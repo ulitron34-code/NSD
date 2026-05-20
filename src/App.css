@@ -1,0 +1,350 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ============================
+   DESIGN SYSTEM — NSD FINTECH
+   ============================ */
+:root {
+  --navy:        #1B3A5C;
+  --navy-light:  #2A527A;
+  --navy-dark:   #0F1F2E;
+  --gold:        #C9A84C;
+  --gold-light:  #E4C878;
+  --gold-pale:   #F5EDD8;
+  --bg:          #F2EFE9;
+  --bg-card:     #FFFFFF;
+  --text:        #1A1A1A;
+  --text-muted:  #6B6560;
+  --border:      rgba(27,58,92,0.10);
+  --green:       #2E7D32;
+  --green-bg:    #E8F5E9;
+  --amber:       #B45309;
+  --amber-bg:    #FEF3C7;
+  --red:         #C62828;
+  --red-bg:      #FFEBEE;
+  --shadow-sm:   0 2px 8px rgba(27,58,92,0.08);
+  --shadow-md:   0 8px 24px rgba(27,58,92,0.12);
+  --shadow-lg:   0 20px 60px rgba(27,58,92,0.18);
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --transition:  all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================
+   RESET & BASE
+   ============================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================
+   TYPOGRAPHY
+   ============================ */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--navy);
+}
+
+/* ============================
+   SCROLLBAR
+   ============================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* ============================
+   BUTTONS
+   ============================ */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+/* Primary Button */
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  color: var(--navy);
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(201, 168, 76, 0.4);
+}
+.btn-primary:active { transform: translateY(0); }
+
+/* ============================
+   CARDS
+   ============================ */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.card:hover { box-shadow: var(--shadow-md); }
+
+/* ============================
+   INPUTS & FORMS
+   ============================ */
+input, select, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  width: 100%;
+  transition: var(--transition);
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+input::placeholder { color: var(--text-muted); }
+
+/* ============================
+   STATUS BADGES
+   ============================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.badge-success { background: var(--green-bg); color: var(--green); }
+.badge-warning { background: var(--amber-bg); color: var(--amber); }
+.badge-danger  { background: var(--red-bg);   color: var(--red);   }
+.badge-navy    { background: rgba(27,58,92,0.1); color: var(--navy); }
+
+/* ============================
+   METRIC CARDS
+   ============================ */
+.metric-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--gold);
+  transition: var(--transition);
+}
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.metric-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+  margin: 0.5rem 0 0.25rem;
+}
+.metric-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+
+/* ============================
+   RESULT / ANALYSIS CARDS
+   ============================ */
+.result-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================
+   FLAG ITEMS
+   ============================ */
+.flag-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+  border-left: 4px solid;
+}
+.flag-critico { background: var(--red-bg);   border-color: var(--red);   }
+.flag-alto    { background: #FFF3E0;          border-color: #E65100;      }
+.flag-medio   { background: var(--amber-bg);  border-color: var(--amber); }
+.flag-bajo    { background: var(--green-bg);  border-color: var(--green); }
+
+/* ============================
+   RECOMMENDATION BOX
+   ============================ */
+.recommendation-box {
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-top: 1.5rem;
+}
+.recommendation-aprobado {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 2px solid var(--green);
+}
+.recommendation-revisar {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border: 2px solid var(--amber);
+}
+.recommendation-rechazar {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 2px solid var(--red);
+}
+
+/* ============================
+   LOADING SPINNER
+   ============================ */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(201, 168, 76, 0.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================
+   PROGRESS BAR
+   ============================ */
+.progress-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================
+   TABLE
+   ============================ */
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+}
+td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+tr:hover td { background: rgba(201, 168, 76, 0.04); }
+
+/* ============================
+   TABS (Sidebar)
+   ============================ */
+.sidebar-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  background: transparent;
+}
+.sidebar-tab:hover {
+  background: rgba(201, 168, 76, 0.15);
+  color: white;
+}
+.sidebar-tab.active {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  color: var(--navy);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.35);
+}
+
+/* ============================
+   HERO GRADIENT
+   ============================ */
+.hero-gradient {
+  background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-light) 100%);
+}
+
+/* ============================
+   GLASSMORPHISM
+   ============================ */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ============================
+   RESPONSIVE HELPERS
+   ============================ */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+}
