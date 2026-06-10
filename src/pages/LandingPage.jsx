@@ -1,3 +1,4 @@
+// LandingPage.jsx
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { COLORS } from "../utils/constants";
@@ -10,7 +11,12 @@ import HistorySection from "../components/Landing/HistorySection";
 import PricingSection from "../components/Landing/PricingSection";
 import FAQSection from "../components/Landing/FAQSection";
 import CTASection from "../components/Landing/CTASection";
+import SecuritySection from "../components/Landing/SecuritySection";
+import IntegrationsBanner from "../components/Landing/IntegrationsBanner";
 import Footer from "../components/Landing/Footer";
+import OperatingModelSection from "../components/Landing/OperatingModelSection";
+import BusinessModelSection from "../components/Landing/BusinessModelSection";
+import ResponsibleAISection from "../components/Landing/ResponsibleAISection";
 
 export default function LandingPage() {
   const location = useLocation();
@@ -38,7 +44,14 @@ export default function LandingPage() {
       
       <div id="servicios">
         <DifferentiersSection />
+        <OperatingModelSection />
       </div>
+
+      <ResponsibleAISection />
+
+      {/* Security and Audit Section */}
+      <SecuritySection />
+      <BusinessModelSection />
       
       <div id="precios">
         <PricingSection />
@@ -50,6 +63,9 @@ export default function LandingPage() {
       
       <TestimonialsSection />
       <CTASection />
+
+      {/* Integrations banner just before Footer */}
+      <IntegrationsBanner />
       <Footer />
     </div>
   );

@@ -1,102 +1,121 @@
-import React from "react";
-
-const icons = ["🎯", "📋", "🌐", "🔬"];
-const numbers = ["01", "02", "03", "04"];
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function DifferentiersSection() {
-  const differentiators = [
+  const { t } = useTranslation();
+  const [openIndex, setOpenIndex] = useState(-1);
+
+  const principles = [
     {
-      titulo: "Enfoque Boutique",
-      desc: "Atención personalizada, proyectos seleccionados y acompañamiento estratégico de alto nivel en cada etapa.",
+      titulo: t("principles.traceability.title", "Traceability"),
+      desc: t("principles.traceability.desc", "Every action within the platform is recorded with date, user and detail. This allows reconstructing the history of any file during an audit, complying with the requirements of CNBV, FIU and international regulators."),
     },
     {
-      titulo: "Preparación Integral",
-      desc: "No presentamos un proyecto ante inversionistas sin expediente, narrativa financiera y estructura mínima verificada.",
+      titulo: t("principles.confidentiality.title", "Confidentiality"),
+      desc: t("principles.confidentiality.desc", "Financial and documentary information is handled under AES-256 encryption standards and role-based access protocols (RBAC). Only authorized personnel can view sensitive data, ensuring banking secrecy and personal data protection."),
     },
     {
-      titulo: "Equipo Multidisciplinario",
-      desc: "Finanzas, legal, cumplimiento, análisis técnico e internacional integrados bajo un mismo techo.",
+      titulo: t("principles.docControl.title", "Document Control"),
+      desc: t("principles.docControl.desc", "Comprehensive management of each document's lifecycle: upload, validation, expiration, versioning and final archive. The system automatically detects expired or missing documents and generates proactive alerts to the compliance officer."),
     },
     {
-      titulo: "Rigor Técnico",
-      desc: "Análisis técnico, financiero, legal y documental de clase mundial antes de cualquier presentación.",
+      titulo: t("principles.visibleRisk.title", "Visible Risk"),
+      desc: t("principles.visibleRisk.desc", "Configurable risk matrix that evaluates documentary, fiscal, reputational, geographical and operational factors. Assigns a standardized NSD Risk Score (1-100) that allows classifying and prioritizing cases objectively and auditably."),
+    },
+    {
+      titulo: t("principles.evidence.title", "Evidence"),
+      desc: t("principles.evidence.desc", "Every finding, observation or decision is documented as formal evidence within the digital file. Review notes, screenshots and results of restricted list queries are linked to the corresponding case."),
+    },
+    {
+      titulo: t("principles.audit.title", "Audit"),
+      desc: t("principles.audit.desc", "The platform generates consolidated reports ready to present to internal auditors, external auditors and regulatory authorities. Includes access log, change history and export in standard formats (PDF, CSV, XML)."),
+    },
+    {
+      titulo: "Living Requirements",
+      desc: "NSD organizes the file against requirements mandated by type of financial entity: KYC/KYB, ultimate beneficial owner, AML/CFT, documentary anti-fraud, expirations, legal evidence, financial information and data room. The goal is for applicants to arrive prepared and for funders to receive a verifiable, updated and auditable file.",
+    },
+    {
+      titulo: "AI Agents",
+      desc: "AI agents review documents in real-time, detect missing items, inconsistencies, expirations, critical fields and potential fraud risks before submitting the application. This reduces time, cost and rework for applicants, while giving greater certainty to banks, non-bank lenders, fintechs and funds about file quality.",
+    },
+    {
+      titulo: "Biometrics",
+      desc: "The biometric layer is designed to strengthen identity and consent through facial recognition, proof of life and, when applicable, fingerprint or equivalent validations. Its use must be configured with privacy notice, express consent, data minimization and access controls.",
     },
   ];
 
   return (
-    <section style={{ padding: "6rem 2rem", background: "white" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+    <section id="servicios" style={{ padding: "5rem 2rem", background: "#F5F4F0", borderTop: "1px solid var(--border)" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        <div style={{ marginBottom: "3rem" }}>
           <p style={{
-            color: "#C9A84C", fontWeight: 700, fontSize: "0.8rem",
-            letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem",
+            color: "var(--gold)",
+            fontWeight: 700,
+            fontSize: "0.75rem",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            marginBottom: "0.75rem",
           }}>
-            POR QUÉ NSD
+            {t("differentiators.subtitle", "PRODUCT PRINCIPLES")}
           </p>
-          <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#1B3A5C", fontWeight: 800 }}>
-            Nuestros Diferenciadores
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.6rem, 3vw, 2.2rem)", color: "var(--navy)", fontWeight: 500 }}>
+            {t("differentiators.mainTitle", "End-to-end operational compliance")}
           </h2>
-          <p style={{ color: "#6B6560", maxWidth: "600px", margin: "1rem auto 0", fontSize: "1.05rem", lineHeight: 1.7 }}>
-            Combinamos tecnología de punta con experiencia humana para llevar tu proyecto al siguiente nivel.
+          <p style={{ color: "var(--text-muted)", maxWidth: "820px", lineHeight: 1.8, marginTop: "1rem", fontSize: "0.98rem", fontWeight: 300 }}>
+            NSD's difference is combining compliance, financial preparation, biometrics and document review with AI.
+            Applicants can align their file with financial entity requirements before seeking funding, and funders
+            receive more complete evidence regarding identity, anti-fraud, AML/CFT, legal documentation and financial capacity.
           </p>
         </div>
 
-        {/* Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
-          {differentiators.map((diff, i) => (
-            <div
-              key={i}
-              style={{
-                background: "#F2EFE9",
-                padding: "2rem",
-                borderRadius: "16px",
-                border: "1px solid rgba(27,58,92,0.08)",
-                transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-                cursor: "default",
-                position: "relative",
-                overflow: "hidden",
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = "translateY(-6px)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(27,58,92,0.15)";
-                e.currentTarget.style.background = "white";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-                e.currentTarget.style.background = "#F2EFE9";
-              }}
-            >
-              {/* Number */}
-              <p style={{
-                position: "absolute", top: "1.5rem", right: "1.5rem",
-                fontSize: "2.5rem", fontWeight: 900,
-                color: "rgba(201,168,76,0.12)", lineHeight: 1,
-              }}>
-                {numbers[i]}
-              </p>
-
-              {/* Icon */}
-              <div style={{
-                width: "48px", height: "48px", borderRadius: "12px",
-                background: "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05))",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "1.5rem", marginBottom: "1.25rem",
-                border: "1px solid rgba(201,168,76,0.2)",
-              }}>
-                {icons[i]}
-              </div>
-
-              <h3 style={{ color: "#1B3A5C", fontWeight: 700, marginBottom: "0.75rem", fontSize: "1.05rem" }}>
-                {diff.titulo}
-              </h3>
-              <p style={{ color: "#6B6560", fontSize: "0.92rem", lineHeight: 1.7 }}>
-                {diff.desc}
-              </p>
-            </div>
-          ))}
+        {/* Grid de tarjetas desplegables */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: openIndex >= 0 ? "0" : "0" }}>
+          {principles.map((p, i) => {
+            const isOpen = openIndex === i;
+            return (
+              <button
+                key={p.titulo}
+                onClick={() => setOpenIndex(isOpen ? -1 : i)}
+                style={{
+                  background: isOpen ? "var(--navy)" : "white",
+                  color: isOpen ? "white" : "var(--navy)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "1.5rem 1rem",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                  transition: "all 0.3s ease",
+                  boxShadow: isOpen ? "0 4px 16px rgba(10,25,47,0.15)" : "0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                {p.titulo}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Panel de explicación desplegable */}
+        {openIndex >= 0 && (
+          <div style={{
+            marginTop: "1.5rem",
+            background: "white",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "2rem 2.5rem",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+            animation: "fadeIn 0.3s ease",
+          }}>
+            <h3 style={{ fontFamily: "'Playfair Display', serif", color: "var(--navy)", fontSize: "1.3rem", fontWeight: 500, marginBottom: "1rem" }}>
+              {principles[openIndex].titulo}
+            </h3>
+            <p style={{ color: "var(--text)", fontSize: "0.95rem", lineHeight: 1.85, fontWeight: 300 }}>
+              {principles[openIndex].desc}
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

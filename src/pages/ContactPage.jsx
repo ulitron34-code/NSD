@@ -1,10 +1,14 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNotification } from "../hooks/useNotification";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
+import { BRAND } from "../config/brand";
+import { uiText } from "../utils/runtimeCopy";
 
 export default function ContactPage() {
   const { addNotification } = useNotification();
+  const { i18n } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,7 +27,7 @@ export default function ContactPage() {
     e.preventDefault();
 
     if (!formData.name || !formData.email || !formData.message) {
-      addNotification("Completa todos los campos obligatorios", "error");
+      addNotification(uiText(i18n, "Completa todos los campos obligatorios", "Complete all required fields"), "error");
       return;
     }
 
@@ -36,10 +40,10 @@ export default function ContactPage() {
       // Por ahora simulamos
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      addNotification("Mensaje enviado correctamente. Te contactaremos pronto.", "success");
+      addNotification(uiText(i18n, "Mensaje enviado correctamente. Te contactaremos pronto.", "Message sent successfully. We will contact you soon."), "success");
       setFormData({name: "", email: "", phone: "", subject: "", message: ""});
     } catch (error) {
-      addNotification("Error al enviar el mensaje", "error");
+      addNotification(uiText(i18n, "Error al enviar el mensaje", "Error sending the message"), "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -59,26 +63,26 @@ export default function ContactPage() {
           borderLeft: `4px solid ${COLORS.gold}`,
           paddingLeft: "1rem",
         }}>
-          Contacto y Soporte
+          {uiText(i18n, "Contacto y Soporte", "Contact and Support")}
         </h1>
         <p style={{color: COLORS.textMuted, marginBottom: "3rem", fontSize: "1.1rem"}}>
-          ¿Preguntas? Nos encantaría escucharte. Estamos aquí para ayudarte.
+          {uiText(i18n, "¿Preguntas? Nos encantaría escucharte. Estamos aquí para ayudarte.", "Questions? We would be glad to hear from you. We are here to help.")}
         </p>
 
         <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3rem", marginBottom: "3rem"}}>
           {/* Contact Info */}
           <div>
             <h2 style={{color: COLORS.navy, fontSize: "1.5rem", marginBottom: "2rem"}}>
-              Información de Contacto
+              {uiText(i18n, "Información de Contacto", "Contact Information")}
             </h2>
 
             {[
-              {icon: "📍", title: "Ubicación", content: "Ciudad de México, México"},
-              {icon: "📞", title: "Teléfono", content: "+52 55 XXXX XXXX"},
-              {icon: "📧", title: "Email General", content: "info@nsd.com"},
-              {icon: "🔧", title: "Soporte", content: "support@nsd.com"},
-              {icon: "⚖️", title: "Legal", content: "legal@nsd.com"},
-              {icon: "🔐", title: "Privacidad", content: "privacidad@nsd.com"},
+              {icon: "📍", title: uiText(i18n, "Ubicación", "Location"), content: BRAND.location},
+              {icon: "📞", title: uiText(i18n, "Teléfono", "Phone"), content: BRAND.contactPhone},
+              {icon: "📧", title: uiText(i18n, "Email General", "General Email"), content: BRAND.contactEmail},
+              {icon: "🔧", title: uiText(i18n, "Soporte", "Support"), content: "support@nsd.com"},
+              {icon: "⚖️", title: uiText(i18n, "Legal", "Legal"), content: "legal@nsd.com"},
+              {icon: "🔐", title: uiText(i18n, "Privacidad", "Privacy"), content: "privacidad@nsd.com"},
             ].map((item, i) => (
               <div key={i} style={{
                 marginBottom: "2rem",
@@ -99,7 +103,7 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div>
             <h2 style={{color: COLORS.navy, fontSize: "1.5rem", marginBottom: "2rem"}}>
-              Envíanos un Mensaje
+              {uiText(i18n, "Envíanos un Mensaje", "Send Us a Message")}
             </h2>
 
             <form onSubmit={handleSubmit} style={{
@@ -117,14 +121,14 @@ export default function ContactPage() {
                   marginBottom: "0.5rem",
                   fontSize: "0.9rem",
                 }}>
-                  Nombre Completo *
+                  {uiText(i18n, "Nombre Completo *", "Full Name *")}
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Tu nombre"
+                  placeholder={uiText(i18n, "Tu nombre", "Your name")}
                   style={{
                     width: "100%",
                     padding: "0.75rem 1rem",
@@ -171,7 +175,7 @@ export default function ContactPage() {
                   marginBottom: "0.5rem",
                   fontSize: "0.9rem",
                 }}>
-                  Teléfono (Opcional)
+                  {uiText(i18n, "Teléfono (Opcional)", "Phone (Optional)")}
                 </label>
                 <input
                   type="tel"
@@ -198,7 +202,7 @@ export default function ContactPage() {
                   marginBottom: "0.5rem",
                   fontSize: "0.9rem",
                 }}>
-                  Asunto
+                  {uiText(i18n, "Asunto", "Subject")}
                 </label>
                 <select
                   name="subject"
@@ -212,12 +216,12 @@ export default function ContactPage() {
                     fontSize: "1rem",
                   }}
                 >
-                  <option>Selecciona un asunto</option>
-                  <option>Consulta General</option>
-                  <option>Soporte Técnico</option>
-                  <option>Ventas / Cotización</option>
-                  <option>Privacidad / ARCO</option>
-                  <option>Otro</option>
+                  <option>{uiText(i18n, "Selecciona un asunto", "Select a subject")}</option>
+                  <option>{uiText(i18n, "Consulta General", "General Inquiry")}</option>
+                  <option>{uiText(i18n, "Soporte Técnico", "Technical Support")}</option>
+                  <option>{uiText(i18n, "Ventas / Cotización", "Sales / Quote")}</option>
+                  <option>{uiText(i18n, "Privacidad / ARCO", "Privacy / ARCO Rights")}</option>
+                  <option>{uiText(i18n, "Otro", "Other")}</option>
                 </select>
               </div>
 
@@ -230,13 +234,13 @@ export default function ContactPage() {
                   marginBottom: "0.5rem",
                   fontSize: "0.9rem",
                 }}>
-                  Mensaje *
+                  {uiText(i18n, "Mensaje *", "Message *")}
                 </label>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  placeholder="Tu mensaje..."
+                  placeholder={uiText(i18n, "Tu mensaje...", "Your message...")}
                   rows="5"
                   style={{
                     width: "100%",
@@ -266,7 +270,7 @@ export default function ContactPage() {
                   fontSize: "1rem",
                 }}
               >
-                {isSubmitting ? "Enviando..." : "Enviar Mensaje"}
+                {isSubmitting ? uiText(i18n, "Enviando...", "Sending...") : uiText(i18n, "Enviar Mensaje", "Send Message")}
               </button>
             </form>
           </div>

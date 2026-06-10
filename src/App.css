@@ -1,34 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 /* ============================
-   DESIGN SYSTEM — NSD FINTECH
+   DESIGN SYSTEM — NSD FINTECH (MEJORADO)
    ============================ */
 :root {
-  --navy:        #1B3A5C;
-  --navy-light:  #2A527A;
-  --navy-dark:   #0F1F2E;
-  --gold:        #C9A84C;
-  --gold-light:  #E4C878;
-  --gold-pale:   #F5EDD8;
-  --bg:          #F2EFE9;
+  /* Primary Colors */
+  --navy:        #0A192F; /* Deepen the navy for a more premium look */
+  --navy-light:  #172A45;
+  --navy-dark:   #020C1B;
+  
+  /* Secondary Colors */
+  --gold:        #D4AF37; /* Metallic Gold */
+  --gold-light:  #F3E5AB;
+  --gold-pale:   #FAF8F5;
+  
+  /* Backgrounds */
+  --bg:          #F9F9F9; /* Very clean off-white */
   --bg-card:     #FFFFFF;
-  --text:        #1A1A1A;
-  --text-muted:  #6B6560;
-  --border:      rgba(27,58,92,0.10);
+  --bg-subtle:   #F3F3F3;
+  --bg-dark:     #0A192F;
+  
+  /* Text */
+  --text:        #333333;
+  --text-muted:  #666666;
+  
+  /* Borders & Shadows */
+  --border:      rgba(10,25,47,0.08);
+  --shadow-sm:   0 2px 8px rgba(10,25,47,0.05);
+  --shadow-md:   0 8px 24px rgba(10,25,47,0.08);
+  --shadow-lg:   0 20px 60px rgba(10,25,47,0.12);
+  
+  /* Status Colors */
   --green:       #2E7D32;
   --green-bg:    #E8F5E9;
   --amber:       #B45309;
   --amber-bg:    #FEF3C7;
   --red:         #C62828;
   --red-bg:      #FFEBEE;
-  --shadow-sm:   0 2px 8px rgba(27,58,92,0.08);
-  --shadow-md:   0 8px 24px rgba(27,58,92,0.12);
-  --shadow-lg:   0 20px 60px rgba(27,58,92,0.18);
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   16px;
-  --radius-xl:   24px;
-  --transition:  all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Radius & Transitions */
+  --radius-sm:   4px; /* More squared off for a corporate look */
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   20px;
+  --transition:  all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 /* ============================
@@ -49,7 +64,7 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.6;
+  line-height: 1.7; /* Slightly more relaxed line height */
   -webkit-font-smoothing: antialiased;
 }
 
@@ -57,10 +72,14 @@ body {
    TYPOGRAPHY
    ============================ */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  line-height: 1.3;
+  font-family: 'Playfair Display', Georgia, serif; /* Classic Serif for headings */
+  font-weight: 600;
+  line-height: 1.25;
   color: var(--navy);
+  letter-spacing: -0.01em;
 }
+
+p { margin: 0; }
 
 /* ============================
    SCROLLBAR
@@ -313,6 +332,9 @@ tr:hover td { background: rgba(201, 168, 76, 0.04); }
   font-weight: 500;
   color: rgba(255,255,255,0.8);
   background: transparent;
+  min-height: 44px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 .sidebar-tab:hover {
   background: rgba(201, 168, 76, 0.15);
@@ -347,4 +369,82 @@ tr:hover td { background: rgba(201, 168, 76, 0.04); }
    ============================ */
 @media (max-width: 768px) {
   .hide-mobile { display: none !important; }
+}
+
+@media (max-width: 700px) {
+  .dashboard-shell {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100% !important;
+    position: static !important;
+    max-height: none !important;
+    padding: 1rem !important;
+  }
+
+  .dashboard-sidebar nav {
+    flex-direction: row !important;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .sidebar-tab {
+    width: auto;
+    min-width: 170px;
+    white-space: nowrap;
+  }
+
+  .dashboard-main {
+    padding: 1.25rem !important;
+  }
+
+  .dashboard-hero,
+  .dashboard-two-column,
+  .dashboard-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-hero {
+    flex-direction: column;
+    align-items: flex-start !important;
+    padding: 1.5rem !important;
+  }
+
+  .dashboard-hero > div:last-child {
+    text-align: left !important;
+    width: 100%;
+  }
+
+  .dashboard-detail-grid aside {
+    position: static !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .card,
+  .result-card {
+    padding: 1.25rem;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .case-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  th,
+  td {
+    padding: 0.7rem;
+    font-size: 0.86rem;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100%;
+  }
 }

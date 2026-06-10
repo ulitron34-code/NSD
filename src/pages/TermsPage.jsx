@@ -2,9 +2,64 @@ import React from "react";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
 
+const sections = [
+  ["1. Aceptacion de terminos", [
+    "Al acceder y usar NSD Platform aceptas estos terminos. Si actuas por cuenta de una empresa, declaras tener facultades suficientes para obligarla.",
+    "NSD puede actualizar estos terminos para reflejar cambios legales, operativos o tecnologicos. La version vigente estara disponible en la plataforma."
+  ]],
+  ["2. Descripcion del servicio", [
+    "NSD Platform combina herramientas SaaS de cumplimiento, data room, revision documental, servicios profesionales NSD IF y flujos para solicitantes y otorgantes.",
+    "La plataforma puede apoyar en preparacion de expedientes, business plan, analisis financiero, pitch deck, revision de requisitos, trazabilidad y acceso controlado para entidades financieras."
+  ]],
+  ["3. Documentos, expediente y data room", [
+    "El usuario puede cargar documentos financieros, legales, fiscales, corporativos, personales o del proyecto. El usuario es responsable de que dichos documentos sean autenticos, completos, vigentes y legalmente obtenidos.",
+    "NSD puede revisar completitud, consistencia, formato, vigencia aparente y trazabilidad documental. NSD no garantiza la veracidad material de la informacion ni sustituye la debida diligencia de bancos, fondos, SOFOMES, fintechs, autoridades o asesores externos.",
+    "Los accesos al data room pueden compartirse con otorgantes autorizados. El usuario reconoce que compartir un expediente implica permitir que el destinatario revise documentos, estados y resultados preliminares asociados."
+  ]],
+  ["4. Uso de IA y resultados automatizados", [
+    "NSD puede usar herramientas de IA, OCR, reglas de negocio o agentes automatizados para clasificar documentos, detectar faltantes, generar score preliminar, identificar inconsistencias y preparar observaciones.",
+    "Los resultados de IA son auxiliares y preliminares. No constituyen asesoria legal, fiscal, financiera, crediticia o regulatoria definitiva. Toda decision debe ser validada por personas autorizadas y asesores profesionales.",
+    "El usuario acepta que la calidad de los resultados depende de la informacion cargada, su legibilidad, vigencia, estructura y completitud."
+  ]],
+  ["5. Biometricos e identidad digital", [
+    "Cuando se active el modulo biometrico, NSD podra integrar proveedores especializados para prueba de vida, validacion facial, comparacion contra identificacion oficial, huella digital u otras senales antifraude.",
+    "La activacion de biometricos requerira consentimiento especifico y finalidades claras. NSD procurara guardar resultados, evidencias y bitacoras, no datos biometricos crudos salvo que sea necesario, legal y consentido."
+  ]],
+  ["6. Responsabilidades del usuario", [
+    "Mantener la confidencialidad de credenciales, usar contrasenas seguras y notificar accesos no autorizados.",
+    "No cargar informacion falsa, alterada, fraudulenta, ilicita o de terceros sin autorizacion.",
+    "No evadir controles de seguridad, manipular bitacoras, realizar scraping, pruebas no autorizadas o uso abusivo de la plataforma.",
+    "Responder por la veracidad, licitud y autorizacion de la informacion cargada o compartida."
+  ]],
+  ["7. Responsabilidades de NSD", [
+    "Prestar el servicio con esfuerzos comercialmente razonables, controles de seguridad, trazabilidad y administracion de accesos.",
+    "Mantener documentos y datos bajo medidas de confidencialidad y seguridad acordes con la etapa del producto y los proveedores utilizados.",
+    "Registrar eventos relevantes como carga de documentos, visualizaciones, revisiones IA y accesos compartidos para fines de auditoria."
+  ]],
+  ["8. Pagos, servicios profesionales y reembolsos", [
+    "Los servicios profesionales, planes o expedientes pueden requerir pago previo o condiciones especificas de contratacion.",
+    "Los pagos se procesan mediante proveedores externos como Stripe. NSD no almacena datos completos de tarjeta.",
+    "Los alcances, tiempos de entrega, revisiones incluidas y politicas de reembolso deberan confirmarse en la orden, propuesta o contrato aplicable."
+  ]],
+  ["9. Confidencialidad, retencion y eliminacion", [
+    "NSD tratara la informacion como confidencial, salvo autorizacion del usuario, requerimiento legal, autoridad competente, auditoria, cumplimiento regulatorio o defensa de derechos.",
+    "La informacion podra conservarse durante la relacion comercial y por los plazos necesarios para cumplimiento legal, auditoria, evidencia contractual, prevencion de fraude y defensa juridica.",
+    "El usuario podra solicitar eliminacion o restriccion cuando proceda legalmente; algunas bitacoras o evidencias podran conservarse si existe obligacion o interes legitimo."
+  ]],
+  ["10. Limitacion de responsabilidad", [
+    "NSD no garantiza aprobacion de credito, inversion, fondeo, autorizacion regulatoria ni decision favorable de un otorgante.",
+    "NSD no sera responsable por rechazos, cambios de criterio de entidades financieras, informacion falsa proporcionada por usuarios, fallas de terceros, fuerza mayor o decisiones tomadas sin revision profesional.",
+    "En caso de detectar posible fraude, uso indebido o actividad ilicita, NSD podra suspender cuentas, preservar evidencia y cooperar con autoridades cuando corresponda."
+  ]],
+  ["11. Ley aplicable y contacto", [
+    "Estos terminos se rigen por las leyes de Mexico. Cualquier controversia sera atendida ante autoridades competentes conforme a la legislacion aplicable.",
+    "Contacto legal: legal@nsd.com. Domicilio, RFC y datos corporativos definitivos deberan integrarse antes de publicacion comercial."
+  ]]
+];
+
 export default function TermsPage() {
   return (
-    <div style={{background: COLORS.bg, minHeight: "100vh"}}>
+    <div style={{ background: COLORS.bg, minHeight: "100vh" }}>
       <div style={{
         maxWidth: "1000px",
         margin: "0 auto",
@@ -19,173 +74,29 @@ export default function TermsPage() {
           borderLeft: `4px solid ${COLORS.gold}`,
           paddingLeft: "1rem",
         }}>
-          Términos y Condiciones
+          Terminos y Condiciones
         </h1>
 
-        <p style={{color: COLORS.textMuted, marginBottom: "2rem"}}>
-          Última actualización: 19 de Mayo 2026
+        <p style={{ color: COLORS.textMuted, marginBottom: "1rem" }}>
+          Ultima actualizacion: 23 de mayo de 2026
+        </p>
+        <p style={{ color: COLORS.textMuted, lineHeight: 1.7, marginBottom: "2rem" }}>
+          Este documento es una base operativa para la plataforma. Debe ser revisado por asesoria legal antes de su publicacion definitiva.
         </p>
 
-        <div style={{lineHeight: "1.8", color: COLORS.text}}>
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            1. Aceptación de Términos
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            Al acceder y usar la plataforma NSD International Finance, aceptas estos términos. 
-            Si no estás de acuerdo, no uses la plataforma.
-          </p>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            2. Descripción del Servicio
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            NSD International Finance proporciona una plataforma de análisis automático de 
-            solicitantes de financiamiento, evaluación de riesgo crediticio, y preparación 
-            de expedientes para inversionistas. Los análisis son informativos y no constituyen 
-            garantía de financiamiento.
-          </p>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            3. Elegibilidad
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Debes ser mayor de 18 años</li>
-            <li style={{marginBottom: "0.5rem"}}>Debes ser residente legal en México o Latinoamérica</li>
-            <li style={{marginBottom: "0.5rem"}}>No puedes estar sancionado por OFAC</li>
-            <li style={{marginBottom: "0.5rem"}}>Debes proporcionar información veraz</li>
-          </ul>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            4. Responsabilidades del Usuario
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Proporcionar información veraz y completa</li>
-            <li style={{marginBottom: "0.5rem"}}>No usar la plataforma para fines ilícitos</li>
-            <li style={{marginBottom: "0.5rem"}}>No compartir tu cuenta con terceros</li>
-            <li style={{marginBottom: "0.5rem"}}>No hacer scraping o acceso no autorizado</li>
-            <li style={{marginBottom: "0.5rem"}}>Mantener confidencialidad de contraseñas</li>
-          </ul>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            5. Responsabilidades de NSD
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Proporcionar servicio con máximo esfuerzo</li>
-            <li style={{marginBottom: "0.5rem"}}>Mantener confidencialidad de datos</li>
-            <li style={{marginBottom: "0.5rem"}}>Cumplir regulaciones aplicables</li>
-            <li style={{marginBottom: "0.5rem"}}>
-              NO somos responsables de decisiones de lenders, cambios de mercado, o resultados
-            </li>
-          </ul>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            6. Limitación de Responsabilidad
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>NSD no es responsable por daños indirectos o consecuentes</li>
-            <li style={{marginBottom: "0.5rem"}}>Responsabilidad limitada al monto pagado</li>
-            <li style={{marginBottom: "0.5rem"}}>Análisis "tal cual" sin garantías</li>
-          </ul>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            7. Pagos y Facturación
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Planes mensuales con renovación automática</li>
-            <li style={{marginBottom: "0.5rem"}}>Facturación al inicio de cada período</li>
-            <li style={{marginBottom: "0.5rem"}}>Período de prueba: 7 días gratuitos</li>
-            <li style={{marginBottom: "0.5rem"}}>Reembolsos: No aplica después de 7 días</li>
-          </ul>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            8. Suspensión o Cancelación
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            NSD puede suspender o cancelar tu cuenta si:
-          </p>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Violas estos términos</li>
-            <li style={{marginBottom: "0.5rem"}}>Se detecta actividad fraudulenta</li>
-            <li style={{marginBottom: "0.5rem"}}>Falta de pago por 30 días</li>
-            <li style={{marginBottom: "0.5rem"}}>Requests legales o regulatorios</li>
-          </ul>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            9. Ley Aplicable y Jurisdicción
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            Estos términos se rigen por las leyes de México. 
-            Jurisdicción: Tribunales de Ciudad de México.
-          </p>
-
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            10. Contacto Legal
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            <strong>Email Legal:</strong> legal@nsd.com<br/>
-            <strong>Teléfono:</strong> +52 XX XXXX XXXX<br/>
-            <strong>Dirección:</strong> [INSERTAR]
-          </p>
+        <div style={{ lineHeight: "1.8", color: COLORS.text }}>
+          {sections.map(([title, paragraphs]) => (
+            <section key={title}>
+              <h2 style={{ color: COLORS.navy, fontSize: "1.3rem", marginTop: "2rem", marginBottom: "1rem" }}>
+                {title}
+              </h2>
+              {paragraphs.map((paragraph) => (
+                <p key={paragraph} style={{ marginBottom: "1rem" }}>
+                  {paragraph}
+                </p>
+              ))}
+            </section>
+          ))}
         </div>
       </div>
       <Footer />

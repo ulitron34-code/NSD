@@ -1,112 +1,77 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNotification } from "../../hooks/useNotification";
-import { projectService } from "../../services/project.service";
 import { COLORS } from "../../utils/constants";
+import { demoCases } from "../../data/demoCases";
+
+const riskColor = {
+  Bajo: COLORS.green,
+  Medio: COLORS.amber,
+  Alto: "#C62828",
+  Critico: "#8B0000",
+};
 
 export default function ProyectosTab() {
   const { addNotification } = useNotification();
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [cases, setCases] = useState(demoCases);
   const [showForm, setShowForm] = useState(false);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedCase, setSelectedCase] = useState(demoCases[0]);
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    sector: "",
-    status: "draft",
+    subject: "",
+    type: "KYB empresarial",
+    risk: "Medio",
+    assignee: "Ana Compliance",
   });
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = async () => {
-    setIsLoading(true);
-    const response = await projectService.getProjects();
-    if (response.success) {
-      setProjects(response.data);
-    } else {
-      addNotification(response.error, "error");
-    }
-    setIsLoading(false);
-  };
-
-  const handleSubmit = async (e) => {
+  const createCase = (e) => {
     e.preventDefault();
-
-    if (!formData.title || !formData.description) {
-      addNotification("Completa todos los campos", "error");
+    if (!formData.subject.trim()) {
+      addNotification("Agrega el nombre del solicitante o entidad", "error");
       return;
     }
 
-    if (selectedProject) {
-      // Update
-      const response = await projectService.updateProject(selectedProject.id, formData);
-      if (response.success) {
-        addNotification("Proyecto actualizado", "success");
-        loadProjects();
-      } else {
-        addNotification(response.error, "error");
-      }
-    } else {
-      // Create
-      const response = await projectService.createProject(formData);
-      if (response.success) {
-        addNotification("Proyecto creado", "success");
-        loadProjects();
-      } else {
-        addNotification(response.error, "error");
-      }
-    }
-
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setFormData({title: "", description: "", sector: "", status: "draft"});
-    setSelectedProject(null);
-    setShowForm(false);
-  };
-
-  const handleEdit = (project) => {
-    setSelectedProject(project);
-    setFormData({
-      title: project.title,
-      description: project.description,
-      sector: project.sector,
-      status: project.status,
-    });
-    setShowForm(true);
-  };
-
-  const handleDelete = async (projectId) => {
-    if (window.confirm("¿Eliminar proyecto?")) {
-      const response = await projectService.deleteProject(projectId);
-      if (response.success) {
-        addNotification("Proyecto eliminado", "success");
-        loadProjects();
-      } else {
-        addNotification(response.error, "error");
-      }
-    }
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      "draft": COLORS.textMuted,
-      "submitted": COLORS.amber,
-      "approved": COLORS.green,
-      "funded": COLORS.navy,
+    const newCase = {
+      id: `CASE-${String(cases.length + 1).padStart(3, "0")}`,
+      subject: formData.subject,
+      type: formData.type,
+      status: "Nuevo",
+      risk: formData.risk,
+      assignee: formData.assignee,
+      sla: "24 h",
+      lastActivity: "Caso creado en modo demo",
+      comments: ["Caso creado desde formulario demo."],
+      timeline: ["Caso creado"],
     };
-    return colors[status] || COLORS.navy;
+
+    setCases((prev) => [newCase, ...prev]);
+    setSelectedCase(newCase);
+    setFormData({ subject: "", type: "KYB empresarial", risk: "Medio", assignee: "Ana Compliance" });
+    setShowForm(false);
+    addNotification("Caso de cumplimiento creado", "success");
+  };
+
+  const advanceCase = (caseId) => {
+    setCases((prev) =>
+      prev.map((item) =>
+        item.id === caseId
+          ? { ...item, status: "En revision", lastActivity: "Revision asignada", timeline: [...(item.timeline || []), "Revision asignada"] }
+          : item
+      )
+    );
+    setSelectedCase((prev) => prev?.id === caseId ? { ...prev, status: "En revision", lastActivity: "Revision asignada", timeline: [...(prev.timeline || []), "Revision asignada"] } : prev);
+    addNotification("Caso actualizado", "success");
   };
 
   return (
     <div>
-      <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem"}}>
-        <h1 style={{color: COLORS.navy, fontSize: "2rem"}}>
-          Mis Proyectos
-        </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1.5rem", marginBottom: "2rem" }}>
+        <div>
+          <h1 style={{ color: COLORS.navy, fontSize: "2rem", marginBottom: "0.5rem" }}>
+            Casos de cumplimiento
+          </h1>
+          <p style={{ color: COLORS.textMuted, maxWidth: "760px" }}>
+            Gestiona casos KYC/KYB con riesgo, responsable, SLA y ultima actividad.
+          </p>
+        </div>
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
@@ -115,230 +80,178 @@ export default function ProyectosTab() {
             color: COLORS.navy,
             border: "none",
             borderRadius: "6px",
-            fontWeight: "600",
+            fontWeight: 800,
             cursor: "pointer",
           }}
         >
-          {showForm ? "Cancelar" : "+ Nuevo Proyecto"}
+          {showForm ? "Cerrar" : "Nuevo caso"}
         </button>
       </div>
 
-      {/* Form */}
       {showForm && (
         <div style={{
           background: COLORS.white,
           padding: "2rem",
-          borderRadius: "8px",
+          borderRadius: "10px",
           marginBottom: "2rem",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}>
-          <form onSubmit={handleSubmit}>
-            <div style={{display: "grid", gap: "1.5rem"}}>
-              {/* Title */}
+          <form onSubmit={createCase}>
+            <div className="case-form-grid" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: "1rem", alignItems: "end" }}>
               <div>
-                <label style={{
-                  display: "block",
-                  color: COLORS.navy,
-                  fontWeight: "600",
-                  marginBottom: "0.5rem",
-                  fontSize: "0.9rem",
-                }}>
-                  Título del Proyecto
-                </label>
+                <label style={{ color: COLORS.navy, fontWeight: 700, fontSize: "0.9rem" }}>Solicitante o entidad</label>
                 <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="Ej: Desarrollo Inmobiliario XYZ"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    border: `1px solid ${COLORS.border}`,
-                    borderRadius: "6px",
-                    fontSize: "1rem",
-                  }}
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  placeholder="Ej: Empresa Demo SA de CV"
                 />
               </div>
-
-              {/* Description */}
               <div>
-                <label style={{
-                  display: "block",
-                  color: COLORS.navy,
-                  fontWeight: "600",
-                  marginBottom: "0.5rem",
-                  fontSize: "0.9rem",
-                }}>
-                  Descripción
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Descripción del proyecto..."
-                  rows="5"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    border: `1px solid ${COLORS.border}`,
-                    borderRadius: "6px",
-                    fontSize: "1rem",
-                    fontFamily: "inherit",
-                  }}
-                />
-              </div>
-
-              {/* Sector */}
-              <div>
-                <label style={{
-                  display: "block",
-                  color: COLORS.navy,
-                  fontWeight: "600",
-                  marginBottom: "0.5rem",
-                  fontSize: "0.9rem",
-                }}>
-                  Sector
-                </label>
-                <select
-                  value={formData.sector}
-                  onChange={(e) => setFormData({...formData, sector: e.target.value})}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    border: `1px solid ${COLORS.border}`,
-                    borderRadius: "6px",
-                    fontSize: "1rem",
-                  }}
-                >
-                  <option>Selecciona un sector</option>
-                  <option>Tecnología</option>
-                  <option>Inmobiliario</option>
-                  <option>Agrícola</option>
-                  <option>Energía</option>
-                  <option>Otro</option>
+                <label style={{ color: COLORS.navy, fontWeight: 700, fontSize: "0.9rem" }}>Tipo</label>
+                <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })}>
+                  <option>KYB empresarial</option>
+                  <option>KYC representante legal</option>
+                  <option>Beneficiario final</option>
+                  <option>Revision documental</option>
                 </select>
               </div>
-
-              {/* Buttons */}
-              <div style={{display: "flex", gap: "1rem"}}>
-                <button
-                  type="submit"
-                  style={{
-                    padding: "0.75rem 2rem",
-                    background: COLORS.gold,
-                    color: COLORS.navy,
-                    border: "none",
-                    borderRadius: "6px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
-                  {selectedProject ? "Actualizar" : "Crear"} Proyecto
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  style={{
-                    padding: "0.75rem 2rem",
-                    background: "transparent",
-                    color: COLORS.navy,
-                    border: `2px solid ${COLORS.border}`,
-                    borderRadius: "6px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
-                  Cancelar
-                </button>
+              <div>
+                <label style={{ color: COLORS.navy, fontWeight: 700, fontSize: "0.9rem" }}>Riesgo</label>
+                <select value={formData.risk} onChange={(e) => setFormData({ ...formData, risk: e.target.value })}>
+                  <option>Bajo</option>
+                  <option>Medio</option>
+                  <option>Alto</option>
+                  <option>Critico</option>
+                </select>
               </div>
+              <div>
+                <label style={{ color: COLORS.navy, fontWeight: 700, fontSize: "0.9rem" }}>Asignado a</label>
+                <select value={formData.assignee} onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}>
+                  <option>Ana Compliance</option>
+                  <option>Luis Riesgos</option>
+                  <option>Mariana Legal</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                style={{
+                  padding: "0.75rem 1.25rem",
+                  background: COLORS.gold,
+                  color: COLORS.navy,
+                  border: "none",
+                  borderRadius: "6px",
+                  fontWeight: 800,
+                }}
+              >
+                Crear
+              </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Projects List */}
-      <div style={{
-        background: COLORS.white,
-        padding: "2rem",
-        borderRadius: "8px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-      }}>
-        {isLoading ? (
-          <p style={{color: COLORS.textMuted}}>Cargando proyectos...</p>
-        ) : projects.length === 0 ? (
-          <p style={{color: COLORS.textMuted}}>Sin proyectos. Crea uno nuevo para comenzar.</p>
-        ) : (
-          <div style={{display: "grid", gap: "1rem"}}>
-            {projects.map((project) => (
-              <div key={project.id} style={{
-                display: "grid",
-                gridTemplateColumns: "1fr auto",
-                alignItems: "center",
-                gap: "1.5rem",
-                padding: "1.5rem",
-                background: COLORS.bg,
-                borderRadius: "6px",
-                border: `1px solid ${COLORS.border}`,
-              }}>
-                <div>
-                  <h3 style={{color: COLORS.navy, marginBottom: "0.5rem", fontWeight: "600"}}>
-                    {project.title}
-                  </h3>
-                  <p style={{color: COLORS.textMuted, marginBottom: "0.5rem", fontSize: "0.9rem"}}>
-                    {project.description}
-                  </p>
-                  <div style={{display: "flex", gap: "1rem", fontSize: "0.85rem"}}>
-                    <span style={{
-                      color: COLORS.textMuted,
-                      background: COLORS.white,
-                      padding: "0.25rem 0.75rem",
-                      borderRadius: "4px",
-                    }}>
-                      {project.sector}
-                    </span>
-                    <span style={{
-                      color: getStatusColor(project.status),
-                      fontWeight: "600",
-                    }}>
-                      {project.status}
-                    </span>
-                  </div>
+      <div className="dashboard-detail-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.35fr) minmax(300px, 0.85fr)", gap: "1.5rem", alignItems: "start" }}>
+        <div style={{
+          background: COLORS.white,
+          padding: "2rem",
+          borderRadius: "10px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        }}>
+        <div style={{ overflowX: "auto" }}>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Solicitante</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Riesgo</th>
+                <th>Asignado</th>
+                <th>SLA</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cases.map((item) => (
+                <tr key={item.id} onClick={() => setSelectedCase(item)} style={{ cursor: "pointer", outline: selectedCase?.id === item.id ? `2px solid ${COLORS.gold}` : "none", outlineOffset: "-2px" }}>
+                  <td style={{ fontWeight: 800, color: COLORS.navy }}>{item.id}</td>
+                  <td>
+                    <strong style={{ color: COLORS.navy }}>{item.subject}</strong>
+                    <p style={{ color: COLORS.textMuted, fontSize: "0.82rem" }}>{item.lastActivity}</p>
+                  </td>
+                  <td>{item.type}</td>
+                  <td>{item.status}</td>
+                  <td style={{ color: riskColor[item.risk], fontWeight: 800 }}>{item.risk}</td>
+                  <td>{item.assignee}</td>
+                  <td style={{ color: item.sla === "6 h" ? "#C62828" : COLORS.text }}>{item.sla}</td>
+                  <td>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        advanceCase(item.id);
+                      }}
+                      style={{
+                        padding: "0.45rem 0.8rem",
+                        background: item.status === "Aprobado" ? "transparent" : COLORS.gold,
+                        color: item.status === "Aprobado" ? COLORS.textMuted : COLORS.navy,
+                        border: item.status === "Aprobado" ? `1px solid ${COLORS.border}` : "none",
+                        borderRadius: "6px",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {item.status === "Aprobado" ? "Ver" : "Avanzar"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        </div>
+        {selectedCase && (
+          <aside style={{
+            background: COLORS.white,
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: "10px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            overflow: "hidden",
+            position: "sticky",
+            top: "96px",
+          }}>
+            <div style={{ padding: "1.5rem", background: COLORS.bg, borderBottom: `1px solid ${COLORS.border}` }}>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.35rem" }}>
+                Detalle del caso
+              </p>
+              <h2 style={{ color: COLORS.navy, fontSize: "1.2rem" }}>{selectedCase.subject}</h2>
+            </div>
+            <div style={{ padding: "1.5rem", display: "grid", gap: "1rem" }}>
+              {[
+                ["ID", selectedCase.id],
+                ["Tipo", selectedCase.type],
+                ["Estado", selectedCase.status],
+                ["Riesgo", selectedCase.risk],
+                ["Responsable", selectedCase.assignee],
+                ["SLA", selectedCase.sla],
+              ].map(([label, value]) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
+                  <span style={{ color: COLORS.textMuted, fontSize: "0.86rem" }}>{label}</span>
+                  <strong style={{ color: label === "Riesgo" ? riskColor[value] : COLORS.navy, textAlign: "right" }}>{value}</strong>
                 </div>
-
-                <div style={{display: "flex", gap: "0.5rem"}}>
-                  <button
-                    onClick={() => handleEdit(project)}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      background: COLORS.gold,
-                      color: COLORS.navy,
-                      border: "none",
-                      borderRadius: "4px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(project.id)}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      background: "#D32F2F",
-                      color: COLORS.white,
-                      border: "none",
-                      borderRadius: "4px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
+              ))}
+              <div style={{ background: COLORS.bg, padding: "1rem", borderRadius: "8px" }}>
+                <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.5rem" }}>Comentarios</p>
+                {(selectedCase.comments || []).map((comment) => (
+                  <p key={comment} style={{ color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "0.4rem" }}>{comment}</p>
+                ))}
               </div>
-            ))}
-          </div>
+              <div style={{ background: COLORS.bg, padding: "1rem", borderRadius: "8px" }}>
+                <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.5rem" }}>Timeline</p>
+                {(selectedCase.timeline || []).map((event) => (
+                  <p key={event} style={{ color: COLORS.textMuted, fontSize: "0.86rem", marginBottom: "0.35rem" }}>- {event}</p>
+                ))}
+              </div>
+            </div>
+          </aside>
         )}
       </div>
     </div>

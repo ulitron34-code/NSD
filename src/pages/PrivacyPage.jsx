@@ -2,9 +2,60 @@ import React from "react";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
 
+const sections = [
+  ["1. Responsable del tratamiento", [
+    "NSD Platform / NSD International Finance sera responsable del tratamiento de datos personales conforme a la legislacion mexicana aplicable en materia de proteccion de datos personales.",
+    "Datos corporativos definitivos, RFC, domicilio fiscal y datos del oficial de privacidad deberan integrarse antes de publicacion comercial."
+  ]],
+  ["2. Datos que podemos tratar", [
+    "Datos de identificacion y contacto: nombre, email, telefono, domicilio, RFC, CURP, identificaciones y datos fiscales.",
+    "Datos corporativos: razon social, representantes legales, accionistas, beneficiarios finales, documentos constitutivos, poderes, contratos y evidencia corporativa.",
+    "Datos financieros y del proyecto: estados financieros, flujo, deuda, garantias, uso de fondos, documentos de soporte, business plan, pitch deck y data room.",
+    "Datos tecnicos: IP, dispositivo, navegador, fecha, hora, eventos de sesion, logs de acceso, acciones en plataforma y bitacoras de auditoria."
+  ]],
+  ["3. Datos sensibles y biometricos", [
+    "Podremos tratar datos sensibles o de alto impacto cuando sean necesarios para identidad, antifraude, cumplimiento, validacion documental, KYC/KYB o servicios profesionales.",
+    "Cuando se active biometricos, podran tratarse rostro, prueba de vida, comparacion contra identificacion oficial, huella digital u otras senales de identidad, siempre sujeto a consentimiento y finalidades especificas.",
+    "La plataforma debe privilegiar resultados, evidencias y trazabilidad sobre almacenamiento de datos biometricos crudos, salvo que sea necesario y legalmente procedente."
+  ]],
+  ["4. Finalidades primarias", [
+    "Crear y administrar cuentas, ordenes, pagos, expedientes y data rooms.",
+    "Prestar servicios profesionales NSD IF y preparar expedientes para credito, inversion, fondeo o revision por otorgantes.",
+    "Validar identidad, documentos, cumplimiento, antifraude, KYC/KYB, beneficiario final y requisitos exigibles.",
+    "Permitir que otorgantes autorizados revisen data rooms, documentos y revisiones IA preliminares.",
+    "Generar bitacoras, auditoria, trazabilidad, evidencia operativa y controles de seguridad."
+  ]],
+  ["5. IA, automatizacion y analitica", [
+    "Podremos usar IA, OCR, reglas automatizadas y analitica para clasificar documentos, detectar faltantes, inconsistencias, vigencias, riesgos o preparar observaciones.",
+    "Los resultados automatizados no sustituyen revision humana ni asesoria legal, fiscal, financiera o regulatoria.",
+    "Podremos conservar registros de revisiones IA, scores, hallazgos, documentos revisados y fechas para auditoria y mejora del servicio."
+  ]],
+  ["6. Transferencias y encargados", [
+    "Podremos compartir informacion con proveedores de hosting, almacenamiento, pagos, email, seguridad, biometria, analitica, OCR, IA, firma electronica y soporte tecnico.",
+    "Podremos transferir o permitir acceso a otorgantes, entidades financieras, asesores, auditores o terceros autorizados por el usuario o por contrato.",
+    "Tambien podremos revelar informacion ante requerimientos de autoridades competentes, auditorias, cumplimiento legal, prevencion de fraude o defensa de derechos."
+  ]],
+  ["7. Seguridad", [
+    "Aplicamos medidas administrativas, tecnicas y organizacionales razonables: cifrado en transito, almacenamiento privado, URLs temporales, control de acceso, rate limiting, headers de seguridad y bitacoras.",
+    "Ningun sistema es absolutamente invulnerable. En caso de incidente relevante, se activaran procedimientos de contencion, analisis, mitigacion y notificacion conforme corresponda."
+  ]],
+  ["8. Retencion y eliminacion", [
+    "Conservaremos datos durante la relacion comercial y por los plazos necesarios para cumplimiento legal, contractual, auditoria, prevencion de fraude, defensa juridica o requerimientos regulatorios.",
+    "El usuario puede solicitar eliminacion, bloqueo o restriccion cuando proceda. Algunos registros, bitacoras o evidencias podran mantenerse por obligacion legal o interes legitimo."
+  ]],
+  ["9. Derechos ARCO y revocacion", [
+    "Puedes ejercer derechos de acceso, rectificacion, cancelacion u oposicion, asi como revocar consentimiento cuando legalmente proceda.",
+    "Para solicitudes ARCO escribe a privacidad@nsd.com indicando nombre, medio de contacto, derecho que deseas ejercer y documentos para acreditar identidad o representacion."
+  ]],
+  ["10. Cambios al aviso", [
+    "Podremos modificar este aviso por cambios legales, regulatorios, operativos o tecnologicos. La version vigente estara disponible en la plataforma.",
+    "Contacto de privacidad: privacidad@nsd.com. Domicilio, RFC y datos definitivos deberan integrarse antes de publicacion comercial."
+  ]]
+];
+
 export default function PrivacyPage() {
   return (
-    <div style={{background: COLORS.bg, minHeight: "100vh"}}>
+    <div style={{ background: COLORS.bg, minHeight: "100vh" }}>
       <div style={{
         maxWidth: "1000px",
         margin: "0 auto",
@@ -22,188 +73,26 @@ export default function PrivacyPage() {
           Aviso de Privacidad
         </h1>
 
-        <p style={{color: COLORS.textMuted, marginBottom: "2rem"}}>
-          Última actualización: 19 de Mayo 2026
+        <p style={{ color: COLORS.textMuted, marginBottom: "1rem" }}>
+          Ultima actualizacion: 23 de mayo de 2026
+        </p>
+        <p style={{ color: COLORS.textMuted, lineHeight: 1.7, marginBottom: "2rem" }}>
+          Este aviso es una base operativa para NSD Platform y debe ser revisado por asesoria legal antes de su publicacion definitiva.
         </p>
 
-        <div style={{lineHeight: "1.8", color: COLORS.text}}>
-          {/* Section 1 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            1. Responsable del Tratamiento de Datos
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            <strong>Razón Social:</strong> NSD International Finance<br/>
-            <strong>RFC:</strong> [INSERTAR RFC REAL]<br/>
-            <strong>Domicilio:</strong> [INSERTAR DOMICILIO]<br/>
-            <strong>Email de Privacidad:</strong> privacidad@nsd.com<br/>
-            <strong>Teléfono:</strong> +52 XX XXXX XXXX
-          </p>
-
-          {/* Section 2 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            2. Datos Personales que Recopilamos
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Nombre completo</li>
-            <li style={{marginBottom: "0.5rem"}}>Email</li>
-            <li style={{marginBottom: "0.5rem"}}>Teléfono</li>
-            <li style={{marginBottom: "0.5rem"}}>RFC/RUC</li>
-            <li style={{marginBottom: "0.5rem"}}>Información financiera</li>
-            <li style={{marginBottom: "0.5rem"}}>Documentos de identidad</li>
-            <li style={{marginBottom: "0.5rem"}}>Historial crediticio</li>
-            <li style={{marginBottom: "0.5rem"}}>Dirección IP y datos de navegación</li>
-          </ul>
-
-          {/* Section 3 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            3. Finalidades del Tratamiento
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Análisis de solicitudes de financiamiento</li>
-            <li style={{marginBottom: "0.5rem"}}>Evaluación de riesgo crediticio</li>
-            <li style={{marginBottom: "0.5rem"}}>Cumplimiento regulatorio (KYC/KYB)</li>
-            <li style={{marginBottom: "0.5rem"}}>Comunicaciones y soporte</li>
-            <li style={{marginBottom: "0.5rem"}}>Mejora de servicios</li>
-            <li style={{marginBottom: "0.5rem"}}>Cumplimiento de obligaciones legales</li>
-          </ul>
-
-          {/* Section 4 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            4. Transferencias de Datos
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            Tus datos pueden ser compartidos con:
-          </p>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>SAT (Validación RFC)</li>
-            <li style={{marginBottom: "0.5rem"}}>Buró de Crédito</li>
-            <li style={{marginBottom: "0.5rem"}}>OFAC (Validación de sanciones)</li>
-            <li style={{marginBottom: "0.5rem"}}>Equifax, PEP Database, Experian</li>
-            <li style={{marginBottom: "0.5rem"}}>Bancos y fondos de inversión</li>
-            <li style={{marginBottom: "0.5rem"}}>Proveedores de servicios (hosting, email)</li>
-          </ul>
-
-          {/* Section 5 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            5. Derechos ARCO
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            Tienes derecho a:
-          </p>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>
-              <strong>Acceso:</strong> Conocer qué datos tenemos de ti
-            </li>
-            <li style={{marginBottom: "0.5rem"}}>
-              <strong>Rectificación:</strong> Corregir datos inexactos
-            </li>
-            <li style={{marginBottom: "0.5rem"}}>
-              <strong>Cancelación:</strong> Solicitar eliminación de datos (derecho al olvido)
-            </li>
-            <li style={{marginBottom: "0.5rem"}}>
-              <strong>Oposición:</strong> Rechazar ciertos tratamientos
-            </li>
-          </ul>
-          <p style={{marginBottom: "1rem"}}>
-            Para ejercer estos derechos, contacta a: <strong>privacidad@nsd.com</strong>
-          </p>
-
-          {/* Section 6 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            6. Medidas de Seguridad
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Encriptación SSL/TLS en tránsito</li>
-            <li style={{marginBottom: "0.5rem"}}>Encriptación en reposo</li>
-            <li style={{marginBottom: "0.5rem"}}>Servidores seguros en AWS</li>
-            <li style={{marginBottom: "0.5rem"}}>Acceso restringido a personal autorizado</li>
-            <li style={{marginBottom: "0.5rem"}}>Auditorías de seguridad regulares</li>
-            <li style={{marginBottom: "0.5rem"}}>Cumplimiento ISO 27001 (en progreso)</li>
-          </ul>
-
-          {/* Section 7 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            7. Retención de Datos
-          </h2>
-          <ul style={{marginBottom: "1rem", marginLeft: "2rem"}}>
-            <li style={{marginBottom: "0.5rem"}}>Datos activos: Mientras seas cliente + 7 años</li>
-            <li style={{marginBottom: "0.5rem"}}>Datos después de cancelación: 7 años (por regulación)</li>
-            <li style={{marginBottom: "0.5rem"}}>Datos de navegación: 90 días</li>
-          </ul>
-
-          {/* Section 8 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            8. Contacto para Privacidad
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            <strong>Email:</strong> privacidad@nsd.com<br/>
-            <strong>Teléfono:</strong> +52 XX XXXX XXXX<br/>
-            <strong>Tiempo de respuesta:</strong> 20 días hábiles
-          </p>
-
-          {/* Section 9 */}
-          <h2 style={{
-            color: COLORS.navy,
-            fontSize: "1.3rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-            fontWeight: "600",
-          }}>
-            9. Cambios a Este Aviso
-          </h2>
-          <p style={{marginBottom: "1rem"}}>
-            Podemos actualizar este aviso en cualquier momento. Te notificaremos por email 
-            de cambios significativos. El uso continuado de la plataforma implica aceptación 
-            de los cambios.
-          </p>
+        <div style={{ lineHeight: "1.8", color: COLORS.text }}>
+          {sections.map(([title, paragraphs]) => (
+            <section key={title}>
+              <h2 style={{ color: COLORS.navy, fontSize: "1.3rem", marginTop: "2rem", marginBottom: "1rem" }}>
+                {title}
+              </h2>
+              {paragraphs.map((paragraph) => (
+                <p key={paragraph} style={{ marginBottom: "1rem" }}>
+                  {paragraph}
+                </p>
+              ))}
+            </section>
+          ))}
         </div>
       </div>
       <Footer />

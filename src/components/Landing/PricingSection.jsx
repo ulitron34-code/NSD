@@ -7,53 +7,58 @@ export default function PricingSection() {
 
   const plans = [
     {
-      name: "Básico",
+      name: "Starter",
       price: "$99",
-      period: "/mes",
-      desc: "Para solicitantes independientes",
+      currency: "USD",
+      period: "/month",
+      desc: "For teams that need to organize files and documents.",
       features: [
-        "Análisis RFC ilimitados",
-        "Score crediticio",
-        "Reportes mensuales",
-        "Soporte email",
+        "Up to 50 active files",
+        "Basic KYC/KYB checklist",
+        "Document control and expiration tracking",
+        "Expiration alerts",
+        "Basic reports",
       ],
-      cta: "Empezar",
+      cta: "Create Account",
     },
     {
-      name: "Profesional",
+      name: "Professional",
       price: "$299",
-      period: "/mes",
-      desc: "Para empresas y startups",
+      currency: "USD",
+      period: "/month",
+      desc: "For companies with document review and internal approvals.",
       features: [
-        "Todo del Plan Básico",
-        "Acceso a otorgantes",
-        "Soporte prioritario",
-        "Análisis internacionales",
-        "2-3 proyectos simultáneamente",
+        "Everything in Starter plan",
+        "Configurable risk matrix",
+        "Review and approval workflows",
+        "Analyst and approver roles",
+        "Complete audit trail",
+        "Executive reports",
       ],
-      cta: "Empezar",
+      cta: "Try Platform",
       popular: true,
     },
     {
-      name: "Empresarial",
-      price: "Personalizado",
+      name: "Enterprise",
+      price: "Custom",
+      currency: "",
       period: "",
-      desc: "Para fondos y instituciones",
+      desc: "For institutions with advanced rules, integrations and control.",
       features: [
-        "Todo del Plan Profesional",
-        "API access",
-        "Análisis ilimitados",
-        "Account manager dedicado",
-        "SLA garantizado 99.9%",
-        "Cumplimiento específico",
+        "Everything in Professional plan",
+        "API and webhooks",
+        "SSO/MFA",
+        "Rules by country, sector or entity",
+        "SLA and dedicated support",
+        "KYC/list integrations",
       ],
-      cta: "Contactar",
+      cta: "Schedule Demo",
     },
   ];
 
   return (
-    <section style={{padding: "5rem 2rem", background: COLORS.bg, minHeight: "80vh"}}>
-      <div style={{maxWidth: "1400px", margin: "0 auto"}}>
+    <section style={{ padding: "5rem 2rem", background: COLORS.bg, minHeight: "80vh" }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
         <h2 style={{
           color: COLORS.navy,
           fontSize: "2.5rem",
@@ -61,22 +66,21 @@ export default function PricingSection() {
           borderLeft: `4px solid ${COLORS.gold}`,
           paddingLeft: "1rem",
         }}>
-          Planes y Precios
+          Plans for Compliance Teams
         </h2>
-        <p style={{color: COLORS.textMuted, marginBottom: "3rem", fontSize: "1.1rem"}}>
-          Selecciona el plan que mejor se adapta a tus necesidades
+        <p style={{ color: COLORS.textMuted, marginBottom: "3rem", fontSize: "1.1rem" }}>
+          Scale from document management to enterprise compliance with rules, audit and integrations.
         </p>
 
-        <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem"}}>
-          {plans.map((plan, i) => (
-            <div key={i} style={{
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+          {plans.map((plan) => (
+            <div key={plan.name} style={{
               background: COLORS.white,
               padding: "2.5rem",
               borderRadius: "12px",
               border: plan.popular ? `2px solid ${COLORS.gold}` : `1px solid ${COLORS.border}`,
               position: "relative",
-              transform: plan.popular ? "scale(1.05)" : "scale(1)",
-              transition: "transform 0.3s",
+              transform: plan.popular ? "scale(1.03)" : "scale(1)",
               boxShadow: plan.popular ? "0 8px 24px rgba(0,0,0,0.12)" : "0 2px 8px rgba(0,0,0,0.08)",
             }}>
               {plan.popular && (
@@ -92,28 +96,28 @@ export default function PricingSection() {
                   fontWeight: "600",
                   fontSize: "0.8rem",
                 }}>
-                  MÁS POPULAR
+                  MOST POPULAR
                 </div>
               )}
 
-              <h3 style={{color: COLORS.navy, fontSize: "1.5rem", marginBottom: "0.5rem", fontWeight: "600"}}>
+              <h3 style={{ color: COLORS.navy, fontSize: "1.5rem", marginBottom: "0.5rem", fontWeight: "600" }}>
                 {plan.name}
               </h3>
-              <p style={{color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "1.5rem"}}>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "1.5rem" }}>
                 {plan.desc}
               </p>
 
-              <div style={{marginBottom: "1.5rem"}}>
-                <span style={{color: COLORS.navy, fontWeight: "700", fontSize: "2.5rem"}}>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <span style={{ color: COLORS.navy, fontWeight: "700", fontSize: "2.5rem", fontFamily: "'Playfair Display', serif" }}>
                   {plan.price}
                 </span>
-                <span style={{color: COLORS.textMuted, fontSize: "1rem"}}>
-                  {plan.period}
+                <span style={{ color: COLORS.textMuted, fontSize: "0.9rem" }}>
+                  {plan.currency ? ` ${plan.currency}` : ""}{plan.period}
                 </span>
               </div>
 
               <button
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate(plan.name === "Enterprise" ? "/contact" : "/signup")}
                 style={{
                   width: "100%",
                   padding: "0.9rem",
@@ -124,21 +128,14 @@ export default function PricingSection() {
                   fontWeight: "600",
                   cursor: "pointer",
                   marginBottom: "2rem",
-                  transition: "all 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = "translateY(0)";
                 }}
               >
                 {plan.cta}
               </button>
 
-              <ul style={{listStyle: "none"}}>
-                {plan.features.map((feature, j) => (
-                  <li key={j} style={{
+              <ul style={{ listStyle: "none" }}>
+                {plan.features.map((feature) => (
+                  <li key={feature} style={{
                     color: COLORS.text,
                     padding: "0.5rem 0",
                     borderBottom: `1px solid ${COLORS.border}`,
