@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const events = [
   ["09:12", "Solicitante", "Cargo estados financieros 2025", "Documento", "Registrado"],
@@ -22,6 +22,7 @@ const controls = [
 export default function TraceabilityLogTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -49,8 +50,8 @@ export default function TraceabilityLogTab() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "0.75rem" }}>
         {controls.map(([title, detail]) => (
           <article key={title} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{L(title, title)}</p>
-            <p style={{ margin: "0.35rem 0 0", color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.5 }}>{L(detail, detail)}</p>
+            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{copy(title)}</p>
+            <p style={{ margin: "0.35rem 0 0", color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.5 }}>{copy(detail)}</p>
           </article>
         ))}
       </section>
@@ -68,9 +69,9 @@ export default function TraceabilityLogTab() {
             {events.map(([time, actor, event, type, status]) => (
               <tr key={`${time}-${event}`} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
                 <td style={{ padding: "0.72rem", color: COLORS.gold, fontWeight: 900 }}>{time}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{actor}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.86rem" }}>{L(event, event)}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{L(type, type)}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{copy(actor)}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.86rem" }}>{copy(event)}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(type)}</td>
                 <td style={{ padding: "0.72rem" }}>
                   <span style={{
                     display: "inline-flex",
@@ -81,7 +82,7 @@ export default function TraceabilityLogTab() {
                     fontWeight: 900,
                     fontSize: "0.75rem",
                   }}>
-                    {L(status, status)}
+                    {copy(status)}
                   </span>
                 </td>
               </tr>

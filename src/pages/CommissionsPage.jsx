@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
 import { COLORS } from "../utils/constants";
+import { uiText, translateCopy } from "../utils/runtimeCopy";
 
 const MOCK_COMMISSIONS = [
   {
@@ -40,6 +42,9 @@ const MOCK_COMMISSIONS = [
 
 export default function CommissionsPage() {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
   const [closures, setClosures] = useState(MOCK_COMMISSIONS);
   const [filter, setFilter] = useState("all");
 
@@ -66,10 +71,10 @@ export default function CommissionsPage() {
           fontWeight: 800,
           marginBottom: "0.5rem",
         }}>
-          Dashboard de Comisiones
+          {L("Dashboard de Comisiones", "Commissions Dashboard")}
         </h1>
         <p style={{ color: COLORS.textMuted }}>
-          Gestiona tus comisiones por cierre de créditos
+          {L("Gestiona tus comisiones por cierre de créditos", "Manage your commissions for credit closings")}
         </p>
       </div>
 
@@ -81,10 +86,10 @@ export default function CommissionsPage() {
         marginBottom: "2.5rem",
       }}>
         {[
-          { label: "Comisiones Completadas", value: `$${totalCommissions.toLocaleString()}`, color: COLORS.green },
-          { label: "Comisiones Pendientes", value: `$${pendingCommissions.toLocaleString()}`, color: COLORS.amber },
-          { label: "Crédito Total Colocado", value: `$${totalCredit.toLocaleString()}`, color: COLORS.gold },
-          { label: "Cierres Totales", value: closures.length, color: COLORS.navy },
+          { label: L("Comisiones Completadas", "Completed Commissions"), value: `$${totalCommissions.toLocaleString()}`, color: COLORS.green },
+          { label: L("Comisiones Pendientes", "Pending Commissions"), value: `$${pendingCommissions.toLocaleString()}`, color: COLORS.amber },
+          { label: L("Crédito Total Colocado", "Total Credit Deployed"), value: `$${totalCredit.toLocaleString()}`, color: COLORS.gold },
+          { label: L("Cierres Totales", "Total Closings"), value: closures.length, color: COLORS.navy },
         ].map((stat, i) => (
           <div key={i} style={{
             background: "white",
@@ -120,9 +125,9 @@ export default function CommissionsPage() {
         marginBottom: "2rem",
       }}>
         {[
-          { value: "all", label: "Todas" },
-          { value: "completed", label: "Pagadas" },
-          { value: "pending", label: "Pendientes" },
+          { value: "all", label: L("Todas", "All") },
+          { value: "completed", label: L("Pagadas", "Paid") },
+          { value: "pending", label: L("Pendientes", "Pending") },
         ].map((f) => (
           <button
             key={f.value}
@@ -130,7 +135,7 @@ export default function CommissionsPage() {
             style={{
               padding: "0.6rem 1.2rem",
               background: filter === f.value ? COLORS.gold : "white",
-              color: filter === f.value ? COLORS.navy : COLORS.navy,
+              color: COLORS.navy,
               border: `1px solid ${filter === f.value ? COLORS.gold : COLORS.border}`,
               borderRadius: "6px",
               fontWeight: 600,
@@ -156,7 +161,7 @@ export default function CommissionsPage() {
         }}>
           <thead>
             <tr style={{ background: COLORS.bg, borderBottom: `1px solid ${COLORS.border}` }}>
-              {["Proyecto", "Solicitante", "Monto Crédito", "Comisión", "Fecha", "Estado"].map((header) => (
+              {[L("Proyecto", "Project"), L("Solicitante", "Applicant"), L("Monto Crédito", "Credit Amount"), L("Comisión", "Commission"), L("Fecha", "Date"), L("Estado", "Status")].map((header) => (
                 <th
                   key={header}
                   style={{
@@ -195,7 +200,7 @@ export default function CommissionsPage() {
                   fontWeight: 600,
                   fontSize: "0.95rem",
                 }}>
-                  {closure.projectName}
+                  {copy(closure.projectName)}
                 </td>
                 <td style={{
                   padding: "1rem",
@@ -225,7 +230,7 @@ export default function CommissionsPage() {
                   color: COLORS.textMuted,
                   fontSize: "0.95rem",
                 }}>
-                  {new Date(closure.closureDate).toLocaleDateString('es-MX')}
+                  {new Date(closure.closureDate).toLocaleDateString(i18n.language?.startsWith("en") ? "en-US" : "es-MX")}
                 </td>
                 <td style={{
                   padding: "1rem",
@@ -239,7 +244,7 @@ export default function CommissionsPage() {
                     fontWeight: 600,
                     fontSize: "0.8rem",
                   }}>
-                    {closure.status === "completed" ? "Pagada" : "Pendiente"}
+                    {closure.status === "completed" ? L("Pagada", "Paid") : L("Pendiente", "Pending")}
                   </span>
                 </td>
               </tr>
@@ -258,7 +263,7 @@ export default function CommissionsPage() {
           marginTop: "2rem",
         }}>
           <p style={{ color: COLORS.textMuted, fontSize: "1.1rem" }}>
-            No hay cierres en este estado.
+            {L("No hay cierres en este estado.", "There are no closings in this status.")}
           </p>
         </div>
       )}
