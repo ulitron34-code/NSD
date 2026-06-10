@@ -62,13 +62,13 @@ export default function FundraisingRoomTab() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
         {[
           ["Ask sugerido", "$250K - $500K", "Pre-seed para producto, pilotos e integraciones."],
-          ["Runway objetivo", "12-18 meses", "Tiempo para validar pilotos, ingresos y producto SaaS."],
+          ["Runway objetivo", "12-18 meses", "Tiempo para validar pilots, ingresos y producto SaaS."],
           ["Primer mercado", "Mexico", "SOFOMES, fintechs, fondos, bancos y solicitantes empresariales."],
           ["Expansion", "USA despues", "Solo con pilotos, legal y costos de integracion validados."],
         ].map(([label, value, detail]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(label)}</p>
-            <p style={{ color: COLORS.navy, fontSize: "1.55rem", fontWeight: 900, marginBottom: "0.35rem" }}>{value}</p>
+            <p style={{ color: COLORS.navy, fontSize: "1.55rem", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(value)}</p>
             <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</p>
           </article>
         ))}
@@ -95,7 +95,7 @@ export default function FundraisingRoomTab() {
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {milestones.map(([time, title, detail]) => (
               <div key={time} style={{ padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
-                <p style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.75rem", marginBottom: "0.2rem" }}>{time}</p>
+                <p style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.75rem", marginBottom: "0.2rem" }}>{copy(time)}</p>
                 <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.88rem" }}>{copy(title)}</strong>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.2rem" }}>{copy(detail)}</p>
               </div>
