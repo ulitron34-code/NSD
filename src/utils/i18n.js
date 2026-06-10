@@ -15,7 +15,7 @@ const resources = {
         "login": "Acceder",
         "logout": "Cerrar sesión",
         "dashboard": "Dashboard",
-        "platform": "Plataforma de Cumplimiento — Accesar",
+        "platform": "Plataforma de Cumplimiento — Acceder",
         "security": "Seguridad",
         "international": "Internacional",
         "servicesFiles": "Servicios / Expedientes",
@@ -52,11 +52,24 @@ const resources = {
         "audit": {
           "title": "Auditoría",
           "desc": "La plataforma genera reportes consolidados listos para presentar ante auditores internos, externos y autoridades regulatorias. Incluye bitácora de accesos, historial de cambios y exportación en formatos estándar (PDF, CSV, XML)."
+        },
+        "livingRequirements": {
+          "title": "Requisitos Dinámicos",
+          "desc": "NSD organiza el expediente frente a los requisitos obligatorios por tipo de entidad financiera: KYC/KYB, beneficiario controlador, PLD/FT, antifraude documental, vigencias, evidencia legal, información financiera y data room. El objetivo es que los solicitantes lleguen preparados y los otorgantes reciban un expediente verificable, actualizado y auditable."
+        },
+        "aiAgents": {
+          "title": "Agentes de IA",
+          "desc": "Agentes de IA revisan documentos en tiempo real, detectan faltantes, inconsistencias, vigencias, campos críticos y posibles riesgos de fraude antes de enviar la solicitud. Esto reduce tiempos, costos y retrabajos para el solicitante, mientras da mayor certeza a bancos, SOFOMES, fintechs y fondos sobre la calidad del expediente."
+        },
+        "biometrics": {
+          "title": "Biométricos",
+          "desc": "La capa biométrica está diseñada para robustecer la identidad y el consentimiento mediante reconocimiento facial, prueba de vida y, en su caso, validación de huella dactilar o equivalente. Su uso debe configurarse con aviso de privacidad, consentimiento expreso, minimización de datos y control de acceso."
         }
       },
       "differentiators": {
         "subtitle": "PRINCIPIOS DE PRODUCTO",
-        "mainTitle": "Cumplimiento operativo de punta a punta"
+        "mainTitle": "Cumplimiento operativo de punta a punta",
+        "description": "La diferencia de NSD es unir cumplimiento, preparación financiera, biométricos y revisión documental con IA. El solicitante puede alinear su expediente a lo que pide la entidad financiera antes de buscar fondeo, y el otorgante recibe evidencia más completa de identidad, antifraude, PLD/FT, legal y financiera."
       },
       "security": {
         "subtitle": "SEGURIDAD Y PRIVACIDAD",
@@ -786,11 +799,24 @@ const resources = {
         "audit": {
           "title": "Audit",
           "desc": "The platform generates consolidated reports ready for internal auditors, external auditors, and regulatory authorities. It includes access logs, change history, and exports in standard formats (PDF, CSV, XML)."
+        },
+        "livingRequirements": {
+          "title": "Living Requirements",
+          "desc": "NSD organizes the file against requirements mandated by type of financial entity: KYC/KYB, ultimate beneficial owner, AML/CFT, documentary anti-fraud, expirations, legal evidence, financial information and data room. The goal is for applicants to arrive prepared and for funders to receive a verifiable, updated and auditable file."
+        },
+        "aiAgents": {
+          "title": "AI Agents",
+          "desc": "AI agents review documents in real-time, detect missing items, inconsistencies, expirations, critical fields and potential fraud risks before submitting the application. This reduces time, cost and rework for applicants, while giving greater certainty to banks, non-bank lenders, fintechs and funds about file quality."
+        },
+        "biometrics": {
+          "title": "Biometrics",
+          "desc": "The biometric layer is designed to strengthen identity and consent through facial recognition, proof of life and, when applicable, fingerprint or equivalent validations. Its use must be configured with privacy notice, express consent, data minimization and access controls."
         }
       },
       "differentiators": {
         "subtitle": "PRODUCT PRINCIPLES",
-        "mainTitle": "End-to-End Operational Compliance"
+        "mainTitle": "End-to-End Operational Compliance",
+        "description": "NSD's difference is combining compliance, financial preparation, biometrics and document review with AI. Applicants can align their file with financial entity requirements before seeking funding, and funders receive more complete evidence regarding identity, anti-fraud, AML/CFT, legal documentation and financial capacity."
       },
       "security": {
         "subtitle": "SECURITY & PRIVACY",

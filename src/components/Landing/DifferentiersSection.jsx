@@ -31,16 +31,16 @@ export default function DifferentiersSection() {
       desc: t("principles.audit.desc", "The platform generates consolidated reports ready to present to internal auditors, external auditors and regulatory authorities. Includes access log, change history and export in standard formats (PDF, CSV, XML)."),
     },
     {
-      titulo: "Living Requirements",
-      desc: "NSD organizes the file against requirements mandated by type of financial entity: KYC/KYB, ultimate beneficial owner, AML/CFT, documentary anti-fraud, expirations, legal evidence, financial information and data room. The goal is for applicants to arrive prepared and for funders to receive a verifiable, updated and auditable file.",
+      titulo: t("principles.livingRequirements.title", "Living Requirements"),
+      desc: t("principles.livingRequirements.desc", "NSD organizes the file against requirements mandated by type of financial entity: KYC/KYB, ultimate beneficial owner, AML/CFT, documentary anti-fraud, expirations, legal evidence, financial information and data room. The goal is for applicants to arrive prepared and for funders to receive a verifiable, updated and auditable file."),
     },
     {
-      titulo: "AI Agents",
-      desc: "AI agents review documents in real-time, detect missing items, inconsistencies, expirations, critical fields and potential fraud risks before submitting the application. This reduces time, cost and rework for applicants, while giving greater certainty to banks, non-bank lenders, fintechs and funds about file quality.",
+      titulo: t("principles.aiAgents.title", "AI Agents"),
+      desc: t("principles.aiAgents.desc", "AI agents review documents in real-time, detect missing items, inconsistencies, expirations, critical fields and potential fraud risks before submitting the application. This reduces time, cost and rework for applicants, while giving greater certainty to banks, non-bank lenders, fintechs and funds about file quality."),
     },
     {
-      titulo: "Biometrics",
-      desc: "The biometric layer is designed to strengthen identity and consent through facial recognition, proof of life and, when applicable, fingerprint or equivalent validations. Its use must be configured with privacy notice, express consent, data minimization and access controls.",
+      titulo: t("principles.biometrics.title", "Biometrics"),
+      desc: t("principles.biometrics.desc", "The biometric layer is designed to strengthen identity and consent through facial recognition, proof of life and, when applicable, fingerprint or equivalent validations. Its use must be configured with privacy notice, express consent, data minimization and access controls."),
     },
   ];
 
@@ -62,9 +62,7 @@ export default function DifferentiersSection() {
             {t("differentiators.mainTitle", "End-to-end operational compliance")}
           </h2>
           <p style={{ color: "var(--text-muted)", maxWidth: "820px", lineHeight: 1.8, marginTop: "1rem", fontSize: "0.98rem", fontWeight: 300 }}>
-            NSD's difference is combining compliance, financial preparation, biometrics and document review with AI.
-            Applicants can align their file with financial entity requirements before seeking funding, and funders
-            receive more complete evidence regarding identity, anti-fraud, AML/CFT, legal documentation and financial capacity.
+            {t("differentiators.description", "NSD's difference is combining compliance, financial preparation, biometrics and document review with AI. Applicants can align their file with financial entity requirements before seeking funding, and funders receive more complete evidence regarding identity, anti-fraud, AML/CFT, legal documentation and financial capacity.")}
           </p>
         </div>
 

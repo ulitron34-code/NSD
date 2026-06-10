@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { useNotification } from "../../../hooks/useNotification";
@@ -25,9 +25,9 @@ export default function SubirProyectoTab() {
   const [project, setProject] = useState({
     name: "Expansion comercial 2026",
     amount: "$500,000 USD",
-    use: "Capital de crecimiento, equipo comercial y tecnologia",
-    sector: "Tecnologia / SaaS",
-    stage: "Listo para revision",
+    use: "Capital de crecimiento, equipo comercial y tecnología",
+    sector: "Tecnología / SaaS",
+    stage: "Listo para revisión",
   });
 
   const [requirements, setRequirements] = useState(null);
@@ -65,7 +65,7 @@ export default function SubirProyectoTab() {
 
   const currentMatrix = React.useMemo(() => {
     if (!requirements) return null;
-    if (project.sector.includes("Tecnologia") || project.sector.includes("Tecnologia") || project.sector.includes("Startup")) {
+    if (project.sector.includes("Tecnología") || project.sector.includes("Tecnologia") || project.sector.includes("Startup")) {
       return requirements["MX_FO_STARTUP"];
     }
     if (project.sector.includes("SOFOM")) {
@@ -156,12 +156,12 @@ export default function SubirProyectoTab() {
   const analyzeProject = () => {
     setAnalysis({
       score: 86,
-      readiness: "Apto para revision preliminar",
-      matches: ["SOFOM de crecimiento", "Fondo de deuda privada", "Fintech de credito empresarial"],
+      readiness: "Apto para revisión preliminar",
+      matches: ["SOFOM de crecimiento", "Fondo de deuda privada", "Fintech de crédito empresarial"],
       findings: [
         "El uso de fondos es claro y compatible con productos de deuda empresarial.",
-        "Falta completar pitch deck para mejorar presentacion ante fondos.",
-        "KYC/KYB requiere validacion final de beneficiario controlador.",
+        "Falta completar pitch deck para mejorar presentación ante fondos.",
+        "KYC/KYB requiere validación final de beneficiario controlador.",
         "Modelo financiero consistente; se recomienda agregar escenario conservador.",
       ],
     });
@@ -178,7 +178,7 @@ export default function SubirProyectoTab() {
           {copy("Subir proyecto y analizarlo con IA")}
         </h1>
         <p style={{ color: COLORS.textMuted, maxWidth: "860px", fontWeight: 300, fontSize: "0.95rem", lineHeight: 1.75 }}>
-          {copy("Carga la informacion base del proyecto, arma el data room y usa agentes IA para revisar viabilidad, faltantes, requisitos de otorgantes y preparacion para financiamiento.")}
+          {copy("Carga la información base del proyecto, arma el data room y usa agentes IA para revisar viabilidad, faltantes, requisitos de otorgantes y preparación para financiamiento.")}
         </p>
       </div>
 
@@ -199,10 +199,10 @@ export default function SubirProyectoTab() {
             <label style={{ color: COLORS.navy, fontWeight: 700, fontSize: "0.86rem" }}>
               {copy("Sector")}
               <select value={project.sector} onChange={(event) => updateProject("sector", event.target.value)} style={{ marginTop: "0.4rem", width: "100%", padding: "0.4rem", border: `1px solid ${COLORS.border}`, borderRadius: "4px" }}>
-                <option value="Tecnologia / SaaS">{copy("Tecnologia / Startup")}</option>
+                <option value="Tecnología / SaaS">{copy("Tecnología / Startup")}</option>
                 <option value="Manufactura / Industrial">{copy("Manufactura / Industrial")}</option>
                 <option value="SOFOM / Financiera No Regulada">{copy("SOFOM / Financiera No Regulada")}</option>
-                <option value="Fintech / Institucion de Tecnologia Financiera">{copy("Fintech / Institucion de Tecnologia Financiera")}</option>
+                <option value="Fintech / Institución de Tecnología Financiera">{copy("Fintech / Institución de Tecnología Financiera")}</option>
                 <option value="Desarrollo Inmobiliario / Real Estate">{copy("Desarrollo Inmobiliario / Real Estate")}</option>
                 <option value="Deuda Privada y Fondos de Capital">{copy("Deuda Privada y Fondos de Capital")}</option>
               </select>
