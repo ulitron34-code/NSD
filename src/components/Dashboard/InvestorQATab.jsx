@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const qaGroups = [
   {
@@ -47,6 +47,7 @@ const closingLines = [
 export default function InvestorQATab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
   const [openKey, setOpenKey] = useState("Mercado-0");
 
   return (
@@ -71,7 +72,7 @@ export default function InvestorQATab() {
           <div style={{ display: "grid", gap: "0.85rem" }}>
             {qaGroups.map((group) => (
               <div key={group.title}>
-                <strong style={{ color: COLORS.gold, fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{L(group.title, group.title)}</strong>
+                <strong style={{ color: COLORS.gold, fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{copy(group.title)}</strong>
                 <div style={{ display: "grid", gap: "0.4rem", marginTop: "0.45rem" }}>
                   {group.items.map(([question], index) => {
                     const key = `${group.title}-${index}`;
@@ -92,7 +93,7 @@ export default function InvestorQATab() {
                           cursor: "pointer",
                         }}
                       >
-                        {L(question, question)}
+                        {copy(question)}
                       </button>
                     );
                   })}
@@ -107,9 +108,9 @@ export default function InvestorQATab() {
             .filter(({ group, index }) => `${group}-${index}` === openKey)
             .map(({ group, item }) => (
               <div key={`${group}-${item[0]}`}>
-                <p style={{ color: COLORS.gold, textTransform: "uppercase", letterSpacing: "0.08em", fontSize: "0.72rem", fontWeight: 900, marginBottom: "0.55rem" }}>{L(group, group)}</p>
-                <h2 style={{ color: COLORS.navy, fontSize: "1.45rem", marginBottom: "0.9rem" }}>{L(item[0], item[0])}</h2>
-                <p style={{ color: COLORS.textMuted, fontSize: "1rem", lineHeight: 1.75, marginBottom: "1.2rem" }}>{L(item[1], item[1])}</p>
+                <p style={{ color: COLORS.gold, textTransform: "uppercase", letterSpacing: "0.08em", fontSize: "0.72rem", fontWeight: 900, marginBottom: "0.55rem" }}>{copy(group)}</p>
+                <h2 style={{ color: COLORS.navy, fontSize: "1.45rem", marginBottom: "0.9rem" }}>{copy(item[0])}</h2>
+                <p style={{ color: COLORS.textMuted, fontSize: "1rem", lineHeight: 1.75, marginBottom: "1.2rem" }}>{copy(item[1])}</p>
                 <div style={{ background: "rgba(15,31,46,0.04)", borderLeft: `4px solid ${COLORS.gold}`, borderRadius: "8px", padding: "1rem" }}>
                   <p style={{ color: COLORS.navy, fontWeight: 900, marginBottom: "0.3rem" }}>{L("Como decirlo", "How to say it")}</p>
                   <p style={{ color: COLORS.textMuted, fontSize: "0.86rem", lineHeight: 1.55 }}>
@@ -128,7 +129,7 @@ export default function InvestorQATab() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.8rem" }}>
           {closingLines.map((line) => (
             <p key={line} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.9rem", color: "rgba(255,255,255,0.82)", lineHeight: 1.55, fontSize: "0.86rem" }}>
-              {L(line, line)}
+              {copy(line)}
             </p>
           ))}
         </div>

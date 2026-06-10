@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { COLORS } from "../../utils/constants";
 import { getActivityLogs, getActivitySummary } from "../../services/auditService";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 // FASE 6: Activity Dashboard - Panel de auditoría en tiempo real
 
@@ -30,20 +32,24 @@ const getActivityColor = (type) => {
   return colors[type] || COLORS.text;
 };
 
-const getActivityLabel = (type) => {
-  const labels = {
-    document_upload: "Documento subido",
-    requirement_created: "Requerimiento creado",
-    requirement_approved: "Requerimiento aprobado",
-    requirement_rejected: "Requerimiento rechazado",
-    message_sent: "Mensaje enviado",
-    expediente_created: "Expediente creado"
-  };
-  return labels[type] || "Actividad";
-};
-
 export default function ActivityDashboard() {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
+
+  const getActivityLabel = (type) => {
+    const labels = {
+      document_upload: L("Documento subido", "Document uploaded"),
+      requirement_created: L("Requerimiento creado", "Request created"),
+      requirement_approved: L("Requerimiento aprobado", "Request approved"),
+      requirement_rejected: L("Requerimiento rechazado", "Request rejected"),
+      message_sent: L("Mensaje enviado", "Message sent"),
+      expediente_created: L("Expediente creado", "File created")
+    };
+    return labels[type] || L("Actividad", "Activity");
+  };
+
   const [logs, setLogs] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -88,10 +94,10 @@ export default function ActivityDashboard() {
       {/* HEADER */}
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ color: COLORS.navy, fontSize: "2rem", margin: "0 0 0.5rem 0" }}>
-          📊 Centro de Actividad
+          📊 {L("Centro de Actividad", "Activity Center")}
         </h1>
         <p style={{ color: COLORS.textMuted, margin: "0 0 1.5rem 0" }}>
-          Auditoría en tiempo real de todas tus acciones
+          {L("Auditoría en tiempo real de todas tus acciones", "Real-time audit of all your actions")}
         </p>
 
         {/* RESUMEN */}
@@ -110,13 +116,13 @@ export default function ActivityDashboard() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Total
+                {L("Total", "Total")}
               </p>
               <p style={{ color: COLORS.navy, fontSize: "1.8rem", fontWeight: 800, margin: 0 }}>
                 {summary.totalActivities}
               </p>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0.5rem 0 0 0" }}>
-                actividades
+                {L("actividades", "activities")}
               </p>
             </div>
 
@@ -128,13 +134,13 @@ export default function ActivityDashboard() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Hoy
+                {L("Hoy", "Today")}
               </p>
               <p style={{ color: COLORS.gold, fontSize: "1.8rem", fontWeight: 800, margin: 0 }}>
                 {summary.today}
               </p>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0.5rem 0 0 0" }}>
-                actividades
+                {L("actividades", "activities")}
               </p>
             </div>
 
@@ -146,13 +152,13 @@ export default function ActivityDashboard() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Esta semana
+                {L("Esta semana", "This Week")}
               </p>
               <p style={{ color: COLORS.green, fontSize: "1.8rem", fontWeight: 800, margin: 0 }}>
                 {summary.thisWeek}
               </p>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0.5rem 0 0 0" }}>
-                actividades
+                {L("actividades", "activities")}
               </p>
             </div>
           </div>
@@ -173,7 +179,7 @@ export default function ActivityDashboard() {
               fontSize: "0.85rem"
             }}
           >
-            Todos ({logs.length})
+            {L("Todos", "All")} ({logs.length})
           </button>
 
           {activityTypes.map(type => (
@@ -206,13 +212,13 @@ export default function ActivityDashboard() {
       }}>
         {loading && (
           <p style={{ padding: "2rem", color: COLORS.textMuted, textAlign: "center" }}>
-            Cargando actividades...
+            {L("Cargando actividades...", "Loading activities...")}
           </p>
         )}
 
         {!loading && filteredLogs.length === 0 && (
           <p style={{ padding: "2rem", color: COLORS.textMuted, textAlign: "center" }}>
-            No hay actividades
+            {L("No hay actividades", "No activities found")}
           </p>
         )}
 
@@ -228,11 +234,11 @@ export default function ActivityDashboard() {
               const diffHours = Math.floor(diffMs / 3600000);
               const diffDays = Math.floor(diffMs / 86400000);
 
-              if (diffMins < 1) timeDisplay = "Ahora";
-              else if (diffMins < 60) timeDisplay = `hace ${diffMins}m`;
-              else if (diffHours < 24) timeDisplay = `hace ${diffHours}h`;
-              else if (diffDays < 7) timeDisplay = `hace ${diffDays}d`;
-              else timeDisplay = timestamp.toLocaleDateString();
+              if (diffMins < 1) timeDisplay = L("Ahora", "Now");
+              else if (diffMins < 60) timeDisplay = L(`hace ${diffMins}m`, `${diffMins}m ago`);
+              else if (diffHours < 24) timeDisplay = L(`hace ${diffHours}h`, `${diffHours}h ago`);
+              else if (diffDays < 7) timeDisplay = L(`hace ${diffDays}d`, `${diffDays}d ago`);
+              else timeDisplay = timestamp.toLocaleDateString(i18n.language?.startsWith("en") ? "en-US" : "es-MX");
 
               return (
                 <div
@@ -264,7 +270,7 @@ export default function ActivityDashboard() {
                       margin: "0 0 0.25rem 0",
                       fontSize: "0.95rem"
                     }}>
-                      {log.title}
+                      {copy(log.title)}
                     </p>
                     <p style={{
                       color: COLORS.textMuted,
@@ -272,18 +278,18 @@ export default function ActivityDashboard() {
                       margin: "0 0 0.5rem 0",
                       wordBreak: "break-word"
                     }}>
-                      {log.description}
+                      {copy(log.description)}
                     </p>
                     <div style={{
                       display: "flex",
                       gap: "1rem",
                       fontSize: "0.75rem",
-                      color: COLORS.textMuted"
+                      color: COLORS.textMuted
                     }}>
-                      <span>📍 {log.expedienteId || "General"}</span>
+                      <span>📍 {copy(log.expedienteId || "General")}</span>
                       <span>🕐 {timeDisplay}</span>
                       <span style={{ textTransform: "capitalize" }}>
-                        {log.action}
+                        {copy(log.action)}
                       </span>
                     </div>
                   </div>

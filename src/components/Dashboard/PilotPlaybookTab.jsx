@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const pilotTimeline = [
   ["Semana 1", "Setup", "Configurar perfiles, cargar matriz documental, seleccionar 10 expedientes y definir responsables."],
@@ -35,6 +35,7 @@ const deliverables = [
 export default function PilotPlaybookTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div>
@@ -58,9 +59,9 @@ export default function PilotPlaybookTab() {
           ["Resultado", "Reporte + renovacion", "Aprendizajes, metrica y siguiente lote."],
         ].map(([label, value, detail]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{L(label, label)}</p>
-            <p style={{ color: COLORS.navy, fontSize: "1.65rem", fontWeight: 900, marginBottom: "0.35rem" }}>{L(value, value)}</p>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(label)}</p>
+            <p style={{ color: COLORS.navy, fontSize: "1.65rem", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(value)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</p>
           </article>
         ))}
       </section>
@@ -71,10 +72,10 @@ export default function PilotPlaybookTab() {
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {pilotTimeline.map(([week, title, detail]) => (
               <div key={week} style={{ display: "grid", gridTemplateColumns: "92px 1fr", gap: "0.75rem", padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
-                <strong style={{ color: COLORS.gold, fontSize: "0.82rem" }}>{L(week, week)}</strong>
+                <strong style={{ color: COLORS.gold, fontSize: "0.82rem" }}>{copy(week)}</strong>
                 <span>
-                  <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.88rem" }}>{L(title, title)}</strong>
-                  <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{L(detail, detail)}</span>
+                  <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.88rem" }}>{copy(title)}</strong>
+                  <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</span>
                 </span>
               </div>
             ))}
@@ -85,8 +86,8 @@ export default function PilotPlaybookTab() {
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Roles del piloto", "Pilot Roles")}</h2>
           {pilotRoles.map(([role, detail]) => (
             <div key={role} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: "0.75rem 0" }}>
-              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{L(role, role)}</strong>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(detail, detail)}</p>
+              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{copy(role)}</strong>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>
@@ -99,10 +100,10 @@ export default function PilotPlaybookTab() {
             {successMetrics.map(([metric, target, detail]) => (
               <div key={metric} style={{ padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "0.7rem", marginBottom: "0.25rem" }}>
-                  <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{L(metric, metric)}</strong>
-                  <span style={{ color: COLORS.green, fontWeight: 900, fontSize: "0.78rem" }}>{L(target, target)}</span>
+                  <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{copy(metric)}</strong>
+                  <span style={{ color: COLORS.green, fontWeight: 900, fontSize: "0.78rem" }}>{copy(target)}</span>
                 </div>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45 }}>{copy(detail)}</p>
               </div>
             ))}
           </div>
@@ -112,8 +113,8 @@ export default function PilotPlaybookTab() {
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Entregables", "Deliverables")}</h2>
           {deliverables.map(([title, detail]) => (
             <div key={title} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.85rem", marginBottom: "0.65rem" }}>
-              <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{L(title, title)}</strong>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(detail, detail)}</p>
+              <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{copy(title)}</strong>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const useOfFunds = [
   ["Producto", "35%", "Cerrar flujos solicitante-otorgante, permisos, auditoria, data room y demo guiado."],
@@ -36,6 +36,7 @@ const riskPlan = [
 export default function FundraisingRoomTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div>
@@ -66,9 +67,9 @@ export default function FundraisingRoomTab() {
           ["Expansion", "USA despues", "Solo con pilotos, legal y costos de integracion validados."],
         ].map(([label, value, detail]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{L(label, label)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(label)}</p>
             <p style={{ color: COLORS.navy, fontSize: "1.55rem", fontWeight: 900, marginBottom: "0.35rem" }}>{value}</p>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</p>
           </article>
         ))}
       </section>
@@ -81,8 +82,8 @@ export default function FundraisingRoomTab() {
               <div key={label} style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "0.8rem", alignItems: "center", padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
                 <strong style={{ color: COLORS.gold, fontSize: "1.2rem" }}>{pct}</strong>
                 <span>
-                  <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.88rem" }}>{L(label, label)}</strong>
-                  <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{L(detail, detail)}</span>
+                  <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.88rem" }}>{copy(label)}</strong>
+                  <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</span>
                 </span>
               </div>
             ))}
@@ -95,8 +96,8 @@ export default function FundraisingRoomTab() {
             {milestones.map(([time, title, detail]) => (
               <div key={time} style={{ padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
                 <p style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.75rem", marginBottom: "0.2rem" }}>{time}</p>
-                <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.88rem" }}>{L(title, title)}</strong>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.2rem" }}>{L(detail, detail)}</p>
+                <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.88rem" }}>{copy(title)}</strong>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.2rem" }}>{copy(detail)}</p>
               </div>
             ))}
           </div>
@@ -109,10 +110,10 @@ export default function FundraisingRoomTab() {
           {dataRoomItems.map(([item, status, detail]) => (
             <div key={item} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: "0.75rem 0" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{L(item, item)}</strong>
-                <span style={{ color: status.includes("Listo") ? COLORS.green : COLORS.amber, fontSize: "0.72rem", fontWeight: 900 }}>{L(status, status)}</span>
+                <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{copy(item)}</strong>
+                <span style={{ color: status.includes("Listo") ? COLORS.green : COLORS.amber, fontSize: "0.72rem", fontWeight: 900 }}>{copy(status)}</span>
               </div>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(detail, detail)}</p>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>
@@ -121,8 +122,8 @@ export default function FundraisingRoomTab() {
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Riesgos y mitigacion", "Risks and Mitigation")}</h2>
           {riskPlan.map(([risk, mitigation]) => (
             <div key={risk} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.85rem", marginBottom: "0.65rem" }}>
-              <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{L(risk, risk)}</strong>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(mitigation, mitigation)}</p>
+              <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{copy(risk)}</strong>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(mitigation)}</p>
             </div>
           ))}
         </div>

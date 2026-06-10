@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const checks = [
   ["Build local", "npm.cmd run build ejecuta sin errores", "Go"],
@@ -25,6 +25,7 @@ const publishSteps = [
 export default function PredeployGoNoGoTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
   const goCount = checks.filter(([, , status]) => status === "Go").length;
   const cautionCount = checks.length - goCount;
 
@@ -38,7 +39,7 @@ export default function PredeployGoNoGoTab() {
         boxShadow: COLORS.shadowMd,
       }}>
         <p style={{ margin: 0, color: "rgba(255,255,255,0.72)", fontSize: "0.75rem", fontWeight: 900, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          {L("Go / No-Go Netlify", "Go / No-Go Netlify")}
+          {copy("Go / No-Go Netlify")}
         </p>
         <h1 style={{ margin: "0.35rem 0", color: COLORS.white, fontSize: "1.55rem" }}>
           {L("Corte recomendado para publicacion controlada", "Recommended cut for controlled publishing")}
@@ -58,9 +59,9 @@ export default function PredeployGoNoGoTab() {
           ["Decision sugerida", "Go", "demo controlada"],
         ].map(([label, value, note]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{L(label, label)}</p>
+            <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{copy(label)}</p>
             <strong style={{ display: "block", color: COLORS.navy, fontSize: "1.7rem", marginTop: "0.25rem" }}>{value}</strong>
-            <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.82rem" }}>{L(note, note)}</span>
+            <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.82rem" }}>{copy(note)}</span>
           </article>
         ))}
       </section>
@@ -78,8 +79,8 @@ export default function PredeployGoNoGoTab() {
             <tbody>
               {checks.map(([check, criteria, status]) => (
                 <tr key={check} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                  <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{L(check, check)}</td>
-                  <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.84rem" }}>{L(criteria, criteria)}</td>
+                  <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{copy(check)}</td>
+                  <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.84rem" }}>{copy(criteria)}</td>
                   <td style={{ padding: "0.72rem" }}>
                     <span style={{
                       borderRadius: "999px",
@@ -101,7 +102,7 @@ export default function PredeployGoNoGoTab() {
             {L("Pasos de publicacion", "Publishing steps")}
           </p>
           <ol style={{ margin: "0.75rem 0 0", paddingLeft: "1.1rem", color: "rgba(255,255,255,0.78)", fontSize: "0.84rem", lineHeight: 1.55 }}>
-            {publishSteps.map((step) => <li key={step}>{L(step, step)}</li>)}
+            {publishSteps.map((step) => <li key={step}>{copy(step)}</li>)}
           </ol>
         </aside>
       </section>

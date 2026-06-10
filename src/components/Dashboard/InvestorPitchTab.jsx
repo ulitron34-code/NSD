@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const demoMetrics = [
   ["Expedientes demo", "128", "Pipeline simulado para bancos, SOFOMES, fintechs y fondos."],
@@ -41,6 +41,7 @@ const launchRoadmap = [
 export default function InvestorPitchTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div>
@@ -66,9 +67,9 @@ export default function InvestorPitchTab() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
         {demoMetrics.map(([label, value, detail]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.45rem" }}>{L(label, label)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.45rem" }}>{copy(label)}</p>
             <p style={{ color: COLORS.navy, fontSize: "2rem", fontWeight: 900, marginBottom: "0.45rem" }}>{value}</p>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>{copy(detail)}</p>
           </article>
         ))}
       </section>
@@ -84,8 +85,8 @@ export default function InvestorPitchTab() {
               <div key={num} style={{ display: "grid", gridTemplateColumns: "34px 1fr", gap: "0.75rem", alignItems: "start", padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
                 <span style={{ width: "32px", height: "32px", borderRadius: "50%", background: COLORS.gold, color: COLORS.navy, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>{num}</span>
                 <span>
-                  <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.9rem", marginBottom: "0.2rem" }}>{L(title, title)}</strong>
-                  <span style={{ color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>{L(detail, detail)}</span>
+                  <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.9rem", marginBottom: "0.2rem" }}>{copy(title)}</strong>
+                  <span style={{ color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>{copy(detail)}</span>
                 </span>
               </div>
             ))}
@@ -94,14 +95,14 @@ export default function InvestorPitchTab() {
 
         <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.gold, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, fontSize: "0.72rem", marginBottom: "0.45rem" }}>
-            {L("AI Compliance Engine", "AI Compliance Engine")}
+            {copy("AI Compliance Engine")}
           </p>
           <h2 style={{ color: COLORS.navy, fontSize: "1.25rem", marginBottom: "1rem" }}>{L("Nucleo tecnologico visible", "Visible technology core")}</h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {aiEngine.map(([title, detail]) => (
               <div key={title} style={{ padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
-                <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.86rem", marginBottom: "0.22rem" }}>{L(title, title)}</strong>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+                <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.86rem", marginBottom: "0.22rem" }}>{copy(title)}</strong>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</p>
               </div>
             ))}
           </div>
@@ -113,8 +114,8 @@ export default function InvestorPitchTab() {
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Modelo de monetizacion", "Monetization Model")}</h2>
           {revenueStreams.map(([title, detail]) => (
             <div key={title} style={{ padding: "0.75rem 0", borderBottom: `1px solid ${COLORS.border}` }}>
-              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{L(title, title)}</strong>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.2rem" }}>{L(detail, detail)}</p>
+              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{copy(title)}</strong>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.2rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>
@@ -125,9 +126,9 @@ export default function InvestorPitchTab() {
             <div key={market} style={{ padding: "0.8rem", borderRadius: "8px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, marginBottom: "0.65rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem" }}>
                 <strong style={{ color: COLORS.navy }}>{market}</strong>
-                <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.72rem" }}>{L(status, status)}</span>
+                <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.72rem" }}>{copy(status)}</span>
               </div>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.35rem" }}>{L(detail, detail)}</p>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.35rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>

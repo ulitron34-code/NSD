@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const memoBlocks = [
   ["Problema", "Solicitantes y entidades financieras pierden tiempo por expedientes incompletos, requisitos dispersos, baja comparabilidad documental y revisiones manuales."],
@@ -26,6 +26,7 @@ const quickFacts = [
 export default function InvestorOnePagerTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div>
@@ -54,8 +55,8 @@ export default function InvestorOnePagerTab() {
           <div style={{ display: "grid", gap: "0.7rem" }}>
             {memoBlocks.map(([title, detail]) => (
               <div key={title} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.9rem" }}>
-                <p style={{ color: COLORS.gold, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.25rem" }}>{L(title, title)}</p>
-                <p style={{ color: COLORS.navy, fontSize: "0.88rem", lineHeight: 1.55, fontWeight: 700 }}>{L(detail, detail)}</p>
+                <p style={{ color: COLORS.gold, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.25rem" }}>{copy(title)}</p>
+                <p style={{ color: COLORS.navy, fontSize: "0.88rem", lineHeight: 1.55, fontWeight: 700 }}>{copy(detail)}</p>
               </div>
             ))}
           </div>
@@ -66,8 +67,8 @@ export default function InvestorOnePagerTab() {
             <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Datos rapidos", "Quick Facts")}</h2>
             {quickFacts.map(([label, value]) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", padding: "0.65rem 0", borderBottom: `1px solid ${COLORS.border}` }}>
-                <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", fontWeight: 800 }}>{L(label, label)}</span>
-                <strong style={{ color: COLORS.navy, fontSize: "0.78rem", textAlign: "right" }}>{L(value, value)}</strong>
+                <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", fontWeight: 800 }}>{copy(label)}</span>
+                <strong style={{ color: COLORS.navy, fontSize: "0.78rem", textAlign: "right" }}>{copy(value)}</strong>
               </div>
             ))}
           </div>

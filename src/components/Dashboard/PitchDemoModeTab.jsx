@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const pitchSteps = [
   {
@@ -65,6 +65,7 @@ const objectionCards = [
 export default function PitchDemoModeTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
   const [activeStep, setActiveStep] = useState(0);
   const current = pitchSteps[activeStep];
 
@@ -111,7 +112,7 @@ export default function PitchDemoModeTab() {
                 }}
               >
                 <span style={{ display: "block", color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900 }}>{step.minute}</span>
-                <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.88rem" }}>{L(step.title, step.title)}</strong>
+                <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.88rem" }}>{copy(step.title)}</strong>
               </button>
             ))}
           </div>
@@ -125,7 +126,7 @@ export default function PitchDemoModeTab() {
           boxShadow: "0 12px 30px rgba(15,31,46,0.22)",
         }}>
           <p style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.8rem", marginBottom: "0.35rem" }}>{current.minute}</p>
-          <h2 style={{ color: "white", fontSize: "1.8rem", marginBottom: "0.75rem" }}>{L(current.title, current.title)}</h2>
+          <h2 style={{ color: "white", fontSize: "1.8rem", marginBottom: "0.75rem" }}>{copy(current.title)}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.9rem" }}>
             {[
               [L("Pantalla", "Screen"), current.screen],
@@ -134,7 +135,7 @@ export default function PitchDemoModeTab() {
             ].map(([label, value]) => (
               <div key={label} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.13)", borderRadius: "8px", padding: "1rem" }}>
                 <p style={{ color: "rgba(255,255,255,0.56)", textTransform: "uppercase", letterSpacing: "0.08em", fontSize: "0.68rem", fontWeight: 900, marginBottom: "0.45rem" }}>{label}</p>
-                <p style={{ color: "rgba(255,255,255,0.86)", lineHeight: 1.55, fontSize: "0.9rem" }}>{L(value, value)}</p>
+                <p style={{ color: "rgba(255,255,255,0.86)", lineHeight: 1.55, fontSize: "0.9rem" }}>{copy(value)}</p>
               </div>
             ))}
           </div>
@@ -147,8 +148,8 @@ export default function PitchDemoModeTab() {
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {objectionCards.map(([title, answer]) => (
               <div key={title} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.9rem" }}>
-                <strong style={{ color: COLORS.navy, fontSize: "0.88rem" }}>{L(title, title)}</strong>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(answer, answer)}</p>
+                <strong style={{ color: COLORS.navy, fontSize: "0.88rem" }}>{copy(title)}</strong>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(answer)}</p>
               </div>
             ))}
           </div>

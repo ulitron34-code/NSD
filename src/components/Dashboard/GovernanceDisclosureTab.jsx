@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const policies = [
   {
@@ -33,6 +33,7 @@ const checklist = [
 export default function GovernanceDisclosureTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -60,9 +61,9 @@ export default function GovernanceDisclosureTab() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.85rem" }}>
         {policies.map((policy) => (
           <article key={policy.title} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{L("Control", "Control")}</p>
-            <h2 style={{ margin: "0.3rem 0", color: COLORS.navy, fontSize: "1rem" }}>{L(policy.title, policy.title)}</h2>
-            <p style={{ margin: 0, color: COLORS.text, fontSize: "0.85rem", lineHeight: 1.5 }}>{L(policy.detail, policy.detail)}</p>
+            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{copy("Control")}</p>
+            <h2 style={{ margin: "0.3rem 0", color: COLORS.navy, fontSize: "1rem" }}>{copy(policy.title)}</h2>
+            <p style={{ margin: 0, color: COLORS.text, fontSize: "0.85rem", lineHeight: 1.5 }}>{copy(policy.detail)}</p>
           </article>
         ))}
       </section>
@@ -82,9 +83,9 @@ export default function GovernanceDisclosureTab() {
           <tbody>
             {checklist.map(([topic, status, timing]) => (
               <tr key={topic} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{L(topic, topic)}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.86rem" }}>{L(status, status)}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{L(timing, timing)}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{copy(topic)}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.86rem" }}>{copy(status)}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(timing)}</td>
               </tr>
             ))}
           </tbody>

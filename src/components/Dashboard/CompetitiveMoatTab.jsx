@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const competitors = [
   ["Consultorias tradicionales", "Alto criterio humano", "Lentas, poco escalables y sin producto SaaS repetible."],
@@ -29,6 +29,7 @@ const positioning = [
 export default function CompetitiveMoatTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div>
@@ -58,9 +59,9 @@ export default function CompetitiveMoatTab() {
             <tbody>
               {competitors.map(([category, strength, gap]) => (
                 <tr key={category} style={{ background: category === "NSD" ? "rgba(201,168,76,0.12)" : "transparent" }}>
-                  <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.navy, fontWeight: 900 }}>{L(category, category)}</td>
-                  <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: "0.84rem" }}>{L(strength, strength)}</td>
-                  <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: "0.84rem" }}>{L(gap, gap)}</td>
+                  <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.navy, fontWeight: 900 }}>{copy(category)}</td>
+                  <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(strength)}</td>
+                  <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(gap)}</td>
                 </tr>
               ))}
             </tbody>
@@ -74,8 +75,8 @@ export default function CompetitiveMoatTab() {
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {moatLayers.map(([title, detail]) => (
               <div key={title} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.9rem" }}>
-                <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{L(title, title)}</strong>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(detail, detail)}</p>
+                <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{copy(title)}</strong>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(detail)}</p>
               </div>
             ))}
           </div>
@@ -85,8 +86,8 @@ export default function CompetitiveMoatTab() {
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Posicionamiento para pitch", "Pitch Positioning")}</h2>
           {positioning.map(([title, detail]) => (
             <div key={title} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: "0.75rem 0" }}>
-              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{L(title, title)}</strong>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(detail, detail)}</p>
+              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{copy(title)}</strong>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>

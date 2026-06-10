@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { COLORS } from "../../utils/constants";
 import { getExpedientesForUser } from "../../services/expedienteService";
@@ -6,11 +7,16 @@ import { getDocumentsByUser } from "../../services/documentService";
 import { getRequirementsForUser, getRequirementsByExpediente } from "../../services/requirementServiceV2";
 import { getUnreadMessages } from "../../services/messagingServiceV2";
 import { getActivityLogs } from "../../services/auditService";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 // FASE 6: Control Center - Panel de control global en tiempo real
 
 export default function ControlCenter() {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
+
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(5000);
@@ -115,15 +121,15 @@ export default function ControlCenter() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <div>
             <h1 style={{ color: COLORS.navy, fontSize: "2rem", margin: "0 0 0.5rem 0" }}>
-              🎛️ Centro de Control
+              🎛️ {L("Centro de Control", "Control Center")}
             </h1>
             <p style={{ color: COLORS.textMuted, margin: 0 }}>
-              Panel global de tu actividad en tiempo real
+              {L("Panel global de tu actividad en tiempo real", "Global panel of your activity in real time")}
             </p>
           </div>
           <div style={{ textAlign: "right" }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", margin: "0 0 0.5rem 0" }}>
-              Auto-actualiza cada
+              {L("Auto-actualiza cada", "Auto-updates every")}
             </p>
             <select
               value={refreshInterval}
@@ -146,7 +152,7 @@ export default function ControlCenter() {
 
       {loading && (
         <p style={{ color: COLORS.textMuted, textAlign: "center", padding: "2rem" }}>
-          Cargando datos...
+          {L("Cargando datos...", "Loading data...")}
         </p>
       )}
 
@@ -162,12 +168,12 @@ export default function ControlCenter() {
             textAlign: "center"
           }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-              Estado del sistema
+              {L("Estado del sistema", "System status")}
             </p>
             <p style={{ color: healthColors[getHealth()], fontSize: "2.5rem", fontWeight: 800, margin: 0 }}>
-              {getHealth() === "healthy" && "✅ Saludable"}
-              {getHealth() === "warning" && "⚠️ Revisar"}
-              {getHealth() === "critical" && "🚨 Crítico"}
+              {getHealth() === "healthy" && `✅ ${L("Saludable", "Healthy")}`}
+              {getHealth() === "warning" && `⚠️ ${L("Revisar", "Review")}`}
+              {getHealth() === "critical" && `🚨 ${L("Crítico", "Critical")}`}
             </p>
           </div>
 
@@ -187,7 +193,7 @@ export default function ControlCenter() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Expedientes
+                {L("Expedientes", "Compliance Files")}
               </p>
               <p style={{ color: COLORS.navy, fontSize: "2.5rem", fontWeight: 800, margin: "0 0 1rem 0" }}>
                 {stats.expedientes}
@@ -214,7 +220,7 @@ export default function ControlCenter() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Documentos
+                {L("Documentos", "Documents")}
               </p>
               <p style={{ color: COLORS.navy, fontSize: "2.5rem", fontWeight: 800, margin: "0 0 1rem 0" }}>
                 {stats.documents}
@@ -241,7 +247,7 @@ export default function ControlCenter() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Requerimientos
+                {L("Requerimientos", "Requests")}
               </p>
               <p style={{ color: COLORS.navy, fontSize: "2.5rem", fontWeight: 800, margin: "0 0 1rem 0" }}>
                 {stats.requirements}
@@ -271,7 +277,7 @@ export default function ControlCenter() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Mensajes sin leer
+                {L("Mensajes sin leer", "Unread Messages")}
               </p>
               <p style={{ color: stats.unreadMessages > 0 ? COLORS.amber : COLORS.green, fontSize: "2.5rem", fontWeight: 800, margin: 0 }}>
                 {stats.unreadMessages}
@@ -287,7 +293,7 @@ export default function ControlCenter() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Actividades hoy
+                {L("Actividades hoy", "Activities Today")}
               </p>
               <p style={{ color: COLORS.navy, fontSize: "2.5rem", fontWeight: 800, margin: 0 }}>
                 {stats.activitiestoday}
@@ -303,7 +309,7 @@ export default function ControlCenter() {
               textAlign: "center"
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: "0 0 0.5rem 0", textTransform: "uppercase" }}>
-                Total actividades
+                {L("Total actividades", "Total Activities")}
               </p>
               <p style={{ color: COLORS.navy, fontSize: "2.5rem", fontWeight: 800, margin: 0 }}>
                 {stats.activities}
@@ -320,13 +326,13 @@ export default function ControlCenter() {
               borderLeft: `3px solid ${COLORS.gold}`
             }}>
               <p style={{ color: COLORS.navy, fontWeight: 700, marginBottom: "0.5rem" }}>
-                📍 Última actividad
+                📍 {L("Última actividad", "Latest Activity")}
               </p>
               <p style={{ color: COLORS.text, margin: "0 0 0.35rem 0" }}>
-                {stats.lastActivity.title}
+                {copy(stats.lastActivity.title)}
               </p>
               <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", margin: 0 }}>
-                {new Date(stats.lastActivity.timestamp).toLocaleString('es-MX')}
+                {new Date(stats.lastActivity.timestamp).toLocaleString(i18n.language?.startsWith("en") ? "en-US" : "es-MX")}
               </p>
             </div>
           )}

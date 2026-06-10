@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const readinessBlocks = [
   {
@@ -74,6 +74,7 @@ const nextMilestones = [
 export default function DueDiligenceRoomTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -111,7 +112,7 @@ export default function DueDiligenceRoomTab() {
               </strong>
             </div>
             <ul style={{ margin: "0.8rem 0 0", paddingLeft: "1.05rem", color: COLORS.text, lineHeight: 1.55, fontSize: "0.86rem" }}>
-              {block.points.map((point) => <li key={point}>{L(point, point)}</li>)}
+              {block.points.map((point) => <li key={point}>{copy(point)}</li>)}
             </ul>
           </article>
         ))}
@@ -125,8 +126,8 @@ export default function DueDiligenceRoomTab() {
           <div style={{ display: "grid", gap: "0.65rem", marginTop: "0.8rem" }}>
             {evidenceItems.map(([label, detail]) => (
               <div key={label} style={{ display: "grid", gridTemplateColumns: "150px 1fr", gap: "0.75rem", padding: "0.7rem", border: `1px solid ${COLORS.border}`, borderRadius: "8px", background: COLORS.bg }}>
-                <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{L(label, label)}</strong>
-                <span style={{ color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.45 }}>{L(detail, detail)}</span>
+                <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{copy(label)}</strong>
+                <span style={{ color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.45 }}>{copy(detail)}</span>
               </div>
             ))}
           </div>
@@ -139,8 +140,8 @@ export default function DueDiligenceRoomTab() {
           <div style={{ display: "grid", gap: "0.65rem", marginTop: "0.8rem" }}>
             {investorRisks.map(([label, detail]) => (
               <div key={label} style={{ borderBottom: "1px solid rgba(255,255,255,0.11)", paddingBottom: "0.55rem" }}>
-                <strong style={{ display: "block", color: COLORS.white, fontSize: "0.86rem", marginBottom: "0.2rem" }}>{L(label, label)}</strong>
-                <span style={{ color: "rgba(255,255,255,0.72)", fontSize: "0.82rem", lineHeight: 1.45 }}>{L(detail, detail)}</span>
+                <strong style={{ display: "block", color: COLORS.white, fontSize: "0.86rem", marginBottom: "0.2rem" }}>{copy(label)}</strong>
+                <span style={{ color: "rgba(255,255,255,0.72)", fontSize: "0.82rem", lineHeight: 1.45 }}>{copy(detail)}</span>
               </div>
             ))}
           </div>
@@ -155,7 +156,7 @@ export default function DueDiligenceRoomTab() {
           {nextMilestones.map((item, index) => (
             <div key={item} style={{ display: "flex", gap: "0.65rem", alignItems: "flex-start", padding: "0.75rem", border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
               <span style={{ flex: "0 0 auto", width: "28px", height: "28px", borderRadius: "50%", background: COLORS.gold, color: COLORS.navy, display: "grid", placeItems: "center", fontWeight: 900, fontSize: "0.78rem" }}>{index + 1}</span>
-              <p style={{ margin: 0, color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.45 }}>{L(item, item)}</p>
+              <p style={{ margin: 0, color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.45 }}>{copy(item)}</p>
             </div>
           ))}
         </div>

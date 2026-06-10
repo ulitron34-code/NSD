@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const tractionMetrics = [
   ["Pilotos objetivo", "8", "Entidades y aliados para validar flujo real."],
@@ -35,6 +35,7 @@ const nextExperiments = [
 export default function TractionPilotsTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div>
@@ -53,9 +54,9 @@ export default function TractionPilotsTab() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
         {tractionMetrics.map(([label, value, detail]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{L(label, label)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(label)}</p>
             <p style={{ color: COLORS.navy, fontSize: "1.9rem", fontWeight: 900, marginBottom: "0.35rem" }}>{value}</p>
-            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</p>
           </article>
         ))}
       </section>
@@ -67,10 +68,10 @@ export default function TractionPilotsTab() {
             {pilotPipeline.map(([name, stage, detail]) => (
               <div key={name} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 130px", gap: "0.75rem", padding: "0.85rem", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
                 <span>
-                  <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.9rem" }}>{L(name, name)}</strong>
-                  <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{L(detail, detail)}</span>
+                  <strong style={{ color: COLORS.navy, display: "block", fontSize: "0.9rem" }}>{copy(name)}</strong>
+                  <span style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</span>
                 </span>
-                <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.78rem", textAlign: "right" }}>{L(stage, stage)}</span>
+                <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.78rem", textAlign: "right" }}>{copy(stage)}</span>
               </div>
             ))}
           </div>
@@ -80,8 +81,8 @@ export default function TractionPilotsTab() {
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Senales de validacion", "Validation Signals")}</h2>
           {evidenceSignals.map(([signal, detail]) => (
             <div key={signal} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: "0.75rem 0" }}>
-              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{L(signal, signal)}</strong>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(detail, detail)}</p>
+              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{copy(signal)}</strong>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>
@@ -102,8 +103,8 @@ export default function TractionPilotsTab() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "0.8rem" }}>
           {nextExperiments.map(([title, detail]) => (
             <div key={title} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.9rem" }}>
-              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{L(title, title)}</strong>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{L(detail, detail)}</p>
+              <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{copy(title)}</strong>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45, marginTop: "0.25rem" }}>{copy(detail)}</p>
             </div>
           ))}
         </div>

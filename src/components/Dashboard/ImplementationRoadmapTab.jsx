@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
-import { uiText } from "../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const lanes = [
   {
@@ -47,6 +47,7 @@ const goNoGo = [
 export default function ImplementationRoadmapTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -83,10 +84,10 @@ export default function ImplementationRoadmapTab() {
           <tbody>
             {lanes.map((item) => (
               <tr key={item.lane} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                <td style={{ padding: "0.75rem", color: COLORS.gold, fontWeight: 900 }}>{L(item.lane, item.lane)}</td>
-                <td style={{ padding: "0.75rem", color: COLORS.text, fontSize: "0.84rem" }}>{L(item.now, item.now)}</td>
-                <td style={{ padding: "0.75rem", color: COLORS.text, fontSize: "0.84rem" }}>{L(item.next, item.next)}</td>
-                <td style={{ padding: "0.75rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{L(item.later, item.later)}</td>
+                <td style={{ padding: "0.75rem", color: COLORS.gold, fontWeight: 900 }}>{copy(item.lane)}</td>
+                <td style={{ padding: "0.75rem", color: COLORS.text, fontSize: "0.84rem" }}>{copy(item.now)}</td>
+                <td style={{ padding: "0.75rem", color: COLORS.text, fontSize: "0.84rem" }}>{copy(item.next)}</td>
+                <td style={{ padding: "0.75rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(item.later)}</td>
               </tr>
             ))}
           </tbody>
@@ -97,7 +98,7 @@ export default function ImplementationRoadmapTab() {
         {goNoGo.map(([label, detail, status]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: "0.7rem", alignItems: "flex-start" }}>
-              <h2 style={{ margin: 0, color: COLORS.navy, fontSize: "0.98rem" }}>{L(label, label)}</h2>
+              <h2 style={{ margin: 0, color: COLORS.navy, fontSize: "0.98rem" }}>{copy(label)}</h2>
               <span style={{
                 borderRadius: "999px",
                 padding: "0.22rem 0.5rem",
@@ -105,9 +106,9 @@ export default function ImplementationRoadmapTab() {
                 color: status === "Listo" ? "#2E7D32" : status === "En curso" ? "#8A6A00" : COLORS.navy,
                 fontWeight: 900,
                 fontSize: "0.72rem",
-              }}>{L(status, status)}</span>
+              }}>{copy(status)}</span>
             </div>
-            <p style={{ margin: "0.45rem 0 0", color: COLORS.text, fontSize: "0.84rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+            <p style={{ margin: "0.45rem 0 0", color: COLORS.text, fontSize: "0.84rem", lineHeight: 1.45 }}>{copy(detail)}</p>
           </article>
         ))}
       </section>
