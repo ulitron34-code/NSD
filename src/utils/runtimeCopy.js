@@ -532,6 +532,36 @@ export const RUNTIME_TRANSLATIONS = {
   "Resume tesis, score, riesgos, documentos clave, requerimientos abiertos y recomendacion NSD.": "Summarizes thesis, score, risks, key documents, open requirements and NSD recommendation.",
   "Descargar memo MD": "Download MD Memo",
   "Selecciona un expediente para revisar el data room.": "Select a file to review the data room.",
+  "información del proyecto": "Project Information",
+  "Información del proyecto": "Project Information",
+  "Informacion del proyecto": "Project Information",
+  "Listo para revisión": "Ready for Review",
+  "Listo para revision": "Ready for Review",
+  "Documentos": "Documents",
+  "Riesgos Documentales": "Documentary Risks",
+  "Consistencia": "Consistency",
+  "Sin riesgos críticos": "No critical risks",
+  "Sin riesgos criticos": "No critical risks",
+  "Documentos consistentes": "Consistent documents",
+  "ROJO": "RED",
+  "AMARILLO": "YELLOW",
+  "VERDE": "GREEN",
+  "Aun no tienes expedientes activos.": "You don't have active compliance files yet.",
+  "Para probar el data room primero crea un expediente desde Servicios.": "To test the data room, first create a compliance file from Services.",
+  "Crear expediente desde servicios": "Create compliance file from services",
+  "Todas": "All",
+  "En Progreso": "In Progress",
+  "Completadas": "Completed",
+  "Pendientes": "Pending",
+  "Todos los semaforos": "All Signals",
+  "Verdes": "Green",
+  "Subsanables": "Remediable",
+  "Bloqueados": "Blocked",
+  "En captura": "In Capture",
+  "Revisar observaciones documentales": "Review documentary observations",
+  "Validar consistencia entre documentos": "Validate consistency between documents",
+  "Listo para presentar a instituciones financieras": "Ready to present to financial institutions",
+  "Detectadas inconsistencias entre documentos": "Inconsistencies detected between documents",
 };
 
 export function translateCopy(value, language = "es") {
@@ -541,7 +571,32 @@ export function translateCopy(value, language = "es") {
   if (RUNTIME_TRANSLATIONS[value]) return RUNTIME_TRANSLATIONS[value];
   const normalized = value.replace(/\s+/g, " ").trim();
   const normalizedEntry = Object.entries(RUNTIME_TRANSLATIONS).find(([key]) => key.replace(/\s+/g, " ").trim() === normalized);
-  return normalizedEntry ? normalizedEntry[1] : value;
+  if (normalizedEntry) return normalizedEntry[1];
+
+  // Dynamic status/remediation translation
+  if (value.includes("aprobados")) {
+    return value.replace("aprobados", "approved");
+  }
+  if (value.startsWith("Completar: ")) {
+    const listStr = value.replace("Completar: ", "");
+    const translatedList = listStr.split(", ").map(item => {
+      const trimmed = item.trim();
+      return RUNTIME_TRANSLATIONS[trimmed] || translateCopy(trimmed, language);
+    }).join(", ");
+    return `Complete: ${translatedList}`;
+  }
+  if (value.startsWith("Revisar riesgos: ")) {
+    const listStr = value.replace("Revisar riesgos: ", "");
+    const translatedList = listStr.split(", ").map(item => {
+      const trimmed = item.trim();
+      return RUNTIME_TRANSLATIONS[trimmed] || translateCopy(trimmed, language);
+    }).join(", ");
+    return `Review risks: ${translatedList}`;
+  }
+  if (value.includes("documento(s) con riesgo alto")) {
+    return value.replace("documento(s) con riesgo alto", "document(s) with high risk");
+  }
+  return value;
 }
 
 export function uiText(i18n, es, en) {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
 import { COLORS } from "../utils/constants";
 import ServiceOrderCard from "../components/Services/ServiceOrderCard";
@@ -7,10 +8,15 @@ import ServiceOrderDetailPanel from "../components/Services/ServiceOrderDetailPa
 import { ordersAPI } from "../services/api";
 import { demoServiceOrders, mapServiceOrder } from "../data/demoServiceOrders";
 import { getOrderReadinessSignal } from "../utils/readinessSignal";
+import { uiText, translateCopy } from "../utils/runtimeCopy";
 
 export default function ServiceOrdersPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -64,9 +70,9 @@ export default function ServiceOrdersPage() {
 
   const getStatusLabel = (status) => {
     const labels = {
-      pending: "Pendiente",
-      in_progress: "En Progreso",
-      completed: "Completado",
+      pending: L("Pendiente", "Pending"),
+      in_progress: L("En Progreso", "In Progress"),
+      completed: L("Completado", "Completed"),
     };
     return labels[status] || status;
   };
@@ -81,17 +87,39 @@ export default function ServiceOrdersPage() {
   }, {});
 
   if (loading) {
-    return <div style={{ padding: "4rem", textAlign: "center" }}>Cargando expedientes...</div>;
+    return <div style={{ padding: "4rem", textAlign: "center" }}>{L("Cargando expedientes...", "Loading compliance files...")}</div>;
   }
+
+  const statCards = [
+    { label: L("Expedientes Totales", "Total Compliance Files"), value: orders.length, color: COLORS.navy },
+    { label: L("Expedientes Activos", "Active Compliance Files"), value: activeOrders, color: COLORS.amber },
+    { label: L("Completadas", "Completed"), value: completedOrders, color: COLORS.green },
+    { label: L("Gasto Total", "Total Spend"), value: `$${totalSpent.toLocaleString()}`, color: COLORS.gold },
+  ];
+
+  const filterButtons = [
+    { value: "all", label: L("Todas", "All") },
+    { value: "in_progress", label: L("En Progreso", "In Progress") },
+    { value: "completed", label: L("Completadas", "Completed") },
+    { value: "pending", label: L("Pendientes", "Pending") },
+  ];
+
+  const readinessFilters = [
+    { value: "all", label: L("Todos los semaforos", "All Signals"), count: orders.length },
+    { value: "green", label: L("Verdes", "Green"), count: readinessCounts.green || 0 },
+    { value: "amber", label: L("Subsanables", "Remediable"), count: readinessCounts.amber || 0 },
+    { value: "red", label: L("Bloqueados", "Blocked"), count: readinessCounts.red || 0 },
+    { value: "pending", label: L("En captura", "In Capture"), count: readinessCounts.pending || 0 },
+  ];
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ color: COLORS.navy, fontSize: "2rem", fontWeight: 800, marginBottom: "0.5rem" }}>
-          Mis Expedientes
+          {L("Mis Expedientes", "My Compliance Files")}
         </h1>
         <p style={{ color: COLORS.textMuted }}>
-          Gestiona tus proyectos, documentos, revisiones y data rooms
+          {L("Gestiona tus proyectos, documentos, revisiones y data rooms", "Manage your projects, documents, reviews and data rooms")}
         </p>
       </div>
 
@@ -101,12 +129,7 @@ export default function ServiceOrdersPage() {
         gap: "1.5rem",
         marginBottom: "2.5rem",
       }}>
-        {[
-          { label: "Expedientes Totales", value: orders.length, color: COLORS.navy },
-          { label: "Expedientes Activos", value: activeOrders, color: COLORS.amber },
-          { label: "Completadas", value: completedOrders, color: COLORS.green },
-          { label: "Gasto Total", value: `$${totalSpent.toLocaleString()}`, color: COLORS.gold },
-        ].map((stat) => (
+        {statCards.map((stat) => (
           <div key={stat.label} style={{
             background: "white",
             padding: "1.5rem",
@@ -131,12 +154,7 @@ export default function ServiceOrdersPage() {
       </div>
 
       <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
-        {[
-          { value: "all", label: "Todas" },
-          { value: "in_progress", label: "En Progreso" },
-          { value: "completed", label: "Completadas" },
-          { value: "pending", label: "Pendientes" },
-        ].map((item) => (
+        {filterButtons.map((item) => (
           <button
             key={item.value}
             onClick={() => setFilter(item.value)}
@@ -157,13 +175,7 @@ export default function ServiceOrdersPage() {
       </div>
 
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "2rem", flexWrap: "wrap" }}>
-        {[
-          { value: "all", label: "Todos los semaforos", count: orders.length },
-          { value: "green", label: "Verdes", count: readinessCounts.green || 0 },
-          { value: "amber", label: "Subsanables", count: readinessCounts.amber || 0 },
-          { value: "red", label: "Bloqueados", count: readinessCounts.red || 0 },
-          { value: "pending", label: "En captura", count: readinessCounts.pending || 0 },
-        ].map((item) => {
+        {readinessFilters.map((item) => {
           const active = readinessFilter === item.value;
           return (
             <button
@@ -195,10 +207,10 @@ export default function ServiceOrdersPage() {
           border: `1px solid ${COLORS.border}`,
         }}>
           <p style={{ color: COLORS.navy, fontSize: "1.35rem", fontWeight: 800, marginBottom: "0.5rem" }}>
-            Aun no tienes expedientes activos.
+            {L("Aun no tienes expedientes activos.", "You don't have active compliance files yet.")}
           </p>
           <p style={{ color: COLORS.textMuted, margin: "0 auto 1.5rem", maxWidth: "620px", lineHeight: 1.6 }}>
-            Para probar el data room primero crea un expediente desde Servicios.
+            {L("Para probar el data room primero crea un expediente desde Servicios.", "To test the data room, first create a compliance file from Services.")}
           </p>
           <button
             onClick={() => navigate("/services")}
@@ -212,7 +224,7 @@ export default function ServiceOrdersPage() {
               cursor: "pointer",
             }}
           >
-            Crear expediente desde servicios
+            {L("Crear expediente desde servicios", "Create compliance file from services")}
           </button>
         </div>
       ) : (

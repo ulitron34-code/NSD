@@ -196,7 +196,7 @@ export default function SubirProyectoTab() {
             ].map(([field, label]) => (
               <label key={field} style={{ color: COLORS.navy, fontWeight: 700, fontSize: "0.86rem" }}>
                 {copy(label)}
-                <input value={project[field]} onChange={(event) => updateProject(field, event.target.value)} style={{ marginTop: "0.4rem" }} />
+                <input value={copy(project[field])} onChange={(event) => updateProject(field, event.target.value)} style={{ marginTop: "0.4rem" }} />
               </label>
             ))}
             <label style={{ color: COLORS.navy, fontWeight: 700, fontSize: "0.86rem" }}>
@@ -213,7 +213,7 @@ export default function SubirProyectoTab() {
           </div>
           <label style={{ display: "block", color: COLORS.navy, fontWeight: 700, fontSize: "0.86rem", marginTop: "1rem" }}>
             {copy("Uso de fondos")}
-            <textarea value={project.use} onChange={(event) => updateProject("use", event.target.value)} rows={4} style={{ marginTop: "0.4rem", resize: "vertical" }} />
+            <textarea value={copy(project.use)} onChange={(event) => updateProject("use", event.target.value)} rows={4} style={{ marginTop: "0.4rem", resize: "vertical" }} />
           </label>
 
           <div style={{ marginTop: "1.5rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
