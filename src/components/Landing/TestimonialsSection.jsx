@@ -1,28 +1,42 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
+import { uiText } from "../../utils/runtimeCopy";
 
 export default function TestimonialsSection() {
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
+
   const testimonials = [
     {
       company: "Fintech Regional",
-      quote: "NSD nos permitio reducir retrabajo documental y responder auditorias internas con evidencia ordenada.",
-      author: "Compliance Officer",
+      quote: L(
+        "NSD nos permitio reducir retrabajo documental y responder auditorias internas con evidencia ordenada.",
+        "NSD allowed us to reduce document rework and answer internal audits with ordered evidence."
+      ),
+      author: L("Compliance Officer", "Compliance Officer"),
       sector: "Fintech",
       avatar: "F",
       color: "#1B3A5C",
     },
     {
       company: "Grupo Empresarial ABC",
-      quote: "La trazabilidad por expediente nos dio claridad sobre responsables, observaciones y tiempos de revision.",
-      author: "Directora Legal",
-      sector: "Corporativo",
+      quote: L(
+        "La trazabilidad por expediente nos dio claridad sobre responsables, observaciones y tiempos de revision.",
+        "Traceability per compliance file gave us clarity on responsible parties, observations, and review timelines."
+      ),
+      author: L("Directora Legal", "Legal Director"),
+      sector: L("Corporativo", "Corporate"),
       avatar: "G",
       color: "#C9A84C",
     },
     {
       company: "Operadora de Servicios",
-      quote: "Centralizamos KYC/KYB, vencimientos y listas restrictivas en una sola vista operativa.",
-      author: "Gerente de Riesgo",
-      sector: "Servicios",
+      quote: L(
+        "Centralizamos KYC/KYB, vencimientos y listas restrictivas en una sola vista operativa.",
+        "We centralized KYC/KYB, expirations, and restrictive screening lists in a single operational view."
+      ),
+      author: L("Gerente de Riesgo", "Risk Manager"),
+      sector: L("Servicios", "Services"),
       avatar: "O",
       color: "#2E7D32",
     },
@@ -33,10 +47,10 @@ export default function TestimonialsSection() {
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "4rem" }}>
           <p style={{ color: "#C9A84C", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-            TESTIMONIOS
+            {L("TESTIMONIOS", "TESTIMONIALS")}
           </p>
           <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#1B3A5C", fontWeight: 800 }}>
-            Lo que dicen nuestros clientes
+            {L("Lo que dicen nuestros clientes", "What our clients say")}
           </h2>
         </div>
 

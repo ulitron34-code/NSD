@@ -3,63 +3,70 @@ import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
 
-const readinessAreas = [
-  {
-    area: "Identidad y KYB",
-    grade: "A",
-    signal: "Verde",
-    progress: 92,
-    next: "Mantener poderes, RFC y beneficiario controlador actualizados.",
-  },
-  {
-    area: "Corporativo legal",
-    grade: "B",
-    signal: "Amarillo",
-    progress: 78,
-    next: "Actualizar acta, organigrama y autorizaciones para financiamiento.",
-  },
-  {
-    area: "Financiero",
-    grade: "B",
-    signal: "Amarillo",
-    progress: 74,
-    next: "Subir estados financieros recientes, flujo proyectado y soporte de ingresos.",
-  },
-  {
-    area: "Proyecto / uso de recursos",
-    grade: "A",
-    signal: "Verde",
-    progress: 88,
-    next: "Agregar hitos, presupuesto y evidencia de avance operativo.",
-  },
-  {
-    area: "Antifraude y cumplimiento",
-    grade: "B",
-    signal: "Amarillo",
-    progress: 81,
-    next: "Completar declaraciones, listas internas y validaciones pendientes.",
-  },
-];
-
-const financingSteps = [
-  ["1", "Preparar expediente", "Completar documentos base y datos del proyecto."],
-  ["2", "Revision IA / NSD", "Detectar faltantes, score, riesgos y memo ejecutivo."],
-  ["3", "Liberar data room", "Compartir expediente con otorgantes compatibles."],
-  ["4", "Atender requerimientos", "Responder solicitudes y sustituir documentos vencidos."],
-  ["5", "Comite / term sheet", "Llegar con evidencia ordenada para decision del otorgante."],
-];
-
-const blockerItems = [
-  "Estados financieros con fecha mayor a 90 dias.",
-  "Poderes o actas sin version final digitalizada.",
-  "Uso de recursos sin presupuesto verificable.",
-  "Contratos clave sin vigencia o firma completa.",
-  "Beneficiario controlador pendiente de confirmacion.",
-];
-
 export default function FundingReadinessTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+
+  const readinessAreas = [
+    {
+      area: L("Identidad y KYB", "Identity & KYB"),
+      grade: "A",
+      signal: "Verde",
+      progress: 92,
+      next: L("Mantener poderes, RFC y beneficiario controlador actualizados.", "Keep powers of attorney, tax ID and ultimate beneficial owner updated."),
+    },
+    {
+      area: L("Corporativo legal", "Corporate Legal"),
+      grade: "B",
+      signal: "Amarillo",
+      progress: 78,
+      next: L("Actualizar acta, organigrama y autorizaciones para financiamiento.", "Update bylaws, org chart and financing authorizations."),
+    },
+    {
+      area: L("Financiero", "Financial"),
+      grade: "B",
+      signal: "Amarillo",
+      progress: 74,
+      next: L("Subir estados financieros recientes, flujo proyectado y soporte de ingresos.", "Upload recent financial statements, projected cash flow and revenue support."),
+    },
+    {
+      area: L("Proyecto / uso de recursos", "Project / Use of Funds"),
+      grade: "A",
+      signal: "Verde",
+      progress: 88,
+      next: L("Agregar hitos, presupuesto y evidencia de avance operativo.", "Add milestones, budget and operational progress evidence."),
+    },
+    {
+      area: L("Antifraude y cumplimiento", "Anti-Fraud & Compliance"),
+      grade: "B",
+      signal: "Amarillo",
+      progress: 81,
+      next: L("Completar declaraciones, listas internas y validaciones pendientes.", "Complete pending declarations, internal screening lists and validations."),
+    },
+  ];
+
+  const financingSteps = [
+    ["1", L("Preparar expediente", "Prepare File"), L("Completar documentos base y datos del proyecto.", "Complete base documents and project details.")],
+    ["2", L("Revision IA / NSD", "AI / NSD Review"), L("Detectar faltantes, score, riesgos y memo ejecutivo.", "Detect gaps, score, risks and executive memo.")],
+    ["3", L("Liberar data room", "Release Data Room"), L("Compartir expediente con otorgantes compatibles.", "Share file with compatible funding providers.")],
+    ["4", L("Atender requerimientos", "Address Requests"), L("Responder solicitudes y sustituir documentos vencidos.", "Respond to requests and replace expired documents.")],
+    ["5", L("Comite / term sheet", "Committee / Term Sheet"), L("Llegar con evidencia ordenada para decision del otorgante.", "Arrive with organized evidence for funding provider decision.")],
+  ];
+
+  const blockerItems = [
+    L("Estados financieros con fecha mayor a 90 dias.", "Financial statements dated older than 90 days."),
+    L("Poderes o actas sin version final digitalizada.", "Powers of attorney or bylaws without digitalized final version."),
+    L("Uso de recursos sin presupuesto verificable.", "Use of funds without verifiable budget."),
+    L("Contratos clave sin vigencia o firma completa.", "Key contracts without validity or complete signatures."),
+    L("Beneficiario controlador pendiente de confirmacion.", "Ultimate beneficial owner pending confirmation."),
+  ];
+
+  const statCards = [
+    [L("Score estimado", "Estimated Score"), "82", "B+"],
+    [L("Faltantes criticos", "Critical Gaps"), "2", L("por atender", "to address")],
+    [L("Dias ahorrados", "Days Saved"), "12", L("estimados", "estimated")],
+    [L("Otorgantes compatibles", "Compatible Funders"), "7", L("potenciales", "potential")],
+  ];
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -85,17 +92,12 @@ export default function FundingReadinessTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "0.75rem" }}>
-        {[
-          ["Score estimado", "82", "B+"],
-          ["Faltantes criticos", "2", "por atender"],
-          ["Dias ahorrados", "12", "estimados"],
-          ["Otorgantes compatibles", "7", "potenciales"],
-        ].map(([label, value, suffix]) => (
+        {statCards.map(([label, value, suffix]) => (
           <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>{L(label, label)}</p>
+            <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</p>
             <div style={{ display: "flex", alignItems: "baseline", gap: "0.45rem", marginTop: "0.35rem" }}>
               <strong style={{ color: COLORS.navy, fontSize: "1.75rem" }}>{value}</strong>
-              <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.85rem" }}>{L(suffix, suffix)}</span>
+              <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.85rem" }}>{suffix}</span>
             </div>
           </article>
         ))}
@@ -107,12 +109,12 @@ export default function FundingReadinessTab() {
             {L("Matriz de preparacion", "Readiness matrix")}
           </p>
           <div style={{ display: "grid", gap: "0.7rem", marginTop: "0.85rem" }}>
-            {readinessAreas.map((item) => (
-              <div key={item.area} style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.75rem", background: COLORS.bg }}>
+            {readinessAreas.map((item, idx) => (
+              <div key={idx} style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.75rem", background: COLORS.bg }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "0.8rem", alignItems: "center" }}>
                   <div>
-                    <strong style={{ color: COLORS.navy, fontSize: "0.92rem" }}>{L(item.area, item.area)}</strong>
-                    <p style={{ margin: "0.25rem 0 0", color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.4 }}>{L(item.next, item.next)}</p>
+                    <strong style={{ color: COLORS.navy, fontSize: "0.92rem" }}>{item.area}</strong>
+                    <p style={{ margin: "0.25rem 0 0", color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.4 }}>{item.next}</p>
                   </div>
                   <span style={{ flex: "0 0 auto", minWidth: "38px", textAlign: "center", borderRadius: "999px", padding: "0.25rem 0.55rem", background: item.signal === "Verde" ? "rgba(46,125,50,0.12)" : "rgba(201,162,39,0.18)", color: item.signal === "Verde" ? "#2E7D32" : "#8A6A00", fontWeight: 900 }}>{item.grade}</span>
                 </div>
@@ -130,7 +132,7 @@ export default function FundingReadinessTab() {
               {L("Bloqueantes comunes", "Common blockers")}
             </p>
             <ul style={{ margin: "0.75rem 0 0", paddingLeft: "1.05rem", color: "rgba(255,255,255,0.78)", fontSize: "0.84rem", lineHeight: 1.55 }}>
-              {blockerItems.map((item) => <li key={item}>{L(item, item)}</li>)}
+              {blockerItems.map((item, idx) => <li key={idx}>{item}</li>)}
             </ul>
           </article>
 
@@ -157,8 +159,8 @@ export default function FundingReadinessTab() {
           {financingSteps.map(([step, title, detail]) => (
             <div key={step} style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.85rem" }}>
               <span style={{ width: "30px", height: "30px", borderRadius: "50%", background: COLORS.gold, color: COLORS.navy, display: "grid", placeItems: "center", fontWeight: 900, marginBottom: "0.55rem" }}>{step}</span>
-              <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.9rem", marginBottom: "0.25rem" }}>{L(title, title)}</strong>
-              <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.82rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+              <strong style={{ display: "block", color: COLORS.navy, fontSize: "0.9rem", marginBottom: "0.25rem" }}>{title}</strong>
+              <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.82rem", lineHeight: 1.45 }}>{detail}</p>
             </div>
           ))}
         </div>

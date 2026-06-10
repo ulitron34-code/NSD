@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNotification } from "../../hooks/useNotification";
 import { useIndexedDB } from "../../hooks/useIndexedDB";
 import { saveDocument, getDocumentsByOrder, updateDocument, deleteDocument, saveLog, getLogsByEntity } from "../../services/storageService";
@@ -7,19 +8,27 @@ import { calculateScore } from "../../services/scoringService";
 import { generateExpedienteReport, downloadReport, printReport } from "../../services/reportService";
 import { COLORS } from "../../utils/constants";
 import { demoDocuments } from "../../data/demoDocuments";
-
-const statusConfig = {
-  uploaded: { label: "Cargado", color: COLORS.amber, bg: "#FEF3C7" },
-  review: { label: "En revision", color: COLORS.amber, bg: "#FEF3C7" },
-  approved: { label: "Aprobado", color: COLORS.green, bg: "#E8F5E9" },
-  observed: { label: "Observado", color: "#C62828", bg: "#FFEBEE" },
-  missing: { label: "No cargado", color: COLORS.textMuted, bg: "#F2EFE9" },
-};
+import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 export default function CumplimientoTab() {
   const { addNotification } = useNotification();
   const { db, error: dbError } = useIndexedDB('nsd-app', 1);
   const orderId = getCurrentOrder();
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
+
+  const statusConfig = {
+    uploaded: { label: L("Cargado", "Uploaded"), color: COLORS.amber, bg: "#FEF3C7" },
+    review: { label: L("En revision", "Under Review"), color: COLORS.amber, bg: "#FEF3C7" },
+    approved: { label: L("Aprobado", "Approved"), color: COLORS.green, bg: "#E8F5E9" },
+    observed: { label: L("Observado", "Observed"), color: "#C62828", bg: "#FFEBEE" },
+    missing: { label: L("No cargado", "Not Uploaded"), color: COLORS.textMuted, bg: "#F2EFE9" },
+  };
+
+  const getStatusLabel = (status) => {
+    return statusConfig[status]?.label || status;
+  };
 
   const [documents, setDocuments] = useState([]);
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -37,21 +46,17 @@ export default function CumplimientoTab() {
       try {
         const docs = await getDocumentsByOrder(db, orderId);
         if (docs.length === 0) {
-          // Si no hay documentos, cargar demo data
           const demo = demoDocuments.map(d => ({
             ...d,
             orderId,
             filesize: d.filesize || 250000,
             filetype: d.filetype || 'application/pdf'
           }));
-          // Guardar demo en IndexedDB
           for (const doc of demo) {
             try {
-              // Crear un fake FileBlob
               const blob = new Blob(['fake content'], { type: doc.filetype });
               await saveDocument(db, blob, orderId, 'demo-user');
             } catch (err) {
-              // Si falla, simplemente usar los docs en memoria
             }
           }
           setDocuments(demo);
@@ -98,36 +103,30 @@ export default function CumplimientoTab() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validar tipo
     const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel'];
     if (!allowed.includes(file.type)) {
-      addNotification('Solo PDF, Word, Excel permitidos', 'error');
+      addNotification(L('Solo PDF, Word, Excel permitidos', 'Only PDF, Word, Excel permitted'), 'error');
       return;
     }
 
-    // Validar tamaño (máx 50MB)
     if (file.size > 50 * 1024 * 1024) {
-      addNotification('Archivo muy grande (máx 50MB)', 'error');
+      addNotification(L('Archivo muy grande (máx 50MB)', 'File too large (max 50MB)'), 'error');
       return;
     }
 
     try {
-      // Guardar en IndexedDB
       const newDoc = await saveDocument(db, file, orderId, 'current-user-id');
-
-      // Guardar en log
       await saveLog(db, 'document_uploaded', 'document', newDoc.id, 'current-user-id', {
         filename: file.name,
         size: file.size
       });
 
-      // Actualizar UI
       setDocuments([...documents, newDoc]);
       setLogs(await getLogsByEntity(db, orderId));
-      addNotification(`"${file.name}" subido exitosamente`, 'success');
+      addNotification(L(`"${file.name}" subido exitosamente`, `"${file.name}" uploaded successfully`), 'success');
     } catch (err) {
       console.error('Upload error:', err);
-      addNotification('Error al subir archivo', 'error');
+      addNotification(L('Error al subir archivo', 'Error uploading file'), 'error');
     }
   };
 
@@ -135,53 +134,46 @@ export default function CumplimientoTab() {
   const updateDocStatus = async (docId, newStatus) => {
     try {
       const oldDoc = documents.find(d => d.id === docId);
-
-      // Actualizar en BD
       const updated = await updateDocument(db, docId, { status: newStatus });
 
-      // Guardar en log
       await saveLog(db, 'status_changed', 'document', docId, 'current-user-id', {
         from: oldDoc.status,
         to: newStatus
       });
 
-      // Actualizar UI
       setDocuments(documents.map(d => d.id === docId ? updated : d));
       setSelectedDoc(updated);
       setLogs(await getLogsByEntity(db, orderId));
-      addNotification(`Estado actualizado: ${statusConfig[newStatus].label}`, 'success');
+      addNotification(`${L('Estado actualizado:', 'Status updated:')} ${statusConfig[newStatus].label}`, 'success');
     } catch (err) {
       console.error('Update error:', err);
-      addNotification('Error al actualizar', 'error');
+      addNotification(L('Error al actualizar', 'Error updating'), 'error');
     }
   };
 
   // ELIMINAR DOCUMENTO
   const handleDelete = async (docId) => {
-    if (!window.confirm('¿Eliminar documento?')) return;
+    if (!window.confirm(L('¿Eliminar documento?', 'Delete document?'))) return;
 
     try {
       await deleteDocument(db, docId);
-
       await saveLog(db, 'document_deleted', 'document', docId, 'current-user-id', {});
 
       setDocuments(documents.filter(d => d.id !== docId));
       setSelectedDoc(null);
       setLogs(await getLogsByEntity(db, orderId));
-      addNotification('Documento eliminado', 'success');
+      addNotification(L('Documento eliminado', 'Document deleted'), 'success');
     } catch (err) {
       console.error('Delete error:', err);
-      addNotification('Error al eliminar', 'error');
+      addNotification(L('Error al eliminar', 'Error deleting'), 'error');
     }
   };
 
-  // ACTUALIZAR ESTADO DEL DOCUMENTO SELECCIONADO
   const updateSelectedStatus = async (newStatus) => {
     if (!selectedDoc) return;
     await updateDocStatus(selectedDoc.id, newStatus);
   };
 
-  // DESCARGAR REPORTE
   const handleDownloadReport = () => {
     const report = generateExpedienteReport(
       { name: orderId, status: 'Cumplimiento' },
@@ -190,11 +182,10 @@ export default function CumplimientoTab() {
       []
     );
     downloadReport(report);
-    addNotification('Reporte descargado exitosamente', 'success');
+    addNotification(L('Reporte descargado exitosamente', 'Report downloaded successfully'), 'success');
     setShowReportMenu(false);
   };
 
-  // IMPRIMIR REPORTE
   const handlePrintReport = () => {
     const report = generateExpedienteReport(
       { name: orderId, status: 'Cumplimiento' },
@@ -212,16 +203,16 @@ export default function CumplimientoTab() {
 
   return (
     <div>
-      {loading && <p>Cargando documentos...</p>}
+      {loading && <p>{L("Cargando documentos...", "Loading documents...")}</p>}
       {dbError && <p style={{ color: 'red' }}>Error: {dbError.message}</p>}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1.5rem", marginBottom: "2rem" }}>
         <div>
           <h1 style={{ color: COLORS.navy, fontSize: "2rem", marginBottom: "0.5rem" }}>
-            Expediente de cumplimiento
+            {L("Expediente de cumplimiento", "Compliance File")}
           </h1>
           <p style={{ color: COLORS.textMuted, maxWidth: "760px" }}>
-            Documentos guardados localmente en tiempo real. Orden: {orderId}
+            {L("Documentos guardados localmente en tiempo real. Orden: ", "Documents saved locally in real-time. Order: ")} {orderId}
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.75rem" }}>
@@ -238,7 +229,7 @@ export default function CumplimientoTab() {
                 cursor: "pointer",
               }}
             >
-              📊 Reporte
+              📊 {L("Reporte", "Report")}
             </button>
             {showReportMenu && (
               <div style={{
@@ -269,7 +260,7 @@ export default function CumplimientoTab() {
                     borderBottom: `1px solid ${COLORS.border}`
                   }}
                 >
-                  ⬇️ Descargar HTML
+                  ⬇️ {L("Descargar HTML", "Download HTML")}
                 </button>
                 <button
                   onClick={handlePrintReport}
@@ -285,7 +276,7 @@ export default function CumplimientoTab() {
                     fontWeight: 700
                   }}
                 >
-                  🖨️ Imprimir
+                  🖨️ {L("Imprimir", "Print")}
                 </button>
               </div>
             )}
@@ -302,17 +293,17 @@ export default function CumplimientoTab() {
               cursor: "pointer",
             }}
           >
-            {showLogs ? "Ocultar" : "Ver"} Historial ({logs.length})
+            {showLogs ? L("Ocultar", "Hide") : L("Ver", "View")} {L("Historial", "History")} ({logs.length})
           </button>
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
         {[
-          { label: "Puntuación total", value: score ? `${score.totalScore}/100` : "—", color: score ? score.statusColor : COLORS.textMuted, highlight: true },
-          { label: "Estado", value: score ? score.status : "—", color: score ? score.statusColor : COLORS.textMuted },
-          { label: "Documentos aprobados", value: `${approvedCount}/${documents.length}`, color: COLORS.navy },
-          { label: "Riesgos altos", value: criticalCount, color: "#C62828" },
+          { label: L("Puntuación total", "Total Score"), value: score ? `${score.totalScore}/100` : "—", color: score ? score.statusColor : COLORS.textMuted, highlight: true },
+          { label: L("Estado", "Status"), value: score ? copy(score.status) : "—", color: score ? score.statusColor : COLORS.textMuted },
+          { label: L("Documentos aprobados", "Approved Documents"), value: `${approvedCount}/${documents.length}`, color: COLORS.navy },
+          { label: L("Riesgos altos", "High Risks"), value: criticalCount, color: "#C62828" },
         ].map((item) => (
           <div key={item.label} style={{ background: COLORS.white, padding: "1.25rem", borderRadius: "10px", borderTop: `4px solid ${item.color}`, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...(item.highlight && { borderWidth: "3px" }) }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{item.label}</p>
@@ -329,7 +320,7 @@ export default function CumplimientoTab() {
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-          <p style={{ color: COLORS.navy, fontWeight: 700 }}>Progreso del expediente</p>
+          <p style={{ color: COLORS.navy, fontWeight: 700 }}>{L("Progreso del expediente", "Compliance file progress")}</p>
           <p style={{ color: COLORS.gold, fontWeight: 800 }}>{completionPercentage}%</p>
         </div>
         <div className="progress-bar">
@@ -348,7 +339,7 @@ export default function CumplimientoTab() {
           borderLeft: `5px solid ${score.statusColor}`,
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-            <h3 style={{ color: COLORS.navy, margin: 0 }}>Análisis de puntuación</h3>
+            <h3 style={{ color: COLORS.navy, margin: 0 }}>{L("Análisis de puntuación", "Score analysis")}</h3>
             <div style={{
               display: "inline-flex",
               alignItems: "center",
@@ -360,7 +351,7 @@ export default function CumplimientoTab() {
               fontWeight: 800,
               fontSize: "1.1rem"
             }}>
-              {score.status}
+              {copy(score.status)}
             </div>
           </div>
 
@@ -372,10 +363,10 @@ export default function CumplimientoTab() {
                 borderRadius: "8px",
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                  <span style={{ color: COLORS.navy, fontWeight: 700 }}>{item.category}</span>
+                  <span style={{ color: COLORS.navy, fontWeight: 700 }}>{copy(item.category)}</span>
                   <span style={{ color: COLORS.gold, fontWeight: 800 }}>{item.earned}/{item.weight}</span>
                 </div>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", margin: "0.25rem 0" }}>{item.detail}</p>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", margin: "0.25rem 0" }}>{copy(item.detail)}</p>
                 <div style={{
                   background: COLORS.white,
                   height: "6px",
@@ -384,10 +375,10 @@ export default function CumplimientoTab() {
                   marginTop: "0.5rem"
                 }}>
                   <div style={{
-                    background: item.status === 'complete' ? COLORS.green : item.status === 'partial' ? COLORS.amber : '#C62828',
-                    height: "100%",
-                    width: `${(item.earned / item.weight) * 100}%`,
-                    transition: "width 0.3s ease"
+                     background: item.status === 'complete' ? COLORS.green : item.status === 'partial' ? COLORS.amber : '#C62828',
+                     height: "100%",
+                     width: `${(item.earned / item.weight) * 100}%`,
+                     transition: "width 0.3s ease"
                   }} />
                 </div>
               </div>
@@ -402,10 +393,10 @@ export default function CumplimientoTab() {
               marginTop: "1.5rem",
               borderLeft: `4px solid ${COLORS.amber}`
             }}>
-              <p style={{ color: COLORS.navy, fontWeight: 700, marginTop: 0, marginBottom: "0.75rem" }}>📋 Próximos pasos:</p>
+              <p style={{ color: COLORS.navy, fontWeight: 700, marginTop: 0, marginBottom: "0.75rem" }}>📋 {L("Próximos pasos:", "Next steps:")}</p>
               <ul style={{ color: COLORS.text, margin: 0, paddingLeft: "1.5rem", lineHeight: 1.8 }}>
                 {score.nextActions.map((action, i) => (
-                  <li key={i}>{action}</li>
+                  <li key={i}>{copy(action)}</li>
                 ))}
               </ul>
             </div>
@@ -421,7 +412,7 @@ export default function CumplimientoTab() {
               color: "#155724",
               fontWeight: 700
             }}>
-              ✅ Expediente listo para presentar a instituciones financieras
+              ✅ {L("Expediente listo para presentar a instituciones financieras", "Compliance file ready to present to financial institutions")}
             </div>
           )}
         </div>
@@ -446,7 +437,7 @@ export default function CumplimientoTab() {
           transition: "all 0.3s ease"
         }}>
           <span style={{ color: COLORS.navy, fontWeight: 700, fontSize: "1.1rem" }}>
-            📄 Arrastra documento aquí o click para seleccionar
+            📄 {L("Arrastra documento aquí o click para seleccionar", "Drag document here or click to select")}
           </span>
           <input type="file" onChange={handleUpload} style={{ display: "none" }} accept=".pdf,.docx,.xlsx,.doc,.xls" />
         </label>
@@ -460,19 +451,19 @@ export default function CumplimientoTab() {
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}>
           <h2 style={{ color: COLORS.navy, marginBottom: "1.5rem" }}>
-            Requisitos documentales
+            {L("Requisitos documentales", "Documentary Requirements")}
           </h2>
 
           <div style={{ overflowX: "auto" }}>
             <table>
               <thead>
                 <tr>
-                  <th>Documento</th>
-                  <th>Responsable</th>
-                  <th>Estado</th>
-                  <th>Vencimiento</th>
-                  <th>Riesgo</th>
-                  <th>Accion</th>
+                  <th>{L("Documento", "Document")}</th>
+                  <th>{L("Responsable", "Owner")}</th>
+                  <th>{L("Estado", "Status")}</th>
+                  <th>{L("Vencimiento", "Expiration")}</th>
+                  <th>{L("Riesgo", "Risk")}</th>
+                  <th>{L("Accion", "Action")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -488,7 +479,7 @@ export default function CumplimientoTab() {
                         outlineOffset: "-2px",
                       }}
                     >
-                      <td style={{ fontWeight: 700, color: COLORS.navy }}>{doc.filename || doc.name}</td>
+                      <td style={{ fontWeight: 700, color: COLORS.navy }}>{copy(doc.filename || doc.name)}</td>
                       <td>{doc.owner}</td>
                       <td>
                         <span style={{
@@ -500,12 +491,12 @@ export default function CumplimientoTab() {
                           fontSize: "0.8rem",
                           fontWeight: 700,
                         }}>
-                          {status.label}
+                          {getStatusLabel(doc.status)}
                         </span>
                       </td>
                       <td>{doc.expires}</td>
                       <td style={{ color: doc.risk === "Critico" || doc.risk === "Alto" ? "#C62828" : COLORS.text, fontWeight: 700 }}>
-                        {doc.risk}
+                        {L(doc.risk, doc.risk)}
                       </td>
                       <td style={{ display: "flex", gap: "0.5rem" }}>
                         <select
@@ -521,10 +512,10 @@ export default function CumplimientoTab() {
                             cursor: "pointer",
                           }}
                         >
-                          <option value="uploaded">Cargado</option>
-                          <option value="review">Revisión</option>
-                          <option value="approved">Aprobado</option>
-                          <option value="observed">Observado</option>
+                          <option value="uploaded">{L("Cargado", "Uploaded")}</option>
+                          <option value="review">{L("Revisión", "Review")}</option>
+                          <option value="approved">{L("Aprobado", "Approved")}</option>
+                          <option value="observed">{L("Observado", "Observed")}</option>
                         </select>
                         <button
                           onClick={(e) => {
@@ -568,20 +559,20 @@ export default function CumplimientoTab() {
               borderBottom: `1px solid ${COLORS.border}`,
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.4rem" }}>
-                Detalle del documento
+                {L("Detalle del documento", "Document Detail")}
               </p>
               <h3 style={{ color: COLORS.navy, fontSize: "1.2rem", lineHeight: 1.35 }}>
-                {selectedDoc.filename || selectedDoc.name}
+                {copy(selectedDoc.filename || selectedDoc.name)}
               </h3>
             </div>
 
             <div style={{ padding: "1.5rem", display: "grid", gap: "1rem" }}>
               {[
-                ["Responsable", selectedDoc.owner],
-                ["Revisor", selectedDoc.reviewer],
-                ["Version", selectedDoc.version],
-                ["Vencimiento", selectedDoc.expires],
-                ["Riesgo", selectedDoc.risk],
+                [L("Responsable", "Owner"), selectedDoc.owner],
+                [L("Revisor", "Reviewer"), selectedDoc.reviewer],
+                [L("Version", "Version"), selectedDoc.version],
+                [L("Vencimiento", "Expiration"), selectedDoc.expires],
+                [L("Riesgo", "Risk"), L(selectedDoc.risk, selectedDoc.risk)],
               ].map(([label, value]) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
                   <span style={{ color: COLORS.textMuted, fontSize: "0.86rem" }}>{label}</span>
@@ -590,7 +581,7 @@ export default function CumplimientoTab() {
               ))}
 
               <div>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.86rem", marginBottom: "0.45rem" }}>Estado actual</p>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.86rem", marginBottom: "0.45rem" }}>{L("Estado actual", "Current Status")}</p>
                 <span style={{
                   display: "inline-flex",
                   padding: "0.35rem 0.7rem",
@@ -600,23 +591,23 @@ export default function CumplimientoTab() {
                   fontSize: "0.8rem",
                   fontWeight: 800,
                 }}>
-                  {statusConfig[selectedDoc.status].label}
+                  {getStatusLabel(selectedDoc.status)}
                 </span>
               </div>
 
               <div style={{ background: COLORS.bg, padding: "1rem", borderRadius: "8px" }}>
-                <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.4rem" }}>Observaciones</p>
-                <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", lineHeight: 1.6 }}>{selectedDoc.notes}</p>
+                <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.4rem" }}>{L("Observaciones", "Observations")}</p>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", lineHeight: 1.6 }}>{copy(selectedDoc.notes)}</p>
               </div>
 
               <div style={{ background: COLORS.bg, padding: "1rem", borderRadius: "8px" }}>
-                <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.65rem" }}>Historial</p>
+                <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.65rem" }}>{L("Historial", "History")}</p>
                 {[
-                  "Documento cargado por cliente",
-                  "Revision asignada",
-                  selectedDoc.status === "approved" ? "Aprobado con evidencia" : "Pendiente de cierre",
-                ].map((event) => (
-                  <p key={event} style={{ color: COLORS.textMuted, fontSize: "0.86rem", marginBottom: "0.4rem" }}>
+                  L("Documento cargado por cliente", "Document uploaded by client"),
+                  L("Revision asignada", "Review assigned"),
+                  selectedDoc.status === "approved" ? L("Aprobado con evidencia", "Approved with evidence") : L("Pendiente de cierre", "Pending closure"),
+                ].map((event, idx) => (
+                  <p key={idx} style={{ color: COLORS.textMuted, fontSize: "0.86rem", marginBottom: "0.4rem" }}>
                     - {event}
                   </p>
                 ))}
@@ -634,7 +625,7 @@ export default function CumplimientoTab() {
                     fontWeight: 800,
                   }}
                 >
-                  Aprobar
+                  {L("Aprobar", "Approve")}
                 </button>
                 <button
                   onClick={() => updateSelectedStatus("observed")}
@@ -647,7 +638,7 @@ export default function CumplimientoTab() {
                     fontWeight: 800,
                   }}
                 >
-                  Observar
+                  {L("Observar", "Observe")}
                 </button>
               </div>
             </div>
@@ -664,7 +655,7 @@ export default function CumplimientoTab() {
           marginTop: "2rem",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}>
-          <h2 style={{ color: COLORS.navy, marginBottom: "1.5rem" }}>Historial de auditoría</h2>
+          <h2 style={{ color: COLORS.navy, marginBottom: "1.5rem" }}>{L("Historial de auditoría", "Audit History")}</h2>
           <div style={{ maxHeight: "400px", overflowY: "auto" }}>
             {logs.map((log, i) => (
               <div
@@ -681,7 +672,7 @@ export default function CumplimientoTab() {
                   {new Date(log.timestamp).toLocaleString()}
                 </p>
                 <p style={{ color: COLORS.textMuted, margin: "0.25rem 0", fontSize: "0.85rem" }}>
-                  {log.action} - {log.userId}
+                  {copy(log.action)} - {log.userId}
                 </p>
                 <p style={{ color: COLORS.text, margin: 0, fontSize: "0.85rem" }}>
                   {JSON.stringify(log.changes)}
@@ -701,7 +692,7 @@ export default function CumplimientoTab() {
           textAlign: "center",
           color: COLORS.textMuted,
         }}>
-          <p>No hay eventos registrados aún</p>
+          <p>{L("No hay eventos registrados aún", "No events recorded yet")}</p>
         </div>
       )}
     </div>

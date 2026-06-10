@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNotification } from "../../hooks/useNotification";
 import { useIndexedDB } from "../../hooks/useIndexedDB";
 import { useAuth } from "../../hooks/useAuth";
@@ -14,11 +15,14 @@ import { getConversationForUser } from "../../services/messagingServiceV2";
 import { generateExpedientePDF } from "../../services/pdfExportService";
 import { searchExpedientes } from "../../services/searchService";
 import { COLORS } from "../../utils/constants";
+import { uiText } from "../../utils/runtimeCopy";
 
 export default function ExpedientesTab() {
   const { addNotification } = useNotification();
   const { db } = useIndexedDB('nsd-app', 1);
   const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
 
   const [expedientes, setExpedientes] = useState([]);
   const [filteredExpedientes, setFilteredExpedientes] = useState([]);
@@ -36,11 +40,10 @@ export default function ExpedientesTab() {
       try {
         let exps = await getExpedientesForUser(user.id);
 
-        // Si no hay expedientes, crear uno demo
         if (exps.length === 0) {
           const demoExp = await createDemoExpediente();
           exps = [demoExp];
-          addNotification('Expediente demo creado', 'info');
+          addNotification(L('Expediente demo creado', 'Demo compliance file created'), 'info');
         }
 
         setExpedientes(exps);
@@ -73,10 +76,10 @@ export default function ExpedientesTab() {
       const msgs = await getConversationForUser(user.id, expId) || [];
 
       await generateExpedientePDF(exp, reqs, docs, msgs);
-      addNotification(`📥 Expediente ${exp.id} descargado`, 'success');
+      addNotification(L(`📥 Expediente ${exp.id} descargado`, `📥 Compliance file ${exp.id} downloaded`), 'success');
     } catch (err) {
       console.error('Error exportando PDF:', err);
-      addNotification('Error al exportar PDF', 'error');
+      addNotification(L('Error al exportar PDF', 'Error exporting PDF'), 'error');
     } finally {
       setExportingId(null);
     }
@@ -87,17 +90,17 @@ export default function ExpedientesTab() {
       const updated = await updateExpediente(expId, { status: newStatus });
       setExpedientes(expedientes.map(e => e.id === expId ? updated : e));
       setSelectedExp(updated);
-      addNotification(`Expediente actualizado a: ${newStatus}`, 'success');
+      addNotification(`${L('Expediente actualizado a:', 'Compliance file updated to:')} ${newStatus}`, 'success');
     } catch (err) {
       console.error('Error updating expediente:', err);
-      addNotification('Error al actualizar expediente', 'error');
+      addNotification(L('Error al actualizar expediente', 'Error updating compliance file'), 'error');
     }
   };
 
   const getMiRol = (expediente) => {
-    if (expediente.solicitanteId === user?.id) return 'Solicitante';
-    if (expediente.otorganteId === user?.id) return 'Otorgante';
-    return 'Desconocido';
+    if (expediente.solicitanteId === user?.id) return L('Solicitante', 'Applicant');
+    if (expediente.otorganteId === user?.id) return L('Otorgante', 'Funding Provider');
+    return L('Desconocido', 'Unknown');
   };
 
   const getStatusColor = (status) => {
@@ -109,17 +112,17 @@ export default function ExpedientesTab() {
     }
   };
 
-  if (loading) return <p>Cargando expedientes...</p>;
+  if (loading) return <p>{L("Cargando expedientes...", "Loading compliance files...")}</p>;
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1.5rem", marginBottom: "2rem" }}>
         <div>
           <h1 style={{ color: COLORS.navy, fontSize: "2rem", marginBottom: "0.5rem" }}>
-            📋 Mis Expedientes
+            📋 {L("Mis Expedientes", "My Compliance Files")}
           </h1>
           <p style={{ color: COLORS.textMuted, maxWidth: "760px" }}>
-            Órdenes vinculadas entre Solicitante y Otorgante. Tienes acceso a {expedientes.length} expediente(s).
+            {L("Órdenes vinculadas entre Solicitante y Otorgante. Tienes acceso a", "Orders linked between Applicant and Funding Provider. You have access to")} {expedientes.length} {L("expediente(s).", "compliance file(s).")}
           </p>
         </div>
       </div>
@@ -128,7 +131,7 @@ export default function ExpedientesTab() {
       <div style={{ marginBottom: "1.5rem" }}>
         <input
           type="text"
-          placeholder="🔍 Busca por nombre, ID, sector..."
+          placeholder={L("🔍 Busca por nombre, ID, sector...", "🔍 Search by name, ID, sector...")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
@@ -143,7 +146,7 @@ export default function ExpedientesTab() {
         />
         {searchQuery && (
           <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", margin: "0.5rem 0 0 0" }}>
-            📊 {filteredExpedientes.length} resultado(s)
+            📊 {filteredExpedientes.length} {L("resultado(s)", "result(s)")}
           </p>
         )}
       </div>
@@ -157,7 +160,7 @@ export default function ExpedientesTab() {
       }}>
         {filteredExpedientes.length === 0 && (
           <p style={{ color: COLORS.textMuted, gridColumn: "1 / -1", textAlign: "center", padding: "2rem" }}>
-            No hay expedientes que coincidan con la búsqueda
+            {L("No hay expedientes que coincidan con la búsqueda", "No compliance files match your search")}
           </p>
         )}
         {filteredExpedientes.map((exp) => (
@@ -203,19 +206,19 @@ export default function ExpedientesTab() {
                 fontWeight: 700,
                 textTransform: "capitalize"
               }}>
-                {exp.status}
+                {L(exp.status, exp.status)}
               </span>
             </div>
 
             <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem" }}>
               <div style={{ fontSize: "0.9rem" }}>
-                <strong style={{ color: COLORS.navy }}>Mi rol:</strong> {getMiRol(exp)}
+                <strong style={{ color: COLORS.navy }}>{L("Mi rol:", "My role:")}</strong> {getMiRol(exp)}
               </div>
               <div style={{ fontSize: "0.9rem" }}>
-                <strong style={{ color: COLORS.navy }}>Monto:</strong> ${(exp.amount || 0).toLocaleString()}
+                <strong style={{ color: COLORS.navy }}>{L("Monto:", "Amount:")}</strong> ${(exp.amount || 0).toLocaleString()}
               </div>
               <div style={{ fontSize: "0.9rem" }}>
-                <strong style={{ color: COLORS.navy }}>Sector:</strong> {exp.sector}
+                <strong style={{ color: COLORS.navy }}>{L("Sector:", "Sector:")}</strong> {exp.sector}
               </div>
             </div>
 
@@ -249,7 +252,7 @@ export default function ExpedientesTab() {
             </div>
 
             <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", margin: 0 }}>
-              Creado: {new Date(exp.createdAt).toLocaleDateString()}
+              {L("Creado:", "Created:")} {new Date(exp.createdAt).toLocaleDateString()}
             </p>
           </div>
         ))}
@@ -290,7 +293,7 @@ export default function ExpedientesTab() {
                     textTransform: "capitalize"
                   }}
                 >
-                  {status}
+                  {L(status, status)}
                 </button>
               ))}
             </div>
@@ -303,12 +306,12 @@ export default function ExpedientesTab() {
             marginBottom: "1.5rem"
           }}>
             {[
-              ["Rol en este expediente", getMiRol(selectedExp)],
-              ["Solicitante", selectedExp.solicitanteName],
-              ["Otorgante", selectedExp.otorganteName],
-              ["Sector", selectedExp.sector],
-              ["Monto solicitado", `$${(selectedExp.amount || 0).toLocaleString()}`],
-              ["Estado", selectedExp.status]
+              [L("Rol en este expediente", "Role in this compliance file"), getMiRol(selectedExp)],
+              [L("Solicitante", "Applicant"), selectedExp.solicitanteName],
+              [L("Otorgante", "Funding Provider"), selectedExp.otorganteName],
+              [L("Sector", "Sector"), selectedExp.sector],
+              [L("Monto solicitado", "Requested Amount"), `$${(selectedExp.amount || 0).toLocaleString()}`],
+              [L("Estado", "Status"), L(selectedExp.status, selectedExp.status)]
             ].map(([label, value]) => (
               <div key={label} style={{ background: COLORS.bg, padding: "1rem", borderRadius: "8px" }}>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", margin: "0 0 0.5rem 0" }}>
@@ -330,7 +333,7 @@ export default function ExpedientesTab() {
               borderLeft: `3px solid ${COLORS.gold}`
             }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", margin: "0 0 0.5rem 0" }}>
-                Descripción
+                {L("Descripción", "Description")}
               </p>
               <p style={{ color: COLORS.text, margin: 0, lineHeight: 1.6 }}>
                 {selectedExp.description}
@@ -345,9 +348,9 @@ export default function ExpedientesTab() {
             marginTop: "1.5rem"
           }}>
             {[
-              ["📄 Documentos", selectedExp.documents?.length || 0, "Archivos cargados"],
-              ["📋 Requerimientos", selectedExp.requirements?.length || 0, "Solicitudes pendientes"],
-              ["💬 Mensajes", selectedExp.messages?.length || 0, "Comunicaciones"]
+              [`📄 ${L("Documentos", "Documents")}`, selectedExp.documents?.length || 0, L("Archivos cargados", "Uploaded files")],
+              [`📋 ${L("Requerimientos", "Requirements")}`, selectedExp.requirements?.length || 0, L("Solicitudes pendientes", "Pending requests")],
+              [`💬 ${L("Mensajes", "Messages")}`, selectedExp.messages?.length || 0, L("Comunicaciones", "Communications")]
             ].map(([icon, count, label]) => (
               <div key={label} style={{
                 background: COLORS.bg,
@@ -398,7 +401,7 @@ export default function ExpedientesTab() {
               }
             }}
           >
-            {exportingId === selectedExp.id ? "📥 Generando..." : "📥 Descargar expediente como PDF"}
+            {exportingId === selectedExp.id ? L("📥 Generando...", "📥 Generating...") : L("📥 Descargar expediente como PDF", "📥 Download compliance file as PDF")}
           </button>
 
           <div style={{
@@ -411,10 +414,10 @@ export default function ExpedientesTab() {
             fontSize: "0.9rem"
           }}>
             <p style={{ margin: 0, fontWeight: 700 }}>
-              ℹ️ Este es el expediente que vincula tu actividad con {getMiRol(selectedExp) === "Solicitante" ? "el Otorgante" : "el Solicitante"}
+              ℹ️ {L("Este es el expediente que vincula tu actividad con", "This is the compliance file that links your activity with")} {getMiRol(selectedExp) === L("Solicitante", "Applicant") ? L("el Otorgante", "the Funding Provider") : L("el Solicitante", "the Applicant")}
             </p>
             <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.85rem" }}>
-              Documentos, requerimientos y mensajes se vinculan automáticamente a este expediente
+              {L("Documentos, requerimientos y mensajes se vinculan automáticamente a este expediente", "Documents, requirements and messages are automatically linked to this compliance file")}
             </p>
           </div>
         </div>

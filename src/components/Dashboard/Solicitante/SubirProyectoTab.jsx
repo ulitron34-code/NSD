@@ -91,39 +91,42 @@ export default function SubirProyectoTab() {
     : [
         { name: "Cargando requisitos...", status: "Pendiente" }
       ];
+  const expectedFunderQuestions = [
+    [L("Uso de fondos", "Use of funds"), L("Como se aplicara el dinero, en que calendario y que hitos desbloquea.", "How the money will be deployed, on what schedule and what milestones it unlocks.")],
+    [L("Capacidad de pago", "Repayment capacity"), L("Flujo, EBITDA, cobranza, contratos o fuente de repago.", "Cash flow, EBITDA, collections, contracts or repayment source.")],
+    [L("Control legal", "Legal control"), L("Poderes, beneficiario controlador, obligaciones vigentes y garantias.", "Powers of attorney, beneficial owner, current obligations and guarantees.")],
+    [L("Evidencia", "Evidence"), L("Documentos que soportan afirmaciones financieras, comerciales y legales.", "Documents supporting financial, commercial and legal claims.")],
+  ];
+  const remediationRoadmap = [
+    [L("48 horas", "48 hours"), L("Completar documentos obligatorios y corregir datos inconsistentes.", "Complete mandatory documents and correct inconsistent data.")],
+    [L("7 dias", "7 days"), L("Agregar soporte financiero, contrato clave y escenario conservador.", "Add financial support, key contract and conservative scenario.")],
+    [L("14 dias", "14 days"), L("Validar KYC/KYB, data room y autorizaciones para otorgantes.", "Validate KYC/KYB, data room and authorizations for funding providers.")],
+  ];
+  const shareReadiness = [
+    [L("Diagnostico IA", "AI Diagnosis"), analysis ? L("Listo", "Ready") : L("Pendiente", "Pending"), analysis ? L("Score y hallazgos generados.", "Score and findings generated.") : L("Ejecuta analisis IA del proyecto.", "Run AI analysis of the project.")],
+    [L("Matriz documental", "Document Matrix"), currentMatrix ? L("Activa", "Active") : L("Cargando", "Loading"), currentMatrix ? L(`${currentMatrix.requirements.length} requisito(s) detectados.`, `${currentMatrix.requirements.length} requirement(s) detected.`) : L("Esperando matriz por sector.", "Waiting for sector matrix.")],
+    [L("Data room", "Data Room"), documents.length > 1 ? L("Preparado", "Prepared") : L("Inicial", "Initial"), L("Documentos organizados para revision institucional.", "Documents organized for institutional review.")],
+    [L("Otorgantes", "Funding Providers"), analysis ? L("Sugeridos", "Suggested") : L("Pendiente", "Pending"), analysis ? L(`${analysis.matches.length} perfil(es) compatibles.`, `${analysis.matches.length} compatible profile(s).`) : L("Se calculan despues del analisis.", "Calculated after analysis.")],
+  ];
+
   const preparationPlan = React.useMemo(() => {
     const mandatory = documents.filter((doc) => doc.status.includes("Obligatorio")).length;
     const sectorRisk = project.sector.includes("Fintech") || project.sector.includes("SOFOM")
-      ? "Regulatorio alto"
+      ? L("Regulatorio alto", "High regulatory risk")
       : project.sector.includes("Inmobiliario")
-        ? "Garantias y permisos"
-        : "Presentacion financiera";
-    const amountTone = project.amount.includes("USD") ? "Validar moneda, fuente de pago y sensibilidad cambiaria." : "Confirmar moneda y calendario de desembolso.";
+        ? L("Garantias y permisos", "Collateral and permits")
+        : L("Presentacion financiera", "Financial presentation");
+    const amountTone = project.amount.includes("USD")
+      ? L("Validar moneda, fuente de pago y sensibilidad cambiaria.", "Validate currency, repayment source and exchange rate sensitivity.")
+      : L("Confirmar moneda y calendario de desembolso.", "Confirm currency and disbursement schedule.");
 
     return [
-      ["Estructura sugerida", project.sector.includes("Startup") || project.sector.includes("Tecnolog") ? "Deuda flexible, venture debt o revenue based financing." : "Credito estructurado, deuda senior o capital partner."],
-      ["Riesgo principal", sectorRisk],
-      ["Documentos criticos", `${mandatory || documents.length} requisito(s) deben cerrarse antes de compartir.`],
-      ["Lectura financiera", amountTone],
+      [L("Estructura sugerida", "Suggested structure"), project.sector.includes("Startup") || project.sector.includes("Tecnolog") ? L("Deuda flexible, venture debt o revenue based financing.", "Flexible debt, venture debt or revenue based financing.") : L("Credito estructurado, deuda senior o capital partner.", "Structured credit, senior debt or capital partner.")],
+      [L("Riesgo principal", "Main risk"), sectorRisk],
+      [L("Documentos criticos", "Critical documents"), L(`${mandatory || documents.length} requisito(s) deben cerrarse antes de compartir.`, `${mandatory || documents.length} requirement(s) must be closed before sharing.`)],
+      [L("Lectura financiera", "Financial reading"), amountTone],
     ];
-  }, [documents, project.amount, project.sector]);
-  const expectedFunderQuestions = [
-    ["Uso de fondos", "Como se aplicara el dinero, en que calendario y que hitos desbloquea."],
-    ["Capacidad de pago", "Flujo, EBITDA, cobranza, contratos o fuente de repago."],
-    ["Control legal", "Poderes, beneficiario controlador, obligaciones vigentes y garantias."],
-    ["Evidencia", "Documentos que soportan afirmaciones financieras, comerciales y legales."],
-  ];
-  const remediationRoadmap = [
-    ["48 horas", "Completar documentos obligatorios y corregir datos inconsistentes."],
-    ["7 dias", "Agregar soporte financiero, contrato clave y escenario conservador."],
-    ["14 dias", "Validar KYC/KYB, data room y autorizaciones para otorgantes."],
-  ];
-  const shareReadiness = [
-    ["Diagnostico IA", analysis ? "Listo" : "Pendiente", analysis ? "Score y hallazgos generados." : "Ejecuta analisis IA del proyecto."],
-    ["Matriz documental", currentMatrix ? "Activa" : "Cargando", currentMatrix ? `${currentMatrix.requirements.length} requisito(s) detectados.` : "Esperando matriz por sector."],
-    ["Data room", documents.length > 1 ? "Preparado" : "Inicial", "Documentos organizados para revision institucional."],
-    ["Otorgantes", analysis ? "Sugeridos" : "Pendiente", analysis ? `${analysis.matches.length} perfil(es) compatibles.` : "Se calculan despues del analisis."],
-  ];
+  }, [documents, project.amount, project.sector, i18n.language]);
 
   const updateProject = (field, value) => {
     setProject((current) => ({ ...current, [field]: value }));
@@ -282,18 +285,18 @@ export default function SubirProyectoTab() {
             </div>
             <span style={{ color: COLORS.green, fontSize: "2rem", fontWeight: 900 }}>{analysis.score}/100</span>
           </div>
-
+ 
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(260px, 0.8fr)", gap: "1rem" }}>
             <div style={{ background: COLORS.white, borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
               <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.6rem" }}>{copy("Hallazgos")}</p>
               {analysis.findings.map((finding) => (
-                <p key={finding} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>- {finding}</p>
+                <p key={finding} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>- {copy(finding)}</p>
               ))}
             </div>
             <div style={{ background: COLORS.white, borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
               <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.6rem" }}>{copy("Otorgantes sugeridos")}</p>
               {analysis.matches.map((match) => (
-                <p key={match} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>- {match}</p>
+                <p key={match} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>- {copy(match)}</p>
               ))}
             </div>
           </div>

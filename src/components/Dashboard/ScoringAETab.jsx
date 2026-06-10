@@ -3,33 +3,33 @@ import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
 
-const grades = [
-  ["A", "Listo institucional", "Expediente completo, sin alertas criticas y con evidencia suficiente para revision acelerada.", "#2E7D32"],
-  ["B", "Viable con observaciones", "Faltantes menores o mitigables; puede avanzar con condiciones y seguimiento.", "#6A8E23"],
-  ["C", "Requiere saneamiento", "Faltantes relevantes que impiden una lectura institucional completa.", "#C9A227"],
-  ["D", "Riesgo alto", "Inconsistencias, documentos vencidos o informacion critica incompleta.", "#C46A1B"],
-  ["E", "No recomendable", "Red flags, opacidad o falta de evidencia suficiente para presentar a otorgantes.", "#B3261E"],
-];
-
-const dimensions = [
-  ["Identidad / KYB", "15%", "Beneficiario controlador, poderes, RFC, identificaciones y estructura."],
-  ["Corporativo legal", "15%", "Actas, estatutos, autorizaciones y capacidad de contratar financiamiento."],
-  ["Financiero", "25%", "Estados financieros, ingresos, deuda, flujo y fuente de repago."],
-  ["Proyecto", "20%", "Uso de recursos, presupuesto, hitos, contratos y evidencia operativa."],
-  ["Cumplimiento / antifraude", "15%", "Listas, declaraciones, consistencia documental y alertas."],
-  ["Data room / trazabilidad", "10%", "Versiones, permisos, auditoria y orden del expediente."],
-];
-
-const guardrails = [
-  "El score no es aprobacion de credito ni dictamen legal.",
-  "La IA asiste revision, pero las decisiones finales corresponden a humanos autorizados.",
-  "Un grado A-E debe poder explicarse con evidencia documental.",
-  "Red flags criticas pueden bloquear avance aunque el promedio numerico sea alto.",
-];
-
 export default function ScoringAETab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+
+  const grades = [
+    ["A", L("Listo institucional", "Institutional Ready"), L("Expediente completo, sin alertas criticas y con evidencia suficiente para revision acelerada.", "Complete file, no critical alerts and sufficient evidence for accelerated review."), "#2E7D32"],
+    ["B", L("Viable con observaciones", "Viable with Observations"), L("Faltantes menores o mitigables; puede avanzar con condiciones y seguimiento.", "Minor or mitigable gaps; can proceed with conditions and follow-up."), "#6A8E23"],
+    ["C", L("Requiere saneamiento", "Requires Remediation"), L("Faltantes relevantes que impiden una lectura institucional completa.", "Relevant gaps that prevent a complete institutional readout."), "#C9A227"],
+    ["D", L("Riesgo alto", "High Risk"), L("Inconsistencias, documentos vencidos o informacion critica incompleta.", "Inconsistencies, expired documents or incomplete critical information."), "#C46A1B"],
+    ["E", L("No recomendable", "Not Recommended"), L("Red flags, opacidad o falta de evidencia suficiente para presentar a otorgantes.", "Red flags, opacity or lack of sufficient evidence to present to funders."), "#B3261E"],
+  ];
+
+  const dimensions = [
+    [L("Identidad / KYB", "Identity & KYB"), "15%", L("Beneficiario controlador, poderes, RFC, identificaciones y estructura.", "Ultimate beneficial owner, powers of attorney, tax ID, identifications and structure.")],
+    [L("Corporativo legal", "Corporate Legal"), "15%", L("Actas, estatutos, autorizaciones y capacidad de contratar financiamiento.", "Bylaws, articles, authorizations and financing capacity.")],
+    [L("Financiero", "Financial"), "25%", L("Estados financieros, ingresos, deuda, flujo y fuente de repago.", "Financial statements, revenue, debt, cash flow and repayment source.")],
+    [L("Proyecto", "Project"), "20%", L("Uso de recursos, presupuesto, hitos, contratos y evidencia operativa.", "Use of funds, budget, milestones, contracts and operational evidence.")],
+    [L("Cumplimiento / antifraude", "Compliance & Anti-Fraud"), "15%", L("Listas, declaraciones, consistencia documental y alertas.", "Screening lists, declarations, document consistency and alerts.")],
+    [L("Data room / trazabilidad", "Data Room & Traceability"), "10%", L("Versiones, permisos, auditoria y orden del expediente.", "Versions, permissions, audit logs and file organization.")],
+  ];
+
+  const guardrails = [
+    L("El score no es aprobacion de credito ni dictamen legal.", "The score is not a credit approval or legal opinion."),
+    L("La IA asiste revision, pero las decisiones finales corresponden a humanos autorizados.", "AI assists review, but final decisions belong to authorized humans."),
+    L("Un grado A-E debe poder explicarse con evidencia documental.", "An A-E grade must be explainable with documentary evidence."),
+    L("Red flags criticas pueden bloquear avance aunque el promedio numerico sea alto.", "Critical red flags can block progress even if the numerical average is high."),
+  ];
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -59,9 +59,9 @@ export default function ScoringAETab() {
           <article key={grade} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.55rem" }}>
               <span style={{ width: "38px", height: "38px", borderRadius: "50%", background: color, color: COLORS.white, display: "grid", placeItems: "center", fontWeight: 900 }}>{grade}</span>
-              <strong style={{ color: COLORS.navy, fontSize: "0.92rem" }}>{L(title, title)}</strong>
+              <strong style={{ color: COLORS.navy, fontSize: "0.92rem" }}>{title}</strong>
             </div>
-            <p style={{ margin: 0, color: COLORS.text, fontSize: "0.83rem", lineHeight: 1.45 }}>{L(detail, detail)}</p>
+            <p style={{ margin: 0, color: COLORS.text, fontSize: "0.83rem", lineHeight: 1.45 }}>{detail}</p>
           </article>
         ))}
       </section>
@@ -80,11 +80,11 @@ export default function ScoringAETab() {
               </tr>
             </thead>
             <tbody>
-              {dimensions.map(([dimension, weight, detail]) => (
-                <tr key={dimension} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                  <td style={{ padding: "0.7rem", color: COLORS.navy, fontWeight: 900, fontSize: "0.86rem" }}>{L(dimension, dimension)}</td>
+              {dimensions.map(([dimension, weight, detail], idx) => (
+                <tr key={idx} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                  <td style={{ padding: "0.7rem", color: COLORS.navy, fontWeight: 900, fontSize: "0.86rem" }}>{dimension}</td>
                   <td style={{ padding: "0.7rem", color: COLORS.gold, fontWeight: 900 }}>{weight}</td>
-                  <td style={{ padding: "0.7rem", color: COLORS.text, fontSize: "0.84rem" }}>{L(detail, detail)}</td>
+                  <td style={{ padding: "0.7rem", color: COLORS.text, fontSize: "0.84rem" }}>{detail}</td>
                 </tr>
               ))}
             </tbody>
@@ -94,7 +94,7 @@ export default function ScoringAETab() {
         <aside style={{ background: "#102235", borderRadius: "10px", color: COLORS.white, padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{L("Reglas de control", "Guardrails")}</p>
           <ul style={{ margin: "0.75rem 0 0", paddingLeft: "1.05rem", color: "rgba(255,255,255,0.78)", fontSize: "0.84rem", lineHeight: 1.55 }}>
-            {guardrails.map((item) => <li key={item}>{L(item, item)}</li>)}
+            {guardrails.map((item, idx) => <li key={idx}>{item}</li>)}
           </ul>
         </aside>
       </section>

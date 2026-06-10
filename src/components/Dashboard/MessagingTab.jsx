@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNotification } from "../../hooks/useNotification";
 import { useAuth } from "../../hooks/useAuth";
 import { COLORS } from "../../utils/constants";
+import { uiText } from "../../utils/runtimeCopy";
 import {
   sendMessage,
   getConversationForUser,
@@ -12,26 +14,23 @@ import {
 } from "../../services/messagingServiceV2";
 import { getExpedientesForUser } from "../../services/expedienteService";
 
-// FASE 5: MessagingTab completamente conectado a messagingServiceV2
-
 export default function MessagingTab() {
   const { addNotification } = useNotification();
   const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
 
-  // FASE 5: Estados
   const [expedientes, setExpedientes] = useState([]);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Formulario
   const [formData, setFormData] = useState({
     subject: "",
     body: "",
   });
 
-  // FASE 5: Cargar expedientes
   useEffect(() => {
     if (!user) return;
 
@@ -39,7 +38,6 @@ export default function MessagingTab() {
       try {
         const exps = await getExpedientesForUser(user.id);
         setExpedientes(exps);
-        // Auto-seleccionar el primero
         if (exps.length > 0 && !selectedExpediente) {
           setSelectedExpediente(exps[0]);
         }
@@ -51,7 +49,6 @@ export default function MessagingTab() {
     loadExpedientes();
   }, [user]);
 
-  // FASE 5: Cargar conversación del expediente
   useEffect(() => {
     if (!selectedExpediente || !user) {
       setLoading(false);
@@ -61,17 +58,13 @@ export default function MessagingTab() {
     const loadConversation = async () => {
       try {
         setLoading(true);
-
-        // Obtener mensajes de la conversación
         const msgs = await getConversationForUser(user.id, selectedExpediente.id);
         setMessages(msgs);
 
-        // Contar sin leer
         const unread = await getUnreadMessages(user.id);
         const inThisExp = unread.filter(m => m.expedienteId === selectedExpediente.id);
         setUnreadCount(inThisExp.length);
 
-        // Marcar como leídos los de esta conversación
         inThisExp.forEach(msg => {
           markMessageAsRead(msg.id).catch(err => console.log("Mark read error:", err));
         });
@@ -85,27 +78,24 @@ export default function MessagingTab() {
 
     loadConversation();
 
-    // FASE 5: Auto-refresh cada 5 segundos
     const interval = setInterval(loadConversation, 5000);
     return () => clearInterval(interval);
   }, [selectedExpediente, user]);
 
-  // FASE 5: Enviar mensaje
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
     if (!formData.body.trim()) {
-      addNotification("Escribe un mensaje", "error");
+      addNotification(L("Escribe un mensaje", "Please write a message"), "error");
       return;
     }
 
     if (!selectedExpediente) {
-      addNotification("Selecciona un expediente", "error");
+      addNotification(L("Selecciona un expediente", "Select a compliance file"), "error");
       return;
     }
 
     try {
-      // Determinar a quién va el mensaje
       const isOtorgante = selectedExpediente.otorganteId === user.id;
       const toUserId = isOtorgante ? selectedExpediente.solicitanteId : selectedExpediente.otorganteId;
       const toUserName = isOtorgante ? selectedExpediente.solicitanteName : selectedExpediente.otorganteName;
@@ -118,24 +108,22 @@ export default function MessagingTab() {
         toUserType: isOtorgante ? "solicitante" : "otorgante",
         toUserName: toUserName,
         expedienteId: selectedExpediente.id,
-        subject: formData.subject || "Sin asunto",
+        subject: formData.subject || L("Sin asunto", "No Subject"),
         body: formData.body,
         priority: "normal"
       });
 
-      // Recargar conversación
       const msgs = await getConversationForUser(user.id, selectedExpediente.id);
       setMessages(msgs);
 
       setFormData({ subject: "", body: "" });
-      addNotification("✅ Mensaje enviado. Destinatario notificado", "success");
+      addNotification(L("✅ Mensaje enviado. Destinatario notificado", "✅ Message sent. Recipient notified"), "success");
     } catch (err) {
       console.error("Error sending message:", err);
-      addNotification("Error al enviar mensaje", "error");
+      addNotification(L("Error al enviar mensaje", "Error sending message"), "error");
     }
   };
 
-  // FASE 5: Marcar todo como leído
   const handleMarkAllAsRead = async () => {
     if (!selectedExpediente) return;
 
@@ -144,7 +132,7 @@ export default function MessagingTab() {
       setUnreadCount(0);
       const msgs = await getConversationForUser(user.id, selectedExpediente.id);
       setMessages(msgs);
-      addNotification("Marcado como leído", "success");
+      addNotification(L("Marcado como leído", "Marked as read"), "success");
     } catch (err) {
       console.error("Error:", err);
     }
@@ -158,11 +146,11 @@ export default function MessagingTab() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1.5rem", marginBottom: "2rem" }}>
         <div>
           <h1 style={{ color: COLORS.navy, fontSize: "2rem", marginBottom: "0.5rem" }}>
-            💬 Mensajería
+            💬 {L("Mensajería", "Messaging")}
           </h1>
           <p style={{ color: COLORS.textMuted, maxWidth: "760px" }}>
-            Comunicación directa con {isOtorgante ? "el Solicitante" : "el Otorgante"}
-            {unreadCount > 0 && ` · ${unreadCount} sin leer`}
+            {L("Comunicación directa con", "Direct communication with")} {isOtorgante ? L("el Solicitante", "the Applicant") : L("el Otorgante", "the Funding Provider")}
+            {unreadCount > 0 && ` · ${unreadCount} ${L("sin leer", "unread")}`}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -178,7 +166,7 @@ export default function MessagingTab() {
               cursor: "pointer",
             }}
           >
-            ✓ Marcar todo como leído
+            ✓ {L("Marcar todo como leído", "Mark all as read")}
           </button>
         )}
       </div>
@@ -193,7 +181,7 @@ export default function MessagingTab() {
           border: `1px solid ${COLORS.border}`
         }}>
           <label style={{ fontWeight: 700, color: COLORS.navy, marginRight: "1rem" }}>
-            Expediente:
+            {L("Expediente:", "Compliance File:")}
           </label>
           <select
             value={selectedExpediente?.id || ""}
@@ -244,12 +232,12 @@ export default function MessagingTab() {
             }}
           >
             {loading && (
-              <p style={{ color: COLORS.textMuted, textAlign: "center" }}>Cargando...</p>
+              <p style={{ color: COLORS.textMuted, textAlign: "center" }}>{L("Cargando...", "Loading...")}</p>
             )}
 
             {!loading && messages.length === 0 && (
               <p style={{ color: COLORS.textMuted, textAlign: "center" }}>
-                No hay mensajes en esta conversación
+                {L("No hay mensajes en esta conversación", "No messages in this conversation")}
               </p>
             )}
 
@@ -292,7 +280,7 @@ export default function MessagingTab() {
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
-                      {!msg.read && !isFromMe && " • Sin leer"}
+                      {!msg.read && !isFromMe && ` • ${L("Sin leer", "Unread")}`}
                     </p>
                   </div>
                 </div>
@@ -314,7 +302,7 @@ export default function MessagingTab() {
           >
             <input
               type="text"
-              placeholder="Asunto (opcional)"
+              placeholder={L("Asunto (opcional)", "Subject (optional)")}
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               style={{
@@ -325,7 +313,7 @@ export default function MessagingTab() {
               }}
             />
             <textarea
-              placeholder="Escribe tu mensaje..."
+              placeholder={L("Escribe tu mensaje...", "Type your message...")}
               value={formData.body}
               onChange={(e) => setFormData({ ...formData, body: e.target.value })}
               style={{
@@ -349,7 +337,7 @@ export default function MessagingTab() {
                 cursor: "pointer",
               }}
             >
-              📤 Enviar mensaje
+              📤 {L("Enviar mensaje", "Send Message")}
             </button>
           </form>
         </div>

@@ -1,13 +1,24 @@
-﻿import React from "react";
+import React from "react";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
+import { uiText } from "../../utils/runtimeCopy";
 
 export default function HistorySection() {
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
+
   const timeline = [
-    { year: 2022, title: "Fundacion", desc: "NSD nace para ordenar expedientes, evidencia y controles operativos." },
-    { year: 2023, title: "Primeros flujos", desc: "Se incorporan validaciones KYC/KYB, revision documental y bitacoras internas." },
-    { year: 2024, title: "Expansion regional", desc: "La plataforma se adapta a equipos con operaciones en Mexico y Latinoamerica." },
-    { year: 2025, title: "Plataforma digital", desc: "Lanzamiento de modulos SaaS para analisis, auditoria e integraciones." },
-    { year: 2026, title: "Hoy", desc: "NSD Platform conecta compliance, servicios profesionales y revision de oportunidades por otorgantes." },
+    { year: 2022, title: L("Fundacion", "Founding"), desc: L("NSD nace para ordenar expedientes, evidencia y controles operativos.", "NSD is born to organize compliance files, evidence and operational controls.") },
+    { year: 2023, title: L("Primeros flujos", "First Workflows"), desc: L("Se incorporan validaciones KYC/KYB, revision documental y bitacoras internas.", "KYC/KYB validations, document review and internal logs are incorporated.") },
+    { year: 2024, title: L("Expansion regional", "Regional Expansion"), desc: L("La plataforma se adapta a equipos con operaciones en Mexico y Latinoamerica.", "The platform adapts to teams with operations in Mexico and Latin America.") },
+    { year: 2025, title: L("Plataforma digital", "Digital Platform"), desc: L("Lanzamiento de modulos SaaS para analisis, auditoria e integraciones.", "Launch of SaaS modules for analysis, auditability and integrations.") },
+    { year: 2026, title: L("Hoy", "Today"), desc: L("NSD Platform conecta compliance, servicios profesionales y revision de oportunidades por otorgantes.", "NSD Platform connects compliance, professional services and opportunity review by funding providers.") },
+  ];
+
+  const team = [
+    { name: "Ulises Salgado", role: L("Fundador & CEO", "Founder & CEO"), bio: L("15+ años en operaciones, tecnologia y procesos regulados.", "15+ years in operations, technology and regulated processes.") },
+    { name: "Ana Garcia", role: L("Operaciones", "Operations"), bio: L("Especialista en expedientes, SLA y mejora de flujos internos.", "Specialist in compliance files, SLAs and internal workflow improvement.") },
+    { name: "Carlos Lopez", role: L("Legal & Compliance", "Legal & Compliance"), bio: L("Abogado especializado en control documental y cumplimiento.", "Lawyer specializing in document control and compliance.") },
   ];
 
   return (
@@ -20,7 +31,7 @@ export default function HistorySection() {
           borderLeft: `4px solid ${COLORS.gold}`,
           paddingLeft: "1rem",
         }}>
-          Historia de NSD Platform
+          {L("Historia de NSD Platform", "History of NSD Platform")}
         </h2>
 
         <div style={{ marginTop: "3rem", marginBottom: "3rem" }}>
@@ -43,14 +54,10 @@ export default function HistorySection() {
 
         <div style={{ marginTop: "3rem" }}>
           <h3 style={{ color: COLORS.navy, fontSize: "1.8rem", marginBottom: "2rem", borderLeft: `4px solid ${COLORS.gold}`, paddingLeft: "1rem" }}>
-            Nuestro equipo
+            {L("Nuestro equipo", "Our Team")}
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "2rem" }}>
-            {[
-              { name: "Ulises Salgado", role: "Fundador & CEO", bio: "15+ anos en operaciones, tecnologia y procesos regulados." },
-              { name: "Ana Garcia", role: "Operaciones", bio: "Especialista en expedientes, SLA y mejora de flujos internos." },
-              { name: "Carlos Lopez", role: "Legal & Compliance", bio: "Abogado especializado en control documental y cumplimiento." },
-            ].map((member) => (
+            {team.map((member) => (
               <div key={member.name} style={{ background: COLORS.white, padding: "2rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, textAlign: "center" }}>
                 <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: COLORS.gold, margin: "0 auto 1rem" }} />
                 <h4 style={{ color: COLORS.navy, fontWeight: "600", marginBottom: "0.25rem" }}>
