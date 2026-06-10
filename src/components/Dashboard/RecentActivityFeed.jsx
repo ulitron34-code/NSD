@@ -1,8 +1,13 @@
 import React from "react";
 import { COLORS } from "../../utils/constants";
+import { useTranslation } from "react-i18next";
+import { translateCopy } from "../../utils/runtimeCopy";
 import { demoAuditLog } from "../../data/demoAuditLog";
 
 export default function RecentActivityFeed() {
+  const { i18n } = useTranslation();
+  const copy = (val) => translateCopy(val, i18n.language);
+
   const statusMap = {
     success: COLORS.green,
     warning: COLORS.amber,
@@ -19,10 +24,10 @@ export default function RecentActivityFeed() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
           <h2 style={{ color: COLORS.navy, fontSize: "1.2rem", marginBottom: "0.25rem" }}>
-            Bitacora de auditoria
+            {copy("Bitacora de auditoria")}
           </h2>
           <p style={{ color: COLORS.textMuted, fontSize: "0.86rem" }}>
-            Eventos recientes con actor, accion y evidencia.
+            {copy("Eventos recientes con actor, accion y evidencia.")}
           </p>
         </div>
         <span style={{
@@ -57,18 +62,18 @@ export default function RecentActivityFeed() {
 
             <div>
               <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.25rem" }}>
-                {activity.title}
+                {copy(activity.title)}
               </p>
               <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                {activity.description}
+                {copy(activity.description)}
               </p>
               <p style={{ color: COLORS.textMuted, fontSize: "0.78rem" }}>
-                Actor: {activity.actor}
+                {copy("Actor")}: {copy(activity.actor)}
               </p>
             </div>
 
             <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", whiteSpace: "nowrap" }}>
-              {activity.timestamp}
+              {copy(activity.timestamp)}
             </p>
           </div>
         ))}

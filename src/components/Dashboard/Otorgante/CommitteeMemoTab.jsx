@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
-import { uiText } from "../../../utils/runtimeCopy";
+import { uiText, translateCopy } from "../../../utils/runtimeCopy";
 
 const memoSections = [
   {
@@ -44,6 +44,7 @@ const decisionChecklist = [
 export default function CommitteeMemoTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const copy = (val) => translateCopy(val, i18n.language);
 
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
@@ -71,10 +72,10 @@ export default function CommitteeMemoTab() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.85rem" }}>
         {memoSections.map((section) => (
           <article key={section.title} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{L(section.status, section.status)}</p>
-            <h2 style={{ margin: "0.3rem 0 0.75rem", color: COLORS.navy, fontSize: "1.05rem" }}>{L(section.title, section.title)}</h2>
+            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{copy(section.status)}</p>
+            <h2 style={{ margin: "0.3rem 0 0.75rem", color: COLORS.navy, fontSize: "1.05rem" }}>{copy(section.title)}</h2>
             <ul style={{ margin: 0, paddingLeft: "1.1rem", color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.55 }}>
-              {section.items.map((item) => <li key={item}>{L(item, item)}</li>)}
+              {section.items.map((item) => <li key={item}>{copy(item)}</li>)}
             </ul>
           </article>
         ))}
@@ -96,8 +97,8 @@ export default function CommitteeMemoTab() {
             <tbody>
               {decisionChecklist.map(([area, readout, signal]) => (
                 <tr key={area} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                  <td style={{ padding: "0.7rem", color: COLORS.navy, fontWeight: 800, fontSize: "0.86rem" }}>{L(area, area)}</td>
-                  <td style={{ padding: "0.7rem", color: COLORS.text, fontSize: "0.86rem" }}>{L(readout, readout)}</td>
+                  <td style={{ padding: "0.7rem", color: COLORS.navy, fontWeight: 800, fontSize: "0.86rem" }}>{copy(area)}</td>
+                  <td style={{ padding: "0.7rem", color: COLORS.text, fontSize: "0.86rem" }}>{copy(readout)}</td>
                   <td style={{ padding: "0.7rem" }}>
                     <span style={{
                       display: "inline-flex",

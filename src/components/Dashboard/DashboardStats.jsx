@@ -1,5 +1,7 @@
 import React from "react";
 import { COLORS } from "../../utils/constants";
+import { useTranslation } from "react-i18next";
+import { translateCopy } from "../../utils/runtimeCopy";
 import {
   Bar,
   BarChart,
@@ -15,6 +17,9 @@ import {
 import { caseStatus, complianceTrend, dashboardKpis, riskData } from "../../data/demoDashboard";
 
 export default function DashboardStats() {
+  const { i18n } = useTranslation();
+  const copy = (val) => translateCopy(val, i18n.language);
+
   return (
     <div className="dashboard-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
       <div style={{
@@ -32,13 +37,13 @@ export default function DashboardStats() {
             borderTop: `4px solid ${kpi.color}`,
           }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              {kpi.title}
+              {copy(kpi.title)}
             </p>
             <p style={{ color: COLORS.navy, fontWeight: 800, fontSize: "2rem", lineHeight: 1 }}>
               {kpi.value}
             </p>
             <p style={{ color: kpi.color, fontWeight: 600, fontSize: "0.86rem", marginTop: "0.65rem" }}>
-              {kpi.helper}
+              {copy(kpi.helper)}
             </p>
           </div>
         ))}
@@ -51,16 +56,16 @@ export default function DashboardStats() {
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
       }}>
         <h3 style={{ color: COLORS.navy, marginBottom: "1rem", fontWeight: 700 }}>
-          Evolucion de cumplimiento
+          {copy("Evolucion de cumplimiento")}
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={complianceTrend}>
             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
-            <XAxis dataKey="month" stroke={COLORS.textMuted} />
+            <XAxis dataKey="month" tickFormatter={(tick) => copy(tick)} stroke={COLORS.textMuted} />
             <YAxis stroke={COLORS.textMuted} />
-            <Tooltip contentStyle={{ background: COLORS.white, border: `1px solid ${COLORS.border}` }} />
-            <Bar dataKey="completos" fill={COLORS.green} name="Completos" />
-            <Bar dataKey="pendientes" fill={COLORS.amber} name="Pendientes" />
+            <Tooltip formatter={(value, name) => [value, copy(name)]} contentStyle={{ background: COLORS.white, border: `1px solid ${COLORS.border}` }} />
+            <Bar dataKey="completos" fill={COLORS.green} name={copy("Completos")} />
+            <Bar dataKey="pendientes" fill={COLORS.amber} name={copy("Pendientes")} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -72,7 +77,7 @@ export default function DashboardStats() {
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
       }}>
         <h3 style={{ color: COLORS.navy, marginBottom: "1rem", fontWeight: 700 }}>
-          Estado de expedientes
+          {copy("Estado de expedientes")}
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -81,7 +86,7 @@ export default function DashboardStats() {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, value }) => `${name}: ${value}`}
+              label={({ name, value }) => `${copy(name)}: ${value}`}
               outerRadius={100}
               dataKey="value"
             >
@@ -89,7 +94,7 @@ export default function DashboardStats() {
                 <Cell key={entry.name} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip formatter={(value, name, props) => [value, copy(props.payload.name)]} />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -102,15 +107,15 @@ export default function DashboardStats() {
         gridColumn: "1 / -1",
       }}>
         <h3 style={{ color: COLORS.navy, marginBottom: "1rem", fontWeight: 700 }}>
-          Distribucion de riesgo
+          {copy("Distribucion de riesgo")}
         </h3>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={riskData}>
             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
-            <XAxis dataKey="range" stroke={COLORS.textMuted} />
+            <XAxis dataKey="range" tickFormatter={(tick) => copy(tick)} stroke={COLORS.textMuted} />
             <YAxis stroke={COLORS.textMuted} />
-            <Tooltip contentStyle={{ background: COLORS.white, border: `1px solid ${COLORS.border}` }} />
-            <Bar dataKey="count" fill={COLORS.gold} name="Expedientes" />
+            <Tooltip formatter={(value, name) => [value, copy("Expedientes")]} contentStyle={{ background: COLORS.white, border: `1px solid ${COLORS.border}` }} />
+            <Bar dataKey="count" fill={COLORS.gold} name={copy("Expedientes")} />
           </BarChart>
         </ResponsiveContainer>
       </div>

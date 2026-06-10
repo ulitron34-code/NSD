@@ -50,7 +50,7 @@ const appetiteDefaults = {
 const regionOptions = ["Todos", "MX", "US", "CA", "LATAM", "EU"];
 const readinessOptions = ["Todos", "Listo para comite", "Subsanable", "Preparacion inicial"];
 
-function buildGateStatus(selected, interestStatus, aiReview) {
+function buildGateStatus(selected, interestStatus, aiReview, copy = (value) => value) {
   const share = selected?.share || {};
   const score = aiReview?.score || selected?.averageScore || 0;
   const contactStatus = selected?.contactRequest?.status;
@@ -63,103 +63,103 @@ function buildGateStatus(selected, interestStatus, aiReview) {
   return [
     {
       key: "nda",
-      label: "NDA / acceso autorizado",
+      label: copy("NDA / acceso autorizado"),
       complete: ndaReady,
-      detail: ndaReady ? "Data room aceptado o compartido bajo acceso controlado." : "Pendiente aceptar invitacion o NDA operativo."
+      detail: ndaReady ? copy("Data room aceptado o compartido bajo acceso controlado.") : copy("Pendiente aceptar invitacion o NDA operativo.")
     },
     {
       key: "mfa",
-      label: "MFA / usuario validado",
+      label: copy("MFA / usuario validado"),
       complete: mfaReady,
-      detail: mfaReady ? "Otorgante identificado para revision institucional." : "Pendiente validacion de usuario autorizado."
+      detail: mfaReady ? copy("Otorgante identificado para revision institucional.") : copy("Pendiente validacion de usuario autorizado.")
     },
     {
       key: "committee",
-      label: "Revision interna",
+      label: copy("Revision interna"),
       complete: committeeReady,
-      detail: committeeReady ? "Puede documentarse para comite interno." : "Registrar interes y validar score minimo."
+      detail: committeeReady ? copy("Puede documentarse para comite interno.") : copy("Registrar interes y validar score minimo.")
     },
     {
       key: "contact",
-      label: "Contacto autorizado",
+      label: copy("Contacto autorizado"),
       complete: contactReady,
       requestable: contactPrerequisitesReady,
       detail: contactReady
-        ? "Contacto aprobado por solicitante/NSD."
+        ? copy("Contacto aprobado por solicitante/NSD.")
         : contactStatus === "requested"
-          ? "Solicitud enviada; pendiente de autorizacion del solicitante/NSD."
+          ? copy("Solicitud enviada; pendiente de autorizacion del solicitante/NSD.")
           : contactPrerequisitesReady
-            ? "Listo para solicitar contacto formal con trazabilidad NSD."
-            : "Bloqueado hasta cerrar NDA, usuario y revision."
+            ? copy("Listo para solicitar contacto formal con trazabilidad NSD.")
+            : copy("Bloqueado hasta cerrar NDA, usuario y revision.")
     }
   ];
 }
 
-function buildWorkflowSteps(selected, aiReview) {
+function buildWorkflowSteps(selected, aiReview, copy = (value) => value) {
   const interestStatus = selected?.interest?.status;
 
   return [
     {
       key: "triage",
-      label: "Triage inicial",
-      detail: selected?.risk === "Alto" ? "Validar alertas antes de avanzar." : "Perfil listo para lectura ejecutiva.",
+      label: copy("Triage inicial"),
+      detail: selected?.risk === "Alto" ? copy("Validar alertas antes de avanzar.") : copy("Perfil listo para lectura ejecutiva."),
       complete: Boolean(selected),
       active: Boolean(selected) && !aiReview,
     },
     {
       key: "data_room",
-      label: "Data room",
-      detail: `${selected?.documentsCount || selected?.documents?.length || 0} documento(s) disponibles para revision.`,
+      label: copy("Data room"),
+      detail: `${selected?.documentsCount || selected?.documents?.length || 0} ${copy("documento(s) disponibles para revision.")}`,
       complete: Boolean(selected?.documentsCount || selected?.documents?.length),
       active: false,
     },
     {
       key: "ai_review",
-      label: "Revision IA",
-      detail: aiReview ? aiReview.status : "Ejecutar agentes sobre documento o data room completo.",
+      label: copy("Revision IA"),
+      detail: aiReview ? copy(aiReview.status) : copy("Ejecutar agentes sobre documento o data room completo."),
       complete: Boolean(aiReview),
       active: Boolean(selected) && !aiReview,
     },
     {
       key: "internal_review",
-      label: "Decision interna",
-      detail: interestStatus === "under_review" ? "En comite interno del otorgante." : "Registrar interes o declinar.",
+      label: copy("Decision interna"),
+      detail: interestStatus === "under_review" ? copy("En comite interno del otorgante.") : copy("Registrar interes o declinar."),
       complete: ["under_review", "term_sheet", "closed", "declined"].includes(interestStatus),
       active: interestStatus === "interested",
     },
     {
       key: "term_sheet",
-      label: "Term sheet / cierre",
-      detail: interestStatus === "term_sheet" ? "Term sheet marcado para seguimiento." : "Pendiente de oferta o cierre.",
+      label: copy("Term sheet / cierre"),
+      detail: interestStatus === "term_sheet" ? copy("Term sheet marcado para seguimiento.") : copy("Pendiente de oferta o cierre."),
       complete: ["term_sheet", "closed"].includes(interestStatus),
       active: interestStatus === "under_review",
     },
   ];
 }
 
-function buildExecutiveBrief(selected, aiReview, infoRequests) {
+function buildExecutiveBrief(selected, aiReview, infoRequests, copy = (value) => value) {
   if (!selected) return [];
 
   const openRequests = infoRequests.filter((request) => !["resolved", "waived"].includes(request.status)).length;
   const score = aiReview?.score || selected.averageScore || 0;
   const recommendation = score >= 82
-    ? "Apto para revision institucional inicial."
+    ? copy("Apto para revision institucional inicial.")
     : score >= 65
-      ? "Apto condicionado a subsanar faltantes."
-      : "Requiere fortalecimiento antes de comite.";
+      ? copy("Apto condicionado a subsanar faltantes.")
+      : copy("Requiere fortalecimiento antes de comite.");
 
   return [
-    ["Tesis NSD", selected.use || "Uso de fondos pendiente de confirmar"],
-    ["Solicitante", selected.applicant || "Solicitante NSD"],
-    ["Monto / ticket", selected.amountLabel || "Por definir"],
-    ["Score integral", `${score}/100 - Riesgo ${selected.risk}`],
-    ["Riesgos visibles", selected.risk === "Alto" ? "Riesgo alto: revisar alertas, faltantes y consistencia." : "Sin alertas criticas en lectura preliminar."],
-    ["Requerimientos abiertos", `${openRequests} pendiente(s) de respuesta o evidencia.`],
-    ["Conclusion", recommendation],
+    [copy("Tesis NSD"), selected.use || copy("Uso de fondos pendiente de confirmar")],
+    [copy("Solicitante"), selected.applicant || copy("Solicitante NSD")],
+    [copy("Monto / ticket"), selected.amountLabel || copy("Por definir")],
+    [copy("Score integral"), `${score}/100 - ${copy("Riesgo")} ${copy(selected.risk)}`],
+    [copy("Riesgos visibles"), selected.risk === "Alto" ? copy("Riesgo alto: revisar alertas, faltantes y consistencia.") : copy("Sin alertas criticas en lectura preliminar.")],
+    [copy("Requerimientos abiertos"), `${openRequests} ${copy("pendiente(s) de respuesta o evidencia.")}`],
+    [copy("Conclusion"), recommendation],
   ];
 }
 
-function buildDecisionBoard(selected, aiReview, infoRequests) {
+function buildDecisionBoard(selected, aiReview, infoRequests, copy = (value) => value) {
   if (!selected) return [];
 
   const score = aiReview?.score || selected.averageScore || 0;
@@ -169,36 +169,36 @@ function buildDecisionBoard(selected, aiReview, infoRequests) {
   return [
     {
       label: "Lectura institucional",
-      value: score >= 82 ? "Avanzar" : score >= 65 ? "Condicionado" : "Pausar",
+      value: score >= 82 ? copy("Avanzar") : score >= 65 ? copy("Condicionado") : copy("Pausar"),
       tone: score >= 82 ? COLORS.green : score >= 65 ? COLORS.amber : "#C62828",
       detail: score >= 82
-        ? "Expediente apto para comite o propuesta indicativa."
+        ? copy("Expediente apto para comite o propuesta indicativa.")
         : score >= 65
-          ? "Revisable si se atienden faltantes documentales."
-          : "No conviene pasar a comite sin subsanar alertas."
+          ? copy("Revisable si se atienden faltantes documentales.")
+          : copy("No conviene pasar a comite sin subsanar alertas.")
     },
     {
       label: "Data room",
       value: selected.documentsCount || selected.documents?.length || 0,
       tone: COLORS.navy,
-      detail: "Documentos organizados por carpeta, acceso y trazabilidad NSD."
+      detail: copy("Documentos organizados por carpeta, acceso y trazabilidad NSD.")
     },
     {
       label: "Pendientes",
       value: openRequests,
       tone: openRequests ? COLORS.amber : COLORS.green,
-      detail: openRequests ? "Hay requerimientos abiertos para el solicitante." : "Sin requerimientos abiertos."
+      detail: openRequests ? copy("Hay requerimientos abiertos para el solicitante.") : copy("Sin requerimientos abiertos.")
     },
     {
       label: "Contacto",
-      value: hasContact ? "Autorizado" : "Controlado",
+      value: hasContact ? copy("Autorizado") : copy("Controlado"),
       tone: hasContact ? COLORS.green : COLORS.gold,
-      detail: hasContact ? "Puede habilitarse contacto formal." : "Requiere gates y solicitud auditada."
+      detail: hasContact ? copy("Puede habilitarse contacto formal.") : copy("Requiere gates y solicitud auditada.")
     }
   ];
 }
 
-function buildCommitteePack(selected, aiReview, infoRequests, gateStatus) {
+function buildCommitteePack(selected, aiReview, infoRequests, gateStatus, copy = (value) => value) {
   if (!selected) return [];
 
   const score = aiReview?.score || selected.averageScore || 0;
@@ -209,33 +209,33 @@ function buildCommitteePack(selected, aiReview, infoRequests, gateStatus) {
   return [
     {
       title: "1. Tesis y uso de fondos",
-      status: selected.use ? "Listo" : "Pendiente",
-      detail: selected.use || "Uso de fondos pendiente de confirmar."
+      status: selected.use ? copy("Listo") : copy("Pendiente"),
+      detail: selected.use || copy("Uso de fondos pendiente de confirmar.")
     },
     {
       title: "2. Score y riesgos",
-      status: score >= 65 ? "Revisable" : "Subsanar",
-      detail: `Score ${score}/100, riesgo ${selected.risk}. ${selected.risk === "Alto" ? "Requiere aclaraciones antes de comite." : "Puede pasar a lectura ejecutiva."}`
+      status: score >= 65 ? copy("Revisable") : copy("Subsanar"),
+      detail: `${copy("Score")} ${score}/100, ${copy("riesgo")} ${copy(selected.risk)}. ${selected.risk === "Alto" ? copy("Requiere aclaraciones antes de comite.") : copy("Puede pasar a lectura ejecutiva.")}`
     },
     {
       title: "3. Evidencia documental",
-      status: selected.documents?.length ? "Integrada" : "Incompleta",
-      detail: `${selected.documents?.length || 0} documentos visibles en data room institucional.`
+      status: selected.documents?.length ? copy("Integrada") : copy("Incompleta"),
+      detail: `${selected.documents?.length || 0} ${copy("documentos visibles en data room institucional.")}`
     },
     {
       title: "4. Requerimientos",
-      status: openRequests ? "Abiertos" : "Cerrados",
-      detail: openRequests ? `${openRequests} pendiente(s) de respuesta o evidencia.` : "Sin requerimientos abiertos."
+      status: openRequests ? copy("Abiertos") : copy("Cerrados"),
+      detail: openRequests ? `${openRequests} ${copy("pendiente(s) de respuesta o evidencia.")}` : copy("Sin requerimientos abiertos.")
     },
     {
       title: "5. Gates y contacto",
       status: `${gatesClosed}/${totalGates}`,
-      detail: gatesClosed === totalGates ? "Gates cerrados para contacto o cierre." : "Cerrar NDA, usuario, revision interna y contacto autorizado."
+      detail: gatesClosed === totalGates ? copy("Gates closed for contact or closing.") : copy("Cerrar NDA, usuario, revision interna y contacto autorizado.")
     }
   ];
 }
 
-function buildTermSheetReadiness(selected, aiReview, infoRequests) {
+function buildTermSheetReadiness(selected, aiReview, infoRequests, copy = (value) => value) {
   if (!selected) return [];
 
   const score = aiReview?.score || selected.averageScore || 0;
@@ -245,28 +245,28 @@ function buildTermSheetReadiness(selected, aiReview, infoRequests) {
   return [
     {
       label: "Condicion documental",
-      status: documents >= 5 ? "Cubierta" : "Condicionada",
-      detail: documents >= 5 ? "Data room suficiente para propuesta indicativa." : "Pedir evidencia adicional antes de term sheet."
+      status: documents >= 5 ? copy("Cubierta") : copy("Condicionada"),
+      detail: documents >= 5 ? copy("Data room suficiente para propuesta indicativa.") : copy("Pedir evidencia adicional antes de term sheet.")
     },
     {
       label: "Condicion de riesgo",
-      status: selected.risk === "Bajo" ? "Aceptable" : selected.risk === "Medio" ? "Mitigable" : "Alta",
-      detail: selected.risk === "Alto" ? "No avanzar sin mitigantes claros." : "Riesgo compatible con revision institucional."
+      status: selected.risk === "Bajo" ? copy("Aceptable") : selected.risk === "Medio" ? copy("Mitigable") : copy("Alta"),
+      detail: selected.risk === "Alto" ? copy("No avanzar sin mitigantes claros.") : copy("Riesgo compatible con revision institucional.")
     },
     {
       label: "Condicion de score",
-      status: score >= 82 ? "Fuerte" : score >= 65 ? "Revisable" : "Debil",
-      detail: `Score base ${score}/100 para calibrar precio, garantias y covenants.`
+      status: score >= 82 ? copy("Fuerte") : score >= 65 ? copy("Revisable") : copy("Debil"),
+      detail: `${copy("Score base")} ${score}/100 ${copy("para calibrar precio, garantias y covenants.")}`
     },
     {
       label: "Condicion de pendientes",
-      status: openRequests ? "Abierta" : "Cerrada",
-      detail: openRequests ? `${openRequests} requerimiento(s) deben resolverse antes de oferta.` : "Sin requerimientos abiertos visibles."
+      status: openRequests ? copy("Abierta") : copy("Cerrada"),
+      detail: openRequests ? `${openRequests} ${copy("requerimiento(s) deben resolverse antes de oferta.")}` : copy("Sin requerimientos abiertos visibles.")
     },
   ];
 }
 
-function buildPhase7Checklist(opportunities = []) {
+function buildPhase7Checklist(opportunities = [], copy = (value) => value) {
   const hasPipeline = opportunities.length > 0;
   const hasSharedRooms = opportunities.some((item) => item.share || item.invitationStatus);
   const hasScoring = opportunities.some((item) => Number(item.averageScore || 0) > 0);
@@ -274,13 +274,13 @@ function buildPhase7Checklist(opportunities = []) {
   const hasContactRequest = opportunities.some((item) => item.contactRequest);
 
   return [
-    ["Pipeline filtrable", true, "Filtros por sector, region, monto, estructura, preparacion, riesgo y score."],
-    ["Data room autorizado", hasSharedRooms, hasSharedRooms ? "Hay data rooms vinculados al otorgante." : "Pendiente probar con data rooms reales compartidos."],
-    ["Score visible", hasScoring, hasScoring ? "Cada oportunidad puede mostrar score y riesgo." : "Pendiente scoring real de expediente."],
-    ["Interes institucional", hasInterest, hasInterest ? "Existe estado de interes registrado." : "Pendiente registrar interes real o demo."],
-    ["Contacto autorizado", hasContactRequest, hasContactRequest ? "Existe solicitud de contacto en pipeline." : "Pendiente solicitar/aprobar contacto con Supabase."],
-    ["Memo de comite", true, "Disponible como descarga Markdown desde el expediente seleccionado."],
-    ["Prueba punta a punta", false, "Pendiente ejecutar SQL actualizado y validar solicitante/otorgante reales."]
+    [copy("Pipeline filtrable"), true, copy("Filtros por sector, region, monto, estructura, preparacion, riesgo y score.")],
+    [copy("Data room autorizado"), hasSharedRooms, hasSharedRooms ? copy("Hay data rooms vinculados al otorgante.") : copy("Pendiente probar con data rooms reales compartidos.")],
+    [copy("Score visible"), hasScoring, hasScoring ? copy("Cada oportunidad puede mostrar score y riesgo.") : copy("Pendiente scoring real de expediente.")],
+    [copy("Interes institucional"), hasInterest, hasInterest ? copy("Existe estado de interes registrado.") : copy("Pendiente registrar interes real o demo.")],
+    [copy("Contacto autorizado"), hasContactRequest, hasContactRequest ? copy("Existe solicitud de contacto en pipeline.") : copy("Pendiente solicitar/aprobar contacto con Supabase.")],
+    [copy("Memo de comite"), true, copy("Disponible como descarga Markdown desde el expediente seleccionado.")],
+    [copy("Prueba punta a punta"), false, copy("Pendiente ejecutar SQL actualizado y validar solicitante/otorgante reales.")]
   ];
 }
 
@@ -426,7 +426,7 @@ export default function PipelineTab() {
   }, [user?.demo]);
 
   const analytics = useMemo(() => buildOtorganteAnalytics(opportunities), [opportunities]);
-  const phase7Checklist = useMemo(() => buildPhase7Checklist(opportunities), [opportunities]);
+  const phase7Checklist = useMemo(() => buildPhase7Checklist(opportunities, copy), [opportunities, i18n.language]);
   const sectorOptions = useMemo(() => ["Todos", ...Array.from(new Set(opportunities.map((item) => item.sector).filter(Boolean)))], [opportunities]);
   const structureOptions = useMemo(() => ["Todos", ...Array.from(new Set(opportunities.map((item) => item.structure).filter(Boolean)))], [opportunities]);
   const filtered = opportunities.filter((item) => {
@@ -441,16 +441,16 @@ export default function PipelineTab() {
     const maxAmountMatch = appetite.maxAmount === "" || Number(item.amount || 0) <= Number(appetite.maxAmount || 0);
     return statusMatch && sectorMatch && riskMatch && regionMatch && structureMatch && readinessMatch && scoreMatch && minAmountMatch && maxAmountMatch;
   });
-  const workflowSteps = useMemo(() => buildWorkflowSteps(selected, aiReview), [selected, aiReview, selected?.interest?.status]);
-  const executiveBrief = useMemo(() => buildExecutiveBrief(selected, aiReview, infoRequests), [selected, aiReview, infoRequests]);
-  const decisionBoard = useMemo(() => buildDecisionBoard(selected, aiReview, infoRequests), [selected, aiReview, infoRequests]);
-  const gateStatus = useMemo(() => buildGateStatus(selected, interestStatus, aiReview), [selected, interestStatus, aiReview]);
-  const committeePack = useMemo(() => buildCommitteePack(selected, aiReview, infoRequests, gateStatus), [selected, aiReview, infoRequests, gateStatus]);
-  const termSheetReadiness = useMemo(() => buildTermSheetReadiness(selected, aiReview, infoRequests), [selected, aiReview, infoRequests]);
+  const workflowSteps = useMemo(() => buildWorkflowSteps(selected, aiReview, copy), [selected, aiReview, selected?.interest?.status, i18n.language]);
+  const executiveBrief = useMemo(() => buildExecutiveBrief(selected, aiReview, infoRequests, copy), [selected, aiReview, infoRequests, i18n.language]);
+  const decisionBoard = useMemo(() => buildDecisionBoard(selected, aiReview, infoRequests, copy), [selected, aiReview, infoRequests, i18n.language]);
+  const gateStatus = useMemo(() => buildGateStatus(selected, interestStatus, aiReview, copy), [selected, interestStatus, aiReview, i18n.language]);
+  const committeePack = useMemo(() => buildCommitteePack(selected, aiReview, infoRequests, gateStatus, copy), [selected, aiReview, infoRequests, gateStatus, i18n.language]);
+  const termSheetReadiness = useMemo(() => buildTermSheetReadiness(selected, aiReview, infoRequests, copy), [selected, aiReview, infoRequests, i18n.language]);
   const internationalReadiness = useMemo(() => buildInternationalReadiness(selected?.country || "MX"), [selected?.country]);
   const committeeMemo = useMemo(
     () => buildCommitteeMemo(selected, aiReview, infoRequests, interestStatus, interestNotes, gateStatus, copy),
-    [selected, aiReview, infoRequests, interestStatus, interestNotes, gateStatus]
+    [selected, aiReview, infoRequests, interestStatus, interestNotes, gateStatus, i18n.language]
   );
 
   useEffect(() => {
@@ -743,7 +743,7 @@ export default function PipelineTab() {
               <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", alignItems: "center", marginBottom: "0.25rem" }}>
                 <p style={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.8rem" }}>{copy(label)}</p>
                 <span style={{ color: complete ? COLORS.green : COLORS.amber, fontWeight: 900, fontSize: "0.68rem", textTransform: "uppercase" }}>
-                  {complete ? "Listo" : "Pendiente"}
+                  {complete ? copy("Listo") : copy("Pendiente")}
                 </span>
               </div>
               <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", lineHeight: 1.35 }}>{copy(detail)}</p>
@@ -928,13 +928,13 @@ export default function PipelineTab() {
                   >
                     <td style={{ padding: "1.1rem" }}>
                       <div style={{ color: COLORS.navy, fontWeight: 800 }}>{copy(item.name)}</div>
-                      <div style={{ color: COLORS.textMuted, fontSize: "0.82rem" }}>{item.sector} / {item.country}</div>
-                      <div style={{ color: COLORS.textMuted, fontSize: "0.72rem", marginTop: "0.2rem" }}>{item.structure} / {item.readinessLevel}</div>
+                      <div style={{ color: COLORS.textMuted, fontSize: "0.82rem" }}>{copy(item.sector)} / {item.country}</div>
+                      <div style={{ color: COLORS.textMuted, fontSize: "0.72rem", marginTop: "0.2rem" }}>{copy(item.structure)} / {copy(item.readinessLevel)}</div>
                     </td>
                     <td style={{ padding: "1.1rem", fontWeight: 700 }}>{item.amountLabel}</td>
                     <td style={{ padding: "1.1rem" }}>
-                      <div style={{ fontSize: "0.82rem", color: COLORS.textMuted }}>Fin {item.financialScore} / Comp {item.complianceScore}</div>
-                      <div style={{ color: riskColor[item.risk], fontWeight: 800 }}>{item.risk}</div>
+                      <div style={{ fontSize: "0.82rem", color: COLORS.textMuted }}>{copy("Fin")} {item.financialScore} / {copy("Comp")} {item.complianceScore}</div>
+                      <div style={{ color: riskColor[item.risk], fontWeight: 800 }}>{copy(item.risk)}</div>
                     </td>
                     <td style={{ padding: "1.1rem" }}>{copy(item.status)}</td>
                   </tr>
@@ -1012,7 +1012,7 @@ export default function PipelineTab() {
                   </p>
                 </div>
                 <span style={{ color: riskColor[selected.risk], fontWeight: 900, fontSize: "0.8rem", whiteSpace: "nowrap" }}>
-                  Riesgo {selected.risk}
+                  {copy("Riesgo")} {copy(selected.risk)}
                 </span>
               </div>
 
@@ -1082,7 +1082,7 @@ export default function PipelineTab() {
             ].map(([label, value]) => (
               <div key={copy(label)}>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", textTransform: "uppercase", marginBottom: "0.25rem" }}>{copy(label)}</p>
-                <p style={{ color: COLORS.navy, fontWeight: 700, lineHeight: 1.5 }}>{value}</p>
+                <p style={{ color: COLORS.navy, fontWeight: 700, lineHeight: 1.5 }}>{copy(value)}</p>
               </div>
             ))}
 
@@ -1250,20 +1250,20 @@ export default function PipelineTab() {
                   {copy("Solicitar informacion al solicitante")}
                 </p>
                 <input
-                  value={copy(requestForm.title)}
+                  value={requestForm.title}
                   onChange={(event) => setRequestForm((prev) => ({ ...prev, title: event.target.value }))}
-                  placeholder="Ej. Estado financiero auditado 2025"
+                  placeholder={copy("Ej. Estado financiero auditado 2025")}
                   style={{ width: "100%", padding: "0.65rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, marginBottom: "0.5rem" }}
                 />
                 <textarea
-                  value={copy(requestForm.description)}
+                  value={requestForm.description}
                   onChange={(event) => setRequestForm((prev) => ({ ...prev, description: event.target.value }))}
                   rows={3}
-                  placeholder="Detalle de la aclaracion o documento requerido..."
+                  placeholder={copy("Detalle de la aclaracion o documento requerido...")}
                   style={{ width: "100%", padding: "0.65rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, resize: "vertical", marginBottom: "0.5rem" }}
                 />
                 <select
-                  value={copy(requestForm.priority)}
+                  value={requestForm.priority}
                   onChange={(event) => setRequestForm((prev) => ({ ...prev, priority: event.target.value }))}
                   style={{ width: "100%", padding: "0.65rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, marginBottom: "0.5rem" }}
                 >
@@ -1286,7 +1286,7 @@ export default function PipelineTab() {
                 disabled={savingRequest}
                 style={{ padding: "0.75rem", border: "none", borderRadius: "6px", background: COLORS.navy, color: "white", fontWeight: 900, cursor: savingRequest ? "not-allowed" : "pointer" }}
               >
-                {savingRequest ? "Enviando..." : "Enviar requerimiento"}
+                {savingRequest ? copy("Enviando...") : copy("Enviar requerimiento")}
               </button>
               {infoRequests.length > 0 && (
                 <div style={{ display: "grid", gap: "0.45rem" }}>
@@ -1387,12 +1387,12 @@ export default function PipelineTab() {
                 value={interestNotes}
                 onChange={(event) => setInterestNotes(event.target.value)}
                 rows={3}
-                placeholder="Notas internas del otorgante..."
+                placeholder={copy("Notas internas del otorgante...")}
                 style={{ width: "100%", padding: "0.65rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, resize: "vertical" }}
               />
               {selected.interest && (
                 <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>
-                  {copy("Último estado:")} <strong>{selected.interest.status}</strong>
+                  {copy("Último estado:")} <strong>{copy(selected.interest.status)}</strong>
                 </p>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
@@ -1401,14 +1401,14 @@ export default function PipelineTab() {
                   disabled={savingInterest}
                   style={{ padding: "0.75rem", border: "none", borderRadius: "6px", background: COLORS.gold, color: COLORS.navy, fontWeight: 800, cursor: savingInterest ? "not-allowed" : "pointer" }}
                 >
-                  {savingInterest ? "Guardando..." : "Me interesa"}
+                  {savingInterest ? copy("Guardando...") : copy("Me interesa")}
                 </button>
                 <button
                   onClick={() => saveInterest(interestStatus === "under_review" ? "term_sheet" : "under_review")}
                   disabled={savingInterest}
                   style={{ padding: "0.75rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", background: "transparent", color: COLORS.navy, fontWeight: 800, cursor: savingInterest ? "not-allowed" : "pointer" }}
                 >
-                  {interestStatus === "under_review" ? "Term sheet" : "A comite"}
+                  {interestStatus === "under_review" ? copy("Term sheet") : copy("A comite")}
                 </button>
               </div>
             </div>
