@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { COLORS } from "../../utils/constants";

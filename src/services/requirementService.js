@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // GESTIÓN DE REQUERIMIENTOS (REQUESTS)
 // Permite que Otorgante (Funder) solicite documentos

@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect, useMemo } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { useAuth } from "../../hooks/useAuth";
@@ -56,7 +57,7 @@ export default function ExpedientesTab() {
               documents: docs.length
             };
           } catch (err) {
-            console.error(`Error loading stats for ${exp.id}:`, err);
+            error("SVC", `Error loading stats for ${exp.id}:`, err);
             stats[exp.id] = { requirements: 0, messages: 0, documents: 0 };
           }
         }
@@ -67,7 +68,7 @@ export default function ExpedientesTab() {
         }
         setLoading(false);
       } catch (err) {
-        console.error("Error:", err);
+        error("SVC", "Error:", err);
         setLoading(false);
       }
     };
@@ -112,7 +113,7 @@ export default function ExpedientesTab() {
       });
       setSelectedExp(exp);
     } catch (err) {
-      console.error("Error loading details:", err);
+      error("SVC", "Error loading details:", err);
       addNotification("Error al cargar detalles", "error");
     }
   };
@@ -130,7 +131,7 @@ export default function ExpedientesTab() {
       }
       addNotification(`Estado actualizado a: ${newStatus}`, "success");
     } catch (err) {
-      console.error("Error:", err);
+      error("SVC", "Error:", err);
       addNotification("Error al actualizar estado", "error");
     }
   };

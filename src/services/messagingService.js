@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SISTEMA DE MENSAJERÍA
 // Chat entre Solicitante y Otorgante

@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SERVICIO DE DOCUMENTOS AISLADO POR USUARIO
 // ============================================

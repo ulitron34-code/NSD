@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 import axios from "axios";
 import { API_URL } from "./api";
 

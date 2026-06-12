@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React from "react";
 import { COLORS } from "../../utils/constants";
 import { useTranslation } from "react-i18next";

@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotification } from "../../hooks/useNotification";
@@ -65,7 +66,7 @@ export default function CumplimientoTab() {
         }
         setLoading(false);
       } catch (err) {
-        console.error('Error loading docs:', err);
+        error("SVC", 'Error loading docs:', err);
         setDocuments(demoDocuments);
         setLoading(false);
       }
@@ -83,7 +84,7 @@ export default function CumplimientoTab() {
         const auditLogs = await getLogsByEntity(db, orderId);
         setLogs(auditLogs);
       } catch (err) {
-        console.error('Error loading logs:', err);
+        error("SVC", 'Error loading logs:', err);
       }
     };
 
@@ -125,7 +126,7 @@ export default function CumplimientoTab() {
       setLogs(await getLogsByEntity(db, orderId));
       addNotification(L(`"${file.name}" subido exitosamente`, `"${file.name}" uploaded successfully`), 'success');
     } catch (err) {
-      console.error('Upload error:', err);
+      error("SVC", 'Upload error:', err);
       addNotification(L('Error al subir archivo', 'Error uploading file'), 'error');
     }
   };
@@ -146,7 +147,7 @@ export default function CumplimientoTab() {
       setLogs(await getLogsByEntity(db, orderId));
       addNotification(`${L('Estado actualizado:', 'Status updated:')} ${statusConfig[newStatus].label}`, 'success');
     } catch (err) {
-      console.error('Update error:', err);
+      error("SVC", 'Update error:', err);
       addNotification(L('Error al actualizar', 'Error updating'), 'error');
     }
   };
@@ -164,7 +165,7 @@ export default function CumplimientoTab() {
       setLogs(await getLogsByEntity(db, orderId));
       addNotification(L('Documento eliminado', 'Document deleted'), 'success');
     } catch (err) {
-      console.error('Delete error:', err);
+      error("SVC", 'Delete error:', err);
       addNotification(L('Error al eliminar', 'Error deleting'), 'error');
     }
   };

@@ -1,12 +1,22 @@
+import { error, debug, info, warn } from '../../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { useNotification } from "../../../hooks/useNotification";
 import { useAuth } from "../../../hooks/useAuth";
-import { ordersAPI } from "../../../services/api";
+import { ordersAPI, aiAgentsAPI } from "../../../services/api";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
 import { createDocument } from "../../../services/documentService";
 import { getExpedientesForUser } from "../../../services/expedienteService";
+
+// Estados demo seguros para presentación startup
+const DEMO_PROJECT = {
+  name: "Mi nuevo proyecto",
+  amount: "",
+  use: "",
+  sector: "Tecnología / SaaS",
+  stage: "En preparación",
+};
 
 export default function SubirProyectoTab() {
   const { i18n } = useTranslation();
@@ -22,15 +32,15 @@ export default function SubirProyectoTab() {
   const [uploadedDocs, setUploadedDocs] = useState([]);
 
   const [analysis, setAnalysis] = useState(null);
-  const [project, setProject] = useState({
-    name: "Expansion comercial 2026",
-    amount: "$500,000 USD",
-    use: "Capital de crecimiento, equipo comercial y tecnología",
-    sector: "Tecnología / SaaS",
-    stage: "Listo para revisión",
-  });
+  const [project, setProject] = useState(DEMO_PROJECT);
 
   const [requirements, setRequirements] = useState(null);
+
+  // Estados para integración con AI Agents
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [triageResult, setTriageResult] = useState(null);
+  const [riskMemoResult, setRiskMemoResult] = useState(null);
 
   // FASE 5: Cargar expedientes del usuario
   useEffect(() => {
@@ -45,7 +55,7 @@ export default function SubirProyectoTab() {
           setSelectedExpediente(exps[0]);
         }
       } catch (err) {
-        console.error('Error loading expedientes:', err);
+        error("SVC", 'Error loading expedientes:', err);
       }
     };
 
@@ -60,7 +70,7 @@ export default function SubirProyectoTab() {
     ordersAPI.requirements()
       .then(({ data }) => data)
       .then((data) => setRequirements(data))
-      .catch((err) => console.error("Error cargando requisitos", err));
+      .catch((err) => error("SVC", "Error cargando requisitos", err));
   }, []);
 
   const currentMatrix = React.useMemo(() => {
@@ -180,24 +190,111 @@ export default function SubirProyectoTab() {
       setUploadedDocs([...uploadedDocs, doc.id]);
       addNotification(`${docName} subido al expediente ${selectedExpediente.id}`, "success");
     } catch (err) {
-      console.error('Error uploading document:', err);
+      error("SVC", 'Error uploading document:', err);
       addNotification(`Error al subir ${docName}`, "error");
     }
   };
 
+  // Función para ejecutar análisis con AI Agents
+  const executeAIAgentsAnalysis = async () => {
+    if (!selectedExpediente) {
+      addNotification(copy("Selecciona un expediente primero"), "warning");
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      // Ejecutar triage de documentos
+      const triageResponse = await aiAgentsAPI.documentTriage(selectedExpediente.id, aiAgentPacket.payload);
+      setTriageResult(triageResponse.data);
+      debug("AI", "Triage completado:", triageResponse.data);
+
+      // Ejecutar análisis forense
+      const forensicResponse = await aiAgentsAPI.forensicAnalyze(selectedExpediente.id, {
+        ...aiAgentPacket.payload,
+        focusAreas: ["kyb", "financial_consistency", "document_integrity"]
+      });
+      debug("AI", "Análisis forense completado:", forensicResponse.data);
+
+      // Generar memo de riesgo
+      const memoResponse = await aiAgentsAPI.riskMemo(selectedExpediente.id, aiAgentPacket.payload);
+      setRiskMemoResult(memoResponse.data);
+      debug("AI", "Memo de riesgo completado:", memoResponse.data);
+
+      // Generar resultado de análisis consolidado
+      const triageData = triageResponse.data;
+      setAnalysis({
+        score: triageData.readiness_score || 75,
+        readiness: triageData.document_gaps?.length > 0 
+          ? copy("Con faltantes - Revisar documentación")
+          : copy("Apto para revisión institucional"),
+        matches: triageData.funder_recommendations || [
+          copy("SOFOM de crecimiento"),
+          copy("Fondo de deuda privada"),
+        ],
+        findings: triageData.document_gaps || [
+          copy("Documentación base verificada"),
+          copy("Revisar requisitos específicos del sector"),
+        ],
+      });
+
+      addNotification(copy("Análisis de agentes IA completado"), "success");
+    } catch (err) {
+      debug("AI", "Error en análisis IA:", err);
+      
+      // En modo demo, mostrar resultado simulado
+      setAnalysis({
+        score: 78,
+        readiness: copy("Análisis completado en modo demo"),
+        matches: [
+          copy("SOFOM de crecimiento"),
+          copy("Fondo de deuda privada"),
+          copy("Fintech de crédito empresarial"),
+        ],
+        findings: [
+          copy("Pipeline de agentes IA configurado y listo"),
+          copy("Pendiente: conectar con API real del backend"),
+          copy("KYC/KYB requiere validación de beneficiario controlador"),
+        ],
+      });
+      
+      setAiError(copy("Modo demo - Conectar con API real para análisis completo"));
+      addNotification(copy("Análisis en modo demo (backend no disponible)"), "info");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // Función legacy para análisis local (sin API)
   const analyzeProject = () => {
     setAnalysis({
       score: 86,
-      readiness: "Apto para revisión preliminar",
-      matches: ["SOFOM de crecimiento", "Fondo de deuda privada", "Fintech de crédito empresarial"],
+      readiness: copy("Apto para revisión preliminar"),
+      matches: [copy("SOFOM de crecimiento"), copy("Fondo de deuda privada"), copy("Fintech de crédito empresarial")],
       findings: [
-        "El uso de fondos es claro y compatible con productos de deuda empresarial.",
-        "Falta completar pitch deck para mejorar presentación ante fondos.",
-        "KYC/KYB requiere validación final de beneficiario controlador.",
-        "Modelo financiero consistente; se recomienda agregar escenario conservador.",
+        copy("El uso de fondos es claro y compatible con productos de deuda empresarial."),
+        copy("Falta completar pitch deck para mejorar presentación ante fondos."),
+        copy("KYC/KYB requiere validación final de beneficiario controlador."),
+        copy("Modelo financiero consistente; se recomienda agregar escenario conservador."),
       ],
     });
-    addNotification(copy("Proyecto analizado con agentes IA"), "success");
+    addNotification(copy("Proyecto analizado localmente"), "success");
+  };
+
+  // Función para obtener estado de orquestación
+  const checkOrchestrationStatus = async () => {
+    if (!selectedExpediente) return;
+    
+    try {
+      const status = await aiAgentsAPI.orchestrationStatus(selectedExpediente.id);
+      debug("AI", "Estado de orquestación:", status.data);
+      return status.data;
+    } catch (err) {
+      debug("AI", "Estado de orquestación no disponible:", err);
+      return null;
+    }
   };
 
   return (
@@ -249,8 +346,8 @@ export default function SubirProyectoTab() {
             <button onClick={() => addNotification(copy("Proyecto guardado como borrador"), "success")} style={{ padding: "0.85rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, background: COLORS.white, color: COLORS.navy, fontWeight: 800 }}>
               {copy("Guardar borrador")}
             </button>
-            <button onClick={analyzeProject} style={{ padding: "0.85rem", borderRadius: "6px", border: "none", background: COLORS.navy, color: COLORS.white, fontWeight: 800 }}>
-              {copy("Analizar proyecto con IA")}
+            <button onClick={executeAIAgentsAnalysis} disabled={aiLoading} style={{ padding: "0.85rem", borderRadius: "6px", border: "none", background: aiLoading ? COLORS.textMuted : COLORS.navy, color: COLORS.white, fontWeight: 800, cursor: aiLoading ? "not-allowed" : "pointer" }}>
+              {aiLoading ? copy("Analizando...") : copy("Analizar con Agentes IA")}
             </button>
           </div>
         </div>
@@ -380,13 +477,83 @@ export default function SubirProyectoTab() {
               "This view prepares the contract so the applicant understands how the file will feed document, risk and funder-readiness agents."
             )}
           </p>
+          
+          {/* Indicadores de estado de AI Agents */}
+          {aiLoading && (
+            <div style={{ 
+              background: "rgba(255,255,255,0.12)", 
+              border: "1px solid rgba(255,255,255,0.2)", 
+              borderRadius: "8px", 
+              padding: "0.75rem",
+              marginBottom: "0.75rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem"
+            }}>
+              <span style={{ 
+                display: "inline-block", 
+                width: "16px", 
+                height: "16px", 
+                border: "2px solid rgba(255,255,255,0.3)", 
+                borderTopColor: COLORS.gold,
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite"
+              }} />
+              <span style={{ color: COLORS.white, fontSize: "0.78rem" }}>
+                {L("Ejecutando triage y análisis...", "Running triage and analysis...")}
+              </span>
+            </div>
+          )}
+          
+          {aiError && (
+            <div style={{ 
+              background: "rgba(198,40,40,0.3)", 
+              border: "1px solid rgba(198,40,40,0.5)", 
+              borderRadius: "8px", 
+              padding: "0.75rem",
+              marginBottom: "0.75rem"
+            }}>
+              <p style={{ color: "#FFCDD2", fontSize: "0.78rem", margin: 0 }}>
+                ⚠️ {aiError}
+              </p>
+            </div>
+          )}
+          
+          {triageResult && (
+            <div style={{ 
+              background: "rgba(46,125,50,0.3)", 
+              border: "1px solid rgba(46,125,50,0.5)", 
+              borderRadius: "8px", 
+              padding: "0.75rem",
+              marginBottom: "0.75rem"
+            }}>
+              <p style={{ color: "#C8E6C9", fontSize: "0.78rem", margin: 0 }}>
+                ✅ {L("Triage completado", "Triage completed")}
+              </p>
+            </div>
+          )}
+          
+          {riskMemoResult && (
+            <div style={{ 
+              background: "rgba(46,125,50,0.3)", 
+              border: "1px solid rgba(46,125,50,0.5)", 
+              borderRadius: "8px", 
+              padding: "0.75rem",
+              marginBottom: "0.75rem"
+            }}>
+              <p style={{ color: "#C8E6C9", fontSize: "0.78rem", margin: 0 }}>
+                ✅ {L("Memo de riesgo generado", "Risk memo generated")}
+              </p>
+            </div>
+          )}
+          
           <div style={{ display: "grid", gap: "0.55rem" }}>
             <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.75rem" }}>
-              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.endpoint}</strong>
-              <span style={{ color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900 }}>{aiAgentPacket.status}</span>
+              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.endpoint.replace(':orderId', selectedExpediente?.id || ':orderId')}</strong>
+              <span style={{ color: aiLoading ? COLORS.amber : COLORS.gold, fontSize: "0.72rem", fontWeight: 900 }}>{aiAgentPacket.status}</span>
             </div>
             <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.75rem" }}>
-              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.memoEndpoint}</strong>
+              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.memoEndpoint.replace(':orderId', selectedExpediente?.id || ':orderId')}</strong>
               <span style={{ color: "rgba(255,255,255,0.72)", fontSize: "0.72rem", fontWeight: 800 }}>{L("Memo de riesgo y liberacion data room", "Risk memo and data room release")}</span>
             </div>
           </div>

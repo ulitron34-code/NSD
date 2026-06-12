@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
@@ -88,7 +89,7 @@ export default function ControlCenter() {
 
         setLoading(false);
       } catch (err) {
-        console.error("Error loading stats:", err);
+        error("SVC", "Error loading stats:", err);
         setLoading(false);
       }
     };

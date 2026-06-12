@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 import api from "./auth.service";
 
 export const projectService = {

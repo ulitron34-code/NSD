@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../../utils/logger';
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../../utils/constants";
 import { ordersAPI, otorganteAPI } from "../../../services/api";

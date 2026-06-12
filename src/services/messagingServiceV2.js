@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SERVICIO DE MENSAJERÍA AISLADO POR USUARIO
 // ============================================
@@ -62,7 +63,7 @@ export function sendMessage(messageData) {
                     message: message.body.substring(0, 100) + (message.body.length > 100 ? '...' : ''),
                     relatedId: message.id,
                     priority: message.priority
-                  }).catch(err => console.log('Notification error:', err));
+                  }).catch(err => debug("SVC", 'Notification error:', err));
                 }
                 resolve(message);
               })

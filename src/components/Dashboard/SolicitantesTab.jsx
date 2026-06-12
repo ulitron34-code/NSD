@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useEffect, useState } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { scoringService } from "../../services/scoring.service";
@@ -66,7 +67,7 @@ export default function SolicitantesTab() {
         addNotification(response.error, "error");
       }
     } catch (error) {
-      console.error("Error:", error);
+      error("SVC", "Error:", error);
       addNotification("Error en el servidor", "error");
     } finally {
       setIsLoading(false);

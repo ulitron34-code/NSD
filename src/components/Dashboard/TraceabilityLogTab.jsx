@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
@@ -24,6 +25,17 @@ export default function TraceabilityLogTab() {
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (val) => translateCopy(val, i18n.language);
 
+  // Traducir datos de eventos y controles
+  const translatedEvents = events.map(([time, role, action, type, status]) => [
+    time,
+    copy(role),
+    copy(action),
+    copy(type),
+    copy(status),
+  ]);
+
+  const translatedControls = controls.map(([title, detail]) => [copy(title), copy(detail)]);
+
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
       <section style={{
@@ -48,10 +60,10 @@ export default function TraceabilityLogTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "0.75rem" }}>
-        {controls.map(([title, detail]) => (
+        {translatedControls.map(([title, detail]) => (
           <article key={title} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
-            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{copy(title)}</p>
-            <p style={{ margin: "0.35rem 0 0", color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.5 }}>{copy(detail)}</p>
+            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{title}</p>
+            <p style={{ margin: "0.35rem 0 0", color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.5 }}>{detail}</p>
           </article>
         ))}
       </section>
@@ -66,12 +78,12 @@ export default function TraceabilityLogTab() {
             </tr>
           </thead>
           <tbody>
-            {events.map(([time, actor, event, type, status]) => (
+            {translatedEvents.map(([time, actor, event, type, status]) => (
               <tr key={`${time}-${event}`} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
                 <td style={{ padding: "0.72rem", color: COLORS.gold, fontWeight: 900 }}>{time}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{copy(actor)}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.86rem" }}>{copy(event)}</td>
-                <td style={{ padding: "0.72rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(type)}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.navy, fontWeight: 900 }}>{actor}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.text, fontSize: "0.86rem" }}>{event}</td>
+                <td style={{ padding: "0.72rem", color: COLORS.textMuted, fontSize: "0.84rem" }}>{type}</td>
                 <td style={{ padding: "0.72rem" }}>
                   <span style={{
                     display: "inline-flex",

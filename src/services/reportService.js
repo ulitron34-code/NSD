@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // GENERADOR DE REPORTES
 // Crea PDF/HTML/Markdown de expedientes
@@ -379,7 +380,7 @@ export function printReport(report) {
 
 // Enviar como Email (requeriría backend)
 export function sendReportByEmail(report, email) {
-  console.log(`Enviar reporte ${report.id} a ${email}`);
+  debug("SVC", `Enviar reporte ${report.id} a ${email}`);
   // Aquí iría una llamada a API para enviar el email
   return Promise.resolve({
     success: true,

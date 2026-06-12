@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // ANÁLISIS Y PREDICCIÓN DE PIPELINE
 // Scoring, predicción y recomendaciones

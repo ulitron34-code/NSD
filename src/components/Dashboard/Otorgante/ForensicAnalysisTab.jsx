@@ -1,8 +1,9 @@
+import { error, debug, info, warn } from '../../../utils/logger';
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
 import { COLORS } from "../../../utils/constants";
-import { ordersAPI, otorganteAPI } from "../../../services/api";
+import { ordersAPI, otorganteAPI, aiAgentsAPI } from "../../../services/api";
 import { demoServiceOrders } from "../../../data/demoServiceOrders";
 import {
   buildOtorgantePipeline,
@@ -192,6 +193,30 @@ export default function ForensicAnalysisTab() {
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  // Estados para integración con AI Agents
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [aiResult, setAiResult] = useState(null);
+
+  // Función para ejecutar análisis forense con AI Agents
+  const executeForensicAnalysis = async (orderId, payload) => {
+    setAiLoading(true);
+    setAiError(null);
+    
+    try {
+      const response = await aiAgentsAPI.forensicAnalyze(orderId, payload);
+      setAiResult(response.data);
+      debug("AI", "Análisis forense completado:", response.data);
+      return response.data;
+    } catch (err) {
+      debug("AI", "Error en análisis forense:", err);
+      setAiError(L("Modo demo - Backend no disponible", "Demo mode - Backend not available"));
+      return null;
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -459,6 +484,79 @@ export default function ForensicAnalysisTab() {
                     "This block clarifies how the FOR tab will connect with AI agents once the backend has OCR, hashing and external services."
                   )}
                 </p>
+                
+                {/* Indicadores de estado de AI Agents */}
+                {aiLoading && (
+                  <div style={{ 
+                    background: "rgba(255,255,255,0.12)", 
+                    border: "1px solid rgba(255,255,255,0.2)", 
+                    borderRadius: "8px", 
+                    padding: "0.75rem",
+                    marginBottom: "0.75rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem"
+                  }}>
+                    <span style={{ 
+                      display: "inline-block", 
+                      width: "16px", 
+                      height: "16px", 
+                      border: "2px solid rgba(255,255,255,0.3)", 
+                      borderTopColor: COLORS.gold,
+                      borderRadius: "50%",
+                      animation: "spin 1s linear infinite"
+                    }} />
+                    <span style={{ color: COLORS.white, fontSize: "0.78rem" }}>
+                      {L("Ejecutando análisis forense...", "Running forensic analysis...")}
+                    </span>
+                  </div>
+                )}
+                
+                {aiError && (
+                  <div style={{ 
+                    background: "rgba(198,40,40,0.3)", 
+                    border: "1px solid rgba(198,40,40,0.5)", 
+                    borderRadius: "8px", 
+                    padding: "0.75rem",
+                    marginBottom: "0.75rem"
+                  }}>
+                    <p style={{ color: "#FFCDD2", fontSize: "0.78rem", margin: 0 }}>
+                      ⚠️ {aiError}
+                    </p>
+                  </div>
+                )}
+                
+                {aiResult && (
+                  <div style={{ 
+                    background: "rgba(46,125,50,0.3)", 
+                    border: "1px solid rgba(46,125,50,0.5)", 
+                    borderRadius: "8px", 
+                    padding: "0.75rem",
+                    marginBottom: "0.75rem"
+                  }}>
+                    <p style={{ color: "#C8E6C9", fontSize: "0.78rem", margin: 0 }}>
+                      ✅ {L("Análisis completado", "Analysis completed")}
+                    </p>
+                  </div>
+                )}
+                
+                <button 
+                  onClick={() => executeForensicAnalysis(selected?.id, agentPayload?.payload)}
+                  disabled={aiLoading || !selected}
+                  style={{ 
+                    padding: "0.75rem 1rem", 
+                    borderRadius: "6px", 
+                    border: "none", 
+                    background: aiLoading ? "rgba(255,255,255,0.2)" : COLORS.gold, 
+                    color: COLORS.navy, 
+                    fontWeight: 900,
+                    cursor: aiLoading ? "not-allowed" : "pointer",
+                    marginBottom: "0.75rem"
+                  }}
+                >
+                  {aiLoading ? L("Analizando...", "Analyzing...") : L("Ejecutar análisis IA", "Run AI analysis")}
+                </button>
+                
                 <div style={{ display: "grid", gap: "0.6rem", marginBottom: "0.8rem" }}>
                   <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.75rem" }}>
                     <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>{agentPayload?.method} {agentPayload?.endpoint}</strong>

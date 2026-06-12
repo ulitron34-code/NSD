@@ -1,7 +1,10 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SERVICIO DE AUDITORÍA / LOGS
 // Registra TODA la actividad del sistema
 // ============================================
+
+import { debug } from '../utils/logger';
 
 export function logActivity(activity) {
   return new Promise((resolve, reject) => {
@@ -13,7 +16,7 @@ export function logActivity(activity) {
 
         // Crear tabla si no existe
         if (!db.objectStoreNames.contains('activity_logs')) {
-          console.log("Activity logs table not found, creating on next upgrade");
+          debug('AUDIT', 'Activity logs table not found, will create on next upgrade');
         }
 
         const tx = db.transaction('logs', 'readwrite');

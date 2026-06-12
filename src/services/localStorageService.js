@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // GUARDAR CONFIGURACIÓN EN LOCALSTORAGE
 // ============================================
@@ -6,7 +7,7 @@ export function saveConfig(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (err) {
-    console.error('Error saving config:', err);
+    error("SVC", 'Error saving config:', err);
     return false;
   }
 }
@@ -19,7 +20,7 @@ export function getConfig(key, defaultValue = null) {
     const value = localStorage.getItem(key);
     return value ? JSON.parse(value) : defaultValue;
   } catch (err) {
-    console.error('Error getting config:', err);
+    error("SVC", 'Error getting config:', err);
     return defaultValue;
   }
 }
@@ -32,7 +33,7 @@ export function deleteConfig(key) {
     localStorage.removeItem(key);
     return true;
   } catch (err) {
-    console.error('Error deleting config:', err);
+    error("SVC", 'Error deleting config:', err);
     return false;
   }
 }
@@ -45,7 +46,7 @@ export function clearAllStorage() {
     localStorage.clear();
     return true;
   } catch (err) {
-    console.error('Error clearing storage:', err);
+    error("SVC", 'Error clearing storage:', err);
     return false;
   }
 }

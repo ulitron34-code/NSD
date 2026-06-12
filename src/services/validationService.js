@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SERVICIO DE VALIDACIÓN
 // Validación de formularios y datos
@@ -181,7 +182,7 @@ export async function validateAsync(fieldName, value, asyncValidator) {
     const error = await asyncValidator(value);
     return error;
   } catch (err) {
-    console.error("Error en validación asincrónica:", err);
+    error("SVC", "Error en validación asincrónica:", err);
     return "Error en validación";
   }
 }
