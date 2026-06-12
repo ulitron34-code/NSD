@@ -1,6 +1,111 @@
 // Runtime bilingual copy helper for ES/EN UI text.
 // Keeps existing data structures stable while the platform is being internationalized.
 export const RUNTIME_TRANSLATIONS = {
+  // Roles principales
+  "Solicitante": "Applicant",
+  "Otorgante": "Funding Provider",
+  "Admin": "Admin",
+  "NSD Admin": "NSD Admin",
+  "NSD Analyst": "NSD Analyst",
+  "IA NSD": "NSD AI",
+
+  // TraceabilityLogTab
+  "Cargo estados financieros 2025": "Uploaded 2025 financial statements",
+  "Detecto faltante de flujo proyectado": "Detected missing projected cash flow",
+  "Marco expediente como B+ preliminar": "Marked file as B+ preliminary",
+  "Abrio data room compartido": "Opened shared data room",
+  "Solicito soporte de fuente de repago": "Requested repayment source support",
+  "Genero memo para comite": "Generated committee memo",
+  "Documento": "Document",
+  "Revision": "Review",
+  "Scoring": "Scoring",
+  "Acceso": "Access",
+  "Requerimiento": "Request",
+  "Comite": "Committee",
+  "Registrado": "Recorded",
+  "Atencion": "Attention",
+  "Pendiente": "Pending",
+  "Auditoria": "Audit",
+  "Evidencia": "Evidence",
+  "Permisos": "Permissions",
+  "Privacidad": "Privacy",
+  "Biometricos y datos sensibles requieren consentimiento y proveedor especializado.": "Biometrics and sensitive data require consent and specialized provider.",
+  "Las vistas dependen del rol: solicitante, otorgante, NSD Admin.": "Views depend on role: applicant, funder, NSD Admin.",
+  "Cada accion relevante debe apuntar a documento, expediente o requerimiento.": "Each relevant action must point to document, file or request.",
+  "Eventos clave con usuario, hora, tipo y resultado.": "Key events with user, time, type and result.",
+
+  // InvestorWarRoomTab
+  "Mostrar preparacion, carga de proyecto, data room y como lo vera un otorgante.": "Show preparation, project upload, data room and how a funder will see it.",
+  "Mostrar pipeline, Sala de decision 360, inteligencia/riesgo y memo de comite.": "Show pipeline, 360 Decision Room, intelligence/risk and committee memo.",
+  "Mostrar one pager, traccion, due diligence, roadmap, auditoria y go/no-go.": "Show one pager, traction, due diligence, roadmap, audit and go/no-go.",
+
+  // PilotPlaybookTab
+  "Semana 1": "Week 1",
+  "Semana 2": "Week 2",
+  "Semana 3": "Week 3",
+  "Semana 4": "Week 4",
+  "La entidad revisa data rooms, pide informacion y registra interes o descarte razonado.": "The entity reviews data rooms, requests information and records interest or reasoned discard.",
+  "Carga proyecto, documentos, uso de fondos y responde requerimientos.": "Upload project, documents, use of funds and respond to requests.",
+  "Controla trazabilidad, metricas, actividad, conversion y aprendizajes del piloto.": "Controls traceability, metrics, activity, conversion and pilot learnings.",
+
+  // InvestorPitchTab
+  "Sube proyecto, monto, sector, uso de fondos y documentos base.": "Upload project, amount, sector, use of funds and base documents.",
+  "Filtra oportunidades, revisa data room, solicita informacion y registra interes.": "Filter opportunities, review data room, request information and record interest.",
+
+  // FundraisingRoomTab
+  "Producto": "Product",
+  "Pilotos": "Pilots",
+  "Go-to-market": "Go-to-market",
+  "Cerrar flujos solicitante-otorgante, permisos, auditoria, data room y demo guiado.": "Close applicant-funder flows, permissions, audit, data room and guided demo.",
+  "Pilotos con SOFOMES, fintechs, fondos, empresas solicitantes y aliados de servicios.": "Pilots with SOFOMES, fintechs, funds, applicant companies and service partners.",
+  "Ventas B2B, contenido, alianzas, demo institucional y materiales de inversion.": "B2B sales, content, partnerships, institutional demo and investment materials.",
+
+  // AIAgentOpsTab
+  "Fase 8": "Phase 8",
+  "Fase 12": "Phase 12",
+  "Fase 16": "Phase 16",
+  "Fase 17": "Phase 17",
+  "Implementacion IA": "AI Implementation",
+  "Seguridad y continuidad": "Security and continuity",
+  "Corrida APIs IA": "AI API Run",
+  "Costos biometricos/APIs": "Biometrics/API Costs",
+  "Parcialmente implementada en UI": "Partially implemented in UI",
+  "Base visible y pendiente backend": "Visible base, pending backend",
+  "Preparada para integracion gradual": "Prepared for gradual integration",
+  "Mitigacion por activacion selectiva": "Mitigation by selective activation",
+
+  // InvestorQATab
+  "Entidades que revisan expedientes, solicitantes que necesitan prepararse y NSD IF por servicios profesionales asociados.": "Entities reviewing files, applicants needing to prepare and NSD IF for associated professional services.",
+  "Cada solicitud de credito, inversion o fondeo requiere documentos, revision, requisitos, evidencia y seguimiento. Ese trabajo hoy es lento y poco comparable.": "Each credit, investment or funding request requires documents, review, requirements, evidence and follow-up. This work today is slow and not very comparable.",
+  "Hay SOFOMES, fintechs, bancos, fondos y PyMEs con friccion documental; ademas permite validar producto con costos controlados antes de expandir.": "There are SOFOMES, fintechs, banks, funds and SMEs with document friction; also allows validating product with controlled costs before expanding.",
+  "Une preparacion del solicitante, matriz documental, IA, data room, requerimientos, otorgantes y administracion en un flujo vertical.": "Combines applicant preparation, document matrix, AI, data room, requirements, funders and administration in a vertical flow.",
+  "La demo local ya muestra landing, solicitante, otorgante, NSD Admin, vista de inversion, demo guiado, ronda, traccion y moat.": "Local demo already shows landing, applicant, funder, NSD Admin, investor view, guided demo, round, traction and moat.",
+  "Permisos robustos, pilotos reales, integraciones premium, optimizacion visual y endurecimiento de seguridad/operacion.": "Robust permissions, real pilots, premium integrations, visual optimization and security/operation hardening.",
+  "No. La IA ayuda a preparar, revisar y explicar evidencia; la decision final permanece en el otorgante.": "No. AI helps prepare, review and explain evidence; final decision remains with the funder.",
+  "Con disclaimers, revision humana, trazabilidad, permisos, auditoria y separando scoring preliminar de decision crediticia.": "With disclaimers, human review, traceability, permissions, audit and separating preliminary scoring from credit decision.",
+  "Detecta faltantes, inconsistencias, vencimientos, requisitos exigibles, riesgos y siguientes acciones.": "Detects gaps, inconsistencies, expirations, compliance requirements, risks and next actions.",
+  "SaaS B2B, fee por expediente, servicios NSD IF y modulos premium como OCR, biometria, KYB, antifraude e integraciones.": "B2B SaaS, fee per file, NSD IF services and premium modules like OCR, biometrics, KYB, anti-fraud and integrations.",
+  "Pilotos con SOFOMES, fintechs, fondos, despachos financieros y empresas solicitantes usando expedientes reales controlados.": "Pilots with SOFOMES, fintechs, funds, financial firms and applicant companies using controlled real files.",
+  "Producto, IA/integraciones, pilotos, go-to-market y base legal/operativa para lanzar con menor riesgo.": "Product, AI/integrations, pilots, go-to-market and legal/operational base to launch with less risk.",
+
+  // GovernanceDisclosureTab
+  "Pendiente de version legal final": "Pending final legal version",
+  "Antes de publicar comercialmente": "Before publishing commercially",
+  "Requiere texto completo y consentimiento": "Requires full text and consent",
+  "Antes de datos reales": "Before real data",
+  "Agregar disclaimer en revision documental": "Add disclaimer in document review",
+  "Antes de piloto": "Before pilot",
+  "Mantener como modulo futuro controlado": "Maintain as controlled future module",
+  "Antes de integracion": "Before integration",
+  "Mapear eventos reales contra Supabase audit_logs": "Map real events against Supabase audit_logs",
+  "Durante hardening": "During hardening",
+
+  // PitchDemoModeTab
+  "Correcto. NSD prepara evidencia, trazabilidad y comparabilidad; la decision sigue siendo del otorgante.": "Correct. NSD prepares evidence, traceability and comparability; decision remains with the funder.",
+  "Por eso se presenta como revision asistida, explicable y auditable, no como aprobacion automatica.": "That is why it is presented as assisted, explainable and auditable review, not automatic approval.",
+  "SaaS B2B, fee por expediente, servicios profesionales y modulos premium de compliance.": "B2B SaaS, fee per file, professional services and premium compliance modules.",
+  "Las entidades necesitan revisar mas casos con menos tiempo, mas regulacion y mayor presion antifraude.": "Entities need to review more cases with less time, more regulation and higher anti-fraud pressure.",
+
   "Quien paga?": "Who pays?",
   "Esto ya funciona?": "Does this work already?",
   "Mercado": "Market",
