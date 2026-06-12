@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SCORING DE OPORTUNIDADES PARA OTORGANTE
 // Evaluación integral de un proyecto/solicitante

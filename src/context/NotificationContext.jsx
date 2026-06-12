@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 import React, { createContext, useState } from "react";
 
 export const NotificationContext = createContext();

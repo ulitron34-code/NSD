@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 import React, { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
@@ -17,7 +18,7 @@ export function AuthProvider({ children }) {
         setUser(JSON.parse(savedUser));
         setIsLoggedIn(true);
       } catch (e) {
-        console.error("Error parsing user:", e);
+        error("SVC", "Error parsing user:", e);
         localStorage.removeItem("auth_token");
         localStorage.removeItem("user");
       }

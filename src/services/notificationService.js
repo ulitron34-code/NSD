@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SISTEMA DE NOTIFICACIONES
 // Alertas para Solicitante y Otorgante

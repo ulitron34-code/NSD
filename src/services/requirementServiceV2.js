@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SERVICIO DE REQUERIMIENTOS AISLADO POR USUARIO
 // ============================================
@@ -65,7 +66,7 @@ export function createRequirement(requirementData) {
                     message: requirement.description,
                     relatedId: requirement.id,
                     priority: requirement.priority === 'high' ? 'high' : 'normal'
-                  }).catch(err => console.log('Notification error:', err));
+                  }).catch(err => debug("SVC", 'Notification error:', err));
                 }
                 resolve(requirement);
               })
@@ -208,7 +209,7 @@ export function respondToRequirement(requirementId, responseDocumentId) {
               message: 'Se ha proporcionado un documento en respuesta a tu requerimiento',
               relatedId: requirementId,
               priority: 'high'
-            }).catch(err => console.log('Notification error:', err));
+            }).catch(err => debug("SVC", 'Notification error:', err));
           }
           resolve(updated);
         };
@@ -253,7 +254,7 @@ export function approveRequirementResponse(requirementId, approvedBy) {
               message: 'Tu respuesta ha sido aprobada',
               relatedId: requirementId,
               priority: 'normal'
-            }).catch(err => console.log('Notification error:', err));
+            }).catch(err => debug("SVC", 'Notification error:', err));
           }
           resolve(updated);
         };
@@ -299,7 +300,7 @@ export function rejectRequirementResponse(requirementId, rejectionReason, approv
               message: `Motivo: ${rejectionReason}`,
               relatedId: requirementId,
               priority: 'high'
-            }).catch(err => console.log('Notification error:', err));
+            }).catch(err => debug("SVC", 'Notification error:', err));
           }
           resolve(updated);
         };

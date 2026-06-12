@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SERVICIO DE EXPORTACIÓN A PDF
 // Genera PDFs profesionales de expedientes

@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // GUARDAR DOCUMENTO EN INDEXEDDB
 // ============================================
