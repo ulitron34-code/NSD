@@ -1,7 +1,12 @@
+import { error, debug, info, warn } from '../utils/logger';
 // ============================================
 // SERVICIO DE AUTENTICACIÓN LOCAL
 // Login/Register con persistencia en localStorage
+// Versión mejorada con hashing seguro y tokens criptográficos
 // ============================================
+
+import bcrypt from 'bcryptjs';
+import { generateSecureToken } from '../utils/cryptoUtils';
 
 export const ROLES = {
   SOLICITANTE: 'solicitante',
@@ -9,13 +14,21 @@ export const ROLES = {
   ADMIN: 'nsd_admin'
 };
 
-// Crear usuario demo
+// Salt rounds para bcrypt (12 es un buen balance entre seguridad y rendimiento)
+const BCRYPT_SALT_ROUNDS = 12;
+
+// Crear usuario demo con contraseñas seguras pre-hasheadas
+// NOTA: Las contraseñas demo son solo para desarrollo local
 export function createDemoUsers() {
+  // Contraseñas pre-hasheadas con bcrypt (todas son "Demo1234!" para fácil testing)
+  // En producción esto se haría dinámicamente con hashPassword()
+  const demoPasswordHash = '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.FaQgPGLL.F/NdC'; // Demo1234!
+  
   return [
     {
       id: 'user-solicitante-001',
       email: 'empresa@ejemplo.com',
-      password: '1234',
+      password: demoPasswordHash,
       name: 'Empresa Solicitante',
       role: ROLES.SOLICITANTE,
       company: 'TechStart México',
@@ -24,7 +37,7 @@ export function createDemoUsers() {
     {
       id: 'user-otorgante-001',
       email: 'fondo@ejemplo.com',
-      password: '1234',
+      password: demoPasswordHash,
       name: 'Fondo de Inversión',
       role: ROLES.OTORGANTE,
       company: 'Nexus Capital',
@@ -33,7 +46,7 @@ export function createDemoUsers() {
     {
       id: 'user-admin-001',
       email: 'admin@nsd.mx',
-      password: '1234',
+      password: demoPasswordHash,
       name: 'Admin NSD',
       role: ROLES.ADMIN,
       company: 'NSD',
@@ -65,7 +78,7 @@ export function registerUser(email, password, name, role, company) {
   const newUser = {
     id: `user-${role}-${Date.now()}`,
     email,
-    password: hashPassword(password), // En prod: hash real + salt
+    password: bcrypt.hashSync(password, BCRYPT_SALT_ROUNDS), // Hash seguro con bcrypt
     name,
     role,
     company,
@@ -84,8 +97,8 @@ export function registerUser(email, password, name, role, company) {
   };
 }
 
-// Login usuario
-export function loginUser(email, password) {
+// Login usuario (versión async para bcrypt)
+export async function loginUserAsync(email, password) {
   const users = getAllUsers();
   const user = users.find(u => u.email === email);
 
@@ -93,8 +106,9 @@ export function loginUser(email, password) {
     throw new Error('Usuario no encontrado');
   }
 
-  // En prod: hash real + salt
-  if (user.password !== hashPassword(password)) {
+  // Verificar contraseña con bcrypt
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) {
     throw new Error('Contraseña incorrecta');
   }
 
@@ -106,9 +120,39 @@ export function loginUser(email, password) {
     company: user.company
   };
 
-  // Guardar sesión actual
+  // Guardar sesión actual con token seguro
   localStorage.setItem('nsd_current_user', JSON.stringify(sessionUser));
-  localStorage.setItem('nsd_session_token', generateToken());
+  localStorage.setItem('nsd_session_token', generateSecureToken());
+
+  return sessionUser;
+}
+
+// Login usuario (versión sync para compatibilidad - usa bcrypt compare sync)
+export function loginUser(email, password) {
+  const users = getAllUsers();
+  const user = users.find(u => u.email === email);
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  // Verificar contraseña con bcrypt (sync para compatibilidad)
+  const isValid = bcrypt.compareSync(password, user.password);
+  if (!isValid) {
+    throw new Error('Contraseña incorrecta');
+  }
+
+  const sessionUser = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    company: user.company
+  };
+
+  // Guardar sesión actual con token seguro
+  localStorage.setItem('nsd_current_user', JSON.stringify(sessionUser));
+  localStorage.setItem('nsd_session_token', generateSecureToken());
 
   return sessionUser;
 }
@@ -161,7 +205,7 @@ function generateToken() {
   return `token-${Date.now()}-${Math.random()}`;
 }
 
-// Cambiar contraseña
+// Cambiar contraseña (actualizado con bcrypt)
 export function changePassword(currentPassword, newPassword) {
   const user = getCurrentUser();
   if (!user) throw new Error('No hay usuario autenticado');
@@ -171,11 +215,13 @@ export function changePassword(currentPassword, newPassword) {
 
   if (userIndex === -1) throw new Error('Usuario no encontrado');
 
-  if (users[userIndex].password !== hashPassword(currentPassword)) {
+  // Verificar contraseña actual con bcrypt
+  if (!bcrypt.compareSync(currentPassword, users[userIndex].password)) {
     throw new Error('Contraseña actual incorrecta');
   }
 
-  users[userIndex].password = hashPassword(newPassword);
+  // Hashear nueva contraseña con bcrypt
+  users[userIndex].password = bcrypt.hashSync(newPassword, BCRYPT_SALT_ROUNDS);
   localStorage.setItem('nsd_users', JSON.stringify(users));
 
   return true;
