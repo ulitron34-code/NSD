@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotification } from "../../hooks/useNotification";
@@ -49,7 +50,7 @@ export default function ExpedientesTab() {
         setExpedientes(exps);
         setLoading(false);
       } catch (err) {
-        console.error('Error loading expedientes:', err);
+        error("SVC", 'Error loading expedientes:', err);
         setLoading(false);
       }
     };
@@ -78,7 +79,7 @@ export default function ExpedientesTab() {
       await generateExpedientePDF(exp, reqs, docs, msgs);
       addNotification(L(`📥 Expediente ${exp.id} descargado`, `📥 Compliance file ${exp.id} downloaded`), 'success');
     } catch (err) {
-      console.error('Error exportando PDF:', err);
+      error("SVC", 'Error exportando PDF:', err);
       addNotification(L('Error al exportar PDF', 'Error exporting PDF'), 'error');
     } finally {
       setExportingId(null);
@@ -92,7 +93,7 @@ export default function ExpedientesTab() {
       setSelectedExp(updated);
       addNotification(`${L('Expediente actualizado a:', 'Compliance file updated to:')} ${newStatus}`, 'success');
     } catch (err) {
-      console.error('Error updating expediente:', err);
+      error("SVC", 'Error updating expediente:', err);
       addNotification(L('Error al actualizar expediente', 'Error updating compliance file'), 'error');
     }
   };

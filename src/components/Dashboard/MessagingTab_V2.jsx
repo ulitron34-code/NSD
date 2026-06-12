@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { useAuth } from "../../hooks/useAuth";
@@ -44,7 +45,7 @@ export default function MessagingTab() {
           setSelectedExpediente(exps[0]);
         }
       } catch (err) {
-        console.error("Error loading expedientes:", err);
+        error("SVC", "Error loading expedientes:", err);
       }
     };
 
@@ -73,12 +74,12 @@ export default function MessagingTab() {
 
         // Marcar como leídos los de esta conversación
         inThisExp.forEach(msg => {
-          markMessageAsRead(msg.id).catch(err => console.log("Mark read error:", err));
+          markMessageAsRead(msg.id).catch(err => debug("SVC", "Mark read error:", err));
         });
 
         setLoading(false);
       } catch (err) {
-        console.error("Error loading conversation:", err);
+        error("SVC", "Error loading conversation:", err);
         setLoading(false);
       }
     };
@@ -130,7 +131,7 @@ export default function MessagingTab() {
       setFormData({ subject: "", body: "" });
       addNotification("✅ Mensaje enviado. Destinatario notificado", "success");
     } catch (err) {
-      console.error("Error sending message:", err);
+      error("SVC", "Error sending message:", err);
       addNotification("Error al enviar mensaje", "error");
     }
   };
@@ -146,7 +147,7 @@ export default function MessagingTab() {
       setMessages(msgs);
       addNotification("Marcado como leído", "success");
     } catch (err) {
-      console.error("Error:", err);
+      error("SVC", "Error:", err);
     }
   };
 

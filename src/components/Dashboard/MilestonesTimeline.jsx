@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { COLORS } from "../../utils/constants";
@@ -26,7 +27,7 @@ export default function MilestonesTimeline() {
           setSelectedExpedienteId(exps[0].id);
         }
       } catch (err) {
-        console.error("Error cargando expedientes:", err);
+        error("SVC", "Error cargando expedientes:", err);
       }
     };
     loadExpedientes();
@@ -192,7 +193,7 @@ export default function MilestonesTimeline() {
         setMilestones(timeline);
         setLoading(false);
       } catch (err) {
-        console.error("Error cargando hitos:", err);
+        error("SVC", "Error cargando hitos:", err);
         setLoading(false);
       }
     };

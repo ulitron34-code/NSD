@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useIndexedDB } from "../../hooks/useIndexedDB";
 import { getDocumentsByOrder, getLogsByEntity } from "../../services/storageService";
@@ -59,7 +60,7 @@ export default function MetricsDashboard() {
 
         setLoading(false);
       } catch (err) {
-        console.error('Error loading metrics:', err);
+        error("SVC", 'Error loading metrics:', err);
         setLoading(false);
       }
     };

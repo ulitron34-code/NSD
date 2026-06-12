@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../../utils/logger';
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotification } from "../../../hooks/useNotification";

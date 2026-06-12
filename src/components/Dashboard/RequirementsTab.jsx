@@ -1,3 +1,4 @@
+import { error, debug, info, warn } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { useAuth } from "../../hooks/useAuth";
@@ -64,7 +65,7 @@ export default function RequirementsTab() {
           setSelectedExpediente(exps[0]);
         }
       } catch (err) {
-        console.error("Error loading expedientes:", err);
+        error("SVC", "Error loading expedientes:", err);
       }
     };
 
@@ -100,7 +101,7 @@ export default function RequirementsTab() {
         setStats(s);
         setLoading(false);
       } catch (err) {
-        console.error("Error loading requirements:", err);
+        error("SVC", "Error loading requirements:", err);
         setLoading(false);
       }
     };
@@ -149,7 +150,7 @@ export default function RequirementsTab() {
       setShowCreateForm(false);
       addNotification("✅ Requerimiento creado. Notificación enviada al solicitante", "success");
     } catch (err) {
-      console.error("Error:", err);
+      error("SVC", "Error:", err);
       addNotification("Error al crear requerimiento", "error");
     }
   };
@@ -168,7 +169,7 @@ export default function RequirementsTab() {
 
       addNotification("✅ Respuesta enviada. Otorgante notificado", "success");
     } catch (err) {
-      console.error("Error:", err);
+      error("SVC", "Error:", err);
       addNotification("Error al responder", "error");
     }
   };
@@ -187,7 +188,7 @@ export default function RequirementsTab() {
 
       addNotification("✅ Aprobado. Solicitante notificado", "success");
     } catch (err) {
-      console.error("Error:", err);
+      error("SVC", "Error:", err);
       addNotification("Error al aprobar", "error");
     }
   };
@@ -209,7 +210,7 @@ export default function RequirementsTab() {
 
       addNotification("❌ Rechazado. Solicitante notificado con razón", "success");
     } catch (err) {
-      console.error("Error:", err);
+      error("SVC", "Error:", err);
       addNotification("Error al rechazar", "error");
     }
   };
