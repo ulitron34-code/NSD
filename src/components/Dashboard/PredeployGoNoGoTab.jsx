@@ -6,20 +6,22 @@ import { uiText, translateCopy } from "../../utils/runtimeCopy";
 const checks = [
   ["Build local", "npm.cmd run build ejecuta sin errores", "Go"],
   ["Chunk dashboard", "Carga diferida activa; sin warning mayor a 500 kB", "Go"],
-  ["Home", "Pagina principal carga en preview local", "Go"],
+  ["Home", "Pagina principal carga en preview local y Vercel sirve assets correctamente", "Go"],
   ["Dashboard", "Perfiles Solicitante, Otorgante y NSD Admin navegables", "Go"],
   ["Textos", "Revisar acentos finales y posibles tramos en ingles", "Caution"],
   ["Legal", "Disclaimers visibles pero faltan terminos legales finales", "Caution"],
   ["Backend", "Render/Supabase deben estar vivos para login y datos reales", "Caution"],
+  ["Deploy", "Vercel actualiza automaticamente si GitHub recibe commit/push en la rama conectada", "Go"],
   ["Pago", "Stripe/checkout requiere prueba aparte despues del deploy", "Caution"],
 ];
 
 const publishSteps = [
-  "Usar el ZIP mas reciente generado desde dist.",
-  "Confirmar que el ZIP tenga index.html y assets en la raiz.",
-  "Subir a Netlify en el proyecto existente, no crear sitio nuevo si se quiere conservar URL.",
-  "Esperar Published y probar /, /dashboard, /services e /international.",
-  "Si sale version vieja, limpiar cache o verificar que se subio el ZIP correcto.",
+  "Trabajar y validar primero en local.",
+  "Ejecutar npm.cmd run build antes de publicar.",
+  "Subir cambios a GitHub con commit/push en la rama conectada a Vercel.",
+  "Esperar que Vercel marque el deployment como Ready.",
+  "Probar /, /dashboard, /services, /international y flujo de perfiles.",
+  "Si sale version vieja, revisar que el ultimo commit este en GitHub y que Vercel haya tomado esa rama.",
 ];
 
 export default function PredeployGoNoGoTab() {
@@ -39,15 +41,15 @@ export default function PredeployGoNoGoTab() {
         boxShadow: COLORS.shadowMd,
       }}>
         <p style={{ margin: 0, color: "rgba(255,255,255,0.72)", fontSize: "0.75rem", fontWeight: 900, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          {copy("Go / No-Go Netlify")}
+          {copy("Go / No-Go publicacion")}
         </p>
         <h1 style={{ margin: "0.35rem 0", color: COLORS.white, fontSize: "1.55rem" }}>
           {L("Corte recomendado para publicacion controlada", "Recommended cut for controlled publishing")}
         </h1>
         <p style={{ margin: 0, maxWidth: "820px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(
-            "Esta vista resume si el estado local esta listo para subir a Netlify como demo de presentacion, separando errores bloqueantes de pendientes aceptables.",
-            "This view summarizes whether the local state is ready to upload to Netlify as a presentation demo, separating blocking errors from acceptable pending items."
+            "Esta vista resume si el estado local esta listo para publicarse en Vercel como demo de presentacion, separando errores bloqueantes de pendientes aceptables.",
+            "This view summarizes whether the local state is ready to publish on Vercel as a presentation demo, separating blocking errors from acceptable pending items."
           )}
         </p>
       </section>

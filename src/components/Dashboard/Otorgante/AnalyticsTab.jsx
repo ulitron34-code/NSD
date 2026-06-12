@@ -41,7 +41,7 @@ export default function AnalyticsTab() {
         if (active) setOpportunities(mapped);
       } catch {
         if (!active) return;
-        setError(L("No se pudieron cargar mÃ©tricas reales; mostrando base demo.", "Could not load real metrics; showing demo baseline."));
+        setError(L("No se pudieron cargar metricas reales; mostrando base demo.", "Could not load real metrics; showing demo baseline."));
         setOpportunities(buildOtorgantePipeline(demoServiceOrders));
       } finally {
         if (active) setLoading(false);
@@ -57,9 +57,9 @@ export default function AnalyticsTab() {
 
   const analytics = useMemo(() => buildOtorganteAnalytics(opportunities), [opportunities]);
   const riskRows = useMemo(() => ([
-    { label: L("Bajo", "Low"), count: analytics.lowRisk, color: COLORS.green, action: L("Puede avanzar a comitÃ© si el data room estÃ¡ completo.", "May advance to committee if the data room is complete.") },
-    { label: L("Medio", "Medium"), count: analytics.mediumRisk, color: COLORS.amber, action: L("Requiere subsanaciÃ³n o informaciÃ³n adicional.", "Requires remediation or additional information.") },
-    { label: L("Alto", "High"), count: analytics.highRisk, color: "#C62828", action: L("Pausar hasta aclarar alertas crÃ­ticas.", "Pause until critical alerts are clarified.") },
+    { label: L("Bajo", "Low"), count: analytics.lowRisk, color: COLORS.green, action: L("Puede avanzar a comite si el data room esta completo.", "May advance to committee if the data room is complete.") },
+    { label: L("Medio", "Medium"), count: analytics.mediumRisk, color: COLORS.amber, action: L("Requiere subsanacion o informacion adicional.", "Requires remediation or additional information.") },
+    { label: L("Alto", "High"), count: analytics.highRisk, color: "#C62828", action: L("Pausar hasta aclarar alertas criticas.", "Pause until critical alerts are clarified.") },
   ]), [analytics, i18n.language]);
   const readinessRows = useMemo(() => {
     const grouped = opportunities.reduce((acc, item) => {
@@ -78,19 +78,19 @@ export default function AnalyticsTab() {
     const early = opportunities.filter((item) => item.readinessLevel === "Preparacion inicial").length;
     const medium = opportunities.filter((item) => item.risk === "Medio").length;
     return [
-      [L("Faltantes documentales", "Document Gaps"), early + medium, L("Requiere requerimientos y plan de subsanaciÃ³n.", "Requires requests and a remediation plan.")],
-      [L("Riesgo alto", "High Risk"), highRisk, L("Pausar o escalar a revisiÃ³n manual.", "Pause or escalate to manual review.")],
-      [L("Listos para comitÃ©", "Ready for Committee"), opportunities.filter((item) => item.readinessLevel === "Listo para comite").length, L("Priorizar lectura ejecutiva y memo.", "Prioritize executive review and memo.")],
+      [L("Faltantes documentales", "Document Gaps"), early + medium, L("Requiere requerimientos y plan de subsanacion.", "Requires requests and a remediation plan.")],
+      [L("Riesgo alto", "High Risk"), highRisk, L("Pausar o escalar a revision manual.", "Pause or escalate to manual review.")],
+      [L("Listos para comite", "Ready for Committee"), opportunities.filter((item) => item.readinessLevel === "Listo para comite").length, L("Priorizar lectura ejecutiva y memo.", "Prioritize executive review and memo.")],
     ];
   }, [opportunities, i18n.language]);
   const actionQueue = useMemo(() => opportunities.map((item) => {
     const score = Number(item.averageScore || 0);
     const documents = Number(item.documentsCount || item.documents?.length || 0);
     const action = score >= 82 && item.risk !== "Alto"
-      ? L("Preparar memo de comitÃ©", "Prepare committee memo")
+      ? L("Preparar memo de comite", "Prepare committee memo")
       : score >= 65
-        ? L("Solicitar informaciÃ³n adicional", "Request additional information")
-        : L("Pausar y pedir subsanaciÃ³n", "Pause and request remediation");
+        ? L("Solicitar informacion adicional", "Request additional information")
+        : L("Pausar y pedir subsanacion", "Pause and request remediation");
     const reason = documents < 4
       ? L("Data room corto", "Thin data room")
       : item.risk === "Alto"
@@ -100,10 +100,10 @@ export default function AnalyticsTab() {
     return { ...item, action, reason, priority };
   }).sort((a, b) => Number(b.averageScore || 0) - Number(a.averageScore || 0)).slice(0, 6), [opportunities, i18n.language]);
   const committeeQuestions = useMemo(() => ([
-    [L("Â¿Hay evidencia suficiente?", "Is there enough evidence?"), opportunities.some((item) => Number(item.documentsCount || item.documents?.length || 0) >= 5) ? L("SÃ­, existen expedientes con data room amplio.", "Yes, some files have a broad data room.") : L("TodavÃ­a hay que fortalecer data rooms.", "Data rooms still need strengthening.")],
-    [L("Â¿DÃ³nde estÃ¡ el cuello de botella?", "Where is the bottleneck?"), recurringSignals[0]?.[1] > 0 ? L("Faltantes documentales y subsanaciÃ³n.", "Document gaps and remediation.") : L("PriorizaciÃ³n de comitÃ© y contacto.", "Committee and contact prioritization.")],
-    [L("Â¿QuÃ© revisa riesgo?", "What should risk review?"), analytics.highRisk > 0 ? L("Alertas altas, KYB, legal y uso de fondos.", "High alerts, KYB, legal and use of funds.") : L("ConcentraciÃ³n sectorial y supuestos de score.", "Sector concentration and scoring assumptions.")],
-    [L("Â¿QuÃ© sigue comercialmente?", "What comes next commercially?"), analytics.lowRisk > 0 ? L("Contactar expedientes mejor preparados bajo gates.", "Contact better-prepared files under gates.") : L("Esperar subsanaciÃ³n antes de abrir contacto.", "Wait for remediation before opening contact.")],
+    [L("Hay evidencia suficiente?", "Is there enough evidence?"), opportunities.some((item) => Number(item.documentsCount || item.documents?.length || 0) >= 5) ? L("Si, existen expedientes con data room amplio.", "Yes, some files have a broad data room.") : L("Todavia hay que fortalecer data rooms.", "Data rooms still need strengthening.")],
+    [L("Donde esta el cuello de botella?", "Where is the bottleneck?"), recurringSignals[0]?.[1] > 0 ? L("Faltantes documentales y subsanacion.", "Document gaps and remediation.") : L("Priorizacion de comite y contacto.", "Committee and contact prioritization.")],
+    [L("Que revisa riesgo?", "What should risk review?"), analytics.highRisk > 0 ? L("Alertas altas, KYB, legal y uso de fondos.", "High alerts, KYB, legal and use of funds.") : L("Concentracion sectorial y supuestos de score.", "Sector concentration and scoring assumptions.")],
+    [L("Que sigue comercialmente?", "What comes next commercially?"), analytics.lowRisk > 0 ? L("Contactar expedientes mejor preparados bajo gates.", "Contact better-prepared files under gates.") : L("Esperar subsanacion antes de abrir contacto.", "Wait for remediation before opening contact.")],
   ]), [analytics.highRisk, analytics.lowRisk, opportunities, recurringSignals, i18n.language]);
   const dataSource = user?.demo ? L("Datos demo enriquecidos localmente", "Enriched local demo data") : "Pipeline Supabase: otorganteAPI.pipeline(); fallback ordersAPI.list()";
 
@@ -114,12 +114,12 @@ export default function AnalyticsTab() {
           {L("Inteligencia de Negocio", "Business Intelligence")}
         </p>
         <h1 style={{ fontFamily: "'Playfair Display', serif", color: COLORS.navy, fontSize: "2.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-          {L("AnalÃ­tica de ColocaciÃ³n y Riesgo", "Placement and Risk Analytics")}
+          {L("Analitica de Colocacion y Riesgo", "Placement and Risk Analytics")}
         </h1>
         <p style={{ color: COLORS.textMuted, maxWidth: "780px", fontWeight: 300, fontSize: "0.95rem" }}>
-          {L("Visualiza el desempeÃ±o del pipeline disponible, embudos de conversiÃ³n y exposiciÃ³n de riesgo por sector.", "Visualize available pipeline performance, conversion funnels and risk exposure by sector.")}
+          {L("Visualiza el desempeno del pipeline disponible, embudos de conversion y exposicion de riesgo por sector.", "Visualize available pipeline performance, conversion funnels and risk exposure by sector.")}
         </p>
-        {loading && <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", marginTop: "0.75rem" }}>{L("Cargando mÃ©tricas...", "Loading metrics...")}</p>}
+        {loading && <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", marginTop: "0.75rem" }}>{L("Cargando metricas...", "Loading metrics...")}</p>}
         {error && <p style={{ color: "#C62828", fontSize: "0.85rem", marginTop: "0.75rem" }}>{error}</p>}
       </div>
 
@@ -137,9 +137,9 @@ export default function AnalyticsTab() {
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.25fr) minmax(300px, 0.75fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
         <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
-          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "0.35rem" }}>{L("Cola de AcciÃ³n Institucional", "Institutional Action Queue")}</h2>
+          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "0.35rem" }}>{L("Cola de Accion Institucional", "Institutional Action Queue")}</h2>
           <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", lineHeight: 1.5, marginBottom: "1rem" }}>
-            {L("Traduce el pipeline a acciones concretas: comitÃ©, requerimientos, pausa o subsanaciÃ³n.", "Translate the pipeline into concrete actions: committee, requests, pause or remediation.")}
+            {L("Traduce el pipeline a acciones concretas: comite, requerimientos, pausa o subsanacion.", "Translate the pipeline into concrete actions: committee, requests, pause or remediation.")}
           </p>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {actionQueue.map((item) => (
@@ -156,9 +156,9 @@ export default function AnalyticsTab() {
         </div>
 
         <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
-          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "0.35rem" }}>{L("Preguntas para ComitÃ©", "Committee Questions")}</h2>
+          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "0.35rem" }}>{L("Preguntas para Comite", "Committee Questions")}</h2>
           <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", lineHeight: 1.5, marginBottom: "1rem" }}>
-            {L("Lectura rÃ¡pida para decidir si el pipeline merece revisiÃ³n interna o mÃ¡s informaciÃ³n.", "Quick read to decide whether the pipeline deserves internal review or more information.")}
+            {L("Lectura rapida para decidir si el pipeline merece revision interna o mas informacion.", "Quick read to decide whether the pipeline deserves internal review or more information.")}
           </p>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {committeeQuestions.map(([question, answer]) => (
@@ -198,10 +198,10 @@ export default function AnalyticsTab() {
         </div>
 
         <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
-          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1.5rem" }}>{L("ExposiciÃ³n por Sector", "Exposure by Sector")}</h2>
+          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1.5rem" }}>{L("Exposicion por Sector", "Exposure by Sector")}</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {analytics.sectorExposure.length === 0 ? (
-              <p style={{ color: COLORS.textMuted, fontSize: "0.9rem" }}>{L("Sin exposiciÃ³n sectorial disponible.", "No sector exposure available.")}</p>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.9rem" }}>{L("Sin exposicion sectorial disponible.", "No sector exposure available.")}</p>
             ) : analytics.sectorExposure.map((item) => (
               <div key={item.sector}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "0.25rem", color: COLORS.text }}>
@@ -218,7 +218,7 @@ export default function AnalyticsTab() {
       </div>
 
       <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
-        <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("MÃ©tricas Financieras", "Financial Metrics")}</h2>
+        <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Metricas Financieras", "Financial Metrics")}</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
           <div style={{ padding: "1.25rem", background: COLORS.bg, borderRadius: "8px", borderTop: `3px solid ${COLORS.gold}` }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>{L("Pipeline total", "Total Pipeline")}</p>
@@ -250,7 +250,7 @@ export default function AnalyticsTab() {
         </div>
 
         <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
-          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("PreparaciÃ³n para ComitÃ©", "Committee Readiness")}</h2>
+          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Preparacion para Comite", "Committee Readiness")}</h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {readinessRows.length ? readinessRows.map((row) => (
               <div key={row.label} style={{ padding: "0.8rem", borderRadius: "8px", background: COLORS.bg, border: `1px solid ${COLORS.border}` }}>
@@ -259,11 +259,11 @@ export default function AnalyticsTab() {
                   <span style={{ color: COLORS.gold, fontWeight: 900 }}>{row.count}</span>
                 </div>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>
-                  {row.label === "Listo para comite" ? L("Puede pasar a lectura ejecutiva.", "May advance to executive review.") : row.label === "Subsanable" ? L("Requiere requerimientos y evidencia adicional.", "Requires requests and additional evidence.") : L("Necesita preparaciÃ³n documental antes de revisar.", "Needs document readiness before review.")}
+                  {row.label === "Listo para comite" ? L("Puede pasar a lectura ejecutiva.", "May advance to executive review.") : row.label === "Subsanable" ? L("Requiere requerimientos y evidencia adicional.", "Requires requests and additional evidence.") : L("Necesita preparacion documental antes de revisar.", "Needs document readiness before review.")}
                 </p>
               </div>
             )) : (
-              <p style={{ color: COLORS.textMuted }}>{L("Sin clasificaciÃ³n de preparaciÃ³n.", "No readiness classification.")}</p>
+              <p style={{ color: COLORS.textMuted }}>{L("Sin clasificacion de preparacion.", "No readiness classification.")}</p>
             )}
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function AnalyticsTab() {
         </div>
 
         <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
-          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("SeÃ±ales Recurrentes", "Recurring Signals")}</h2>
+          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Senales Recurrentes", "Recurring Signals")}</h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {recurringSignals.map(([label, count, detail]) => (
               <div key={label} style={{ padding: "0.85rem", borderRadius: "8px", background: COLORS.bg, border: `1px solid ${COLORS.border}` }}>

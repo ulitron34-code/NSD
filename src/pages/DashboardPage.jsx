@@ -22,6 +22,8 @@ const MessagingTab = lazy(() => import("../components/Dashboard/MessagingTab"));
 const ExpedientesTab = lazy(() => import("../components/Dashboard/ExpedientesTab"));
 const PipelineTab = lazy(() => import("../components/Dashboard/Otorgante/PipelineTab"));
 const AnalyticsTab = lazy(() => import("../components/Dashboard/Otorgante/AnalyticsTab"));
+const DecisionRoomTab = lazy(() => import("../components/Dashboard/Otorgante/DecisionRoomTab"));
+const ForensicAnalysisTab = lazy(() => import("../components/Dashboard/Otorgante/ForensicAnalysisTab"));
 const CommitteeMemoTab = lazy(() => import("../components/Dashboard/Otorgante/CommitteeMemoTab"));
 const DataRoomIndexTab = lazy(() => import("../components/Dashboard/DataRoomIndexTab"));
 const TraceabilityLogTab = lazy(() => import("../components/Dashboard/TraceabilityLogTab"));
@@ -30,6 +32,8 @@ const GovernanceDisclosureTab = lazy(() => import("../components/Dashboard/Gover
 const PredeployGoNoGoTab = lazy(() => import("../components/Dashboard/PredeployGoNoGoTab"));
 const BiometricosTab = lazy(() => import("../components/Dashboard/BiometricosTab"));
 const InvestorPitchTab = lazy(() => import("../components/Dashboard/InvestorPitchTab"));
+const InvestorWarRoomTab = lazy(() => import("../components/Dashboard/InvestorWarRoomTab"));
+const AIAgentOpsTab = lazy(() => import("../components/Dashboard/AIAgentOpsTab"));
 const PitchDemoModeTab = lazy(() => import("../components/Dashboard/PitchDemoModeTab"));
 const FundraisingRoomTab = lazy(() => import("../components/Dashboard/FundraisingRoomTab"));
 const TractionPilotsTab = lazy(() => import("../components/Dashboard/TractionPilotsTab"));
@@ -58,7 +62,7 @@ function DashboardLoadingFallback() {
   );
 }
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (value) => translateCopy(value, i18n.language);
@@ -143,6 +147,8 @@ export default function DashboardPage() {
         { id: "expedientes", label: L("Mis Expedientes", "My Files"), icon: "EXP" },
         { id: "command", label: L("Centro de comando", "Command Center"), icon: "CC" },
         { id: "pipeline", label: L("Oportunidades / Data room", "Opportunities / Data Room"), icon: "DR" },
+        { id: "decision_room", label: L("Sala de decision 360", "360 Decision Room"), icon: "360" },
+        { id: "forensic_analysis", label: L("Analisis forense", "Forensic Analysis"), icon: "FOR" },
         { id: "data_room_index", label: L("Indice Data Room", "Data Room Index"), icon: "IDX" },
         { id: "requirements", label: L("Informacion solicitada", "Requested Information"), icon: "REQ" },
         { id: "analytics", label: L("Inteligencia y Riesgo", "Intelligence and Risk"), icon: "BI" },
@@ -153,6 +159,8 @@ export default function DashboardPage() {
     }
     return [
       { id: "one_pager", label: L("One Pager", "One Pager"), icon: "ONE" },
+      { id: "investor_war_room", label: L("War Room inversion", "Investor War Room"), icon: "WAR" },
+      { id: "ai_agent_ops", label: L("Agentes IA", "AI Agents"), icon: "AIA" },
       { id: "investor_view", label: L("Vista inversion", "Investor View"), icon: "INV" },
       { id: "pitch_demo", label: L("Demo 10 min", "10-min Demo"), icon: "PIT" },
       { id: "fundraising_room", label: L("Ronda", "Round"), icon: "ROU" },
@@ -400,6 +408,8 @@ export default function DashboardPage() {
 
     if (userMode === "otorgante") {
       if (activeTab === "pipeline") return <PipelineTab />;
+      if (activeTab === "decision_room") return <DecisionRoomTab />;
+      if (activeTab === "forensic_analysis") return <ForensicAnalysisTab />;
       if (activeTab === "requirements") return <RequirementsTab />;
       if (activeTab === "analytics") return <AnalyticsTab />;
       if (activeTab === "committee_memo") return <CommitteeMemoTab />;
@@ -407,6 +417,8 @@ export default function DashboardPage() {
     }
 
     if (activeTab === "one_pager") return <InvestorOnePagerTab />;
+    if (activeTab === "investor_war_room") return <InvestorWarRoomTab />;
+    if (activeTab === "ai_agent_ops") return <AIAgentOpsTab />;
     if (activeTab === "investor_view") return <InvestorPitchTab />;
     if (activeTab === "pitch_demo") return <PitchDemoModeTab />;
     if (activeTab === "fundraising_room") return <FundraisingRoomTab />;
@@ -512,11 +524,7 @@ export default function DashboardPage() {
           <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", marginBottom: "1rem" }} />
           <button
             onClick={() => {
-              const { logout } = require("../hooks/useAuth");
-              // Cierre local para demo y pruebas sin backend.
-              localStorage.removeItem('nsd_current_user');
-              localStorage.removeItem('nsd_session_token');
-              window.location.reload();
+              logout();
             }}
             style={{
               width: "100%",

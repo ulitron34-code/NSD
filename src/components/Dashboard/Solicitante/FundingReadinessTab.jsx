@@ -68,6 +68,27 @@ export default function FundingReadinessTab() {
     [L("Otorgantes compatibles", "Compatible Funders"), "7", L("potenciales", "potential")],
   ];
 
+  const funderView = [
+    [
+      L("Claridad del uso de fondos", "Use-of-funds clarity"),
+      L("Fuerte", "Strong"),
+      L("El proyecto explica monto, destino, hitos y presupuesto base.", "The project explains amount, destination, milestones and base budget."),
+      L("Agregar evidencia de cotizaciones, contratos o avance operativo.", "Add evidence of quotes, contracts or operational progress."),
+    ],
+    [
+      L("Capacidad de repago", "Repayment capacity"),
+      L("Revisable", "Reviewable"),
+      L("Hay informacion financiera, pero faltan supuestos y sensibilidad.", "There is financial information, but assumptions and sensitivity are missing."),
+      L("Subir flujo proyectado, supuestos y fuente primaria de pago.", "Upload projected cash flow, assumptions and primary repayment source."),
+    ],
+    [
+      L("Cumplimiento y antifraude", "Compliance and anti-fraud"),
+      L("Condicionado", "Conditional"),
+      L("KYB esta avanzado, pero hay validaciones y declaraciones pendientes.", "KYB is advanced, but validations and declarations are pending."),
+      L("Completar beneficiario controlador, listas y autorizaciones.", "Complete UBO, screenings and authorizations."),
+    ],
+  ];
+
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
       <section style={{
@@ -101,6 +122,34 @@ export default function FundingReadinessTab() {
             </div>
           </article>
         ))}
+      </section>
+
+      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "0.9rem" }}>
+          <div>
+            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              {L("Como te ve un otorgante", "How a funder sees you")}
+            </p>
+            <h2 style={{ color: COLORS.navy, fontSize: "1.08rem", margin: "0.35rem 0 0" }}>
+              {L("Lectura institucional antes de liberar el data room", "Institutional readout before releasing the data room")}
+            </h2>
+          </div>
+          <span style={{ padding: "0.45rem 0.65rem", borderRadius: "999px", background: "rgba(201,168,76,0.14)", color: COLORS.navy, fontWeight: 900, fontSize: "0.78rem" }}>
+            {L("Listo condicionado", "Conditionally ready")}
+          </span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.75rem" }}>
+          {funderView.map(([label, status, detail, action]) => (
+            <article key={label} style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.9rem", background: COLORS.bg }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", marginBottom: "0.45rem" }}>
+                <strong style={{ color: COLORS.navy, fontSize: "0.88rem" }}>{label}</strong>
+                <span style={{ color: status === L("Fuerte", "Strong") ? COLORS.green : COLORS.amber, fontWeight: 900, fontSize: "0.76rem" }}>{status}</span>
+              </div>
+              <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>{detail}</p>
+              <p style={{ margin: "0.55rem 0 0", color: COLORS.navy, fontSize: "0.78rem", lineHeight: 1.4, fontWeight: 800 }}>{action}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.15fr) minmax(280px, 0.85fr)", gap: "1rem" }}>

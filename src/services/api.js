@@ -150,4 +150,15 @@ export const auditAPI = {
     api.get(`/audit-logs/${orderId}/export.csv`, { responseType: 'blob' })
 };
 
+export const aiAgentsAPI = {
+  forensicAnalyze: (orderId, payload = {}) =>
+    api.post(`/ai-agents/forensic/${orderId}/analyze`, payload),
+  documentTriage: (orderId, payload = {}) =>
+    api.post(`/ai-agents/documents/${orderId}/triage`, payload),
+  riskMemo: (orderId, payload = {}) =>
+    api.post(`/ai-agents/risk/${orderId}/memo`, payload),
+  orchestrationStatus: (orderId) =>
+    api.get(`/ai-agents/orchestration/${orderId}`)
+};
+
 export default api;

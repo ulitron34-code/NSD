@@ -109,6 +109,35 @@ export default function SubirProyectoTab() {
     [L("Otorgantes", "Funding Providers"), analysis ? L("Sugeridos", "Suggested") : L("Pendiente", "Pending"), analysis ? L(`${analysis.matches.length} perfil(es) compatibles.`, `${analysis.matches.length} compatible profile(s).`) : L("Se calculan despues del analisis.", "Calculated after analysis.")],
   ];
 
+  const aiAgentPacket = React.useMemo(() => {
+    const mandatoryDocs = documents
+      .filter((doc) => doc.status.includes("Obligatorio"))
+      .map((doc) => copy(doc.name));
+
+    return {
+      endpoint: "/api/ai-agents/documents/:orderId/triage",
+      memoEndpoint: "/api/ai-agents/risk/:orderId/memo",
+      status: analysis ? L("Paquete listo para agentes", "Agent package ready") : L("Pendiente de analisis", "Pending analysis"),
+      payload: {
+        applicantEmail: user?.email || "demo@nsd.local",
+        projectName: copy(project.name),
+        requestedAmount: copy(project.amount),
+        sector: copy(project.sector),
+        useOfFunds: copy(project.use),
+        stage: copy(project.stage),
+        matrixKey: currentMatrix?.matrix_key || currentMatrix?.key || "MX_FO_STARTUP",
+        mandatoryDocuments: mandatoryDocs,
+        expectedOutputs: [
+          "document_gaps",
+          "readiness_score",
+          "funder_questions",
+          "risk_memo",
+          "data_room_release_recommendation",
+        ],
+      },
+    };
+  }, [analysis, currentMatrix, documents, project, user?.email, i18n.language]);
+
   const preparationPlan = React.useMemo(() => {
     const mandatory = documents.filter((doc) => doc.status.includes("Obligatorio")).length;
     const sectorRisk = project.sector.includes("Fintech") || project.sector.includes("SOFOM")
@@ -335,6 +364,55 @@ export default function SubirProyectoTab() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div style={{ marginTop: "1.5rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: "1rem" }}>
+        <section style={{ background: "#102235", color: COLORS.white, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
+          <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.35rem" }}>
+            {L("Paquete para agentes IA", "AI agent package")}
+          </p>
+          <h2 style={{ color: COLORS.white, fontSize: "1.15rem", marginBottom: "0.5rem" }}>
+            {L("Lo que se enviara a revision automatizada", "What will be sent to automated review")}
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.76)", fontSize: "0.82rem", lineHeight: 1.55, marginBottom: "0.9rem" }}>
+            {L(
+              "Esta vista deja preparado el contrato para que el solicitante entienda como su expediente alimentara agentes documentales, de riesgo y de preparacion para otorgantes.",
+              "This view prepares the contract so the applicant understands how the file will feed document, risk and funder-readiness agents."
+            )}
+          </p>
+          <div style={{ display: "grid", gap: "0.55rem" }}>
+            <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.75rem" }}>
+              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.endpoint}</strong>
+              <span style={{ color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900 }}>{aiAgentPacket.status}</span>
+            </div>
+            <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.75rem" }}>
+              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.memoEndpoint}</strong>
+              <span style={{ color: "rgba(255,255,255,0.72)", fontSize: "0.72rem", fontWeight: 800 }}>{L("Memo de riesgo y liberacion data room", "Risk memo and data room release")}</span>
+            </div>
+          </div>
+        </section>
+
+        <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
+          <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.35rem" }}>
+            {L("Payload previsto", "Planned payload")}
+          </p>
+          <pre style={{
+            margin: 0,
+            maxHeight: "310px",
+            overflow: "auto",
+            background: COLORS.bg,
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: "8px",
+            padding: "0.85rem",
+            color: COLORS.navy,
+            fontSize: "0.68rem",
+            lineHeight: 1.45,
+            whiteSpace: "pre-wrap",
+            overflowWrap: "anywhere",
+          }}>
+            {JSON.stringify(aiAgentPacket.payload, null, 2)}
+          </pre>
+        </section>
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ import IntegrationsBanner from "../components/Landing/IntegrationsBanner";
 import Footer from "../components/Landing/Footer";
 import OperatingModelSection from "../components/Landing/OperatingModelSection";
 import BusinessModelSection from "../components/Landing/BusinessModelSection";
+import InvestorPilotSection from "../components/Landing/InvestorPilotSection";
 import ResponsibleAISection from "../components/Landing/ResponsibleAISection";
 
 export default function LandingPage() {
@@ -52,6 +53,7 @@ export default function LandingPage() {
       {/* Security and Audit Section */}
       <SecuritySection />
       <BusinessModelSection />
+      <InvestorPilotSection />
       
       <div id="precios">
         <PricingSection />
