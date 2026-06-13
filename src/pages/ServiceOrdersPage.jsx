@@ -9,11 +9,14 @@ import { ordersAPI } from "../services/api";
 import { demoServiceOrders, mapServiceOrder } from "../data/demoServiceOrders";
 import { getOrderReadinessSignal } from "../utils/readinessSignal";
 import { uiText, translateCopy } from "../utils/runtimeCopy";
+import { PageSkeleton } from "../components/common/Skeleton";
+import { useToastNotifications } from "../hooks/useToastNotifications";
 
 export default function ServiceOrdersPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { i18n } = useTranslation();
+  const { showSuccess, showError, showInfo } = useToastNotifications();
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (val) => translateCopy(val, i18n.language);
 
@@ -30,15 +33,19 @@ export default function ServiceOrdersPage() {
       try {
         if (user?.demo) {
           setOrders(demoServiceOrders.map(mapServiceOrder));
+          showInfo("Modo demo activo - mostrando datos de ejemplo");
           return;
         }
 
         const { data } = await ordersAPI.list();
         setOrders((data || []).map(mapServiceOrder));
+        showSuccess(`${(data || []).length} expedientes cargados`);
       } catch (error) {
         console.error("Error loading orders:", error);
         if (user?.demo) {
           setOrders(demoServiceOrders.map(mapServiceOrder));
+        } else {
+          showError("No se pudieron cargar los expedientes");
         }
       } finally {
         setLoading(false);
@@ -87,7 +94,11 @@ export default function ServiceOrdersPage() {
   }, {});
 
   if (loading) {
-    return <div style={{ padding: "4rem", textAlign: "center" }}>{L("Cargando expedientes...", "Loading compliance files...")}</div>;
+    return (
+      <div style={{ padding: "2rem" }}>
+        <PageSkeleton type="table" />
+      </div>
+    );
   }
 
   const statCards = [
