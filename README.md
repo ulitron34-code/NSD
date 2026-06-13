@@ -22,17 +22,56 @@ npm run test:run
 npm run build
 ```
 
-## 🌐 Deployments
+## 🌐 Deployment con Vercel
 
-### Frontend (Netlify/Vercel)
+### Configuración en Vercel
+
+1. **Importar proyecto en Vercel**
+   - Ir a [vercel.com/new](https://vercel.com/new)
+   - Importar desde GitHub: `ulitron34-code/NSD`
+   - Framework: Vite (detectado automáticamente)
+
+2. **Variables de entorno requeridas**
+   
+   En el dashboard de Vercel → Settings → Environment Variables:
+   
+   | Variable | Valor | Descripción |
+   |----------|-------|-------------|
+   | `VITE_API_URL` | `https://tu-backend.onrender.com/api` | URL del backend |
+   | `VITE_STRIPE_PUBLIC_KEY` | `pk_live_xxx` | Stripe public key |
+   | `VITE_DEMO_MODE` | `false` | Modo demo (production) |
+   | `VITE_SENTRY_DSN` | *(opcional)* | DSN de Sentry para tracking |
+
+3. **Dominio personalizado** (opcional)
+   - Settings → Domains → Agregar tu dominio
+   - Actualizar DNS según instrucciones de Vercel
+
+### Deploy automático
+
+El proyecto está configurado con GitHub Actions:
+- **Pull Requests**: Deploy automático a URL de preview
+- **Main branch**: Deploy automático a producción
+- **URL de preview**: Se comenta automáticamente en el PR
+
+### Secrets necesarios en GitHub
+
+En GitHub → Settings → Secrets → Actions:
+
+| Secret | Descripción |
+|--------|-------------|
+| `VERCEL_TOKEN` | Token de Vercel ([vercel.com/account/tokens](https://vercel.com/account/tokens)) |
+| `VERCEL_ORG_ID` | ID de la organización (team ID) |
+| `VERCEL_PROJECT_ID` | ID del proyecto |
+
+Para obtener los IDs:
 ```bash
-# Variables de entorno requeridas
-VITE_API_URL=https://tu-backend.onrender.com/api
-VITE_STRIPE_PUBLIC_KEY=pk_live_xxx
-VITE_DEMO_MODE=false
+npm i -g vercel
+vercel link
+cat .vercel/project.json
 ```
 
-### Backend (Render)
+## 🔗 Backend (Render)
+
 ```bash
 # Variables de entorno requeridas
 NODE_ENV=production
@@ -42,7 +81,7 @@ SUPABASE_KEY=tu_anon_key
 SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
 STRIPE_SECRET_KEY=sk_live_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
-CORS_ORIGIN=https://tu-frontend.netlify.app
+CORS_ORIGIN=https://tu-frontend.vercel.app
 ```
 
 ### Webhook de Stripe
