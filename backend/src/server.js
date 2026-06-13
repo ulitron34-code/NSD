@@ -80,10 +80,17 @@ app.use('/api', informationRequestsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({
+  const isDev = process.env.NODE_ENV !== 'production';
+  
+  const response = {
     status: 'ok',
-    timestamp: new Date(),
-    config: {
+    timestamp: new Date().toISOString(),
+    service: 'nsd-backend'
+  };
+
+  // Only show detailed config in development
+  if (isDev) {
+    response.config = {
       supabaseUrl: Boolean(process.env.SUPABASE_URL),
       supabaseAnonKey: Boolean(process.env.SUPABASE_KEY),
       supabaseServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
@@ -101,8 +108,10 @@ app.get('/health', (req, res) => {
         dubaiTradeLicense: Boolean(process.env.DUBAI_TRADE_LICENSE_API_URL && process.env.DUBAI_TRADE_LICENSE_API_KEY)
       },
       corsOrigins: allowedOrigins.length
-    }
-  });
+    };
+  }
+
+  res.json(response);
 });
 
 // Error handler

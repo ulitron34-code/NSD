@@ -107,12 +107,37 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       const orderId = paymentIntent.metadata?.orderId;
 
       if (orderId) {
-        await supabaseAdmin
+        // Check if order exists and is not already paid (idempotency)
+        const { data: existingOrder } = await supabaseAdmin
           .from('service_orders')
-          .update({ status: 'paid' })
-          .eq('id', orderId);
+          .select('id, status')
+          .eq('id', orderId)
+          .single();
 
-        await createCommissionIfNeeded(orderId, Number(paymentIntent.amount) / 100);
+        // Only update if not already paid
+        if (existingOrder && existingOrder.status !== 'paid' && existingOrder.status !== 'completed') {
+          await supabaseAdmin
+            .from('service_orders')
+            .update({ status: 'paid' })
+            .eq('id', orderId);
+
+          await createCommissionIfNeeded(orderId, Number(paymentIntent.amount) / 100);
+
+          await logAuditEvent({
+            userId: paymentIntent.metadata?.userId || 'webhook',
+            action: 'payment_webhook_received',
+            entityType: 'service_order',
+            entityId: orderId,
+            orderId,
+            req,
+            metadata: {
+              paymentIntentId: paymentIntent.id,
+              amount: Number(paymentIntent.amount) / 100,
+              provider: 'stripe'
+            },
+            complianceRelevant: false
+          });
+        }
       }
     }
 
