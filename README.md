@@ -22,25 +22,64 @@ npm run test:run
 npm run build
 ```
 
+## 🌐 Deployments
+
+### Frontend (Netlify/Vercel)
+```bash
+# Variables de entorno requeridas
+VITE_API_URL=https://tu-backend.onrender.com/api
+VITE_STRIPE_PUBLIC_KEY=pk_live_xxx
+VITE_DEMO_MODE=false
+```
+
+### Backend (Render)
+```bash
+# Variables de entorno requeridas
+NODE_ENV=production
+PORT=10000
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_KEY=tu_anon_key
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+STRIPE_SECRET_KEY=sk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+CORS_ORIGIN=https://tu-frontend.netlify.app
+```
+
+### Webhook de Stripe
+En el dashboard de Stripe, configurar:
+- URL: `https://tu-backend.onrender.com/api/webhook`
+- Eventos: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `charge.refunded`
+
 ## 📁 Estructura del Proyecto
 
 ```
-src/
-├── components/
-│   ├── Auth/              # Componentes de autenticación
-│   ├── Dashboard/         # Dashboard principal
-│   │   ├── Solicitante/   # Flujo para solicitantes
-│   │   ├── Otorgante/     # Flujo para otorgantes (fondos)
-│   │   └── *.jsx          # Componentes compartidos
-│   ├── Landing/           # Páginas de aterrizaje
-│   ├── Layout/            # Layout principal (Header, etc)
-│   └── Services/          # Componentes de servicios
-├── context/               # React Context (Auth, Notifications)
-├── data/                  # Datos demo para desarrollo
-├── hooks/                 # Custom hooks
-├── pages/                 # Páginas principales
-├── services/              # Servicios API y lógica de negocio
-└── utils/                 # Utilidades (crypto, logger, i18n, etc)
+NSD/
+├── frontend/                    # React app (este repo)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Auth/           # Login, Signup
+│   │   │   ├── common/          # Skeleton, Breadcrumbs
+│   │   │   ├── Dashboard/        # Dashboard principal
+│   │   │   │   ├── Solicitante/ # Flujo solicitantes
+│   │   │   │   └── Otorgante/   # Flujo otorgantes
+│   │   │   ├── Landing/          # Páginas landing
+│   │   │   └── Layout/           # Header, Footer
+│   │   ├── context/              # ToastContext, ThemeContext
+│   │   ├── pages/                # Páginas principales
+│   │   ├── services/             # api.js, pricingService.js
+│   │   └── utils/               # logger, i18n, crypto
+│   └── public/
+│
+├── backend/                      # Node/Express API
+│   ├── src/
+│   │   ├── config/              # supabase.js
+│   │   ├── middleware/          # auth.js
+│   │   ├── routes/              # payments.js, orders.js, etc.
+│   │   ├── services/            # aiEngine.js
+│   │   └── server.js            # Entry point
+│   └── render.yaml              # Configuración Render
+│
+└── scripts/                     # Scripts de deployment
 ```
 
 ## 🏗️ Arquitectura

@@ -1,12 +1,35 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/Layout/ProtectedRoute";
 import Header from "./components/Layout/Header";
 import Toast from "./components/Shared/Toast";
 import LoadingSpinner from "./components/Shared/LoadingSpinner";
+import NotFoundPage from "./pages/NotFoundPage";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 import "./App.css";
+
+// Page transition wrapper
+function PageTransition({ children }) {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+  
+  return (
+    <div 
+      className="page-transition"
+      style={{
+        animation: 'fadeIn 0.3s ease-out',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const CertificationsPage = lazy(() => import("./pages/CertificationsPage"));
@@ -31,50 +54,39 @@ const OtorganteDashboard = lazy(() => import("./pages/OtorganteDashboard"));
 
 function AppContent() {
   return (
-    <>
+    <ErrorBoundary>
       <Router>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            <Route path="/" element={<><Header isLanding={true} /><LandingPage /></>} />
-            <Route path="/login" element={<><Header /><LoginComponent /></>} />
-            <Route path="/signup" element={<><Header /><SignupComponent /></>} />
-            <Route path="/privacy" element={<><Header /><PrivacyPage /></>} />
-            <Route path="/terms" element={<><Header /><TermsPage /></>} />
-            <Route path="/contact" element={<><Header /><ContactPage /></>} />
-            <Route path="/blog" element={<><Header isLanding={true} /><BlogPage /></>} />
-            <Route path="/certifications" element={<><Header isLanding={true} /><CertificationsPage /></>} />
-            <Route path="/services" element={<><Header isLanding={true} /><ServicesPage /></>} />
-            <Route path="/security" element={<><Header isLanding={true} /><SecurityTraceabilityPage /></>} />
-            <Route path="/international" element={<><Header isLanding={true} /><InternationalPage /></>} />
-            <Route path="/for-applicants" element={<><Header isLanding={true} /><ForApplicantsPage /></>} />
-            <Route path="/for-funders" element={<><Header isLanding={true} /><ForFundersPage /></>} />
+            <Route path="/" element={<PageTransition><><Header isLanding={true} /><LandingPage /></></PageTransition>} />
+            <Route path="/login" element={<PageTransition><><Header /><LoginComponent /></></PageTransition>} />
+            <Route path="/signup" element={<PageTransition><><Header /><SignupComponent /></></PageTransition>} />
+            <Route path="/privacy" element={<PageTransition><><Header /><PrivacyPage /></></PageTransition>} />
+            <Route path="/terms" element={<PageTransition><><Header /><TermsPage /></></PageTransition>} />
+            <Route path="/contact" element={<PageTransition><><Header /><ContactPage /></></PageTransition>} />
+            <Route path="/blog" element={<PageTransition><><Header isLanding={true} /><BlogPage /></></PageTransition>} />
+            <Route path="/certifications" element={<PageTransition><><Header isLanding={true} /><CertificationsPage /></></PageTransition>} />
+            <Route path="/services" element={<PageTransition><><Header isLanding={true} /><ServicesPage /></></PageTransition>} />
+            <Route path="/security" element={<PageTransition><><Header isLanding={true} /><SecurityTraceabilityPage /></></PageTransition>} />
+            <Route path="/international" element={<PageTransition><><Header isLanding={true} /><InternationalPage /></></PageTransition>} />
+            <Route path="/for-applicants" element={<PageTransition><><Header isLanding={true} /><ForApplicantsPage /></></PageTransition>} />
+            <Route path="/for-funders" element={<PageTransition><><Header isLanding={true} /><ForFundersPage /></></PageTransition>} />
             <Route path="/shared-data-room/:token" element={<SharedDataRoomPage />} />
-            <Route path="/service-orders" element={<ProtectedRoute><><Header /><ServiceOrdersPage /></></ProtectedRoute>} />
-            <Route path="/commissions" element={<ProtectedRoute><><Header /><CommissionsPage /></></ProtectedRoute>} />
-            <Route path="/otorgantes" element={<ProtectedRoute><><Header /><OtorganteDashboard /></></ProtectedRoute>} />
-            <Route
-              path="/dashboard/*"
-              element={
-                <ProtectedRoute>
-                  <><Header /><DashboardPage /></>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <><Header /><ProfilePage /></>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/checkout" element={<ProtectedRoute><><Header /><CheckoutPage /></></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/service-orders" element={<ProtectedRoute><PageTransition><><Header /><ServiceOrdersPage /></></PageTransition></ProtectedRoute>} />
+            <Route path="/commissions" element={<ProtectedRoute><PageTransition><><Header /><CommissionsPage /></></PageTransition></ProtectedRoute>} />
+            <Route path="/otorgantes" element={<ProtectedRoute><PageTransition><><Header /><OtorganteDashboard /></></PageTransition></ProtectedRoute>} />
+            <Route path="/dashboard/*" element={<ProtectedRoute><PageTransition><><Header /><DashboardPage /></></PageTransition></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><PageTransition><><Header /><ProfilePage /></></PageTransition></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><PageTransition><><Header /><CheckoutPage /></></PageTransition></ProtectedRoute>} />
+            
+            {/* 404 Page */}
+            <Route path="/404" element={<PageTransition><NotFoundPage /></PageTransition>} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </Suspense>
       </Router>
       <Toast />
-    </>
+    </ErrorBoundary>
   );
 }
 
