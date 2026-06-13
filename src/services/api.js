@@ -71,10 +71,29 @@ export const institutionalAPI = {
 
 // Payments
 export const paymentsAPI = {
+  // Check payment status
+  getStatus: (orderId) =>
+    api.get(`/payments/status/${orderId}`),
+  
+  // Create payment intent
   createPaymentIntent: (orderId) =>
     api.post('/create-payment-intent', { orderId }),
+  
+  // Confirm payment from frontend
   confirmPayment: (orderId, paymentIntentId) =>
-    api.post('/confirm-payment', { orderId, paymentIntentId })
+    api.post('/confirm-payment', { orderId, paymentIntentId }),
+  
+  // Cancel payment intent (if user abandons)
+  cancelPaymentIntent: (paymentIntentId) =>
+    api.post('/cancel-payment-intent', { paymentIntentId }),
+  
+  // Get saved payment methods
+  getPaymentMethods: () =>
+    api.get('/payment-methods'),
+  
+  // Request refund (admin)
+  requestRefund: (orderId, reason) =>
+    api.post('/refund-payment', { orderId, reason })
 };
 
 // Documents
