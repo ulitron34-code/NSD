@@ -4,7 +4,6 @@
 // ============================================
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { COLORS } from './constants';
 
 // Toast types and their styling
 const TOAST_TYPES = {

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./components/Layout/ProtectedRoute";
 import Header from "./components/Layout/Header";
 import Toast from "./components/Shared/Toast";
@@ -92,10 +93,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
