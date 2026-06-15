@@ -16,12 +16,13 @@ export default function SignupComponent() {
     password: "",
     confirmPassword: "",
     role: "solicitante",
+    consentLFPDPPP: false,
   });
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -37,6 +38,7 @@ export default function SignupComponent() {
       newErrors.confirmPassword = "Las contrasenas no coinciden";
     }
     if (!formData.role) newErrors.role = "Selecciona un tipo de usuario";
+    if (!formData.consentLFPDPPP) newErrors.consentLFPDPPP = "Debes aceptar el aviso de privacidad para continuar";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -50,8 +52,13 @@ export default function SignupComponent() {
     }
 
     setIsLoading(true);
+    const consentTimestamp = new Date().toISOString();
     try {
-      const response = await authService.signup(formData.email, formData.password, formData.role);
+      const response = await authService.signup(formData.email, formData.password, formData.role, {
+        consentLFPDPPP: true,
+        consentTimestamp,
+        avisoPrivacidadVersion: "1.0",
+      });
       if (response.success) {
         login({ id: response.data.user_id, email: formData.email, role: formData.role }, response.data.access_token);
         addNotification("Cuenta creada exitosamente", "success");
@@ -128,6 +135,30 @@ export default function SignupComponent() {
               {errors[name] && <p style={{ color: "#D32F2F", fontSize: "0.8rem", marginTop: "0.25rem" }}>{errors[name]}</p>}
             </div>
           ))}
+
+          {/* Consentimiento LFPDPPP */}
+          <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "#F8F7F4", borderRadius: "8px", border: errors.consentLFPDPPP ? "1.5px solid #D32F2F" : "1px solid rgba(27,58,92,0.1)" }}>
+            <label style={{ display: "flex", gap: "0.75rem", cursor: "pointer", alignItems: "flex-start" }}>
+              <input
+                type="checkbox"
+                name="consentLFPDPPP"
+                checked={formData.consentLFPDPPP}
+                onChange={handleChange}
+                style={{ marginTop: "3px", accentColor: COLORS.gold, width: "16px", height: "16px", flexShrink: 0 }}
+              />
+              <span style={{ fontSize: "0.82rem", color: COLORS.text, lineHeight: 1.5 }}>
+                He leído y acepto el{" "}
+                <a href="/privacy" target="_blank" style={{ color: COLORS.gold, fontWeight: 700 }}>
+                  Aviso de Privacidad
+                </a>{" "}
+                de NSD International Finance y consiento el tratamiento de mis datos personales conforme a la{" "}
+                <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong>.
+              </span>
+            </label>
+            {errors.consentLFPDPPP && (
+              <p style={{ color: "#D32F2F", fontSize: "0.8rem", margin: "0.5rem 0 0 1.75rem" }}>{errors.consentLFPDPPP}</p>
+            )}
+          </div>
 
           <button type="submit" disabled={isLoading} style={{
             width: "100%",

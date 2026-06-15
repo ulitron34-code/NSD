@@ -1,11 +1,6 @@
 import { error, debug, info, warn } from '../utils/logger';
-// ============================================
-// SERVICIO DE AUTENTICACIÓN LOCAL
-// Login/Register con persistencia en localStorage
-// Versión mejorada con hashing seguro y tokens criptográficos
-// ============================================
-
-import bcrypt from 'bcryptjs';
+// AVISO: Este servicio es solo para acceso demo local.
+// La autenticación real usa auth.service.js + backend Express + Supabase.
 import { generateSecureToken } from '../utils/cryptoUtils';
 
 export const ROLES = {
@@ -14,15 +9,9 @@ export const ROLES = {
   ADMIN: 'nsd_admin'
 };
 
-// Salt rounds para bcrypt (12 es un buen balance entre seguridad y rendimiento)
-const BCRYPT_SALT_ROUNDS = 12;
-
-// Crear usuario demo con contraseñas seguras pre-hasheadas
-// NOTA: Las contraseñas demo son solo para desarrollo local
+// Crear usuario demo (solo para acceso local de desarrollo)
 export function createDemoUsers() {
-  // Contraseñas pre-hasheadas con bcrypt (todas son "Demo1234!" para fácil testing)
-  // En producción esto se haría dinámicamente con hashPassword()
-  const demoPasswordHash = '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.FaQgPGLL.F/NdC'; // Demo1234!
+  const demoPasswordHash = 'DEMO_ONLY';
   
   return [
     {
@@ -78,7 +67,7 @@ export function registerUser(email, password, name, role, company) {
   const newUser = {
     id: `user-${role}-${Date.now()}`,
     email,
-    password: bcrypt.hashSync(password, BCRYPT_SALT_ROUNDS), // Hash seguro con bcrypt
+    password: 'DEMO_ONLY',
     name,
     role,
     company,
@@ -106,9 +95,8 @@ export async function loginUserAsync(email, password) {
     throw new Error('Usuario no encontrado');
   }
 
-  // Verificar contraseña con bcrypt
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) {
+  // Demo: cualquier contraseña es válida para usuarios demo
+  if (user.password !== 'DEMO_ONLY' && user.password !== password) {
     throw new Error('Contraseña incorrecta');
   }
 
@@ -136,9 +124,8 @@ export function loginUser(email, password) {
     throw new Error('Usuario no encontrado');
   }
 
-  // Verificar contraseña con bcrypt (sync para compatibilidad)
-  const isValid = bcrypt.compareSync(password, user.password);
-  if (!isValid) {
+  // Demo: cualquier contraseña es válida para usuarios demo
+  if (user.password !== 'DEMO_ONLY' && user.password !== password) {
     throw new Error('Contraseña incorrecta');
   }
 
@@ -215,13 +202,11 @@ export function changePassword(currentPassword, newPassword) {
 
   if (userIndex === -1) throw new Error('Usuario no encontrado');
 
-  // Verificar contraseña actual con bcrypt
-  if (!bcrypt.compareSync(currentPassword, users[userIndex].password)) {
+  if (users[userIndex].password !== 'DEMO_ONLY' && users[userIndex].password !== currentPassword) {
     throw new Error('Contraseña actual incorrecta');
   }
 
-  // Hashear nueva contraseña con bcrypt
-  users[userIndex].password = bcrypt.hashSync(newPassword, BCRYPT_SALT_ROUNDS);
+  users[userIndex].password = 'DEMO_ONLY';
   localStorage.setItem('nsd_users', JSON.stringify(users));
 
   return true;
