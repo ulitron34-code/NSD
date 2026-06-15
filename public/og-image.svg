@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A192F"/>
+      <stop offset="100%" style="stop-color:#172A45"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#D4AF37"/>
+      <stop offset="100%" style="stop-color:#F3E5AB"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.1">
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#D4AF37" stroke-width="0.5"/>
+    </pattern>
+    <rect width="1200" height="630" fill="url(#grid)"/>
+  </g>
+  
+  <!-- Decorative circles -->
+  <circle cx="1100" cy="100" r="200" fill="#D4AF37" opacity="0.05"/>
+  <circle cx="100" cy="530" r="150" fill="#D4AF37" opacity="0.08"/>
+  
+  <!-- Logo area -->
+  <g transform="translate(80, 80)">
+    <!-- Shield icon -->
+    <path d="M 0 60 L 60 20 L 120 60 L 120 140 C 120 180 60 220 60 220 C 60 220 0 180 0 140 Z" 
+          fill="none" stroke="url(#gold)" stroke-width="3"/>
+    <path d="M 30 80 L 50 100 L 90 50" stroke="#D4AF37" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Company name -->
+  <text x="240" y="140" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="#D4AF37">
+    NSD Platform
+  </text>
+  
+  <!-- Tagline -->
+  <text x="240" y="180" font-family="Arial, sans-serif" font-size="18" fill="#94A3B8" letter-spacing="2">
+    COMPLIANCE + FUNDING NETWORK
+  </text>
+  
+  <!-- Main text -->
+  <text x="80" y="320" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
+    Documentos Verificables.
+  </text>
+  <text x="80" y="390" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
+    Fondos Confiables.
+  </text>
+  
+  <!-- Accent line -->
+  <rect x="80" y="420" width="200" height="6" rx="3" fill="url(#gold)"/>
+  
+  <!-- Description -->
+  <text x="80" y="480" font-family="Arial, sans-serif" font-size="22" fill="#94A3B8">
+    Plataforma B2B de cumplimiento documental para financiamiento institucional
+  </text>
+  
+  <!-- Features -->
+  <g transform="translate(80, 520)">
+    <circle cx="10" cy="-5" r="4" fill="#10B981"/>
+    <text x="24" y="0" font-family="Arial, sans-serif" font-size="16" fill="#94A3B8">KYC/KYB</text>
+    
+    <circle cx="140" cy="-5" r="4" fill="#10B981"/>
+    <text x="154" y="0" font-family="Arial, sans-serif" font-size="16" fill="#94A3B8">Expedientes Digitales</text>
+    
+    <circle cx="340" cy="-5" r="4" fill="#10B981"/>
+    <text x="354" y="0" font-family="Arial, sans-serif" font-size="16" fill="#94A3B8">AI Agents</text>
+    
+    <circle cx="490" cy="-5" r="4" fill="#10B981"/>
+    <text x="504" y="0" font-family="Arial, sans-serif" font-size="16" fill="#94A3B8">Compliance</text>
+  </g>
+  
+  <!-- URL -->
+  <text x="1200" y="600" font-family="Arial, sans-serif" font-size="16" fill="#64748B" text-anchor="end">
+    nsd.com
+  </text>
+</svg>

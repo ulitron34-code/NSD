@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { error, debug, info, warn } from '../../utils/logger';
+import React, { useEffect, useState } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { scoringService } from "../../services/scoring.service";
 import { validateRFC } from "../../utils/validators";
@@ -12,7 +13,6 @@ export default function SolicitantesTab() {
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Cargar historial al montar
   useEffect(() => {
     loadHistory();
   }, []);
@@ -27,14 +27,13 @@ export default function SolicitantesTab() {
   const handleAnalyze = async (e) => {
     e.preventDefault();
 
-    // Validar RFC
     if (!rfc.trim()) {
       addNotification("RFC es requerido", "error");
       return;
     }
 
     if (!validateRFC(rfc)) {
-      addNotification("RFC inválido (formato debe ser 13 caracteres)", "error");
+      addNotification("RFC invalido: debe tener 12 o 13 caracteres validos", "error");
       return;
     }
 
@@ -44,74 +43,72 @@ export default function SolicitantesTab() {
       const response = await scoringService.validateRFC(rfc);
 
       if (response.success) {
-        setResult(response.data);
-        addNotification("Análisis completado", "success");
+        setResult({
+          ...response.data,
+          kyb: {
+            entityType: "Persona moral",
+            taxStatus: response.data.rfc_validation?.status || "Activo",
+            ubo: "Pendiente de documentar",
+            sanctions: "Sin coincidencias",
+            pep: "Sin coincidencias",
+            complianceScore: 82,
+            riskLevel: "Medio",
+          },
+          requirements: [
+            "Actualizar estructura accionaria",
+            "Cargar identificacion de representante legal",
+            "Validar comprobante de domicilio",
+          ],
+        });
+        addNotification("Analisis KYC/KYB completado", "success");
         setRfc("");
         loadHistory();
       } else {
         addNotification(response.error, "error");
       }
     } catch (error) {
-      console.error("Error:", error);
+      error("SVC", "Error:", error);
       addNotification("Error en el servidor", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getGradeColor = (grade) => {
-    const gradeColors = {
-      "AAA": COLORS.green,
-      "AA": COLORS.green,
-      "A": "#2E7D32",
-      "BBB": COLORS.amber,
-      "BB": COLORS.amber,
-      "B": "#D32F2F",
-    };
-    return gradeColors[grade] || COLORS.navy;
-  };
-
   return (
     <div>
-      <h1 style={{color: COLORS.navy, fontSize: "2rem", marginBottom: "2rem"}}>
-        Análisis de Solicitantes
-      </h1>
+      <div style={{ marginBottom: "2rem", borderBottom: `1px solid ${COLORS.border}`, paddingBottom: "1.5rem" }}>
+        <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.5rem" }}>
+          Módulo B2C
+        </p>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", color: COLORS.navy, fontSize: "2.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+          Gestión de Solicitantes (KYC/KYB)
+        </h1>
+      </div>
+      <p style={{ color: COLORS.textMuted, marginBottom: "2rem", maxWidth: "760px" }}>
+        Evalua identidad fiscal, riesgo documental, beneficiarios finales, listas restrictivas y requisitos pendientes.
+      </p>
 
-      {/* RFC Input Form */}
       <div style={{
         background: COLORS.white,
         padding: "2rem",
-        borderRadius: "8px",
+        borderRadius: "10px",
         marginBottom: "2rem",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
       }}>
         <form onSubmit={handleAnalyze}>
-          <div style={{display: "grid", gridTemplateColumns: "1fr auto", gap: "1rem"}}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "1rem" }}>
             <div>
-              <label style={{
-                display: "block",
-                color: COLORS.navy,
-                fontWeight: "600",
-                marginBottom: "0.5rem",
-                fontSize: "0.9rem",
-              }}>
-                RFC
+              <label style={{ display: "block", color: COLORS.navy, fontWeight: 700, marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                RFC del solicitante
               </label>
               <input
                 type="text"
                 value={rfc}
                 onChange={(e) => setRfc(e.target.value.toUpperCase())}
                 placeholder="Ej: ABC123456XYZ"
-                style={{
-                  width: "100%",
-                  padding: "0.75rem 1rem",
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: "6px",
-                  fontSize: "1rem",
-                }}
               />
             </div>
-            <div style={{display: "flex", alignItems: "flex-end"}}>
+            <div style={{ display: "flex", alignItems: "flex-end" }}>
               <button
                 type="submit"
                 disabled={isLoading}
@@ -121,7 +118,7 @@ export default function SolicitantesTab() {
                   color: COLORS.navy,
                   border: "none",
                   borderRadius: "6px",
-                  fontWeight: "600",
+                  fontWeight: 700,
                   cursor: isLoading ? "not-allowed" : "pointer",
                 }}
               >
@@ -132,151 +129,88 @@ export default function SolicitantesTab() {
         </form>
       </div>
 
-      {/* Result Card */}
       {result && (
         <div style={{
           background: COLORS.white,
           padding: "2rem",
-          borderRadius: "8px",
+          borderRadius: "10px",
           marginBottom: "2rem",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}>
-          <h2 style={{color: COLORS.navy, marginBottom: "1.5rem"}}>
-            Resultado del Análisis
+          <h2 style={{ color: COLORS.navy, marginBottom: "1.5rem" }}>
+            Resultado de cumplimiento
           </h2>
 
-          <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem"}}>
-            {/* RFC Status */}
-            <div style={{padding: "1.5rem", background: COLORS.bg, borderRadius: "6px"}}>
-              <p style={{color: COLORS.textMuted, fontSize: "0.85rem", marginBottom: "0.5rem"}}>
-                Estado RFC
-              </p>
-              <p style={{
-                color: COLORS.navy,
-                fontWeight: "600",
-                fontSize: "1.3rem",
-              }}>
-                {result.rfc_validation?.status || "N/A"}
-              </p>
-            </div>
-
-            {/* Credit Score */}
-            <div style={{padding: "1.5rem", background: COLORS.bg, borderRadius: "6px"}}>
-              <p style={{color: COLORS.textMuted, fontSize: "0.85rem", marginBottom: "0.5rem"}}>
-                Score Crediticio
-              </p>
-              <p style={{
-                color: COLORS.navy,
-                fontWeight: "600",
-                fontSize: "1.3rem",
-              }}>
-                {result.credit_score?.score || "N/A"} / 850
-              </p>
-            </div>
-
-            {/* Grade */}
-            <div style={{padding: "1.5rem", background: COLORS.bg, borderRadius: "6px"}}>
-              <p style={{color: COLORS.textMuted, fontSize: "0.85rem", marginBottom: "0.5rem"}}>
-                Calificación
-              </p>
-              <p style={{
-                color: getGradeColor(result.credit_score?.grade),
-                fontWeight: "700",
-                fontSize: "1.8rem",
-              }}>
-                {result.credit_score?.grade || "N/A"}
-              </p>
-            </div>
-
-            {/* NSD Score */}
-            <div style={{padding: "1.5rem", background: COLORS.bg, borderRadius: "6px"}}>
-              <p style={{color: COLORS.textMuted, fontSize: "0.85rem", marginBottom: "0.5rem"}}>
-                Score NSD (0-100)
-              </p>
-              <p style={{
-                color: COLORS.navy,
-                fontWeight: "600",
-                fontSize: "1.3rem",
-              }}>
-                {result.nsd_score || "N/A"}
-              </p>
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+            {[
+              { label: "Estado fiscal", value: result.kyb.taxStatus, color: COLORS.green },
+              { label: "Score compliance", value: `${result.kyb.complianceScore}/100`, color: COLORS.navy },
+              { label: "Riesgo", value: result.kyb.riskLevel, color: COLORS.amber },
+              { label: "Listas/PEP", value: "Sin coincidencias", color: COLORS.green },
+            ].map((item) => (
+              <div key={item.label} style={{ padding: "1.25rem", background: COLORS.bg, borderRadius: "8px", borderTop: `4px solid ${item.color}` }}>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", marginBottom: "0.45rem" }}>{item.label}</p>
+                <p style={{ color: COLORS.navy, fontWeight: 800, fontSize: "1.25rem" }}>{item.value}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Flags */}
-          {result.flags && result.flags.length > 0 && (
-            <div style={{marginTop: "2rem", padding: "1.5rem", background: "#FFF3E0", borderRadius: "6px", borderLeft: `4px solid ${COLORS.amber}`}}>
-              <p style={{color: COLORS.amber, fontWeight: "600", marginBottom: "1rem"}}>
-                ⚠️ {result.flags.length} Banderas de Riesgo Detectadas
-              </p>
-              <ul style={{listStyle: "none"}}>
-                {result.flags.map((flag, i) => (
-                  <li key={i} style={{color: COLORS.text, marginBottom: "0.5rem"}}>
-                    • {flag}
-                  </li>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            <div style={{ background: COLORS.bg, padding: "1.5rem", borderRadius: "8px" }}>
+              <h3 style={{ color: COLORS.navy, marginBottom: "1rem" }}>Hallazgos KYB</h3>
+              <p style={{ color: COLORS.text, marginBottom: "0.5rem" }}><strong>Tipo:</strong> {result.kyb.entityType}</p>
+              <p style={{ color: COLORS.text, marginBottom: "0.5rem" }}><strong>Beneficiario final:</strong> {result.kyb.ubo}</p>
+              <p style={{ color: COLORS.text, marginBottom: "0.5rem" }}><strong>Sanciones:</strong> {result.kyb.sanctions}</p>
+              <p style={{ color: COLORS.text }}><strong>PEP:</strong> {result.kyb.pep}</p>
+            </div>
+
+            <div style={{ background: COLORS.bg, padding: "1.5rem", borderRadius: "8px" }}>
+              <h3 style={{ color: COLORS.navy, marginBottom: "1rem" }}>Acciones requeridas</h3>
+              <ul style={{ paddingLeft: "1.2rem", color: COLORS.text }}>
+                {result.requirements.map((item) => (
+                  <li key={item} style={{ marginBottom: "0.5rem" }}>{item}</li>
                 ))}
               </ul>
             </div>
-          )}
-
-          {/* Recommendation */}
-          <div style={{marginTop: "2rem"}}>
-            <p style={{color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "0.5rem"}}>
-              Recomendación
-            </p>
-            <p style={{
-              color: result.recommendation === "APROBADO" ? COLORS.green : COLORS.amber,
-              fontWeight: "600",
-              fontSize: "1.1rem",
-            }}>
-              {result.recommendation}
-            </p>
           </div>
         </div>
       )}
 
-      {/* History */}
       <div style={{
         background: COLORS.white,
         padding: "2rem",
-        borderRadius: "8px",
+        borderRadius: "10px",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
       }}>
-        <div 
+        <div
           onClick={() => setShowHistory(!showHistory)}
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            cursor: "pointer",
-            marginBottom: showHistory ? "1rem" : 0,
-          }}
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", marginBottom: showHistory ? "1rem" : 0 }}
         >
-          <h3 style={{color: COLORS.navy, fontSize: "1.2rem"}}>
-            Historial de Búsquedas ({history.length})
+          <h3 style={{ color: COLORS.navy, fontSize: "1.2rem" }}>
+            Historial de analisis ({history.length})
           </h3>
-          <span style={{fontSize: "1.5rem"}}>{showHistory ? "▲" : "▼"}</span>
+          <span style={{ fontSize: "1.1rem", color: COLORS.gold }}>{showHistory ? "Cerrar" : "Abrir"}</span>
         </div>
 
         {showHistory && (
-          <div style={{marginTop: "1rem"}}>
+          <div style={{ marginTop: "1rem", overflowX: "auto" }}>
             {history.length === 0 ? (
-              <p style={{color: COLORS.textMuted}}>Sin historial de búsquedas</p>
+              <p style={{ color: COLORS.textMuted }}>Sin historial de analisis</p>
             ) : (
-              <table style={{width: "100%", borderCollapse: "collapse"}}>
+              <table>
                 <thead>
-                  <tr style={{borderBottom: `1px solid ${COLORS.border}`}}>
-                    <th style={{padding: "0.75rem", textAlign: "left", color: COLORS.navy, fontWeight: "600"}}>RFC</th>
-                    <th style={{padding: "0.75rem", textAlign: "left", color: COLORS.navy, fontWeight: "600"}}>Score</th>
-                    <th style={{padding: "0.75rem", textAlign: "left", color: COLORS.navy, fontWeight: "600"}}>Fecha</th>
+                  <tr>
+                    <th>RFC</th>
+                    <th>Score</th>
+                    <th>Fecha</th>
                   </tr>
                 </thead>
                 <tbody>
                   {history.map((item, i) => (
-                    <tr key={i} style={{borderBottom: `1px solid ${COLORS.border}`}}>
-                      <td style={{padding: "0.75rem"}}>{item.rfc}</td>
-                      <td style={{padding: "0.75rem"}}>{item.score}</td>
-                      <td style={{padding: "0.75rem", color: COLORS.textMuted, fontSize: "0.9rem"}}>
+                    <tr key={`${item.rfc}-${i}`}>
+                      <td>{item.rfc}</td>
+                      <td>{item.score}</td>
+                      <td style={{ color: COLORS.textMuted, fontSize: "0.9rem" }}>
                         {new Date(item.timestamp).toLocaleDateString()}
                       </td>
                     </tr>

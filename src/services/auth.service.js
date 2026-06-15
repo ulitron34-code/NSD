@@ -1,11 +1,26 @@
+import { error, debug, info, warn } from '../utils/logger';
 import axios from "axios";
-import { API_BASE_URL } from "../utils/constants";
+import { API_URL } from "./api";
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
+  timeout: 15000,
 });
 
-// Interceptor para agregar token a headers
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+const DEMO_EMAILS = new Set(["demo@nsd.local", "compliance.demo@nsd.local"]);
+
+function buildDemoSession(email, role = "compliance_officer") {
+  return {
+    success: true,
+    data: {
+      access_token: "demo_token_123",
+      user_id: "demo-compliance",
+      user: { email, role, demo: true },
+    },
+  };
+}
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("auth_token");
@@ -18,71 +33,69 @@ api.interceptors.request.use(
 );
 
 export const authService = {
-  // Login con email y password
   login: async (email, password) => {
     try {
-      const response = await api.post("/api/auth/login", {
+      if (DEMO_MODE && DEMO_EMAILS.has(String(email).toLowerCase()) && password === "demo12345") {
+        return buildDemoSession(email);
+      }
+
+      const response = await api.post("/auth/login", {
         email,
         password,
       });
       return {
         success: true,
-        data: response.data,
+        data: {
+          access_token: response.data.token,
+          user_id: response.data.user?.id,
+          user: response.data.user,
+        },
       };
     } catch (error) {
-      // MODO DEMO PARA NETLIFY: Si no hay conexión al backend, simular éxito
-      if (error.message === "Network Error" || !error.response) {
-        return {
-          success: true,
-          data: {
-            access_token: "demo_token_123",
-            user_id: 1,
-            user: { email, role: "solicitante" }
-          }
-        };
+      if (DEMO_MODE && (error.message === "Network Error" || !error.response)) {
+        return buildDemoSession(email);
       }
+      const fallbackMessage =
+        error.code === "ECONNABORTED"
+          ? "El servidor tardó demasiado en responder. Intenta de nuevo o usa modo demo local."
+          : "Error en login";
+
       return {
         success: false,
-        error: error.response?.data?.detail || error.response?.data?.message || "Error en login",
+        error: error.response?.data?.detail || error.response?.data?.message || error.response?.data?.error || fallbackMessage,
       };
     }
   },
 
-  // Signup / Registro
   signup: async (email, password, role = "solicitante") => {
     try {
-      const response = await api.post("/api/auth/signup", {
+      const response = await api.post("/auth/register", {
         email,
         password,
-        role,
+        profileType: role,
       });
       return {
         success: true,
-        data: response.data,
+        data: {
+          access_token: response.data.token,
+          user_id: response.data.user?.id,
+          user: response.data.user,
+        },
       };
     } catch (error) {
-      // MODO DEMO PARA NETLIFY: Si no hay conexión al backend, simular éxito
-      if (error.message === "Network Error" || !error.response) {
-        return {
-          success: true,
-          data: {
-            access_token: "demo_token_123",
-            user_id: 1,
-            user: { email, role }
-          }
-        };
+      if (DEMO_MODE && (error.message === "Network Error" || !error.response)) {
+        return buildDemoSession(email, role);
       }
       return {
         success: false,
-        error: error.response?.data?.detail || error.response?.data?.message || "Error en registro",
+        error: error.response?.data?.detail || error.response?.data?.message || error.response?.data?.error || "Error en registro",
       };
     }
   },
 
-  // Validar token actual
   validateToken: async () => {
     try {
-      const response = await api.get("/api/auth/me");
+      const response = await api.get("/auth/me");
       return {
         success: true,
         data: response.data,
@@ -90,12 +103,11 @@ export const authService = {
     } catch (error) {
       return {
         success: false,
-        error: "Token inválido",
+        error: "Token invalido",
       };
     }
   },
 
-  // Logout
   logout: () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user");

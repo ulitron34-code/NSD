@@ -1,68 +1,77 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotification } from "../../hooks/useNotification";
 import { authService } from "../../services/auth.service";
-import { validateEmail, validatePassword, getValidationError } from "../../utils/validators";
+import { validateEmail, validatePassword } from "../../utils/validators";
 import { COLORS } from "../../utils/constants";
+import { useTranslation } from "react-i18next";
+import { uiText } from "../../utils/runtimeCopy";
 
 export default function LoginComponent() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { addNotification } = useNotification();
+  const { i18n } = useTranslation();
+  const demoMode = import.meta.env.VITE_DEMO_MODE === "true";
   const [isLoading, setIsLoading] = useState(false);
-
-  // Form state
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
-  // Errors
   const [errors, setErrors] = useState({});
 
-  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error when user starts typing
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.email) {
-      newErrors.email = "Email es requerido";
+      newErrors.email = uiText(i18n, "Email es requerido", "Email is required");
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Email inválido";
+      newErrors.email = uiText(i18n, "Email invalido", "Invalid email");
     }
 
     if (!formData.password) {
-      newErrors.password = "Contraseña es requerida";
+      newErrors.password = uiText(i18n, "Contraseña es requerida", "Password is required");
     } else if (!validatePassword(formData.password)) {
-      newErrors.password = "Mínimo 8 caracteres";
+      newErrors.password = uiText(i18n, "Minimo 8 caracteres", "Minimum 8 characters");
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle submit
+  const enterDemo = () => {
+    if (!demoMode) {
+      addNotification(uiText(i18n, "Modo demo desactivado en este entorno", "Demo mode is disabled in this environment"), "warning");
+      return;
+    }
+
+    login(
+      {
+        id: "demo-compliance",
+        email: "compliance.demo@nsd.local",
+        role: "compliance_officer",
+        demo: true,
+      },
+      "demo_token_123"
+    );
+    addNotification(uiText(i18n, "Modo demo iniciado", "Demo mode started"), "success");
+    navigate("/dashboard");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      addNotification("Por favor corrige los errores", "error");
+      addNotification(uiText(i18n, "Por favor corrige los errores", "Please fix the errors"), "error");
       return;
     }
 
@@ -75,17 +84,18 @@ export default function LoginComponent() {
         const userData = {
           id: response.data.user_id,
           email: formData.email,
-          role: response.data.role,
+          role: response.data.user?.role || response.data.role || "compliance_officer",
+          demo: response.data.user?.demo,
         };
         login(userData, response.data.access_token);
-        addNotification("¡Bienvenido!", "success");
+        addNotification(uiText(i18n, "Bienvenido", "Welcome"), "success");
         navigate("/dashboard");
       } else {
-        addNotification(response.error, "error");
+        addNotification(response.error || uiText(i18n, "No se pudo iniciar sesión", "Could not sign in"), "error");
       }
     } catch (error) {
       console.error("Login error:", error);
-      addNotification("Error en el servidor", "error");
+      addNotification(uiText(i18n, "Error en el servidor", "Server error"), "error");
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +112,7 @@ export default function LoginComponent() {
     }}>
       <div style={{
         width: "100%",
-        maxWidth: "450px",
+        maxWidth: "470px",
         background: COLORS.white,
         padding: "3rem",
         borderRadius: "12px",
@@ -114,28 +124,56 @@ export default function LoginComponent() {
           marginBottom: "0.5rem",
           textAlign: "center",
         }}>
-          Acceso a Plataforma
+          {uiText(i18n, "Acceso a NSD Platform", "Access NSD Platform")}
         </h1>
         <p style={{
           color: COLORS.textMuted,
           textAlign: "center",
-          marginBottom: "2rem",
+          marginBottom: "1.5rem",
           fontSize: "0.95rem",
         }}>
-          Ingresa con tu email y contraseña
+          {uiText(i18n, "Ingresa al centro de cumplimiento, expedientes y auditoria.", "Enter the compliance, files and audit center.")}
         </p>
 
-        <form onSubmit={handleSubmit}>
-          {/* Email Input */}
-          <div style={{marginBottom: "1.5rem"}}>
-            <label style={{
-              display: "block",
-              color: COLORS.navy,
-              fontWeight: "600",
-              marginBottom: "0.5rem",
-              fontSize: "0.9rem",
+        {demoMode && (
+          <>
+            <button
+              type="button"
+              onClick={enterDemo}
+              style={{
+                width: "100%",
+                padding: "0.9rem",
+                background: "rgba(27,58,92,0.08)",
+                color: COLORS.navy,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "8px",
+                fontWeight: 800,
+                fontSize: "0.98rem",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              {uiText(i18n, "Entrar en modo demo", "Enter Demo Mode")}
+            </button>
+
+            <div style={{
+              background: COLORS.goldPale,
+              color: COLORS.amber,
+              borderRadius: "8px",
+              padding: "0.8rem 1rem",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              marginBottom: "1.5rem",
             }}>
-              Email
+              {uiText(i18n, "Demo local: usa demo@nsd.local / demo12345 o el boton de modo demo.", "Local demo: use demo@nsd.local / demo12345 or the demo mode button.")}
+            </div>
+          </>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label style={{ display: "block", color: COLORS.navy, fontWeight: 700, marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+              {uiText(i18n, "Email", "Email")}
             </label>
             <input
               type="email"
@@ -144,71 +182,29 @@ export default function LoginComponent() {
               onChange={handleChange}
               placeholder="tu@email.com"
               style={{
-                width: "100%",
-                padding: "0.75rem 1rem",
-                border: errors.email ? `2px solid #D32F2F` : `1px solid ${COLORS.border}`,
-                borderRadius: "6px",
-                fontSize: "0.95rem",
-                fontFamily: "inherit",
-                transition: "border-color 0.3s",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = COLORS.gold;
-                e.target.style.outline = "none";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = errors.email ? "#D32F2F" : COLORS.border;
+                border: errors.email ? "2px solid #D32F2F" : `1px solid ${COLORS.border}`,
               }}
             />
-            {errors.email && (
-              <p style={{color: "#D32F2F", fontSize: "0.8rem", marginTop: "0.25rem"}}>
-                {errors.email}
-              </p>
-            )}
+            {errors.email && <p style={{ color: "#D32F2F", fontSize: "0.8rem", marginTop: "0.25rem" }}>{errors.email}</p>}
           </div>
 
-          {/* Password Input */}
-          <div style={{marginBottom: "2rem"}}>
-            <label style={{
-              display: "block",
-              color: COLORS.navy,
-              fontWeight: "600",
-              marginBottom: "0.5rem",
-              fontSize: "0.9rem",
-            }}>
-              Contraseña
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label style={{ display: "block", color: COLORS.navy, fontWeight: 700, marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+              {uiText(i18n, "Contraseña", "Password")}
             </label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="********"
               style={{
-                width: "100%",
-                padding: "0.75rem 1rem",
-                border: errors.password ? `2px solid #D32F2F` : `1px solid ${COLORS.border}`,
-                borderRadius: "6px",
-                fontSize: "0.95rem",
-                fontFamily: "inherit",
-                transition: "border-color 0.3s",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = COLORS.gold;
-                e.target.style.outline = "none";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = errors.password ? "#D32F2F" : COLORS.border;
+                border: errors.password ? "2px solid #D32F2F" : `1px solid ${COLORS.border}`,
               }}
             />
-            {errors.password && (
-              <p style={{color: "#D32F2F", fontSize: "0.8rem", marginTop: "0.25rem"}}>
-                {errors.password}
-              </p>
-            )}
+            {errors.password && <p style={{ color: "#D32F2F", fontSize: "0.8rem", marginTop: "0.25rem" }}>{errors.password}</p>}
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
@@ -219,41 +215,23 @@ export default function LoginComponent() {
               color: COLORS.navy,
               border: "none",
               borderRadius: "6px",
-              fontWeight: "700",
+              fontWeight: 800,
               fontSize: "1rem",
               cursor: isLoading ? "not-allowed" : "pointer",
-              transition: "background 0.3s",
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) e.target.style.background = COLORS.goldLight;
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) e.target.style.background = COLORS.gold;
             }}
           >
-            {isLoading ? "Conectando..." : "Iniciar Sesión"}
+            {isLoading ? uiText(i18n, "Conectando...", "Connecting...") : uiText(i18n, "Iniciar sesión", "Sign In")}
           </button>
         </form>
 
-        {/* Links */}
-        <div style={{
-          marginTop: "2rem",
-          textAlign: "center",
-          fontSize: "0.9rem",
-          color: COLORS.textMuted,
-        }}>
+        <div style={{ marginTop: "2rem", textAlign: "center", fontSize: "0.9rem", color: COLORS.textMuted }}>
           <p>
-            ¿No tienes cuenta?{" "}
+            {uiText(i18n, "No tienes cuenta?", "Do not have an account?")}{" "}
             <a
               onClick={() => navigate("/signup")}
-              style={{
-                color: COLORS.gold,
-                fontWeight: "600",
-                cursor: "pointer",
-                textDecoration: "none",
-              }}
+              style={{ color: COLORS.gold, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}
             >
-              Regístrate aquí
+              {uiText(i18n, "Registrate aqui", "Register here")}
             </a>
           </p>
         </div>

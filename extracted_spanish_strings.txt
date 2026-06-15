@@ -1,0 +1,625 @@
+$250K - $500K
+$250K - $500K pre-seed para producto, IA/integraciones, pilotos, go-to-market y base legal/operativa.
+$42K
+$8K
+'Playfair Display', serif
+, 
+0 0 auto
+0 12px 28px rgba(15,31,46,0.22)
+0 12px 30px rgba(15,31,46,0.22)
+0 14px 34px rgba(15,31,46,0.22)
+0 14px 34px rgba(15,31,46,0.24)
+0-90 dias
+0.22rem 0.55rem
+0.22rem 0.5rem
+0.25rem 0
+0.25rem 0.55rem
+0.35rem 0
+0.3rem 0
+0.45rem 0 0
+0.45rem 0.75rem
+0.65rem 0
+0.75rem 0
+0.75rem 0 0
+0.8rem 0 0
+0:00 - 1:00
+10 expedientes
+10-Minute Demo Mode
+100%
+12-18 meses
+15%
+150px 1fr
+180-365 dias
+1:00 - 2:30
+1px solid rgba(255,255,255,0.11)
+1px solid rgba(255,255,255,0.12)
+1px solid rgba(255,255,255,0.13)
+20%
+20-second pitch
+25%
+2:30 - 4:00
+3 entidades, 20 expedientes, flujo solicitante-otorgante completo y data room funcional.
+3-5 expedientes y 2 otorgantes
+30 dias
+34px 1fr
+35%
+4:00 - 6:00
+5%
+50%
+50+
+62%
+6:00 - 7:30
+70%
+74%
+78%
+7:30 - 9:00
+82%
+90-180 dias
+90px 1fr
+92px 1fr
+9:00 - 10:00
+A 30-day pilot to turn the demo into evidence.
+AI Compliance Engine
+AI does not promise credit approval; it accelerates readiness, review and internal decisions.
+Aclarar que NSD IF no sustituye dictamen legal, regulatorio ni decision crediticia.
+Adopcion otorgantes
+Agregar disclaimer en revision documental
+Alta prioridad
+Alto criterio humano
+An executive read for investors: what problem it solves, how it monetizes, why it can be defended and what would be funded.
+Answer briefly, return to the product workflow and avoid promising credit outcomes.
+Antes de datos reales
+Antes de integracion
+Antes de piloto
+Antes de publicar comercialmente
+Aprendizajes, metrica y siguiente lote.
+Aqui aparece el otro lado del marketplace: instituciones con mejor informacion y menos ruido operativo.
+Ask sugerido
+Auditoria completa y reglas por jurisdiccion
+Available evidence
+Avoid promising automatic credit approval.
+Backend conectado
+Backend hardening
+Base defendible
+Base operativa
+Biometria, OCR, antifraude, KYB, integraciones y monitoreo avanzado.
+Biometricos futuros
+Biometricos planteados como modulo futuro con consentimiento, privacidad y proveedor especializado.
+Build local
+Build local OK y Netlify actualizado
+Business plan, modelo financiero, pitch deck, memo y preparacion institucional.
+CORS, RLS, auditoria y storage
+CRMs financieros
+Cada carga, faltante, requerimiento, score e interes institucional puede mejorar el sistema.
+Cada expediente se estructura por sector, monto, tipo de fondeo y requisitos exigibles.
+Cada solicitud de credito, inversion o fondeo requiere documentos, revision, requisitos, evidencia y seguimiento. Ese trabajo hoy es lento y poco comparable.
+Calendario de piloto
+Canada / UK
+Canal aliado
+Capas de defensa
+Captura de solicitantes, business plan y preparacion para fondeo.
+Carga diferida activa; sin warning mayor a 500 kB
+Carga operacional
+Carga proyecto, documentos, uso de fondos y responde requerimientos.
+Carga y revision
+Cartas de interes, aliados, casos piloto y entidades objetivo.
+Caso demo
+Casos de uso
+Casos para probar solicitante, IA, data room y otorgante.
+Casos reales o semi-reales con permiso de uso.
+Cerrar con modelo de negocio y uso de fondos de la ronda.
+Cerrar flujos solicitante-otorgante, permisos, auditoria, data room y demo guiado.
+Cerrar narrativa final de ronda y demo guiado de 10 minutos.
+Checklist antes de presentar
+Checklist dinamico y alertas por faltantes
+Checklist legal minimo
+Checks Go
+Chunk dashboard
+Close with business model and use of funds for the round.
+Closing Lines
+Cobro por evaluacion, checklist, scoring, data room y requerimientos.
+Como decirlo
+Como monetiza
+Como monetiza?
+Como presentar NSD IF sin sobrerregular ni sobreprometer
+Como se consigue traccion?
+Como se evita riesgo reputacional?
+Comparar fee por expediente vs. SaaS mensual + servicios NSD IF.
+Competencia / Moat
+Competition / Moat
+Competitive Map
+Con disclaimers, revision humana, trazabilidad, permisos, auditoria y separando scoring preliminar de decision crediticia.
+Confianza y auditoria
+Configurar perfiles, cargar matriz documental, seleccionar 10 expedientes y definir responsables.
+Confirmar que el ZIP tenga index.html y assets en la raiz.
+Consultorias tradicionales
+Contratos, privacidad, compliance, terminos, seguros y gobierno corporativo.
+Controla trazabilidad, metricas, actividad, conversion y aprendizajes del piloto.
+Controlled International Roadmap
+Conversion meta
+Correcto. NSD prepara evidencia, trazabilidad y comparabilidad; la decision sigue siendo del otorgante.
+Corte recomendado para publicacion controlada
+Cruza tipo de proyecto, sector, monto, jurisdiccion y perfil de otorgante.
+Cubren una pieza, no el flujo completo de financiamiento.
+Dashboard demo con tres perfiles: solicitante, otorgante y NSD Admin.
+Data room
+Data room de inversion
+Data room inteligente
+Data room, memo, ticket, riesgo y seguimiento de oportunidades.
+Data rooms genericos
+Datos de interaccion
+Datos rapidos
+Datos sensibles
+De demo invertible a piloto operativo
+De expediente preparado a interes institucional registrado.
+Decision del otorgante
+Decision sugerida
+Deck final y data room de inversion
+Definir paquete minimo legal, privacidad, terminos y consentimiento para demo comercial.
+Demo SaaS navegable
+Demo Story Mode
+Demo completa: solicitante, IA, otorgante, NSD Admin, monetizacion e internacional.
+Demo estable
+Demo invertible
+Demo local funcional
+Demo navegable
+Demo producto
+Demo story mode
+Dependencia IA
+Despacho financiero
+Detecta faltantes, inconsistencias, vencimientos, requisitos exigibles, riesgos y siguientes acciones.
+Detectar requisitos criticos antes de enviar al otorgante.
+Diagnostico IA / Checklist
+Disclaimers visibles pero faltan terminos legales finales
+Documentar resultados: tiempos, faltantes, conversion, interes y aprendizaje de pricing.
+Documentos, informacion financiera y biometricos deben operar con consentimiento, finalidad, control de acceso, trazabilidad y retencion limitada.
+Dolor identificable: solicitudes de financiamiento lentas, incompletas y costosas.
+Dolor validable
+Dos lados de mercado: solicitantes que requieren capital y entidades que necesitan certeza documental.
+Due diligence room
+Durante hardening
+Ejecutar piloto controlado con 3 a 5 expedientes y al menos 2 otorgantes.
+El data room es consecuencia; el valor esta en preparar, validar y explicar el expediente.
+El modelo combina SaaS, fee por expediente, servicios NSD IF y modulos avanzados.
+El modelo puede monetizar por SaaS, expediente, servicios y modulos premium.
+El otorgante filtra oportunidades, abre data room, pide informacion y registra interes.
+El producto empieza antes del banco: prepara al solicitante para llegar con un expediente defendible.
+El producto entiende solicitantes, otorgantes, expedientes, data room, requerimientos y comite.
+El producto puede empezar con servicios profesionales y evolucionar hacia SaaS recurrente con datos operativos propios.
+El solicitante registra proyecto, monto, sector, uso de fondos y documentos base.
+Empresa solicitante
+En curso
+Enfoque pre-seed
+Enter with demo user and visible profile switcher.
+Entidad objetivo
+Entidades que revisan expedientes, solicitantes que necesitan prepararse y NSD IF por servicios profesionales asociados.
+Entrar con usuario demo y selector de perfil visible.
+Escala A-E, politicas y disclaimers
+Esperar Published y probar /, /dashboard, /services e /international.
+Esta capa ordena los disclaimers que deben acompañar la demo: IA asistiva, decision humana, privacidad, biometricos futuros y trazabilidad.
+Esta vista ayuda a contestar sin improvisar durante la ronda: mercado, producto, IA, riesgo, monetizacion y traccion.
+Esta vista define como validar NSD con una entidad financiera o aliado: participantes, calendario, metricas, entregables y criterios de exito.
+Esta vista ordena la demostracion para inversionistas: que pantalla abrir, que probar y que frase decir en cada bloque.
+Esta vista organiza la conversacion de inversion: uso de fondos, hitos, evidencias del data room, riesgos y proximos activos que deben prepararse para levantar capital.
+Esta vista resume a quien se le venderia primero, que hipotesis se validan y que metricas deben demostrar traccion para una ronda pre-seed.
+Esta vista resume que existe hoy, que debe cerrarse antes de publicar y que se deja para el piloto. Ayuda a ordenar prioridades sin sobredimensionar el MVP.
+Esta vista resume que existe, que esta validado, que falta probar y cuales son los riesgos que deben explicarse con transparencia antes de una ronda.
+Esta vista resume si el estado local esta listo para subir a Netlify como demo de presentacion, separando errores bloqueantes de pendientes aceptables.
+Esto no reemplaza al banco
+Esto ya funciona?
+Estructura expediente, revisa con IA, genera score, memo y plan de subsanacion.
+Estructura para compartir expediente, documentos, permisos y evidencias.
+Evidencia disponible
+Evitar prometer aprobacion crediticia automatica.
+Evitar servicios manuales excesivos sin precio suficiente por expediente.
+Executive Memo
+Executive investor readiness view
+Executive script to present NSD as a startup.
+Existe un dolor real: tiempos, documentos, cumplimiento y baja comparabilidad.
+Expansion controlada
+Expansion gradual
+Expansion natural
+Expected Objections
+Expediente + IA + data room + otorgantes + servicios
+Expediente completo, IA, matriz documental y presentacion a otorgantes.
+Expedientes demo
+Expedientes piloto
+Experimentos siguientes
+Extension internacional planteada como expansion gradual, no promesa inmediata.
+Faltantes detectados
+Fase posterior
+Fee por expediente
+Fintech credito
+Flow investors should see in the presentation
+Flujo de expediente, carga documental, data room y revision con IA simulado/operativo.
+Flujo que debe verse en una presentacion
+Fondo deuda privada
+Fortalecer consentimiento, auditoria, retencion documental y politicas de acceso.
+Frase de 20 segundos
+Frase para inversionista
+Frases de cierre
+From investor demo to operating pilot
+Fundable Milestones
+Gestionan pipeline
+Go / No-Go Netlify
+Gobernanza y limites
+Governance and limits
+Guion ejecutivo para presentar NSD como startup.
+Hay SOFOMES, fintechs, bancos, fondos y PyMEs con friccion documental; ademas permite validar producto con costos controlados antes de expandir.
+Herramientas KYC/KYB
+Historias concretas de solicitante y otorgante para pitch.
+Hitos financiables
+How to present NSD IF without overpromising
+How to say it
+IA / Integraciones
+IA aplicada
+IA asistiva, no decisoria
+IA detecta faltantes, vencimientos, consistencia, requisitos y riesgos.
+IA y riesgo
+Immediate Use
+Implementation roadmap
+Ingresos piloto
+Ingresos por expediente, servicios profesionales, paquetes SaaS y comisiones condicionadas.
+Ingresos potenciales
+Iniciar con pilotos acotados y servicios profesionales para aprender antes de escalar.
+Integraciones y comites por entidad
+Interes institucional
+Interes institucional y feedback real
+Investor Data Room
+Investor One Pager
+Investor Q&A
+Investor Round View
+Investor line
+KYB, antifraude, scoring y carga documental asistida.
+KYC/KYB es un modulo dentro de un expediente financiero completo.
+La IA aprueba creditos?
+La IA ayuda a revisar documentos, detectar faltantes, resumir riesgos y sugerir semaforos. No aprueba creditos, no sustituye abogados y no emite dictamen regulatorio final.
+La IA no aprueba creditos; reduce friccion, ordena evidencia y acelera la revision humana.
+La IA no promete aprobar creditos; acelera preparacion, revision y decisiones internas.
+La IA puede equivocarse
+La administracion ve pipeline, ingresos, score, conversion, trazabilidad y modulos premium.
+La arquitectura se puede replicar, pero el rollout se controla para proteger margen, cumplimiento y reputacion.
+La capa profesional ayuda a iniciar ingresos antes de que el SaaS este completamente maduro.
+La consultoria no escala; NSD convierte conocimiento en flujo repetible.
+La decision sigue en el otorgante; NSD acelera preparacion y revision.
+La defensa esta en el flujo vertical, no en una sola funcion.
+La demo debe convertirse en pilotos medibles.
+La demo local ya muestra landing, solicitante, otorgante, NSD Admin, vista de inversion, demo guiado, ronda, traccion y moat.
+La demo muestra el puente completo entre solicitantes, otorgantes y NSD IF: preparacion documental, IA, data room, score, requerimientos, trazabilidad y monetizacion.
+La entidad financiera conserva su propio comite, politicas de riesgo, apetito de credito, autorizaciones y decision final.
+La entidad revisa data rooms, pide informacion y registra interes o descarte razonado.
+La oportunidad esta en estandarizar un flujo que hoy vive entre correos, PDFs, hojas de calculo y revisiones manuales.
+La plataforma conecta a los dos lados del mercado con trazabilidad.
+La ronda financia producto, pilotos, integraciones y go-to-market con entidades financieras.
+Landing + demo
+Landing / Modelo operativo
+Landing, dashboard, solicitante, otorgante, NSD Admin y demo 10 min.
+Las entidades necesitan revisar mas casos con menos tiempo, mas regulacion y mayor presion antifraude.
+Lectura ejecutiva para inversionistas
+Lectura unificada de preparacion financiera, legal y documental.
+Legal / Operacion
+Legal minimo
+Lentas, poco escalables y sin producto SaaS repetible.
+Listo local
+Lo que se debe demostrar
+Lograr que el otorgante quiera procesar otro lote.
+Los solicitantes no saben que documentos preparar y los otorgantes reciben informacion desigual.
+Lote inicial
+MRR demo combinando SaaS, expedientes y servicios profesionales.
+MRR inicial, repeticion por entidad, dashboard de administracion y auditoria robusta.
+MRR, fee por expediente, servicios, CAC, margen, escenarios y runway.
+MVP comercial
+Mantener como modulo futuro controlado
+Mantener revision asistida y explicable; evitar decisiones automaticas opacas.
+Mantener revision humana, explicabilidad, auditoria y disclaimers visibles.
+Mapa competitivo
+Mapear eventos reales contra Supabase audit_logs
+Matriz documental
+Matriz documental, scoring y data room conceptual
+Matriz documental, trazabilidad, scoring y semaforos como capas principales de control.
+Matriz refinada
+Matriz viva
+Medir cuantos expedientes generan interes o solicitud adicional.
+Medir interes de entidades y solicitantes con CTA hacia demo guiada.
+Medir tiempos, faltantes, conversion, friccion, satisfaccion y posibles ingresos.
+Memo ejecutivo
+Mercado inicial
+Meta: -40%
+Meta: 1 renovacion
+Meta: 1-3 tickets
+Meta: 20%
+Meta: 90%+
+Metricas de exito
+Metricas de piloto y negociacion de ronda
+Metricas, tiempos, hallazgos, fricciones y decisiones.
+Mexico como mercado inicial, USA como expansion natural, Canada/UK despues de validacion legal.
+Mexico consolidado, primeros casos USA y partners de integracion.
+Mexico primero, USA despues, otros mercados solo con validacion legal.
+Mexico: PyMEs, startups, proyectos productivos, SOFOMES, fintechs, fondos, bancos y despachos financieros.
+Minimum legal checklist
+Moat Layers
+Modelo de monetizacion
+Modelo de negocio
+Modelo financiero
+Modo demo 10 minutos
+Monetizacion mixta
+Monetization Model
+Mostrar Solicitante, Otorgante y NSD Admin en menos de 10 minutos.
+NSD Admin
+NSD IF
+NSD Platform: infraestructura para preparar y revisar solicitudes financieras.
+NSD Platform: infrastructure to prepare and review financing requests.
+NSD ayuda a empresas y proyectos a preparar expedientes financieros con IA, data room y trazabilidad, para que bancos, SOFOMES, fintechs y fondos revisen oportunidades con menos friccion y mejor evidencia.
+NSD convierte solicitudes de financiamiento en expedientes institucionales con IA, data room, scoring, requerimientos y trazabilidad.
+NSD convierte solicitudes financieras dispersas en expedientes institucionales revisables.
+NSD helps companies and projects prepare financing files with AI, data room and traceability, so banks, lenders, fintechs and funds can review opportunities with less friction and better evidence.
+NSD no compite por aprobar creditos; compite por hacer que los expedientes lleguen mejor preparados.
+NSD se posiciona entre consultoria financiera, compliance, data room, KYC/KYB e inteligencia documental. La oportunidad es unificar esas piezas en un flujo repetible para solicitantes y otorgantes.
+NSD sits between financial consulting, compliance, data rooms, KYC/KYB and document intelligence. The opportunity is to unify those pieces into a repeatable workflow for applicants and funders.
+NSD turns scattered financing requests into institution-ready review files.
+Narrativa inversion
+Narrativa, mercado, producto, modelo, equipo, ask y uso de fondos.
+Next Experiments
+Next milestones for fundraising readiness
+No aprobacion automatica, auditoria y revision humana
+No entienden requisitos, score, otorgantes ni subsanacion.
+No es solo data room, KYC o consultoria. Es un flujo vertical que prepara al solicitante y reduce friccion para el otorgante.
+No preparan expediente ni validan evidencia documental.
+No prometer aprobacion crediticia; operar como preparacion, evidencia y trazabilidad.
+No somos KYC aislado
+No somos aprobacion automatica
+No somos solo consultoria
+No somos solo data room
+No vendemos una pagina de cumplimiento; organizamos solicitudes financieras para que sean revisables institucionalmente.
+No. La IA ayuda a preparar, revisar y explicar evidencia; la decision final permanece en el otorgante.
+Nucleo tecnologico visible
+OCR, KYB, biometria, antifraude, proveedores externos y scoring explicable.
+Objeciones esperadas
+Onboarding asistido y paquetes por industria
+One Pager, ronda, piloto, moat, Q&A y due diligence
+One page to answer: how much, for what and what gets achieved.
+One pager inversionista
+Oportunidades / Data room
+Ordena evidencia por carpetas y permisos para revision institucional.
+Ordenan archivos
+Otorgante workflow
+Pagina principal carga en preview local
+Pagina publica SaaS con narrativa de cumplimiento, otorgantes, solicitantes e internacional.
+Pagina publica, dashboard y perfiles demo listos para presentacion.
+Pasos de publicacion
+Pendiente de version legal final
+Pendiente final
+Perfil, expedientes, preparacion y carga IA
+Perfiles Solicitante, Otorgante y NSD Admin navegables
+Permisos robustos, pilotos reales, integraciones premium, optimizacion visual y endurecimiento de seguridad/operacion.
+Pilot Pipeline
+Pilot Playbook
+Pilot Roles
+Pilot Timeline
+Pilot playbook
+Piloto 30 dias
+Piloto cerrado
+Piloto comercial
+Piloto de 4 semanas para medir disposicion de pago, conversion e interes de otorgantes.
+Piloto tecnico
+Pilotos
+Pilotos con SOFOMES, fintechs, fondos, despachos financieros y empresas solicitantes usando expedientes reales controlados.
+Pilotos con SOFOMES, fintechs, fondos, empresas solicitantes y aliados de servicios.
+Pilotos con entidades y aliados, 50+ expedientes piloto, primera conversion a interes institucional y primer MRR demostrable.
+Pilotos objetivo
+Pipeline de PyMEs, credito empresarial y revision documental.
+Pipeline de pilotos
+Pipeline simulado para bancos, SOFOMES, fintechs y fondos.
+Pipeline, inteligencia, requerimientos y memo comite
+Pipeline, oportunidades, solicitudes de informacion e interes institucional.
+Pitch Positioning
+Pitch deck
+Plataforma SaaS para solicitantes, otorgantes y NSD Admin: carga de proyecto, revision IA, data room, pipeline de oportunidades, mensajeria, requerimientos y auditoria.
+Plataforma vertical para preparar y revisar solicitudes financieras.
+Por cerrar
+Por eso se presenta como revision asistida, explicable y auditable, no como aprobacion automatica.
+Por iniciar
+Por preparar
+Por que ahora
+Por que empezar en Mexico?
+Por que es grande?
+Posicionamiento para pitch
+Pre-Presentation Checklist
+Pre-seed focus
+Pre-seed para producto, pilotos e integraciones.
+Preparacion documental, investor readiness y capital partners.
+Preparar data room de inversion: one pager, deck, modelo, roadmap, riesgos y evidencias.
+Pricing learning
+Pricing sujeto a aprendizaje real antes de comprometer escala.
+Pricing test
+Primer MRR meta
+Primer mercado
+Primeros ingresos por expedientes y servicios NSD IF; 2 modulos premium validados.
+Priorizar permisos, seguridad, respaldos, trazabilidad y observabilidad antes de abrir masivo.
+Problema, solucion, mercado, moat y piloto
+Procesar 10 expedientes con un aliado y medir faltantes, tiempos y acciones.
+Producto demostrable
+Producto, IA/integraciones, pilotos, go-to-market y base legal/operativa para lanzar con menor riesgo.
+Publishing steps
+Q&A inversionista
+QA visual y flujo guiado
+Que falta para producto comercial?
+Que financia la ronda?
+Que hace distinto NSD?
+Que hace el AI Compliance Engine?
+Que medir antes de pedir mas capital
+Quick Facts
+Quien paga?
+Quien sufra friccion documental en primera revision.
+Recommended cut for controlled publishing
+Reduccion estimada en ida y vuelta documental antes de comite.
+Reducir dias entre expediente recibido y primera lectura util.
+Registra cargas, revisiones, requerimientos, accesos y cambios de estado.
+Regulatorio / reputacional
+Render + Supabase como base para autenticacion, ordenes, documentos y revisiones.
+Render/Supabase deben estar vivos para login y datos reales
+Reporte + renovacion
+Reporte de piloto
+Requiere texto completo y consentimiento
+Requisitos ajustados por sector, monto, entidad y producto financiero.
+Responder breve, regresar al flujo de producto y evitar prometer resultados crediticios.
+Respuestas cortas para preguntas dificiles.
+Retencion de entidad
+Revisa data room, solicita informacion, registra interes y retroalimenta criterios.
+Revisar acentos finales y posibles tramos en ingles
+Revision documental, scoring, faltantes, memo ejecutivo y alertas de riesgo.
+Riesgo IA
+Riesgo clave
+Riesgo go-to-market
+Riesgo regulatorio
+Riesgo tecnico
+Riesgos a explicar
+Riesgos y mitigacion
+Risks and Mitigation
+Risks to explain
+Roadmap de implementacion
+Roles del piloto
+Ronda / Data room de inversion
+Rostro, huella u otra biometria deben integrarse con proveedor especializado, prueba de vida, cifrado, politica de eliminacion y opcion de no continuidad cuando aplique.
+Round / Investor Data Room
+Runway objetivo
+Ruta inicial para expansion por jurisdiccion, requisitos y aliados locales.
+Ruta internacional controlada
+SOFOM / fintech / fondo
+SOFOM crecimiento
+SOFOMES, fintechs, bancos, fondos y empresas solicitantes.
+SOFOMES, fintechs, fondos, bancos y solicitantes empresariales.
+SaaS B2B, fee por expediente, servicios NSD IF y modulos premium como OCR, biometria, KYB, antifraude e integraciones.
+SaaS B2B, fee por expediente, servicios profesionales NSD IF y modulos premium como OCR, biometria, KYB, antifraude e integraciones.
+SaaS B2B, fee por expediente, servicios profesionales y modulos premium de compliance.
+SaaS B2B, fee por expediente, servicios profesionales y modulos premium.
+SaaS entidades
+Sala de due diligence
+Score A-E y 0-100 con razonamiento, hallazgos y semaforo de riesgo.
+Score promedio
+Scoring explicable
+Semana 1
+Semana 2
+Semana 3
+Semana 4
+Senales de validacion
+Separacion responsable entre asistencia de cumplimiento y decision crediticia final.
+Servicios NSD IF
+Short answers for hard questions.
+Show Applicant, Funder and NSD Admin in under 10 minutes.
+Si sale version vieja, limpiar cache o verificar que se subio el ZIP correcto.
+Siguientes hitos para estar listo para ronda
+Solicitante / Otorgante / NSD Admin
+Solicitantes suben evidencia; NSD ejecuta checklist, IA, score y plan de subsanacion.
+Solicitantes y entidades financieras pierden tiempo por expedientes incompletos, requisitos dispersos, baja comparabilidad documental y revisiones manuales.
+Solicitantes y otorgantes pierden tiempo por expedientes incompletos, baja comparabilidad y revisiones manuales.
+Solo con pilotos, legal y costos de integracion validados.
+Solo despues de validacion legal, privacidad y pilotos.
+Status
+Stripe/checkout requiere prueba aparte despues del deploy
+Subir Proyecto / IA
+Subir a Netlify en el proyecto existente, no crear sitio nuevo si se quiere conservar URL.
+Success Metrics
+Suficiente para procesar un lote controlado.
+Suscripcion mensual por usuarios, data room, roles, auditoria y pipeline.
+Suscripciones iniciales y servicios recurrentes.
+Terminos de uso
+Terminos, privacidad, IA y biometria
+Terminos, privacidad, consentimiento, disclaimers y revision legal pendiente.
+Tesis clara
+The demo must become measurable pilots.
+The demo shows the complete bridge between applicants, funders and NSD IF: document readiness, AI, data room, score, requests, traceability and monetization.
+The moat is in the vertical workflow, not a single feature.
+The model can monetize through SaaS, files, services and premium modules.
+The platform connects both sides of the market with traceability.
+There is a real pain: time, documents, compliance and low comparability.
+This layer organizes the disclaimers that must accompany the demo: assistive AI, human decisioning, privacy, future biometrics and traceability.
+This view defines how to validate NSD with a financial institution or partner: participants, timeline, metrics, deliverables and success criteria.
+This view helps answer without improvising during the round: market, product, AI, risk, monetization and traction.
+This view organizes the investor demo: which screen to open, what to prove and what line to say in each block.
+This view structures the fundraising conversation: use of funds, milestones, data room evidence, risks and the next assets required to raise capital.
+This view summarizes what exists today, what must be closed before publishing and what remains for the pilot. It helps prioritize without overbuilding the MVP.
+This view summarizes what exists, what is validated, what still needs proof and which risks should be explained transparently before a round.
+This view summarizes whether the local state is ready to upload to Netlify as a presentation demo, separating blocking errors from acceptable pending items.
+This view summarizes who to sell to first, which hypotheses are being validated and which metrics should prove traction for a pre-seed round.
+Tiempo ahorrado
+Tiempo de primera revision
+Tiempo para validar pilotos, ingresos y producto SaaS.
+Traccion / pilotos
+Traccion SaaS
+Traccion buscada
+Traction / Pilots
+Trazabilidad, permisos, disclaimers y revision humana reducen riesgo reputacional.
+USA
+USA despues
+USA despues de pilotos
+Un piloto de 30 dias para convertir la demo en evidencia.
+Una lectura ejecutiva para inversionistas: que problema resuelve, como monetiza, por que puede defenderse y que se financiaria.
+Una pagina para contestar: cuanto, para que y que se logra.
+Une preparacion del solicitante, matriz documental, IA, data room, requerimientos, otorgantes y administracion en un flujo vertical.
+Usar el ZIP mas reciente generado desde dist.
+Usar esta pantalla como resumen antes o despues de la demo. Si el inversionista pide contexto rapido, esta es la vista para abrir.
+Use of Funds
+Use this screen as a summary before or after the demo. If the investor asks for quick context, this is the screen to open.
+Uso de fondos
+Uso inmediato
+Validable en piloto
+Validacion comercial
+Validacion de SaaS, fee por expediente y servicios profesionales.
+Validar con pilotos pequenos antes de escalar equipo comercial.
+Validar fee por expediente o servicios NSD IF pagados.
+Validar si data room, memo y requerimientos reducen tiempo de primera revision.
+Validation Signals
+Ventas B2B, contenido, alianzas, demo institucional y materiales de inversion.
+Verifican identidad
+Version piloto con datos reales controlados
+Visible technology core
+Vista inversion
+Vista inversion / Modelo de negocio
+Vista para ronda de inversion
+What the demo must prove
+What to measure before raising more capital
+Workflow vertical
+Ya existe flujo local de solicitante, otorgante, admin, data room, IA y demo guiado.
+clamp(2rem, 4vw, 2.8rem)
+clamp(2rem, 4vw, 2.9rem)
+clamp(2rem, 4vw, 3rem)
+demo controlada
+linear-gradient(135deg, #0F1F2E 0%, #19395D 58%, #C9A227 135%)
+linear-gradient(135deg, #0F1F2E 0%, #1B3A5C 58%, #C9A84C 160%)
+linear-gradient(135deg, #0F1F2E 0%, #1B3A5C 68%, #C9A227 145%)
+linear-gradient(135deg, #0F1F2E 0%, #1B3A5C 70%, #C9A227 145%)
+linear-gradient(135deg, #0F1F2E 0%, #1B3A5C 70%, #C9A84C 170%)
+linear-gradient(135deg, rgba(15,31,46,0.97), rgba(27,58,92,0.94))
+minmax(0, 1.15fr) minmax(280px, 0.85fr)
+minmax(0, 1.15fr) minmax(300px, 0.85fr)
+minmax(0, 1.1fr) minmax(300px, 0.9fr)
+minmax(0, 1fr) 130px
+minmax(0, 1fr) 340px
+minmax(0, 1fr) minmax(300px, 0.85fr)
+minmax(0, 1fr) minmax(300px, 0.8fr)
+minmax(0, 1fr) minmax(300px, 0.9fr)
+minmax(0, 1fr) minmax(320px, 0.9fr)
+minmax(260px, 0.75fr) minmax(0, 1.25fr)
+minmax(260px, 0.7fr) minmax(0, 1.3fr)
+no bloqueantes
+npm.cmd run build ejecuta sin errores
+repeat(auto-fit, minmax(210px, 1fr))
+repeat(auto-fit, minmax(220px, 1fr))
+repeat(auto-fit, minmax(230px, 1fr))
+repeat(auto-fit, minmax(240px, 1fr))
+repeat(auto-fit, minmax(260px, 1fr))
+repeat(auto-fit, minmax(280px, 1fr))
+rgba(15,31,46,0.04)
+rgba(201,162,39,0.18)
+rgba(201,168,76,0.12)
+rgba(201,168,76,0.14)
+rgba(255,255,255,0.08)
+rgba(255,255,255,0.56)
+rgba(255,255,255,0.68)
+rgba(255,255,255,0.72)
+rgba(255,255,255,0.78)
+rgba(255,255,255,0.82)
+rgba(255,255,255,0.86)
+rgba(27,58,92,0.10)
+rgba(46,125,50,0.12)
