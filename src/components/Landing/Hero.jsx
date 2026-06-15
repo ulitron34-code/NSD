@@ -7,7 +7,6 @@ export default function Hero() {
   const { t } = useTranslation();
   const [counter, setCounter] = useState({ projects: 0, success: 0, lenders: 0 });
 
-  // Animated counters
   useEffect(() => {
     const targets = { projects: 500, success: 98, lenders: 120 };
     const duration = 1800;
@@ -29,9 +28,9 @@ export default function Hero() {
   }, []);
 
   const stats = [
-    { value: `${counter.projects}+`, label: "Proyectos Estructurados" },
-    { value: `${counter.success}%`,  label: "Tasa de Éxito" },
-    { value: `${counter.lenders}+`,  label: "Lenders Globales" },
+    { value: `${counter.projects}+`, label: t("hero.stat1Label") },
+    { value: `${counter.success}%`,  label: t("hero.stat2Label") },
+    { value: `${counter.lenders}+`,  label: t("hero.stat3Label") },
   ];
 
   return (
@@ -47,7 +46,6 @@ export default function Hero() {
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Background decoration */}
       <div style={{
         position: "absolute", top: "-20%", right: "-10%",
         width: "600px", height: "600px", borderRadius: "50%",
@@ -62,7 +60,6 @@ export default function Hero() {
       }} />
 
       <div style={{ maxWidth: "1100px", margin: "0 auto", textAlign: "center", position: "relative" }}>
-        {/* Eyebrow tag */}
         <div style={{
           display: "inline-flex", alignItems: "center", gap: "0.5rem",
           background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.35)",
@@ -71,7 +68,7 @@ export default function Hero() {
           letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "2rem",
         }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4CAF50", display: "inline-block" }} />
-          Plataforma Activa — Fintech Boutique
+          {t("hero.badge")}
         </div>
 
         <h1 style={{
@@ -79,8 +76,8 @@ export default function Hero() {
           fontWeight: 800, lineHeight: 1.1,
           marginBottom: "1.5rem", color: "white",
         }}>
-          {t("hero.title") || "Estructura, presenta y financia"}<br />
-          <span style={{ color: "#C9A84C" }}>proyectos de alto impacto</span>
+          {t("hero.title")}<br />
+          <span style={{ color: "#C9A84C" }}>{t("hero.titleHighlight")}</span>
         </h1>
 
         <p style={{
@@ -88,10 +85,9 @@ export default function Hero() {
           maxWidth: "700px", margin: "0 auto 3rem",
           color: "rgba(255,255,255,0.75)", lineHeight: 1.8,
         }}>
-          {t("hero.description") || "Conectamos empresas y proyectos con inversionistas internacionales mediante análisis automatizado, cumplimiento regulatorio y una red de 120+ lenders globales."}
+          {t("hero.description")}
         </p>
 
-        {/* CTAs */}
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "5rem" }}>
           <button
             onClick={() => navigate("/signup")}
@@ -106,7 +102,7 @@ export default function Hero() {
             onMouseEnter={e => { e.target.style.transform = "translateY(-3px)"; e.target.style.boxShadow = "0 12px 32px rgba(201,168,76,0.5)"; }}
             onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 8px 24px rgba(201,168,76,0.4)"; }}
           >
-            Comenzar Ahora →
+            {t("hero.cta1")}
           </button>
           <button
             onClick={() => navigate("/contact")}
@@ -120,14 +116,12 @@ export default function Hero() {
             onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.14)"; e.target.style.borderColor = "rgba(255,255,255,0.5)"; }}
             onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.07)"; e.target.style.borderColor = "rgba(255,255,255,0.25)"; }}
           >
-            Hablar con un Experto
+            {t("hero.cta2")}
           </button>
         </div>
 
-        {/* Stats Bar */}
         <div style={{
           display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "0",
           background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: "16px",

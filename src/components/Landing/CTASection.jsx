@@ -1,8 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function CTASection() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const trustItems = [t("cta.trust1"), t("cta.trust2"), t("cta.trust3")];
 
   return (
     <section style={{
@@ -11,7 +15,6 @@ export default function CTASection() {
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Decorative glow */}
       <div style={{
         position: "absolute", top: "50%", left: "50%",
         transform: "translate(-50%,-50%)",
@@ -25,19 +28,20 @@ export default function CTASection() {
           color: "#C9A84C", fontWeight: 700, fontSize: "0.78rem",
           letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: "1rem",
         }}>
-          COMIENZA HOY
+          {t("cta.eyebrow")}
         </p>
         <h2 style={{
           color: "white", fontSize: "clamp(2rem, 4vw, 3rem)",
           fontWeight: 800, lineHeight: 1.2, marginBottom: "1.25rem",
+          whiteSpace: "pre-line",
         }}>
-          ¿Listo para transformar<br />tu proyecto?
+          {t("cta.title")}
         </h2>
         <p style={{
           color: "rgba(255,255,255,0.7)", fontSize: "1.1rem",
-          lineHeight: 1.7, marginBottom: "3rem", maxWidth: "550px", margin: "0 auto 2.5rem",
+          lineHeight: 1.7, maxWidth: "550px", margin: "0 auto 2.5rem",
         }}>
-          Accede a nuestra Plataforma de Cumplimiento y comienza el análisis de tu solicitante hoy mismo.
+          {t("cta.subtitle")}
         </p>
 
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
@@ -54,7 +58,7 @@ export default function CTASection() {
             onMouseEnter={e => { e.target.style.transform = "translateY(-3px)"; e.target.style.boxShadow = "0 14px 32px rgba(201,168,76,0.5)"; }}
             onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 8px 24px rgba(201,168,76,0.4)"; }}
           >
-            Crear Cuenta Gratis →
+            {t("cta.cta1")}
           </button>
           <button
             onClick={() => navigate("/contact")}
@@ -68,16 +72,15 @@ export default function CTASection() {
             onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.16)"; }}
             onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.08)"; }}
           >
-            Hablar con un Experto
+            {t("cta.cta2")}
           </button>
         </div>
 
-        {/* Trust indicators */}
         <div style={{
           display: "flex", gap: "2.5rem", justifyContent: "center",
           marginTop: "3.5rem", flexWrap: "wrap",
         }}>
-          {["🔒 Datos seguros", "⚡ Análisis en segundos", "🌎 Red global de lenders"].map((item, i) => (
+          {trustItems.map((item, i) => (
             <p key={i} style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>
               {item}
             </p>

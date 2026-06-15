@@ -1,59 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 
 export default function PricingSection() {
   const navigate = useNavigate();
-
-  const plans = [
-    {
-      name: "Básico",
-      price: "$99",
-      period: "/mes",
-      desc: "Para solicitantes independientes",
-      features: [
-        "Análisis RFC ilimitados",
-        "Score crediticio",
-        "Reportes mensuales",
-        "Soporte email",
-      ],
-      cta: "Empezar",
-    },
-    {
-      name: "Profesional",
-      price: "$299",
-      period: "/mes",
-      desc: "Para empresas y startups",
-      features: [
-        "Todo del Plan Básico",
-        "Acceso a otorgantes",
-        "Soporte prioritario",
-        "Análisis internacionales",
-        "2-3 proyectos simultáneamente",
-      ],
-      cta: "Empezar",
-      popular: true,
-    },
-    {
-      name: "Empresarial",
-      price: "Personalizado",
-      period: "",
-      desc: "Para fondos y instituciones",
-      features: [
-        "Todo del Plan Profesional",
-        "API access",
-        "Análisis ilimitados",
-        "Account manager dedicado",
-        "SLA garantizado 99.9%",
-        "Cumplimiento específico",
-      ],
-      cta: "Contactar",
-    },
-  ];
+  const { t } = useTranslation();
+  const plans = t("pricing.plans", { returnObjects: true });
 
   return (
-    <section style={{padding: "5rem 2rem", background: COLORS.bg, minHeight: "80vh"}}>
-      <div style={{maxWidth: "1400px", margin: "0 auto"}}>
+    <section style={{ padding: "5rem 2rem", background: COLORS.bg, minHeight: "80vh" }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
         <h2 style={{
           color: COLORS.navy,
           fontSize: "2.5rem",
@@ -61,13 +18,16 @@ export default function PricingSection() {
           borderLeft: `4px solid ${COLORS.gold}`,
           paddingLeft: "1rem",
         }}>
-          Planes y Precios
+          {t("pricing.title")}
         </h2>
-        <p style={{color: COLORS.textMuted, marginBottom: "3rem", fontSize: "1.1rem"}}>
-          Selecciona el plan que mejor se adapta a tus necesidades
+        <p style={{ color: COLORS.textMuted, marginBottom: "0.5rem", fontSize: "1.1rem" }}>
+          {t("pricing.subtitle")}
+        </p>
+        <p style={{ color: COLORS.textMuted, marginBottom: "3rem", fontSize: "0.85rem" }}>
+          * {t("pricing.currency")}
         </p>
 
-        <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem"}}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
           {plans.map((plan, i) => (
             <div key={i} style={{
               background: COLORS.white,
@@ -92,22 +52,22 @@ export default function PricingSection() {
                   fontWeight: "600",
                   fontSize: "0.8rem",
                 }}>
-                  MÁS POPULAR
+                  {t("pricing.popular")}
                 </div>
               )}
 
-              <h3 style={{color: COLORS.navy, fontSize: "1.5rem", marginBottom: "0.5rem", fontWeight: "600"}}>
+              <h3 style={{ color: COLORS.navy, fontSize: "1.5rem", marginBottom: "0.5rem", fontWeight: "600" }}>
                 {plan.name}
               </h3>
-              <p style={{color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "1.5rem"}}>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "1.5rem" }}>
                 {plan.desc}
               </p>
 
-              <div style={{marginBottom: "1.5rem"}}>
-                <span style={{color: COLORS.navy, fontWeight: "700", fontSize: "2.5rem"}}>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <span style={{ color: COLORS.navy, fontWeight: "700", fontSize: "2.5rem" }}>
                   {plan.price}
                 </span>
-                <span style={{color: COLORS.textMuted, fontSize: "1rem"}}>
+                <span style={{ color: COLORS.textMuted, fontSize: "1rem" }}>
                   {plan.period}
                 </span>
               </div>
@@ -126,17 +86,13 @@ export default function PricingSection() {
                   marginBottom: "2rem",
                   transition: "all 0.3s",
                 }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = "translateY(0)";
-                }}
+                onMouseEnter={e => { e.target.style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { e.target.style.transform = "translateY(0)"; }}
               >
                 {plan.cta}
               </button>
 
-              <ul style={{listStyle: "none"}}>
+              <ul style={{ listStyle: "none" }}>
                 {plan.features.map((feature, j) => (
                   <li key={j} style={{
                     color: COLORS.text,

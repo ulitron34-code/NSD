@@ -24,11 +24,11 @@ export default function Header({ isLanding = false }) {
   };
 
   const navLinks = [
-    { label: "Inicio",    anchor: "/#inicio" },
-    { label: "Nosotros",  anchor: "/#nosotros" },
-    { label: "Servicios", anchor: "/#servicios" },
-    { label: "Precios",   anchor: "/#precios" },
-    { label: "FAQ",       anchor: "/#faq" },
+    { label: t("navbar.home"),     anchor: "/#inicio" },
+    { label: t("navbar.about"),    anchor: "/#nosotros" },
+    { label: t("navbar.services"), anchor: "/#servicios" },
+    { label: t("navbar.prices"),   anchor: "/#precios" },
+    { label: "FAQ",                anchor: "/#faq" },
   ];
 
   const linkStyle = {
@@ -165,12 +165,12 @@ export default function Header({ isLanding = false }) {
                 border: "1px solid rgba(27,58,92,0.1)",
               }}>
                 <div style={{ padding: "0.75rem 1rem", background: "#F2EFE9", borderBottom: "1px solid rgba(27,58,92,0.08)" }}>
-                  <p style={{ fontSize: "0.7rem", color: "#6B6560", marginBottom: "0.1rem" }}>Sesión activa</p>
+                  <p style={{ fontSize: "0.7rem", color: "#6B6560", marginBottom: "0.1rem" }}>{t("dashboard.sesionActiva")}</p>
                   <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1B3A5C", wordBreak: "break-all" }}>{user.email}</p>
                 </div>
                 {[
-                  { label: "🏠 Dashboard", action: () => { navigate("/dashboard"); setShowMenu(false); } },
-                  { label: "👤 Mi Perfil",  action: () => { navigate("/profile");   setShowMenu(false); } },
+                  { label: `🏠 ${t("dashboard.title")}`, action: () => { navigate("/dashboard"); setShowMenu(false); } },
+                  { label: `👤 ${t("dashboard.miPerfil")}`,  action: () => { navigate("/profile");   setShowMenu(false); } },
                 ].map((item, i) => (
                   <button key={i} onClick={item.action} style={{
                     width: "100%", padding: "0.75rem 1rem", border: "none",
@@ -192,7 +192,7 @@ export default function Header({ isLanding = false }) {
                 }}
                 onMouseEnter={e => e.target.style.background = "#FEF3C7"}
                 onMouseLeave={e => e.target.style.background = "transparent"}>
-                  🚪 Cerrar Sesión
+                  🚪 {t("dashboard.cerrarSesion")}
                 </button>
               </div>
             )}
@@ -210,7 +210,7 @@ export default function Header({ isLanding = false }) {
               onMouseEnter={e => e.target.style.borderColor = "rgba(255,255,255,0.5)"}
               onMouseLeave={e => e.target.style.borderColor = "rgba(255,255,255,0.2)"}
             >
-              Entrar
+              {t("navbar.login")}
             </button>
             <button
               onClick={() => navigate("/signup")}
@@ -225,7 +225,7 @@ export default function Header({ isLanding = false }) {
               onMouseEnter={e => e.target.style.boxShadow = "0 4px 14px rgba(201,168,76,0.5)"}
               onMouseLeave={e => e.target.style.boxShadow = "0 2px 8px rgba(201,168,76,0.35)"}
             >
-              Crear Cuenta
+              {t("navbar.signup")}
             </button>
           </div>
         )}
