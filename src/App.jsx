@@ -1,68 +1,80 @@
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
-import BlogPage from "./pages/BlogPage";
-import CertificationsPage from "./pages/CertificationsPage";
 import ProtectedRoute from "./components/Layout/ProtectedRoute";
 import Header from "./components/Layout/Header";
 import Toast from "./components/Shared/Toast";
-import LoginComponent from "./components/Auth/LoginComponent";
-import SignupComponent from "./components/Auth/SignupComponent";
-import LandingPage from "./pages/LandingPage";
-import DashboardPage from "./pages/DashboardPage";
 import "./App.css";
 import "./utils/i18n";
 
-import PrivacyPage from "./pages/PrivacyPage";
-import TermsPage from "./pages/TermsPage";
-import ContactPage from "./pages/ContactPage";
-import ProfilePage from "./pages/ProfilePage";
+// Landing y rutas críticas — carga inmediata
+import LandingPage from "./pages/LandingPage";
+import LoginComponent from "./components/Auth/LoginComponent";
+import SignupComponent from "./components/Auth/SignupComponent";
+
+// Rutas secundarias — lazy load
+const DashboardPage     = lazy(() => import("./pages/DashboardPage"));
+const ProfilePage       = lazy(() => import("./pages/ProfilePage"));
+const PrivacyPage       = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage         = lazy(() => import("./pages/TermsPage"));
+const ContactPage       = lazy(() => import("./pages/ContactPage"));
+const BlogPage          = lazy(() => import("./pages/BlogPage"));
+const CertificationsPage = lazy(() => import("./pages/CertificationsPage"));
+const NotFoundPage      = lazy(() => import("./pages/NotFoundPage"));
+
+const Loader = () => (
+  <div style={{
+    minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center",
+    color: "#6B6560", fontSize: "0.9rem",
+  }}>
+    Cargando...
+  </div>
+);
 
 function AppContent() {
-  const { t } = useTranslation();
-  
   return (
-    <>
-      <Router>
+    <Router>
+      <Suspense fallback={<Loader />}>
         <Routes>
-          {/* Landing Page (sin login) */}
+          {/* Landing */}
           <Route path="/" element={<><Header isLanding={true} /><LandingPage /></>} />
-          <Route path="/login" element={<><Header /><LoginComponent /></>} />
+
+          {/* Auth */}
+          <Route path="/login"  element={<><Header /><LoginComponent /></>} />
           <Route path="/signup" element={<><Header /><SignupComponent /></>} />
-          
-          {/* Public Pages */}
-          <Route path="/privacy" element={<><Header /><PrivacyPage /></>} />
-          <Route path="/terms" element={<><Header /><TermsPage /></>} />
-          <Route path="/contact" element={<><Header /><ContactPage /></>} />
-          <Route path="/blog" element={<><Header isLanding={true} /><BlogPage /></>} />
+
+          {/* Páginas públicas */}
+          <Route path="/privacy"        element={<><Header /><PrivacyPage /></>} />
+          <Route path="/terms"          element={<><Header /><TermsPage /></>} />
+          <Route path="/contact"        element={<><Header /><ContactPage /></>} />
+          <Route path="/blog"           element={<><Header isLanding={true} /><BlogPage /></>} />
           <Route path="/certifications" element={<><Header isLanding={true} /><CertificationsPage /></>} />
-          
-          {/* Dashboard (protegido) */}
-          <Route 
-            path="/dashboard/*" 
+
+          {/* Dashboard protegido */}
+          <Route
+            path="/dashboard/*"
             element={
               <ProtectedRoute>
                 <><Header /><DashboardPage /></>
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          <Route 
-            path="/profile" 
+          <Route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <><Header /><ProfilePage /></>
               </ProtectedRoute>
-            } 
+            }
           />
-          
+
           {/* 404 */}
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<><Header /><NotFoundPage /></>} />
         </Routes>
-      </Router>
+      </Suspense>
       <Toast />
-    </>
+    </Router>
   );
 }
 
