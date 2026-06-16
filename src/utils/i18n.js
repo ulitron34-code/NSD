@@ -127,7 +127,7 @@ const resources = {
         plans: [
           {
             name: "Básico",
-            price: "$99",
+            price: "$299",
             period: "/mes",
             desc: "Para solicitantes independientes",
             features: [
@@ -140,7 +140,7 @@ const resources = {
           },
           {
             name: "Profesional",
-            price: "$299",
+            price: "$699",
             period: "/mes",
             desc: "Para empresas y startups",
             features: [
@@ -154,8 +154,8 @@ const resources = {
           },
           {
             name: "Empresarial",
-            price: "Personalizado",
-            period: "",
+            price: "$899",
+            period: "/mes",
             desc: "Para fondos e instituciones",
             features: [
               "Todo del Plan Profesional",
@@ -379,7 +379,7 @@ const resources = {
         plans: [
           {
             name: "Basic",
-            price: "$99",
+            price: "$299",
             period: "/mo",
             desc: "For independent applicants",
             features: [
@@ -392,7 +392,7 @@ const resources = {
           },
           {
             name: "Professional",
-            price: "$299",
+            price: "$699",
             period: "/mo",
             desc: "For companies and startups",
             features: [
@@ -406,8 +406,8 @@ const resources = {
           },
           {
             name: "Enterprise",
-            price: "Custom",
-            period: "",
+            price: "$899",
+            period: "/mo",
             desc: "For funds and institutions",
             features: [
               "Everything in Professional",

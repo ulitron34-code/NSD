@@ -1,4 +1,4 @@
-﻿import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
 import { COLORS } from "../utils/constants";
@@ -45,6 +45,7 @@ const DueDiligenceRoomTab = lazy(() => import("../components/Dashboard/DueDilige
 const ImplementationRoadmapTab = lazy(() => import("../components/Dashboard/ImplementationRoadmapTab"));
 const ServiceOrdersPage = lazy(() => import("../pages/ServiceOrdersPage"));
 const CommissionsPage = lazy(() => import("../pages/CommissionsPage"));
+const DocumentIntelligenceTab = lazy(() => import("../components/Dashboard/DocumentIntelligenceTab"));
 
 function DashboardLoadingFallback() {
   return (
@@ -134,6 +135,7 @@ export default function DashboardPage() {
         { id: "readiness", label: L("Preparacion", "Readiness"), icon: "RDY" },
         { id: "subir_proyecto", label: L("Subir proyecto / IA", "Upload Project / AI"), icon: "UP" },
         { id: "data_room_index", label: L("Data Room", "Data Room"), icon: "DR" },
+        { id: "document_intel", label: L("Inteligencia Doc.", "Document Intelligence"), icon: "IDI" },
         { id: "scoring_ae", label: L("Scoring A-E", "A-E Scoring"), icon: "AE" },
         { id: "cumplimiento", label: L("Cumplimiento", "Compliance"), icon: "CUM" },
         { id: "mensajeria", label: L("Mensajeria", "Messaging"), icon: "MSG" },
@@ -150,6 +152,7 @@ export default function DashboardPage() {
         { id: "decision_room", label: L("Sala de decision 360", "360 Decision Room"), icon: "360" },
         { id: "forensic_analysis", label: L("Analisis forense", "Forensic Analysis"), icon: "FOR" },
         { id: "data_room_index", label: L("Indice Data Room", "Data Room Index"), icon: "IDX" },
+        { id: "document_intel", label: L("Inteligencia Doc.", "Document Intelligence"), icon: "IDI" },
         { id: "requirements", label: L("Informacion solicitada", "Requested Information"), icon: "REQ" },
         { id: "analytics", label: L("Inteligencia y Riesgo", "Intelligence and Risk"), icon: "BI" },
         { id: "scoring_ae", label: L("Scoring A-E", "A-E Scoring"), icon: "AE" },
@@ -176,6 +179,7 @@ export default function DashboardPage() {
       { id: "admin_proyectos", label: L("Gestion de servicios", "Service Management"), icon: "GS" },
       { id: "data_room_index", label: L("Indice Data Room", "Data Room Index"), icon: "IDX" },
       { id: "traceability", label: L("Auditoria", "Audit"), icon: "AUD" },
+      { id: "document_intel", label: L("Inteligencia Doc.", "Document Intelligence"), icon: "IDI" },
       { id: "admin_comisiones", label: L("Comisiones y Cierres", "Commissions and Closings"), icon: "CO" },
       { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
     ];
@@ -395,6 +399,7 @@ export default function DashboardPage() {
     if (activeTab === "data_room_index") return <DataRoomIndexTab />;
     if (activeTab === "scoring_ae") return <ScoringAETab />;
     if (activeTab === "biometricos") return <BiometricosTab />;
+    if (activeTab === "document_intel") return <DocumentIntelligenceTab />;
 
     if (userMode === "solicitante") {
       if (activeTab === "readiness") return <FundingReadinessTab />;

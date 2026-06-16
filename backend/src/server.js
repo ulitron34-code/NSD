@@ -26,6 +26,7 @@ import regulatoryRoutes from './routes/regulatory.js';
 import otorganteRoutes from './routes/otorgante.js';
 import institutionalRoutes from './routes/institutional.js';
 import informationRequestsRoutes from './routes/informationRequests.js';
+import documentIntelligenceRoutes from './routes/documentIntelligence.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -87,6 +88,7 @@ app.use('/api', regulatoryRoutes);
 app.use('/api', otorganteRoutes);
 app.use('/api', institutionalRoutes);
 app.use('/api', informationRequestsRoutes);
+app.use('/api', documentIntelligenceRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

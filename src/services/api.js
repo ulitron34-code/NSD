@@ -181,4 +181,23 @@ export const aiAgentsAPI = {
     api.get(`/ai-agents/orchestration/${orderId}`)
 };
 
+export const intelAPI = {
+  getDocumentTypes: () => api.get('/intel/reference/document-types'),
+  getValidationRules: (type) => api.get('/intel/reference/validation-rules', { params: type ? { type } : {} }),
+  getBenchmarks: (sector) => api.get(`/intel/reference/benchmarks/${sector}`),
+  getFraudPatterns: () => api.get('/intel/reference/fraud-patterns'),
+  classify: (documentId) => api.post(`/intel/documents/${documentId}/classify`),
+  extract: (documentId, textContent) => api.post(`/intel/documents/${documentId}/extract`, { textContent }),
+  validate: (documentId) => api.post(`/intel/documents/${documentId}/validate`),
+  getScore: (documentId) => api.get(`/intel/documents/${documentId}/score`),
+  saveScore: (documentId, payload) => api.post(`/intel/documents/${documentId}/score`, payload),
+  getVerifications: (documentId) => api.get(`/intel/documents/${documentId}/verifications`),
+  getDocRedFlags: (documentId) => api.get(`/intel/documents/${documentId}/red-flags`),
+  getSummary: (expedienteId) => api.get(`/intel/expediente/${expedienteId}/summary`),
+  getCrossReferences: (expedienteId) => api.get(`/intel/expediente/${expedienteId}/cross-references`),
+  getExpedienteRedFlags: (expedienteId) => api.get(`/intel/expediente/${expedienteId}/red-flags`),
+  processAll: (expedienteId) => api.post(`/intel/expediente/${expedienteId}/process-all`),
+  validateAll: (expedienteId) => api.post(`/intel/expediente/${expedienteId}/validate-all`)
+};
+
 export default api;

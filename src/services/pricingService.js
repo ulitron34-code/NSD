@@ -18,8 +18,8 @@ export const PLANS = {
       en: 'For startups and SMEs starting their compliance journey'
     },
     price: {
-      MXN: 2990, // ~$175 USD
-      USD: 175
+      MXN: 5980, // ~$299 USD
+      USD: 299
     },
     interval: 'month',
     features: [
@@ -114,8 +114,8 @@ export const PLANS = {
       en: 'For growing companies with more robust compliance needs'
     },
     price: {
-      MXN: 7990, // ~$465 USD
-      USD: 465
+      MXN: 13980, // ~$699 USD
+      USD: 699
     },
     interval: 'month',
     popular: true,
@@ -211,8 +211,8 @@ export const PLANS = {
       en: 'For financial institutions and funds with enterprise compliance needs'
     },
     price: {
-      MXN: 24990, // ~$1,450 USD
-      USD: 1450
+      MXN: 17980, // ~$899 USD
+      USD: 899
     },
     interval: 'month',
     features: [
