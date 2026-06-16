@@ -14,7 +14,9 @@ export function extractFinancialFieldsDeterministically(workbook) {
     capital_contable: null,
     ingresos_netos: null,
     utilidad_neta: null,
-    ebitda: null
+    ebitda: null,
+    dscr: null,
+    apalancamiento: null
   };
 
   const keywords = {
@@ -23,7 +25,9 @@ export function extractFinancialFieldsDeterministically(workbook) {
     capital_contable: [/capital\s+contable/i, /total\s+capital/i, /patrimonio\s+neto/i],
     ingresos_netos: [/ingresos\s+netos/i, /ventas\s+netas/i, /ingresos\s+operativos/i, /total\s+ingresos/i],
     utilidad_neta: [/utilidad\s+neta/i, /utilidad\s+del\s+ejercicio/i, /resultado\s+neto/i],
-    ebitda: [/ebitda/i, /utilidad\s+de\s+operacion\s+antes/i]
+    ebitda: [/ebitda/i, /utilidad\s+de\s+operacion\s+antes/i],
+    dscr: [/dscr/i, /cobertura\s+de\s+servicio/i, /cobertura\s+de\s+deuda/i],
+    apalancamiento: [/apalancamiento/i, /leverage/i, /pasivo\s+a\s+capital/i, /deuda\s+a\s+capital/i]
   };
 
   for (const sheetName of workbook.SheetNames) {
@@ -71,7 +75,9 @@ export async function extractFinancialWithAI(textContent) {
       capital_contable: 7200000,
       ingresos_netos: 5500000,
       utilidad_neta: 890000,
-      ebitda: 1200000
+      ebitda: 1200000,
+      dscr: 1.83,
+      apalancamiento: 1.14
     };
   }
 
@@ -83,6 +89,8 @@ export async function extractFinancialWithAI(textContent) {
     - ingresos_netos
     - utilidad_neta
     - ebitda
+    - dscr (Debt Service Coverage Ratio o cobertura de servicio de deuda, si se menciona)
+    - apalancamiento (o leverage ratio / pasivo a capital, si se menciona o calcula como pasivo_total / capital_contable)
 
     Responde únicamente con el objeto JSON, sin explicaciones ni texto introductorio. Ejemplo de respuesta:
     {
@@ -91,7 +99,9 @@ export async function extractFinancialWithAI(textContent) {
       "capital_contable": 40000,
       "ingresos_netos": 150000,
       "utilidad_neta": 15000,
-      "ebitda": 22000
+      "ebitda": 22000,
+      "dscr": 1.75,
+      "apalancamiento": 2.0
     }
 
     Texto a analizar:
@@ -137,7 +147,9 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     capital_contable: null,
     ingresos_netos: null,
     utilidad_neta: null,
-    ebitda: null
+    ebitda: null,
+    dscr: null,
+    apalancamiento: null
   };
 
   // Re-leer el buffer del storage para parseo estructurado si es Excel
@@ -174,6 +186,15 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     }
   }
 
+  // Cálculos automáticos si no se extrajeron directamente
+  if (extractedFields.apalancamiento === null && extractedFields.pasivo_total && extractedFields.capital_contable) {
+    extractedFields.apalancamiento = parseFloat((extractedFields.pasivo_total / extractedFields.capital_contable).toFixed(2));
+  }
+  if (extractedFields.dscr === null && extractedFields.ebitda && extractedFields.pasivo_total) {
+    const estimatedService = extractedFields.pasivo_total * 0.08;
+    extractedFields.dscr = estimatedService > 0 ? parseFloat((extractedFields.ebitda / estimatedService).toFixed(2)) : 1.5;
+  }
+
   // 3. Obtener Benchmarks del sector en Supabase
   const { data: benchmarks } = await supabaseAdmin
     .from('ref_financial_benchmarks')
@@ -188,51 +209,69 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     
     // Buscar benchmark para Margen Neto
     const netMarginBenchmark = (benchmarks || []).find(b => b.metric_name === 'net_margin');
-    if (netMarginBenchmark) {
-      const minVal = parseFloat(netMarginBenchmark.min_val);
-      const maxVal = parseFloat(netMarginBenchmark.max_val);
+    const minVal = netMarginBenchmark ? parseFloat(netMarginBenchmark.min_val) : 0.05;
+    const maxVal = netMarginBenchmark ? parseFloat(netMarginBenchmark.max_val) : 0.25;
 
-      if (margin >= minVal && margin <= maxVal) {
-        verifications.push({
-          rule_code: 'BENCHMARK_MARGEN_NETO',
-          status: 'pass',
-          severity: 'info',
-          findings: `Margen Neto del ${marginPct}% se encuentra dentro del rango saludable del sector ${sector} (${(minVal * 100).toFixed(1)}% - ${(maxVal * 100).toFixed(1)}%)`
-        });
-      } else {
-        verifications.push({
-          rule_code: 'BENCHMARK_MARGEN_NETO',
-          status: 'warning',
-          severity: 'warning',
-          findings: `El Margen Neto del ${marginPct}% está fuera del rango típico del sector ${sector} (${(minVal * 100).toFixed(1)}% - ${(maxVal * 100).toFixed(1)}%)`
-        });
-      }
+    if (margin >= minVal && margin <= maxVal) {
+      verifications.push({
+        rule_code: 'BENCHMARK_MARGEN_NETO',
+        status: 'pass',
+        severity: 'info',
+        findings: `Margen Neto del ${marginPct}% se encuentra dentro del rango saludable del sector ${sector} (${(minVal * 100).toFixed(1)}% - ${(maxVal * 100).toFixed(1)}%)`
+      });
+    } else {
+      verifications.push({
+        rule_code: 'BENCHMARK_MARGEN_NETO',
+        status: 'warning',
+        severity: 'warning',
+        findings: `El Margen Neto del ${marginPct}% está fuera del rango típico del sector ${sector} (${(minVal * 100).toFixed(1)}% - ${(maxVal * 100).toFixed(1)}%)`
+      });
     }
   }
 
-  // Ecuación de liquidez o apalancamiento
-  if (extractedFields.activo_total && extractedFields.pasivo_total) {
-    const leverage = extractedFields.pasivo_total / extractedFields.activo_total;
-    const leveragePct = (leverage * 100).toFixed(2);
-
+  // Apalancamiento (Leverage Ratio)
+  if (extractedFields.apalancamiento !== null) {
+    const leverageVal = extractedFields.apalancamiento;
     const leverageBenchmark = (benchmarks || []).find(b => b.metric_name === 'leverage');
-    if (leverageBenchmark) {
-      const maxVal = parseFloat(leverageBenchmark.max_val);
-      if (leverage <= maxVal) {
-        verifications.push({
-          rule_code: 'BENCHMARK_APALANCAMIENTO',
-          status: 'pass',
-          severity: 'info',
-          findings: `El nivel de apalancamiento del ${leveragePct}% está dentro del máximo permitido de ${maxVal * 100}%`
-        });
-      } else {
-        verifications.push({
-          rule_code: 'BENCHMARK_APALANCAMIENTO',
-          status: 'warning',
-          severity: 'warning',
-          findings: `Nivel de apalancamiento elevado: ${leveragePct}% supera el límite del sector de ${maxVal * 100}%`
-        });
-      }
+    const maxVal = leverageBenchmark ? parseFloat(leverageBenchmark.max_val) : 2.5;
+
+    if (leverageVal <= maxVal) {
+      verifications.push({
+        rule_code: 'BENCHMARK_APALANCAMIENTO',
+        status: 'pass',
+        severity: 'info',
+        findings: `El nivel de apalancamiento (Deuda/Capital) de ${leverageVal} está dentro del máximo permitido de ${maxVal} para el sector ${sector}`
+      });
+    } else {
+      verifications.push({
+        rule_code: 'BENCHMARK_APALANCAMIENTO',
+        status: 'warning',
+        severity: 'warning',
+        findings: `Nivel de apalancamiento elevado: ${leverageVal} supera el límite recomendado del sector ${sector} de ${maxVal}`
+      });
+    }
+  }
+
+  // DSCR
+  if (extractedFields.dscr !== null) {
+    const dscrVal = extractedFields.dscr;
+    const dscrBenchmark = (benchmarks || []).find(b => b.metric_name === 'dscr');
+    const minVal = dscrBenchmark ? parseFloat(dscrBenchmark.min_val) : 1.2;
+
+    if (dscrVal >= minVal) {
+      verifications.push({
+        rule_code: 'BENCHMARK_DSCR',
+        status: 'pass',
+        severity: 'info',
+        findings: `La Razón de Cobertura de Deuda (DSCR) es de ${dscrVal}, superior al mínimo saludable de ${minVal} para el sector ${sector}`
+      });
+    } else {
+      verifications.push({
+        rule_code: 'BENCHMARK_DSCR',
+        status: 'warning',
+        severity: 'warning',
+        findings: `Cobertura de servicio de deuda comprometida: DSCR de ${dscrVal} es inferior al mínimo sugerido de ${minVal}`
+      });
     }
   }
 

@@ -83,8 +83,24 @@ export async function runClassifierForDocument(documentId) {
   // 2. Descargar archivo
   const buffer = await downloadFileFromStorage(document.storage_path);
 
-  // 3. Extraer texto
-  const textContent = await extractText(document.filename, buffer);
+  // 3. Extraer texto y metadatos
+  let textContent = '';
+  let pdfMetadata = null;
+  const ext = String(document.filename || '').split('.').pop()?.toLowerCase();
+  
+  if (ext === 'pdf') {
+    try {
+      const pdfParse = (await import('pdf-parse')).default;
+      const parsed = await pdfParse(buffer);
+      textContent = parsed.text || '';
+      pdfMetadata = parsed.info || null;
+    } catch (e) {
+      console.error(`Error parsing PDF ${document.filename}:`, e);
+      textContent = `[PDF Parsing Failed: ${e.message}]`;
+    }
+  } else {
+    textContent = await extractText(document.filename, buffer);
+  }
 
   // 4. Procesar clasificación y guardar en base de datos
   const result = await processDocument(documentId, document.filename, textContent);
@@ -93,6 +109,7 @@ export async function runClassifierForDocument(documentId) {
   await saveExtraction(documentId, {
     filename: document.filename,
     textContent,
+    pdfMetadata,
     extracted_at: new Date().toISOString()
   }, result.classification.confidence);
 

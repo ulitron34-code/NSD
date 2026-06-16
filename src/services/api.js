@@ -190,6 +190,7 @@ export const intelAPI = {
   extract: (documentId, textContent) => api.post(`/intel/documents/${documentId}/extract`, { textContent }),
   validate: (documentId) => api.post(`/intel/documents/${documentId}/validate`),
   getScore: (documentId) => api.get(`/intel/documents/${documentId}/score`),
+  getExtraction: (documentId) => api.get(`/intel/documents/${documentId}/extraction`),
   saveScore: (documentId, payload) => api.post(`/intel/documents/${documentId}/score`, payload),
   getVerifications: (documentId) => api.get(`/intel/documents/${documentId}/verifications`),
   getDocRedFlags: (documentId) => api.get(`/intel/documents/${documentId}/red-flags`),

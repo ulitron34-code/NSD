@@ -314,6 +314,83 @@ export async function validateDocumentContent(documentId, documentType, textCont
     }
   }
 
+  // 7. REGLA: Anti-fraude por metadatos (FRAUD_METADATA_EDIT)
+  let pdfMetadata = null;
+  try {
+    const ext = await getExtraction(documentId);
+    if (ext && ext.extracted_data) {
+      pdfMetadata = ext.extracted_data.pdfMetadata || null;
+    }
+  } catch (err) {
+    console.error('Error fetching extraction for metadata checks:', err);
+  }
+
+  if (pdfMetadata) {
+    const creator = String(pdfMetadata.Creator || '').toUpperCase();
+    const producer = String(pdfMetadata.Producer || '').toUpperCase();
+    
+    const suspiciousSoftware = ['PHOTOSHOP', 'ILLUSTRATOR', 'COREL', 'NITRO', 'ACROBAT PRO', 'PDFILL', 'FOXIT PHANTOM', 'SEJDA', 'ILOVEPDF', 'PDF2GO', 'SMALLPDF'];
+    let isSuspicious = false;
+    let foundSoftware = '';
+    
+    for (const sw of suspiciousSoftware) {
+      if (creator.includes(sw) || producer.includes(sw)) {
+        isSuspicious = true;
+        foundSoftware = sw;
+        break;
+      }
+    }
+    
+    if (isSuspicious) {
+      scores.authenticity = Math.max(0, scores.authenticity - 40);
+      verifications.push({
+        rule_code: 'FRAUD_METADATA_EDIT',
+        status: 'warning',
+        severity: 'warning',
+        findings: `Metadatos sospechosos detectados: El archivo fue creado/procesado con software de edición (${foundSoftware}). Creator: ${pdfMetadata.Creator || 'N/A'}, Producer: ${pdfMetadata.Producer || 'N/A'}`
+      });
+    } else {
+      // Comparación de fechas de creación y modificación
+      const creationDateStr = pdfMetadata.CreationDate;
+      const modDateStr = pdfMetadata.ModDate;
+      
+      if (creationDateStr && modDateStr && creationDateStr !== modDateStr) {
+        // En PDF el formato de fechas es usualmente "D:YYYYMMDDHHmmSSOHH'mm'"
+        const getYYYYMMDD = (str) => {
+          const match = String(str).match(/D?:?(\d{8})/);
+          return match ? match[1] : null;
+        };
+        
+        const creationYYYYMMDD = getYYYYMMDD(creationDateStr);
+        const modYYYYMMDD = getYYYYMMDD(modDateStr);
+        
+        if (creationYYYYMMDD && modYYYYMMDD && creationYYYYMMDD !== modYYYYMMDD) {
+          scores.authenticity = Math.max(0, scores.authenticity - 20);
+          verifications.push({
+            rule_code: 'FRAUD_METADATA_EDIT',
+            status: 'warning',
+            severity: 'warning',
+            findings: `Discrepancia en metadatos del PDF: La fecha de creación (${creationYYYYMMDD}) no coincide con la fecha de modificación (${modYYYYMMDD}), sugiriendo una alteración posterior.`
+          });
+        } else {
+          verifications.push({
+            rule_code: 'FRAUD_METADATA_EDIT',
+            status: 'pass',
+            severity: 'info',
+            findings: 'Análisis de metadatos del PDF limpio. No se detectó software sospechoso ni discrepancia de fechas.'
+          });
+        }
+      } else {
+        verifications.push({
+          rule_code: 'FRAUD_METADATA_EDIT',
+          status: 'pass',
+          severity: 'info',
+          findings: 'Análisis de metadatos del PDF limpio. No se detectó software sospechoso.'
+        });
+      }
+    }
+  }
+
   // Si no se añadieron reglas, agregar una regla de completitud por defecto
   if (verifications.length === 0) {
     verifications.push({

@@ -125,6 +125,18 @@ router.get('/intel/documents/:id/score', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/intel/documents/:id/extraction', authMiddleware, async (req, res) => {
+  try {
+    const extraction = await getExtraction(req.params.id);
+    if (!extraction) {
+      return res.status(404).json({ error: 'Extracción no encontrada' });
+    }
+    res.json(extraction);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 router.post('/intel/documents/:id/score', authMiddleware, async (req, res) => {
   try {
     const result = await saveScore(req.params.id, req.body);
