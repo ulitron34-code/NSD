@@ -198,7 +198,8 @@ export const intelAPI = {
   getCrossReferences: (expedienteId) => api.get(`/intel/expediente/${expedienteId}/cross-references`),
   getExpedienteRedFlags: (expedienteId) => api.get(`/intel/expediente/${expedienteId}/red-flags`),
   processAll: (expedienteId) => api.post(`/intel/expediente/${expedienteId}/process-all`),
-  validateAll: (expedienteId) => api.post(`/intel/expediente/${expedienteId}/validate-all`)
+  validateAll: (expedienteId) => api.post(`/intel/expediente/${expedienteId}/validate-all`),
+  chat: (expedienteId, message) => api.post(`/intel/expediente/${expedienteId}/chat`, { message })
 };
 
 export default api;

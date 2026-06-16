@@ -17,6 +17,7 @@ import {
 } from '../services/documentIntelligenceService.js';
 import { runClassifierBatch } from '../agents/agentClassifier.js';
 import { runValidatorBatch } from '../agents/agentValidator.js';
+import { chatWithExpediente } from '../agents/agentChat.js';
 import { supabaseAdmin } from '../config/supabase.js';
 
 const router = express.Router();
@@ -227,6 +228,17 @@ router.post('/intel/expediente/:id/validate-all', authMiddleware, async (req, re
     })();
   } catch (error) {
     console.error(error);
+  }
+});
+
+router.post('/intel/expediente/:id/chat', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { message } = req.body;
+  try {
+    const result = await chatWithExpediente(id, message);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

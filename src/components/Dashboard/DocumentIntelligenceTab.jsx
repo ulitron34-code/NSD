@@ -20,6 +20,14 @@ export default function DocumentIntelligenceTab() {
   const [selectedDocMetrics, setSelectedDocMetrics] = useState(null);
   const [agentLogs, setAgentLogs] = useState([]);
 
+  // Chatbot states
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // Flowchart animation state
+  const [activeAgentNode, setActiveAgentNode] = useState(null); // 'classifier', 'validator', 'financial', 'cross'
+
   // Cargar lista de expedientes al iniciar
   useEffect(() => {
     async function loadExpedientes() {
@@ -40,6 +48,10 @@ export default function DocumentIntelligenceTab() {
   useEffect(() => {
     if (!selectedExpedienteId) return;
     loadExpedienteData(selectedExpedienteId);
+    // Reset chat
+    setChatMessages([
+      { sender: "ai", text: "Hola. Estoy listo para auditar este expediente. Pregúntame lo que necesites sobre los documentos." }
+    ]);
   }, [selectedExpedienteId]);
 
   const loadExpedienteData = async (expedienteId) => {
@@ -94,30 +106,46 @@ export default function DocumentIntelligenceTab() {
   const handleProcessAll = async () => {
     if (!selectedExpedienteId) return;
     setLoading(true);
+    setActiveAgentNode("classifier");
+    
+    // Simulate orchestration animation
+    setTimeout(() => setActiveAgentNode("validator"), 1000);
+    setTimeout(() => setActiveAgentNode("financial"), 2000);
+    setTimeout(() => setActiveAgentNode("cross"), 3000);
+
     try {
       await intelAPI.processAll(selectedExpedienteId);
-      // Esperamos un segundo para recargar
-      setTimeout(() => loadExpedienteData(selectedExpedienteId), 1500);
+      setTimeout(() => {
+        loadExpedienteData(selectedExpedienteId);
+        setActiveAgentNode(null);
+      }, 4000);
     } catch (err) {
       console.error("Error al procesar lote:", err);
       setLoading(false);
+      setActiveAgentNode(null);
     }
   };
 
   const handleValidateAll = async () => {
     if (!selectedExpedienteId) return;
     setLoading(true);
+    setActiveAgentNode("validator");
     try {
       await intelAPI.validateAll(selectedExpedienteId);
-      setTimeout(() => loadExpedienteData(selectedExpedienteId), 1500);
+      setTimeout(() => {
+        loadExpedienteData(selectedExpedienteId);
+        setActiveAgentNode(null);
+      }, 2000);
     } catch (err) {
       console.error("Error al validar lote:", err);
       setLoading(false);
+      setActiveAgentNode(null);
     }
   };
 
   const handleSingleClassify = async (docId) => {
     setProcessingId(docId);
+    setActiveAgentNode("classifier");
     try {
       await intelAPI.classify(docId);
       await loadExpedienteData(selectedExpedienteId);
@@ -125,11 +153,13 @@ export default function DocumentIntelligenceTab() {
       console.error("Error en clasificación unitaria:", err);
     } finally {
       setProcessingId(null);
+      setActiveAgentNode(null);
     }
   };
 
   const handleSingleValidate = async (docId) => {
     setProcessingId(docId);
+    setActiveAgentNode("validator");
     try {
       await intelAPI.validate(docId);
       await loadExpedienteData(selectedExpedienteId);
@@ -137,6 +167,7 @@ export default function DocumentIntelligenceTab() {
       console.error("Error en validación unitaria:", err);
     } finally {
       setProcessingId(null);
+      setActiveAgentNode(null);
     }
   };
 
@@ -159,6 +190,158 @@ export default function DocumentIntelligenceTab() {
     }
   };
 
+  const handleSendChatMessage = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || !selectedExpedienteId) return;
+    
+    const userMsg = chatInput;
+    setChatMessages(prev => [...prev, { sender: "user", text: userMsg }]);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const { data } = await intelAPI.chat(selectedExpedienteId, userMsg);
+      setChatMessages(prev => [...prev, { sender: "ai", text: data.response }]);
+    } catch (err) {
+      console.error("Error consultando chatbot:", err);
+      setChatMessages(prev => [...prev, { sender: "ai", text: "Error de comunicación con el Agente de Chat." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleExportReport = () => {
+    if (!selectedExpedienteId || !summary) return;
+    
+    let reportMd = `# 🤖 REPORT EXECUTIVE COMPLIANCE AUDIT\n`;
+    reportMd += `=========================================\n`;
+    reportMd += `Expediente ID: ${selectedExpedienteId}\n`;
+    reportMd += `Fecha de Generación: ${new Date().toLocaleString()}\n`;
+    reportMd += `Semáforo de Estatus: ${summary.traffic_light.toUpperCase()}\n`;
+    reportMd += `Documentos Analizados: ${summary.analyzed_documents} / ${summary.total_documents}\n`;
+    reportMd += `Score Promedio del Expediente: ${summary.average_score || "N/A"}\n`;
+    reportMd += `Alertas (Red Flags) Activas: ${summary.red_flags_count}\n\n`;
+
+    reportMd += `## 📋 Estatus por Documentos\n`;
+    documents.forEach(doc => {
+      reportMd += `- **${doc.filename}**: [${doc.document_type || "No clasificado"}] - Score: ${doc.score?.composite_score || "N/A"}% - Semáforo: ${doc.score?.traffic_light || "N/A"}\n`;
+    });
+
+    reportMd += `\n## 🚨 Alertas Detectadas (Red Flags)\n`;
+    if (redFlags.length === 0) {
+      reportMd += `✓ No se detectaron alertas críticas de cumplimiento en el expediente.\n`;
+    } else {
+      redFlags.forEach(f => {
+        reportMd += `- [${f.rule_code}] **${f.filename}**: ${f.findings} (Severidad: ${f.severity})\n`;
+      });
+    }
+
+    reportMd += `\n## 🔗 Análisis de Cruces Transversales\n`;
+    if (crossRefs.length === 0) {
+      reportMd += `* Sin cruces de datos disponibles.\n`;
+    } else {
+      crossRefs.forEach(c => {
+        reportMd += `- [${c.cross_reference_type}] **${c.status.toUpperCase()}**: ${c.details}\n`;
+      });
+    }
+
+    reportMd += `\n=========================================\n`;
+    reportMd += `NSD International Finance - Platform compliance Audit`;
+
+    const blob = new Blob([reportMd], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `NSD-Reporte-Ejecutivo-${selectedExpedienteId.slice(0, 8)}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Simulador / Sandbox Handler
+  const handleSimulateCase = (caseType) => {
+    if (caseType === "reset") {
+      loadExpedienteData(selectedExpedienteId);
+      return;
+    }
+
+    let simulatedDocs = [...documents];
+    let simulatedSummary = { ...summary };
+    let simulatedFlags = [...redFlags];
+    let simulatedCross = [...crossRefs];
+
+    if (caseType === "suspended_csf") {
+      // Inyectar alerta de estatus inactivo
+      simulatedSummary.traffic_light = "red";
+      simulatedSummary.red_flags_count += 1;
+      
+      const csfDoc = simulatedDocs.find(d => d.document_type === 'RFC_CSF') || simulatedDocs[0];
+      if (csfDoc) {
+        csfDoc.score = {
+          ...csfDoc.score,
+          traffic_light: "red",
+          composite_score: 45,
+          authenticity_score: 30
+        };
+      }
+
+      simulatedFlags.push({
+        filename: csfDoc ? csfDoc.filename : "CSF.pdf",
+        rule_code: "CSF_ESTATUS_ACTIVO",
+        findings: "La CSF no indica estatus ACTIVO (Contribuyente en estatus SUSPENDIDO temporalmente)",
+        severity: "critical"
+      });
+    }
+
+    if (caseType === "altered_pdf") {
+      simulatedSummary.traffic_light = "red";
+      simulatedSummary.red_flags_count += 2;
+
+      const ineDoc = simulatedDocs.find(d => d.document_type === 'INE_FRENTE') || simulatedDocs[0];
+      if (ineDoc) {
+        ineDoc.score = {
+          ...ineDoc.score,
+          traffic_light: "red",
+          composite_score: 35,
+          authenticity_score: 10
+        };
+      }
+
+      simulatedFlags.push({
+        filename: ineDoc ? ineDoc.filename : "Identificacion.pdf",
+        rule_code: "FRAUD_METADATA_EDIT",
+        findings: "Metadatos sospechosos detectados: El archivo fue modificado con software de edición (Adobe Photoshop CC). Fechas inconsistentes.",
+        severity: "critical"
+      });
+    }
+
+    if (caseType === "unbalanced_balance") {
+      simulatedSummary.traffic_light = "yellow";
+      simulatedSummary.red_flags_count += 1;
+
+      const edosDoc = simulatedDocs.find(d => d.document_type === 'EDOS_FINANCIEROS') || simulatedDocs[0];
+      if (edosDoc) {
+        edosDoc.score = {
+          ...edosDoc.score,
+          traffic_light: "yellow",
+          composite_score: 60,
+          consistency_score: 40
+        };
+      }
+
+      simulatedFlags.push({
+        filename: edosDoc ? edosDoc.filename : "EstadosFinancieros.xlsx",
+        rule_code: "BALANCE_CUADRA",
+        findings: "La ecuación contable no cuadra: Activo ($15,400,000) vs Pasivo + Capital ($16,200,000). Diferencia: $800,000",
+        severity: "error"
+      });
+    }
+
+    setDocuments(simulatedDocs);
+    setSummary(simulatedSummary);
+    setRedFlags(simulatedFlags);
+  };
+
   const getTrafficLightColor = (light) => {
     if (light === "green") return "#2E7D32";
     if (light === "yellow") return "#F2C94C";
@@ -166,7 +349,6 @@ export default function DocumentIntelligenceTab() {
     return "#BDBDBD";
   };
 
-  // Porcentaje estimado de la métrica dentro de su escala
   const getProgressPercentage = (val, min, max) => {
     if (val === null || val === undefined) return 0;
     const v = parseFloat(val);
@@ -257,6 +439,115 @@ export default function DocumentIntelligenceTab() {
             >
               {t('intel.validateAll')}
             </button>
+            <button
+              onClick={handleExportReport}
+              disabled={!selectedExpedienteId || !summary}
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.3)",
+                padding: "0.6rem 1.2rem",
+                borderRadius: "8px",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+            >
+              {t('intel.exportReport')}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Visualizador de Orquestación de Agentes IA */}
+      <div style={{
+        background: "#0F1F2E",
+        borderRadius: "12px",
+        padding: "1.5rem",
+        color: "white",
+        boxShadow: COLORS.shadowSm
+      }}>
+        <h4 style={{ margin: "0 0 1rem 0", fontSize: "1rem", color: COLORS.gold, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          🤖 {t('intel.flowTitle')}
+        </h4>
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem"
+        }}>
+          {/* Node 1: Classifier */}
+          <div style={{
+            flex: 1,
+            minWidth: "150px",
+            background: activeAgentNode === "classifier" ? "rgba(242, 201, 76, 0.2)" : "rgba(255,255,255,0.05)",
+            border: `2px solid ${activeAgentNode === "classifier" ? COLORS.gold : "rgba(255,255,255,0.1)"}`,
+            borderRadius: "8px",
+            padding: "1rem",
+            textAlign: "center",
+            boxShadow: activeAgentNode === "classifier" ? "0 0 15px rgba(242,201,76,0.4)" : "none",
+            transition: "all 0.3s ease"
+          }}>
+            <div style={{ fontSize: "1.2rem", marginBottom: "0.25rem" }}>📁</div>
+            <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>{t('intel.flowClassifier')}</div>
+            <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.25rem" }}>OCR & Triage</div>
+          </div>
+
+          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: "1.5rem" }}>➔</div>
+
+          {/* Node 2: Validator */}
+          <div style={{
+            flex: 1,
+            minWidth: "150px",
+            background: activeAgentNode === "validator" ? "rgba(242, 201, 76, 0.2)" : "rgba(255,255,255,0.05)",
+            border: `2px solid ${activeAgentNode === "validator" ? COLORS.gold : "rgba(255,255,255,0.1)"}`,
+            borderRadius: "8px",
+            padding: "1rem",
+            textAlign: "center",
+            boxShadow: activeAgentNode === "validator" ? "0 0 15px rgba(242,201,76,0.4)" : "none",
+            transition: "all 0.3s ease"
+          }}>
+            <div style={{ fontSize: "1.2rem", marginBottom: "0.25rem" }}>🛡️</div>
+            <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>{t('intel.flowValidator')}</div>
+            <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.25rem" }}>Rules & Anti-fraud</div>
+          </div>
+
+          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: "1.5rem" }}>➔</div>
+
+          {/* Node 3: Financial */}
+          <div style={{
+            flex: 1,
+            minWidth: "150px",
+            background: activeAgentNode === "financial" ? "rgba(242, 201, 76, 0.2)" : "rgba(255,255,255,0.05)",
+            border: `2px solid ${activeAgentNode === "financial" ? COLORS.gold : "rgba(255,255,255,0.1)"}`,
+            borderRadius: "8px",
+            padding: "1rem",
+            textAlign: "center",
+            boxShadow: activeAgentNode === "financial" ? "0 0 15px rgba(242,201,76,0.4)" : "none",
+            transition: "all 0.3s ease"
+          }}>
+            <div style={{ fontSize: "1.2rem", marginBottom: "0.25rem" }}>📈</div>
+            <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>{t('intel.flowFinancial')}</div>
+            <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.25rem" }}>Ratios & Benchmarks</div>
+          </div>
+
+          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: "1.5rem" }}>➔</div>
+
+          {/* Node 4: CrossRef */}
+          <div style={{
+            flex: 1,
+            minWidth: "150px",
+            background: activeAgentNode === "cross" ? "rgba(242, 201, 76, 0.2)" : "rgba(255,255,255,0.05)",
+            border: `2px solid ${activeAgentNode === "cross" ? COLORS.gold : "rgba(255,255,255,0.1)"}`,
+            borderRadius: "8px",
+            padding: "1rem",
+            textAlign: "center",
+            boxShadow: activeAgentNode === "cross" ? "0 0 15px rgba(242,201,76,0.4)" : "none",
+            transition: "all 0.3s ease"
+          }}>
+            <div style={{ fontSize: "1.2rem", marginBottom: "0.25rem" }}>🔗</div>
+            <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>{t('intel.flowCrossRef')}</div>
+            <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.25rem" }}>Identity Crosscheck</div>
           </div>
         </div>
       </div>
@@ -639,6 +930,86 @@ export default function DocumentIntelligenceTab() {
         </div>
       )}
 
+      {/* Dossier Chatbot Component */}
+      <div style={{
+        background: COLORS.white,
+        borderRadius: "12px",
+        border: `1px solid ${COLORS.border}`,
+        padding: "1.5rem",
+        boxShadow: COLORS.shadowSm,
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem"
+      }}>
+        <h3 style={{ fontSize: "1.1rem", color: COLORS.navy, fontWeight: "700", margin: 0 }}>
+          {t('intel.chatTitle')}
+        </h3>
+        
+        <div style={{
+          height: "250px",
+          overflowY: "auto",
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: "8px",
+          padding: "1rem",
+          background: "#F9FBFD",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.75rem"
+        }}>
+          {chatMessages.map((msg, index) => (
+            <div key={index} style={{
+              alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
+              background: msg.sender === "user" ? COLORS.navy : "#ECEFF1",
+              color: msg.sender === "user" ? "white" : COLORS.navy,
+              padding: "0.6rem 1rem",
+              borderRadius: "12px",
+              maxWidth: "80%",
+              fontSize: "0.85rem",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+            }}>
+              {msg.text}
+            </div>
+          ))}
+          {chatLoading && (
+            <div style={{ alignSelf: "flex-start", color: COLORS.textMuted, fontSize: "0.8rem", fontStyle: "italic" }}>
+              {t('intel.chatLoading')}
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSendChatMessage} style={{ display: "flex", gap: "0.5rem" }}>
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder={t('intel.chatPlaceholder')}
+            style={{
+              flex: 1,
+              padding: "0.6rem 1rem",
+              borderRadius: "8px",
+              border: `1px solid ${COLORS.border}`,
+              fontSize: "0.85rem",
+              outline: "none"
+            }}
+          />
+          <button
+            type="submit"
+            disabled={chatLoading || !chatInput.trim()}
+            style={{
+              background: COLORS.navy,
+              color: "white",
+              border: "none",
+              padding: "0.6rem 1.2rem",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer"
+            }}
+          >
+            {t('intel.chatSend')}
+          </button>
+        </form>
+      </div>
+
       {/* Red Flags & Bitácora de Agentes */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "2rem" }}>
         
@@ -712,6 +1083,82 @@ export default function DocumentIntelligenceTab() {
         </div>
 
       </div>
+
+      {/* Simulator Playground Panel */}
+      <div style={{
+        background: "#F5F7FA",
+        borderRadius: "12px",
+        padding: "1.5rem",
+        border: `2px dashed ${COLORS.gold}`,
+        boxShadow: COLORS.shadowSm
+      }}>
+        <h3 style={{ fontSize: "1.1rem", color: COLORS.navy, fontWeight: "700", margin: "0 0 1rem 0" }}>
+          {t('intel.sandboxTitle')}
+        </h3>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          <button
+            onClick={() => handleSimulateCase("suspended_csf")}
+            style={{
+              padding: "0.6rem 1rem",
+              background: COLORS.white,
+              border: `1px solid ${COLORS.navy}`,
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: "600",
+              color: COLORS.navy
+            }}
+          >
+            ⚠️ {t('intel.sandboxOption1')}
+          </button>
+          <button
+            onClick={() => handleSimulateCase("altered_pdf")}
+            style={{
+              padding: "0.6rem 1rem",
+              background: COLORS.white,
+              border: `1px solid ${COLORS.navy}`,
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: "600",
+              color: COLORS.navy
+            }}
+          >
+            ⚠️ {t('intel.sandboxOption2')}
+          </button>
+          <button
+            onClick={() => handleSimulateCase("unbalanced_balance")}
+            style={{
+              padding: "0.6rem 1rem",
+              background: COLORS.white,
+              border: `1px solid ${COLORS.navy}`,
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: "600",
+              color: COLORS.navy
+            }}
+          >
+            ⚠️ {t('intel.sandboxOption3')}
+          </button>
+          <button
+            onClick={() => handleSimulateCase("reset")}
+            style={{
+              padding: "0.6rem 1rem",
+              background: COLORS.gold,
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: "700",
+              color: COLORS.navy
+            }}
+          >
+            🔄 {t('intel.sandboxReset')}
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 }
