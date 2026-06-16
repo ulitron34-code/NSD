@@ -28,6 +28,38 @@ export default function DocumentIntelligenceTab() {
   // Flowchart animation state
   const [activeAgentNode, setActiveAgentNode] = useState(null); // 'classifier', 'validator', 'financial', 'cross'
 
+  // NEW: Consent & Signature State
+  const [hasConsented, setHasConsented] = useState(() => {
+    return localStorage.getItem("intel_consent") === "true";
+  });
+  const [consentChecks, setConsentChecks] = useState({ terms: false, ai: false, data: false });
+  const [sigName, setSigName] = useState("");
+
+  // NEW: Rules Management State
+  const [jurisdiction, setJurisdiction] = useState("MX");
+  const [activeRules, setActiveRules] = useState({
+    RFC_FORMAT: true,
+    CURP_FORMAT: true,
+    CSF_ESTATUS_ACTIVO: true,
+    OPINION_32D_POSITIVA: true,
+    NUMEROS_REDONDOS: true,
+    FRAUD_METADATA_EDIT: true,
+    BENCHMARK_MARGEN_NETO: true,
+    BENCHMARK_APALANCAMIENTO: true,
+    BENCHMARK_DSCR: true,
+  });
+
+  // NEW: Stripe Simulation State
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [stripePlan, setStripePlan] = useState(null);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCVC, setCardCVC] = useState("");
+  const [billingSuccess, setBillingSuccess] = useState(false);
+  const [activeSubscription, setActiveSubscription] = useState(() => {
+    return localStorage.getItem("intel_subscription") || "Básico";
+  });
+
   // Cargar lista de expedientes al iniciar
   useEffect(() => {
     async function loadExpedientes() {
@@ -53,6 +85,48 @@ export default function DocumentIntelligenceTab() {
       { sender: "ai", text: "Hola. Estoy listo para auditar este expediente. Pregúntame lo que necesites sobre los documentos." }
     ]);
   }, [selectedExpedienteId]);
+
+  // Adjust rules dynamically based on selected jurisdiction
+  useEffect(() => {
+    if (jurisdiction === "US") {
+      setActiveRules({
+        RFC_FORMAT: false,
+        CURP_FORMAT: false,
+        CSF_ESTATUS_ACTIVO: false,
+        OPINION_32D_POSITIVA: false,
+        NUMEROS_REDONDOS: true,
+        FRAUD_METADATA_EDIT: true,
+        BENCHMARK_MARGEN_NETO: true,
+        BENCHMARK_APALANCAMIENTO: true,
+        BENCHMARK_DSCR: true,
+      });
+    } else if (jurisdiction === "INT") {
+      setActiveRules({
+        RFC_FORMAT: false,
+        CURP_FORMAT: false,
+        CSF_ESTATUS_ACTIVO: false,
+        OPINION_32D_POSITIVA: false,
+        NUMEROS_REDONDOS: false,
+        FRAUD_METADATA_EDIT: true,
+        BENCHMARK_MARGEN_NETO: true,
+        BENCHMARK_APALANCAMIENTO: true,
+        BENCHMARK_DSCR: true,
+      });
+    } else {
+      // MX defaults
+      setActiveRules({
+        RFC_FORMAT: true,
+        CURP_FORMAT: true,
+        CSF_ESTATUS_ACTIVO: true,
+        OPINION_32D_POSITIVA: true,
+        NUMEROS_REDONDOS: true,
+        FRAUD_METADATA_EDIT: true,
+        BENCHMARK_MARGEN_NETO: true,
+        BENCHMARK_APALANCAMIENTO: true,
+        BENCHMARK_DSCR: true,
+      });
+    }
+  }, [jurisdiction]);
 
   const loadExpedienteData = async (expedienteId) => {
     setLoading(true);
@@ -176,7 +250,10 @@ export default function DocumentIntelligenceTab() {
     setSelectedDocMetrics(null);
     try {
       const { data } = await intelAPI.getVerifications(doc.id);
-      setDocVerifications(data || []);
+      
+      // Filter based on active rules set by the manager panel
+      const filtered = (data || []).filter(v => activeRules[v.rule_code] !== false);
+      setDocVerifications(filtered);
 
       if (doc.document_type === 'EDOS_FINANCIEROS') {
         const { data: extData } = await intelAPI.getExtraction(doc.id);
@@ -216,6 +293,8 @@ export default function DocumentIntelligenceTab() {
     let reportMd = `# 🤖 REPORT EXECUTIVE COMPLIANCE AUDIT\n`;
     reportMd += `=========================================\n`;
     reportMd += `Expediente ID: ${selectedExpedienteId}\n`;
+    reportMd += `Jurisdicción: ${jurisdiction}\n`;
+    reportMd += `Plan de Suscripción: ${activeSubscription}\n`;
     reportMd += `Fecha de Generación: ${new Date().toLocaleString()}\n`;
     reportMd += `Semáforo de Estatus: ${summary.traffic_light.toUpperCase()}\n`;
     reportMd += `Documentos Analizados: ${summary.analyzed_documents} / ${summary.total_documents}\n`;
@@ -258,6 +337,39 @@ export default function DocumentIntelligenceTab() {
     document.body.removeChild(link);
   };
 
+  // Rule Toggle Switch
+  const toggleRule = (ruleKey) => {
+    setActiveRules(prev => ({
+      ...prev,
+      [ruleKey]: !prev[ruleKey]
+    }));
+  };
+
+  // Consent Form Submit
+  const handleConsentSubmit = (e) => {
+    e.preventDefault();
+    if (consentChecks.terms && consentChecks.ai && consentChecks.data && sigName.trim()) {
+      localStorage.setItem("intel_consent", "true");
+      localStorage.setItem("intel_consent_signature", sigName);
+      setHasConsented(true);
+    }
+  };
+
+  // Stripe checkout processing
+  const handleStripePay = (e) => {
+    e.preventDefault();
+    setBillingSuccess(true);
+    setTimeout(() => {
+      localStorage.setItem("intel_subscription", stripePlan.name);
+      setActiveSubscription(stripePlan.name);
+      setShowStripeModal(false);
+      setBillingSuccess(false);
+      setCardNumber("");
+      setCardExpiry("");
+      setCardCVC("");
+    }, 2000);
+  };
+
   // Simulador / Sandbox Handler
   const handleSimulateCase = (caseType) => {
     if (caseType === "reset") {
@@ -268,10 +380,8 @@ export default function DocumentIntelligenceTab() {
     let simulatedDocs = [...documents];
     let simulatedSummary = { ...summary };
     let simulatedFlags = [...redFlags];
-    let simulatedCross = [...crossRefs];
 
     if (caseType === "suspended_csf") {
-      // Inyectar alerta de estatus inactivo
       simulatedSummary.traffic_light = "red";
       simulatedSummary.red_flags_count += 1;
       
@@ -342,24 +452,224 @@ export default function DocumentIntelligenceTab() {
     setRedFlags(simulatedFlags);
   };
 
-  const getTrafficLightColor = (light) => {
-    if (light === "green") return "#2E7D32";
-    if (light === "yellow") return "#F2C94C";
-    if (light === "red") return "#C62828";
-    return "#BDBDBD";
-  };
+  // Render Privacy Consent Gate
+  if (!hasConsented) {
+    return (
+      <div style={{
+        maxWidth: "680px",
+        margin: "2rem auto",
+        background: "white",
+        borderRadius: "16px",
+        padding: "2.5rem",
+        boxShadow: "0 10px 30px rgba(27,58,92,0.1)",
+        border: `1px solid ${COLORS.border}`
+      }}>
+        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <span style={{ fontSize: "3rem" }}>🔒</span>
+          <h2 style={{ color: COLORS.navy, margin: "1rem 0 0.5rem 0", fontWeight: "800" }}>Consentimiento de Privacidad y Auditoría</h2>
+          <p style={{ color: COLORS.textMuted, fontSize: "0.9rem" }}>Es obligatorio firmar de conformidad para habilitar las auditorías asistidas por Agentes IA de cumplimiento.</p>
+        </div>
 
-  const getProgressPercentage = (val, min, max) => {
-    if (val === null || val === undefined) return 0;
-    const v = parseFloat(val);
-    const range = max - min;
-    if (range <= 0) return 0;
-    const pct = ((v - min) / range) * 100;
-    return Math.max(0, Math.min(100, pct));
-  };
+        <form onSubmit={handleConsentSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+          <label style={{ display: "flex", gap: "0.8rem", cursor: "pointer", fontSize: "0.88rem", color: COLORS.text }}>
+            <input
+              type="checkbox"
+              checked={consentChecks.terms}
+              onChange={(e) => setConsentChecks(prev => ({ ...prev, terms: e.target.checked }))}
+              style={{ marginTop: "3px" }}
+              required
+            />
+            Acepto los términos de servicio de NSD Platform y las políticas de retención limitada de documentos.
+          </label>
+
+          <label style={{ display: "flex", gap: "0.8rem", cursor: "pointer", fontSize: "0.88rem", color: COLORS.text }}>
+            <input
+              type="checkbox"
+              checked={consentChecks.ai}
+              onChange={(e) => setConsentChecks(prev => ({ ...prev, ai: e.target.checked }))}
+              style={{ marginTop: "3px" }}
+              required
+            />
+            Entiendo que los análisis son diagnósticos preliminares y que el Agente IA actúa de forma asistida, no sustituyendo el criterio de los otorgantes.
+          </label>
+
+          <label style={{ display: "flex", gap: "0.8rem", cursor: "pointer", fontSize: "0.88rem", color: COLORS.text }}>
+            <input
+              type="checkbox"
+              checked={consentChecks.data}
+              onChange={(e) => setConsentChecks(prev => ({ ...prev, data: e.target.checked }))}
+              style={{ marginTop: "3px" }}
+              required
+            />
+            Autorizo a la plataforma a procesar datos sensibles incluidos en los estados financieros, comprobantes e identificaciones proporcionadas.
+          </label>
+
+          <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            <span style={{ fontSize: "0.8rem", color: COLORS.textMuted, fontWeight: "700" }}>Firma Electrónica (Escribe tu nombre completo):</span>
+            <input
+              type="text"
+              value={sigName}
+              onChange={(e) => setSigName(e.target.value)}
+              placeholder="Ej. Ulises Salgado Díaz"
+              style={{
+                padding: "0.8rem 1rem",
+                borderRadius: "8px",
+                border: `1px solid ${COLORS.border}`,
+                outline: "none",
+                fontSize: "0.95rem"
+              }}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            style={{
+              background: COLORS.navy,
+              color: "white",
+              padding: "1rem",
+              borderRadius: "8px",
+              border: "none",
+              fontWeight: "700",
+              cursor: "pointer",
+              marginTop: "1.5rem",
+              transition: "opacity 0.2s"
+            }}
+          >
+            ✓ Desbloquear Panel de Inteligencia
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      
+      {/* Stripe Payment Simulator Modal */}
+      {showStripeModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(15,31,46,0.6)",
+          zIndex: 1000,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "white",
+            width: "100%",
+            maxWidth: "450px",
+            borderRadius: "16px",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+            padding: "2rem",
+            position: "relative"
+          }}>
+            <button
+              onClick={() => setShowStripeModal(false)}
+              style={{
+                position: "absolute",
+                top: "1.2rem",
+                right: "1.2rem",
+                background: "transparent",
+                border: "none",
+                fontSize: "1.2rem",
+                cursor: "pointer",
+                color: "#6B7280"
+              }}
+            >
+              ✕
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
+              <span style={{ fontSize: "1.5rem" }}>💳</span>
+              <h3 style={{ margin: 0, color: "#1B3A5C" }}>Stripe Checkout Simulator</h3>
+            </div>
+
+            {billingSuccess ? (
+              <div style={{ textAlign: "center", padding: "2rem 0" }}>
+                <span style={{ fontSize: "3rem" }}>🎉</span>
+                <h4 style={{ color: "#2E7D32", margin: "1rem 0 0.5rem 0" }}>¡Pago Completado!</h4>
+                <p style={{ color: COLORS.textMuted, fontSize: "0.85rem" }}>Tu suscripción ha sido actualizada a {stripePlan?.name}.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleStripePay} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ background: "#F3F4F6", padding: "1rem", borderRadius: "8px", marginBottom: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: COLORS.text }}>
+                    <span>Plan a contratar:</span>
+                    <strong>{stripePlan?.name}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: COLORS.text, marginTop: "0.25rem" }}>
+                    <span>Monto a pagar:</span>
+                    <strong>{stripePlan?.price} {stripePlan?.period}</strong>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: COLORS.textMuted, fontWeight: "700" }}>Número de Tarjeta:</span>
+                  <input
+                    type="text"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    placeholder="4242 4242 4242 4242"
+                    maxLength={19}
+                    style={{ padding: "0.6rem", borderRadius: "6px", border: "1px solid #D1D5DB" }}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                    <span style={{ fontSize: "0.75rem", color: COLORS.textMuted, fontWeight: "700" }}>Vencimiento:</span>
+                    <input
+                      type="text"
+                      value={cardExpiry}
+                      onChange={(e) => setCardExpiry(e.target.value)}
+                      placeholder="MM/AA"
+                      maxLength={5}
+                      style={{ padding: "0.6rem", borderRadius: "6px", border: "1px solid #D1D5DB" }}
+                      required
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                    <span style={{ fontSize: "0.75rem", color: COLORS.textMuted, fontWeight: "700" }}>CVC:</span>
+                    <input
+                      type="password"
+                      value={cardCVC}
+                      onChange={(e) => setCardCVC(e.target.value)}
+                      placeholder="123"
+                      maxLength={3}
+                      style={{ padding: "0.6rem", borderRadius: "6px", border: "1px solid #D1D5DB" }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  style={{
+                    background: "#0055FF",
+                    color: "white",
+                    padding: "0.8rem",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    marginTop: "1rem"
+                  }}
+                >
+                  Confirmar Pago Simulado
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header Gradiente con Controles */}
       <div style={{
         background: "linear-gradient(135deg, #0F1F2E 0%, #1E3D59 100%)",
@@ -380,6 +690,11 @@ export default function DocumentIntelligenceTab() {
           <p style={{ opacity: 0.8, fontSize: "0.95rem", marginTop: "0.25rem" }}>
             {t('intel.subtitle')}
           </p>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <span style={{ background: "rgba(255,255,255,0.15)", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.75rem" }}>
+              Plan activo: <strong>{activeSubscription}</strong>
+            </span>
+          </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
@@ -549,6 +864,70 @@ export default function DocumentIntelligenceTab() {
             <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>{t('intel.flowCrossRef')}</div>
             <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.25rem" }}>Identity Crosscheck</div>
           </div>
+        </div>
+      </div>
+
+      {/* Rules Config Panel */}
+      <div style={{
+        background: COLORS.white,
+        borderRadius: "12px",
+        border: `1px solid ${COLORS.border}`,
+        padding: "1.5rem",
+        boxShadow: COLORS.shadowSm
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "center", flexWrap: "wrap", marginBottom: "1rem" }}>
+          <h3 style={{ fontSize: "1.1rem", color: COLORS.navy, fontWeight: "700", margin: 0 }}>
+            ⚙️ Panel de Gestión de Reglas de Cumplimiento
+          </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "0.85rem", color: COLORS.textMuted }}>Jurisdicción:</span>
+            <select
+              value={jurisdiction}
+              onChange={(e) => setJurisdiction(e.target.value)}
+              style={{
+                padding: "0.4rem 0.8rem",
+                borderRadius: "6px",
+                border: `1px solid ${COLORS.border}`,
+                outline: "none"
+              }}
+            >
+              <option value="MX">México (CSF/32-D)</option>
+              <option value="US">USA (General Audit)</option>
+              <option value="INT">Internacional (Fuzzy & Anti-fraud)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+          {Object.entries(activeRules).map(([key, isActive]) => (
+            <div key={key} style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "0.8rem",
+              background: COLORS.bg,
+              borderRadius: "8px",
+              border: `1px solid ${COLORS.border}`
+            }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: "700", color: COLORS.navy }}>{key}</span>
+              <button
+                onClick={() => toggleRule(key)}
+                style={{
+                  background: isActive ? "#2E7D32" : "#9CA3AF",
+                  color: "white",
+                  border: "none",
+                  padding: "0.3rem 0.7rem",
+                  borderRadius: "12px",
+                  fontSize: "0.75rem",
+                  cursor: "pointer",
+                  fontWeight: "700",
+                  transition: "background 0.2s"
+                }}
+              >
+                {isActive ? "Activo" : "Inactivo"}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -1008,6 +1387,62 @@ export default function DocumentIntelligenceTab() {
             {t('intel.chatSend')}
           </button>
         </form>
+      </div>
+
+      {/* Billing Integration & Stripe Section */}
+      <div style={{
+        background: COLORS.white,
+        borderRadius: "12px",
+        border: `1px solid ${COLORS.border}`,
+        padding: "1.5rem",
+        boxShadow: COLORS.shadowSm
+      }}>
+        <h3 style={{ fontSize: "1.1rem", color: COLORS.navy, fontWeight: "700", marginBottom: "1rem" }}>
+          💳 Suscripción de Compliance e Integración de Stripe
+        </h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem" }}>
+          {[
+            { name: "Básico", price: "$299", desc: "Para solicitantes individuales", period: "/mes" },
+            { name: "Profesional", price: "$699", desc: "Para empresas y startups", period: "/mes" },
+            { name: "Empresarial", price: "$899", desc: "Para fondos e instituciones", period: "/mes" }
+          ].map((plan) => (
+            <div key={plan.name} style={{
+              background: COLORS.bg,
+              border: activeSubscription === plan.name ? `2px solid ${COLORS.gold}` : `1px solid ${COLORS.border}`,
+              borderRadius: "10px",
+              padding: "1.2rem",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              boxShadow: activeSubscription === plan.name ? "0 4px 12px rgba(201,168,76,0.15)" : "none"
+            }}>
+              <div>
+                <h4 style={{ margin: "0 0 0.5rem 0", color: COLORS.navy }}>{plan.name}</h4>
+                <p style={{ fontSize: "0.78rem", color: COLORS.textMuted, margin: "0 0 1rem 0" }}>{plan.desc}</p>
+                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: COLORS.navy }}>{plan.price} <span style={{ fontSize: "0.85rem", fontWeight: "normal" }}>{plan.period}</span></div>
+              </div>
+              <button
+                onClick={() => {
+                  setStripePlan(plan);
+                  setShowStripeModal(true);
+                }}
+                disabled={activeSubscription === plan.name}
+                style={{
+                  background: activeSubscription === plan.name ? "#9CA3AF" : COLORS.gold,
+                  color: COLORS.navy,
+                  border: "none",
+                  padding: "0.5rem",
+                  borderRadius: "6px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  marginTop: "1rem"
+                }}
+              >
+                {activeSubscription === plan.name ? "Plan Activo" : "Contratar con Stripe"}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Red Flags & Bitácora de Agentes */}
