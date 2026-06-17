@@ -68,17 +68,8 @@ export function extractFinancialFieldsDeterministically(workbook) {
 // Extracción por IA como fallback
 export async function extractFinancialWithAI(textContent) {
   if (!anthropic) {
-    console.warn("Claude no configurado para AgentFinancial. Retornando valores simulados.");
-    return {
-      activo_total: 15400000,
-      pasivo_total: 8200000,
-      capital_contable: 7200000,
-      ingresos_netos: 5500000,
-      utilidad_neta: 890000,
-      ebitda: 1200000,
-      dscr: 1.83,
-      apalancamiento: 1.14
-    };
+    console.warn("ANTHROPIC_API_KEY no configurada: AgentFinancial omite la extracción por IA (sin datos simulados).");
+    return null;
   }
 
   try {
@@ -108,7 +99,7 @@ export async function extractFinancialWithAI(textContent) {
     ${textContent.slice(0, 15000)}`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-6',
       max_tokens: 500,
       messages: [
         { role: 'user', content: prompt }

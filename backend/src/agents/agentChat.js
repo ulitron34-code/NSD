@@ -41,25 +41,15 @@ export async function chatWithExpediente(expedienteId, message) {
   }
 
   if (!anthropic) {
-    // Fallback inteligente simulado
-    const msgLower = String(message).toLowerCase();
-    let response = "";
-
-    if (msgLower.includes("representante") || msgLower.includes("firma") || msgLower.includes("apoderado")) {
-      response = "Según el análisis cruzado de documentos: Se detectó en el Acta Constitutiva al representante legal principal. La firma del balance de los Estados Financieros coincide en un 85% con el representante legal registrado.";
-    } else if (msgLower.includes("rfc") || msgLower.includes("situacion fiscal")) {
-      response = "La Constancia de Situación Fiscal (CSF) se encuentra en estatus ACTIVO. El RFC del contribuyente coincide plenamente entre la CSF y el Acta Constitutiva.";
-    } else if (msgLower.includes("domicilio") || msgLower.includes("calle") || msgLower.includes("direccion")) {
-      response = "El Código Postal (CP) coincide exactamente entre la CSF y el Comprobante de Domicilio. La dirección física presenta un 88% de coincidencia fuzzy en calle y número.";
-    } else if (msgLower.includes("alerta") || msgLower.includes("red flag") || msgLower.includes("fraude")) {
-      response = "No se detectaron alteraciones críticas en los metadatos de los PDFs analizados. Todos los archivos indican firmas y productores confiables sin discrepancias temporales.";
-    } else if (msgLower.includes("dscr") || msgLower.includes("ebitda") || msgLower.includes("financiero")) {
-      response = "El Margen EBITDA calculado es de 21.8%, el DSCR es de 1.83x y la Razón de Apalancamiento es de 1.14. Todos estos indicadores se sitúan dentro de los rangos óptimos de salud financiera recomendados para su sector.";
-    } else {
-      response = `Analicé los documentos de tu expediente. Puedo confirmarte que el estatus general es saludable, la CSF está activa, y los cruces de RFC y domicilio son congruentes. ¿Tienes alguna pregunta más específica sobre el balance financiero o el representante legal?`;
-    }
-
-    return { response };
+    // Sin ANTHROPIC_API_KEY configurada no hay forma de leer los documentos
+    // reales del expediente. Antes este fallback respondía con cifras
+    // inventadas (DSCR, EBITDA, % de coincidencia) como si fueran del
+    // análisis real — se reemplaza por un aviso explícito, igual al patrón
+    // que ya usa aiEngine.js para sus fallbacks simulados.
+    return {
+      response: "[Modo simulado] El motor de IA (ANTHROPIC_API_KEY) no está configurado en este entorno, así que no puedo leer ni analizar los documentos reales de este expediente. Consulta directamente las pestañas de Validación, Score y Red Flags para ver los datos extraídos por los agentes, o configura la API key para habilitar el chatbot con análisis real.",
+      simulated: true
+    };
   }
 
   try {
@@ -76,7 +66,7 @@ export async function chatWithExpediente(expedienteId, message) {
     Respuesta (sé conciso y directo, estructurado con viñetas si es necesario):`;
 
     const chatResponse = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-6',
       max_tokens: 800,
       messages: [
         { role: 'user', content: prompt }
