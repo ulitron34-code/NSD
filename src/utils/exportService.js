@@ -5,6 +5,7 @@
 
 import { uiText } from './runtimeCopy';
 import { apiLogger } from './logger';
+import { escapeHtml as esc } from './htmlEscape';
 
 /**
  * Convert data to CSV format
@@ -84,7 +85,7 @@ export function exportToPDF(reportData, filename, options = {}) {
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>${title}</title>
+      <title>${esc(title)}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; color: #1E293B; }
@@ -108,32 +109,32 @@ export function exportToPDF(reportData, filename, options = {}) {
     </head>
     <body>
       <div class="header">
-        <h1>${title}</h1>
-        ${subtitle ? `<div class="subtitle">${subtitle}</div>` : ''}
-        <div class="date">Generado: ${date}</div>
+        <h1>${esc(title)}</h1>
+        ${subtitle ? `<div class="subtitle">${esc(subtitle)}</div>` : ''}
+        <div class="date">Generado: ${esc(date)}</div>
       </div>
-      
+
       ${reportData.table ? `
         <table>
           <thead>
-            <tr>${reportData.table.headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            <tr>${reportData.table.headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr>
           </thead>
           <tbody>
             ${reportData.table.rows.map(row => `
-              <tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>
+              <tr>${row.map(cell => `<td>${esc(cell)}</td>`).join('')}</tr>
             `).join('')}
           </tbody>
         </table>
       ` : ''}
-      
+
       ${reportData.summary ? `
         <div class="summary">
           <h3>Resumen / Summary</h3>
           <div class="summary-grid">
             ${reportData.summary.map(item => `
               <div class="summary-item">
-                <div class="value">${item.value}</div>
-                <div class="label">${item.label}</div>
+                <div class="value">${esc(item.value)}</div>
+                <div class="label">${esc(item.label)}</div>
               </div>
             `).join('')}
           </div>

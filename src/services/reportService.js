@@ -1,4 +1,5 @@
 import { error, debug, info, warn } from '../utils/logger';
+import { escapeHtml as esc } from '../utils/htmlEscape';
 // ============================================
 // GENERADOR DE REPORTES
 // Crea PDF/HTML/Markdown de expedientes
@@ -239,8 +240,8 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
     <div class="header">
       <h1>Reporte de Expediente</h1>
       <div class="meta">
-        <p>Generado: ${timestamp}</p>
-        <p>ID: ${reportId}</p>
+        <p>Generado: ${esc(timestamp)}</p>
+        <p>ID: ${esc(reportId)}</p>
       </div>
     </div>
 
@@ -250,27 +251,27 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
       <div class="info-grid">
         <div class="info-item">
           <div class="info-label">Proyecto</div>
-          <div class="info-value">${expedient?.name || 'N/A'}</div>
+          <div class="info-value">${esc(expedient?.name) || 'N/A'}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Solicitante</div>
-          <div class="info-value">${expedient?.applicant || 'N/A'}</div>
+          <div class="info-value">${esc(expedient?.applicant) || 'N/A'}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Sector</div>
-          <div class="info-value">${expedient?.sector || 'N/A'}</div>
+          <div class="info-value">${esc(expedient?.sector) || 'N/A'}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Monto Solicitado</div>
-          <div class="info-value">${expedient?.amountLabel || 'N/A'}</div>
+          <div class="info-value">${esc(expedient?.amountLabel) || 'N/A'}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Riesgo</div>
-          <div class="info-value">${expedient?.risk || 'N/A'}</div>
+          <div class="info-value">${esc(expedient?.risk) || 'N/A'}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Estado</div>
-          <div class="info-value">${expedient?.status || 'N/A'}</div>
+          <div class="info-value">${esc(expedient?.status) || 'N/A'}</div>
         </div>
       </div>
     </div>
@@ -282,16 +283,16 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
       <div class="score-card">
         <div>Puntuación Total</div>
         <div class="score-value">${score.totalScore}/100</div>
-        <span class="score-status ${score.status.toLowerCase()}">${score.status}</span>
+        <span class="score-status ${esc(score.status.toLowerCase())}">${esc(score.status)}</span>
       </div>
       <div class="breakdown">
         ${score.breakdown.map(item => `
         <div class="breakdown-item">
-          <div class="breakdown-category">${item.category}</div>
+          <div class="breakdown-category">${esc(item.category)}</div>
           <div class="breakdown-score">${item.earned}/${item.weight}</div>
         </div>
         <div style="grid-column: 1/-1;">
-          <small style="color: #666;">${item.detail}</small>
+          <small style="color: #666;">${esc(item.detail)}</small>
           <div class="progress-bar">
             <div class="progress-fill" style="width: ${(item.earned / item.weight) * 100}%"></div>
           </div>
@@ -302,7 +303,7 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
       <div class="next-steps">
         <h3>📌 Próximos Pasos</h3>
         <ul>
-          ${score.nextActions.map(action => `<li>${action}</li>`).join('')}
+          ${score.nextActions.map(action => `<li>${esc(action)}</li>`).join('')}
         </ul>
       </div>
       ` : ''}
@@ -316,12 +317,12 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
       <div class="document-list">
         ${documents.map(doc => `
         <div class="document-item">
-          <strong>${doc.filename || doc.name}</strong>
+          <strong>${esc(doc.filename || doc.name)}</strong>
           <span class="document-status ${doc.status === 'approved' ? 'status-approved' : 'status-pending'}">
             ${doc.status === 'approved' ? 'Aprobado' : 'Pendiente'}
           </span>
           <br/>
-          <small style="color: #666;">Riesgo: ${doc.risk || 'N/A'} | Revisor: ${doc.reviewer || 'N/A'}</small>
+          <small style="color: #666;">Riesgo: ${esc(doc.risk) || 'N/A'} | Revisor: ${esc(doc.reviewer) || 'N/A'}</small>
         </div>
         `).join('')}
       </div>
@@ -335,12 +336,12 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
       <div class="document-list">
         ${requirements.map(req => `
         <div class="document-item">
-          <strong>${req.title}</strong>
+          <strong>${esc(req.title)}</strong>
           <span class="document-status ${req.status === 'approved' ? 'status-approved' : 'status-pending'}">
             ${req.status === 'approved' ? 'Aprobado' : 'Pendiente'}
           </span>
           <br/>
-          <small style="color: #666;">Prioridad: ${req.priority || 'normal'} | Creado: ${new Date(req.createdAt).toLocaleDateString('es-MX')}</small>
+          <small style="color: #666;">Prioridad: ${esc(req.priority) || 'normal'} | Creado: ${new Date(req.createdAt).toLocaleDateString('es-MX')}</small>
           ${req.dueDate ? `<br/><small style="color: #666;">Vencimiento: ${new Date(req.dueDate).toLocaleDateString('es-MX')}</small>` : ''}
         </div>
         `).join('')}

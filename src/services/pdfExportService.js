@@ -1,4 +1,5 @@
 import { error, debug, info, warn } from '../utils/logger';
+import { escapeHtml as esc } from '../utils/htmlEscape';
 // ============================================
 // SERVICIO DE EXPORTACIÓN A PDF
 // Genera PDFs profesionales de expedientes
@@ -12,7 +13,7 @@ export async function generateExpedientePDF(expediente, requirements, documents,
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>${expediente.title}</title>
+          <title>${esc(expediente.title)}</title>
           <style>
             body {
               font-family: Arial, sans-serif;
@@ -161,8 +162,8 @@ export async function generateExpedientePDF(expediente, requirements, documents,
         </head>
         <body>
           <div class="header">
-            <h1>${expediente.title}</h1>
-            <p>ID: ${expediente.id}</p>
+            <h1>${esc(expediente.title)}</h1>
+            <p>ID: ${esc(expediente.id)}</p>
             <p>Generado: ${new Date().toLocaleDateString('es-MX')}</p>
           </div>
 
@@ -172,11 +173,11 @@ export async function generateExpedientePDF(expediente, requirements, documents,
             <div class="info-grid">
               <div class="info-item">
                 <div class="info-label">Solicitante</div>
-                <div class="info-value">${expediente.solicitanteName}</div>
+                <div class="info-value">${esc(expediente.solicitanteName)}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Otorgante</div>
-                <div class="info-value">${expediente.otorganteName}</div>
+                <div class="info-value">${esc(expediente.otorganteName)}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Monto</div>
@@ -184,13 +185,13 @@ export async function generateExpedientePDF(expediente, requirements, documents,
               </div>
               <div class="info-item">
                 <div class="info-label">Sector</div>
-                <div class="info-value">${expediente.sector}</div>
+                <div class="info-value">${esc(expediente.sector)}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Estado</div>
                 <div class="info-value">
-                  <span class="status-badge status-${expediente.status}">
-                    ${expediente.status}
+                  <span class="status-badge status-${esc(expediente.status)}">
+                    ${esc(expediente.status)}
                   </span>
                 </div>
               </div>
@@ -240,9 +241,9 @@ export async function generateExpedientePDF(expediente, requirements, documents,
                 <tbody>
                   ${documents.map(doc => `
                     <tr>
-                      <td>${doc.fileName}</td>
-                      <td>${doc.documentType || '-'}</td>
-                      <td><span class="status-badge status-${doc.status}">${doc.status}</span></td>
+                      <td>${esc(doc.fileName)}</td>
+                      <td>${esc(doc.documentType) || '-'}</td>
+                      <td><span class="status-badge status-${esc(doc.status)}">${esc(doc.status)}</span></td>
                       <td>${new Date(doc.uploadedAt).toLocaleDateString('es-MX')}</td>
                     </tr>
                   `).join('')}
@@ -267,9 +268,9 @@ export async function generateExpedientePDF(expediente, requirements, documents,
                 <tbody>
                   ${requirements.map(req => `
                     <tr>
-                      <td>${req.title}</td>
-                      <td>${req.priority}</td>
-                      <td><span class="status-badge status-${req.status}">${req.status}</span></td>
+                      <td>${esc(req.title)}</td>
+                      <td>${esc(req.priority)}</td>
+                      <td><span class="status-badge status-${esc(req.status)}">${esc(req.status)}</span></td>
                       <td>${req.dueDate ? new Date(req.dueDate).toLocaleDateString('es-MX') : '-'}</td>
                     </tr>
                   `).join('')}
@@ -283,7 +284,7 @@ export async function generateExpedientePDF(expediente, requirements, documents,
             <h2>Actividad Reciente</h2>
             ${messages.length > 0 ? messages.slice(0, 5).map(msg => `
               <div class="activity-item">
-                <strong>${msg.fromUserName}:</strong> ${msg.body}
+                <strong>${esc(msg.fromUserName)}:</strong> ${esc(msg.body)}
                 <div class="activity-time">${new Date(msg.createdAt).toLocaleDateString('es-MX')} ${new Date(msg.createdAt).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'})}</div>
               </div>
             `).join('') : '<p>Sin actividad reciente</p>'}
@@ -331,7 +332,7 @@ export function generateExpedientePDFWithCharts(expediente, requirements) {
     <html>
       <head>
         <meta charset="UTF-8">
-        <title>${expediente.title}</title>
+        <title>${esc(expediente.title)}</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
         <style>
           body {
@@ -349,8 +350,8 @@ export function generateExpedientePDFWithCharts(expediente, requirements) {
         </style>
       </head>
       <body>
-        <h1>${expediente.title}</h1>
-        <p>ID: ${expediente.id}</p>
+        <h1>${esc(expediente.title)}</h1>
+        <p>ID: ${esc(expediente.id)}</p>
 
         <h2>Estado de Requerimientos</h2>
         <div class="chart-container">
