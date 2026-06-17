@@ -29,7 +29,8 @@
     "smoke": "node scripts/smoke-test-flow.js",
     "smoke:ocr": "node scripts/smoke-ocr.js",
     "test:regulators": "node scripts/test-regulatory-api-connections.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -51,5 +52,8 @@
     "tesseract.js": "^7.0.0",
     "ws": "^8.20.1",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.9"
   }
 }
