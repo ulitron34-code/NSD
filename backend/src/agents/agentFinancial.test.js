@@ -14,7 +14,9 @@ vi.mock('../config/supabase.js', () => ({
 
 import {
   extractFinancialFieldsDeterministically,
-  analyzeFinancialDocument
+  analyzeFinancialDocument,
+  collectMonetaryAmounts,
+  analyzeBenfordLaw
 } from './agentFinancial.js';
 import { saveExtraction, saveVerifications } from '../services/documentIntelligenceService.js';
 import { supabaseAdmin } from '../config/supabase.js';
@@ -71,6 +73,51 @@ describe('extractFinancialFieldsDeterministically', () => {
     ]);
     const result = extractFinancialFieldsDeterministically(wb);
     expect(result.activo_total).toBeNull();
+  });
+
+  it('extrae ROE y ROA cuando vienen etiquetados explicitamente', () => {
+    const wb = buildWorkbook([
+      ['ROE', 0.18],
+      ['ROA', 0.09]
+    ]);
+    const result = extractFinancialFieldsDeterministically(wb);
+    expect(result.roe).toBe(0.18);
+    expect(result.roa).toBe(0.09);
+  });
+});
+
+describe('collectMonetaryAmounts', () => {
+  it('descarta valores pequenos y reconoce montos en formato moneda', () => {
+    const wb = buildWorkbook([
+      ['Renglon', 5],
+      ['Activo Total', 1000000],
+      ['Ingresos', '$250,000'],
+      ['Porcentaje', 0.15]
+    ]);
+    const amounts = collectMonetaryAmounts(wb);
+    expect(amounts).toContain(1000000);
+    expect(amounts).toContain(250000);
+    expect(amounts).not.toContain(5);
+  });
+});
+
+describe('analyzeBenfordLaw', () => {
+  it('responde "skipped" cuando la muestra es insuficiente', () => {
+    const result = analyzeBenfordLaw([100, 200, 300]);
+    expect(result.status).toBe('skipped');
+  });
+
+  it('responde "normal" para una distribucion que sigue la Ley de Benford', () => {
+    // Una progresion geometrica conforma de manera natural y conocida con Benford.
+    const amounts = Array.from({ length: 90 }, (_, i) => 100 * Math.pow(1.05, i));
+    const result = analyzeBenfordLaw(amounts);
+    expect(result.status).toBe('normal');
+  });
+
+  it('responde "anomalous" cuando todos los montos comparten el mismo primer digito', () => {
+    const amounts = Array.from({ length: 40 }, (_, i) => 900000 + i * 1000);
+    const result = analyzeBenfordLaw(amounts);
+    expect(result.status).toBe('anomalous');
   });
 });
 
@@ -134,6 +181,10 @@ describe('analyzeFinancialDocument', () => {
     expect(margin.status).toBe('pass');
     const leverage = result.verifications.find(v => v.rule_code === 'BENCHMARK_APALANCAMIENTO');
     expect(leverage.status).toBe('pass');
+    expect(result.metrics.roe).toBe(0.1667);
+    expect(result.metrics.roa).toBe(0.1);
+    expect(result.verifications.find(v => v.rule_code === 'FORENSE_ROE_ANOMALO').status).toBe('pass');
+    expect(result.verifications.find(v => v.rule_code === 'FORENSE_ROA_ANOMALO').status).toBe('pass');
 
     expect(saveVerifications).toHaveBeenCalledWith('doc-1', result.verifications);
     expect(saveExtraction).toHaveBeenCalled();
@@ -153,5 +204,37 @@ describe('analyzeFinancialDocument', () => {
     const result = await analyzeFinancialDocument('doc-2', 'Comercio');
     const leverage = result.verifications.find(v => v.rule_code === 'BENCHMARK_APALANCAMIENTO');
     expect(leverage.status).toBe('warning');
+  });
+
+  it('marca critico un ROE mayor a 100% (rentabilidad extremadamente atipica)', async () => {
+    setup({
+      extraction: { extracted_data: { textContent: '' }, confidence_score: 90 },
+      document: { filename: 'eeff.xlsx', storage_path: 'docs/eeff.xlsx' },
+      benchmarks: [],
+      workbookRows: [
+        ['Utilidad Neta', 500000],
+        ['Capital Contable', 100000]
+      ]
+    });
+
+    const result = await analyzeFinancialDocument('doc-3', 'Comercio');
+    const roeCheck = result.verifications.find(v => v.rule_code === 'FORENSE_ROE_ANOMALO');
+    expect(roeCheck.status).toBe('fail');
+    expect(roeCheck.severity).toBe('critical');
+  });
+
+  it('marca warning de Ley de Benford cuando los montos del Excel no conforman con la distribucion esperada', async () => {
+    const suspiciousRows = Array.from({ length: 40 }, (_, i) => [`Concepto ${i}`, 900000 + i * 1000]);
+    setup({
+      extraction: { extracted_data: { textContent: '' }, confidence_score: 90 },
+      document: { filename: 'eeff.xlsx', storage_path: 'docs/eeff.xlsx' },
+      benchmarks: [],
+      workbookRows: suspiciousRows
+    });
+
+    const result = await analyzeFinancialDocument('doc-4', 'Comercio');
+    const benfordCheck = result.verifications.find(v => v.rule_code === 'FORENSE_BENFORD_LAW');
+    expect(benfordCheck.status).toBe('warning');
+    expect(result.benfordAnalysis.status).toBe('anomalous');
   });
 });

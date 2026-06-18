@@ -16,7 +16,9 @@ export function extractFinancialFieldsDeterministically(workbook) {
     utilidad_neta: null,
     ebitda: null,
     dscr: null,
-    apalancamiento: null
+    apalancamiento: null,
+    roe: null,
+    roa: null
   };
 
   const keywords = {
@@ -27,7 +29,9 @@ export function extractFinancialFieldsDeterministically(workbook) {
     utilidad_neta: [/utilidad\s+neta/i, /utilidad\s+del\s+ejercicio/i, /resultado\s+neto/i],
     ebitda: [/ebitda/i, /utilidad\s+de\s+operacion\s+antes/i],
     dscr: [/dscr/i, /cobertura\s+de\s+servicio/i, /cobertura\s+de\s+deuda/i],
-    apalancamiento: [/apalancamiento/i, /leverage/i, /pasivo\s+a\s+capital/i, /deuda\s+a\s+capital/i]
+    apalancamiento: [/apalancamiento/i, /leverage/i, /pasivo\s+a\s+capital/i, /deuda\s+a\s+capital/i],
+    roe: [/\broe\b/i, /retorno\s+sobre\s+capital/i, /rentabilidad\s+sobre\s+capital/i, /return\s+on\s+equity/i],
+    roa: [/\broa\b/i, /retorno\s+sobre\s+activos/i, /rentabilidad\s+sobre\s+activos/i, /return\s+on\s+assets/i]
   };
 
   for (const sheetName of workbook.SheetNames) {
@@ -63,6 +67,91 @@ export function extractFinancialFieldsDeterministically(workbook) {
   }
 
   return data;
+}
+
+// Recolecta montos numericos (no las 8 metricas clave, sino TODOS los valores
+// monetarios visibles en el workbook) para usarlos como muestra en el test de
+// Ley de Benford. Se descartan valores pequenos (<100) porque suelen ser
+// porcentajes, indices de fila u otros numeros que no son montos.
+export function collectMonetaryAmounts(workbook) {
+  const amounts = [];
+
+  for (const sheetName of workbook.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+    for (const row of rows) {
+      if (!row || !row.length) continue;
+
+      for (const cell of row) {
+        let numVal = null;
+        if (typeof cell === 'number') {
+          numVal = cell;
+        } else if (typeof cell === 'string') {
+          const parsed = parseFloat(cell.replace(/[\$,\s]/g, ''));
+          if (!isNaN(parsed)) numVal = parsed;
+        }
+        if (numVal !== null && Math.abs(numVal) >= 100) {
+          amounts.push(numVal);
+        }
+      }
+    }
+  }
+
+  return amounts;
+}
+
+const BENFORD_EXPECTED_DISTRIBUTION = [0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046];
+const BENFORD_MIN_SAMPLE_SIZE = 30;
+
+function firstSignificantDigit(value) {
+  const abs = Math.abs(value);
+  if (abs === 0) return null;
+  const normalized = abs / 10 ** Math.floor(Math.log10(abs));
+  const digit = Math.floor(normalized);
+  return digit >= 1 && digit <= 9 ? digit : null;
+}
+
+// Test del primer digito de la Ley de Benford (Nigrini, "Forensic Analytics", 2012).
+// En conjuntos de datos financieros reales, el primer digito de cada monto sigue
+// una distribucion logaritmica predecible; datos inventados tienden a una
+// distribucion mas uniforme. Es una heuristica estadistica de apoyo, no una
+// prueba definitiva de fraude, y requiere una muestra minima para ser confiable.
+export function analyzeBenfordLaw(amounts = []) {
+  const firstDigits = amounts.map(firstSignificantDigit).filter((d) => d !== null);
+
+  if (firstDigits.length < BENFORD_MIN_SAMPLE_SIZE) {
+    return {
+      status: 'skipped',
+      sampleSize: firstDigits.length,
+      detail: `Muestra insuficiente (${firstDigits.length} montos, se requieren al menos ${BENFORD_MIN_SAMPLE_SIZE}) para aplicar la Ley de Benford`
+    };
+  }
+
+  const counts = new Array(9).fill(0);
+  for (const digit of firstDigits) counts[digit - 1] += 1;
+  const observedDistribution = counts.map((count) => count / firstDigits.length);
+
+  const meanAbsoluteDeviation = observedDistribution
+    .reduce((sum, observed, i) => sum + Math.abs(observed - BENFORD_EXPECTED_DISTRIBUTION[i]), 0) / 9;
+
+  // Umbrales de conformidad MAD segun Nigrini (2012) para el test de primer digito.
+  let conformity = 'close';
+  if (meanAbsoluteDeviation > 0.015) conformity = 'nonconformity';
+  else if (meanAbsoluteDeviation > 0.012) conformity = 'marginal';
+  else if (meanAbsoluteDeviation > 0.006) conformity = 'acceptable';
+
+  const status = conformity === 'nonconformity' ? 'anomalous' : 'normal';
+
+  return {
+    status,
+    sampleSize: firstDigits.length,
+    meanAbsoluteDeviation: parseFloat(meanAbsoluteDeviation.toFixed(4)),
+    conformity,
+    observedDistribution: observedDistribution.map((v) => parseFloat((v * 100).toFixed(1))),
+    detail: status === 'anomalous'
+      ? `La distribucion de primeros digitos de los montos (muestra de ${firstDigits.length}) se desvia de la Ley de Benford (MAD ${meanAbsoluteDeviation.toFixed(4)}, no conforme). Puede indicar cifras inventadas o manipuladas; es una heuristica estadistica que requiere revision manual, no una prueba definitiva.`
+      : `La distribucion de primeros digitos de los montos (muestra de ${firstDigits.length}) es consistente con la Ley de Benford (MAD ${meanAbsoluteDeviation.toFixed(4)}, conformidad ${conformity}).`
+  };
 }
 
 // Extracción por IA como fallback
@@ -140,7 +229,9 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     utilidad_neta: null,
     ebitda: null,
     dscr: null,
-    apalancamiento: null
+    apalancamiento: null,
+    roe: null,
+    roa: null
   };
 
   // Re-leer el buffer del storage para parseo estructurado si es Excel
@@ -150,15 +241,16 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     .eq('id', documentId)
     .single();
 
+  let workbook = null;
   if (document && document.filename.match(/\.(xlsx|xls|csv)$/i)) {
     try {
       const { data: fileData } = await supabaseAdmin.storage
         .from('documents')
         .download(document.storage_path);
-      
+
       if (fileData) {
         const buffer = Buffer.from(await fileData.arrayBuffer());
-        const workbook = XLSX.read(buffer, { type: 'buffer' });
+        workbook = XLSX.read(buffer, { type: 'buffer' });
         extractedFields = extractFinancialFieldsDeterministically(workbook);
       }
     } catch (parseErr) {
@@ -185,6 +277,18 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     const estimatedService = extractedFields.pasivo_total * 0.08;
     extractedFields.dscr = estimatedService > 0 ? parseFloat((extractedFields.ebitda / estimatedService).toFixed(2)) : 1.5;
   }
+  if (extractedFields.roe === null && extractedFields.utilidad_neta && extractedFields.capital_contable) {
+    extractedFields.roe = parseFloat((extractedFields.utilidad_neta / extractedFields.capital_contable).toFixed(4));
+  }
+  if (extractedFields.roa === null && extractedFields.utilidad_neta && extractedFields.activo_total) {
+    extractedFields.roa = parseFloat((extractedFields.utilidad_neta / extractedFields.activo_total).toFixed(4));
+  }
+
+  // Analisis forense: distribucion de primeros digitos (Ley de Benford) sobre
+  // todos los montos visibles en el Excel, no solo las 8 metricas clave.
+  const benfordAnalysis = workbook
+    ? analyzeBenfordLaw(collectMonetaryAmounts(workbook))
+    : { status: 'skipped', detail: 'El analisis de Ley de Benford solo aplica a documentos Excel/CSV' };
 
   // 3. Obtener Benchmarks del sector en Supabase
   const { data: benchmarks } = await supabaseAdmin
@@ -266,6 +370,79 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     }
   }
 
+  // ROE (Rentabilidad sobre Capital) — Capa 2.1 del analisis forense: un ROE
+  // anomalamente ALTO es señal de alerta (no uno bajo, eso ya lo cubre el margen neto).
+  if (extractedFields.roe !== null) {
+    const roeVal = extractedFields.roe;
+    const roeBenchmark = (benchmarks || []).find(b => b.metric_name === 'roe');
+    const warningVal = roeBenchmark ? parseFloat(roeBenchmark.max_val) : 0.50;
+    const roePct = (roeVal * 100).toFixed(1);
+
+    if (roeVal > 1.0) {
+      verifications.push({
+        rule_code: 'FORENSE_ROE_ANOMALO',
+        status: 'fail',
+        severity: 'critical',
+        findings: `ROE de ${roePct}% es crítico (>100%): rentabilidad sobre capital extremadamente atípica para una operación legítima, requiere análisis forense adicional`
+      });
+    } else if (roeVal > warningVal) {
+      verifications.push({
+        rule_code: 'FORENSE_ROE_ANOMALO',
+        status: 'warning',
+        severity: 'warning',
+        findings: `ROE de ${roePct}% supera el umbral de sospecha de ${(warningVal * 100).toFixed(0)}% para el sector ${sector}`
+      });
+    } else {
+      verifications.push({
+        rule_code: 'FORENSE_ROE_ANOMALO',
+        status: 'pass',
+        severity: 'info',
+        findings: `ROE de ${roePct}% dentro de rangos no sospechosos`
+      });
+    }
+  }
+
+  // ROA (Rentabilidad sobre Activos)
+  if (extractedFields.roa !== null) {
+    const roaVal = extractedFields.roa;
+    const roaBenchmark = (benchmarks || []).find(b => b.metric_name === 'roa');
+    const warningVal = roaBenchmark ? parseFloat(roaBenchmark.max_val) : 0.30;
+    const roaPct = (roaVal * 100).toFixed(1);
+
+    if (roaVal > 0.50) {
+      verifications.push({
+        rule_code: 'FORENSE_ROA_ANOMALO',
+        status: 'fail',
+        severity: 'critical',
+        findings: `ROA de ${roaPct}% es crítico (>50%): rentabilidad sobre activos extremadamente atípica, requiere análisis forense adicional`
+      });
+    } else if (roaVal > warningVal) {
+      verifications.push({
+        rule_code: 'FORENSE_ROA_ANOMALO',
+        status: 'warning',
+        severity: 'warning',
+        findings: `ROA de ${roaPct}% supera el umbral de sospecha de ${(warningVal * 100).toFixed(0)}% para el sector ${sector}`
+      });
+    } else {
+      verifications.push({
+        rule_code: 'FORENSE_ROA_ANOMALO',
+        status: 'pass',
+        severity: 'info',
+        findings: `ROA de ${roaPct}% dentro de rangos no sospechosos`
+      });
+    }
+  }
+
+  // Ley de Benford sobre los montos del documento (heurística de fraude contable)
+  if (benfordAnalysis.status !== 'skipped') {
+    verifications.push({
+      rule_code: 'FORENSE_BENFORD_LAW',
+      status: benfordAnalysis.status === 'anomalous' ? 'warning' : 'pass',
+      severity: benfordAnalysis.status === 'anomalous' ? 'warning' : 'info',
+      findings: benfordAnalysis.detail
+    });
+  }
+
   // 4. Guardar verificaciones del agente financiero
   if (verifications.length > 0) {
     await saveVerifications(documentId, verifications);
@@ -275,6 +452,7 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
   await saveExtraction(documentId, {
     ...extraction.extracted_data,
     financial_metrics: extractedFields,
+    benford_analysis: benfordAnalysis,
     analyzed_by_financial_agent: true,
     used_ai: usedAI
   }, extraction.confidence_score);
@@ -290,6 +468,7 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
   return {
     success: true,
     metrics: extractedFields,
+    benfordAnalysis,
     verifications
   };
 }
