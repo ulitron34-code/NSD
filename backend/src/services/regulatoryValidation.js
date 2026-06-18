@@ -1,4 +1,7 @@
+import { screenNameAgainstOfac } from './ofacScreening.js';
+
 const configured = (name) => Boolean(process.env[name]?.trim());
+const KNOWN_COUNTRIES = ['MX', 'US', 'AE', 'UK'];
 
 function normalizeCountry(country = 'MX') {
   const value = String(country).trim().toUpperCase();
@@ -86,12 +89,6 @@ export function validateRegulatoryProfile({ country = 'MX', applicant = {}, orde
       pattern: /^\d{2}-\d{7}$/
     }));
     addCheck(checks, optionalProviderCheck({
-      provider: 'ofac',
-      label: 'OFAC sanctions screening',
-      envUrl: 'OFAC_API_URL',
-      envKey: 'OFAC_API_KEY'
-    }));
-    addCheck(checks, optionalProviderCheck({
       provider: 'equifax',
       label: 'Credit report USA',
       envUrl: 'EQUIFAX_API_URL',
@@ -138,7 +135,7 @@ export function validateRegulatoryProfile({ country = 'MX', applicant = {}, orde
     });
   }
 
-  if (checks.length === 0) {
+  if (!KNOWN_COUNTRIES.includes(normalizedCountry)) {
     addCheck(checks, {
       provider: 'nsd',
       label: 'Pais no soportado',
@@ -147,6 +144,19 @@ export function validateRegulatoryProfile({ country = 'MX', applicant = {}, orde
       severity: 'low'
     });
   }
+
+  // OFAC es una lista de sanciones global (no especifica de un pais), asi que
+  // se revisa siempre, independientemente de la matriz regulatoria del pais.
+  const ofacSubjectName = applicant.companyName || applicant.name || applicant.fullName
+    || order?.metadata?.companyName;
+  const ofacResult = screenNameAgainstOfac(ofacSubjectName);
+  addCheck(checks, {
+    provider: 'ofac',
+    label: 'OFAC sanctions screening (SDN list)',
+    status: ofacResult.status === 'hit' ? 'fail' : ofacResult.status === 'clear' ? 'pass' : 'skipped',
+    detail: ofacResult.detail,
+    severity: ofacResult.status === 'hit' ? 'high' : ofacResult.status === 'clear' ? 'info' : 'low'
+  });
 
   const failed = checks.filter((check) => check.status === 'fail');
   const configuredChecks = checks.filter((check) => check.status === 'configured');

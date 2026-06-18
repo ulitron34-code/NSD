@@ -74,7 +74,6 @@ function checkEnv() {
     'COMPANIES_HOUSE_API_KEY',
     'MEXICO_RFC_API_URL',
     'MEXICO_UIF_API_URL',
-    'OFAC_API_URL',
     'EQUIFAX_API_URL'
   ];
 

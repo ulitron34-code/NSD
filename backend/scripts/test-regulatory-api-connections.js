@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { primeOfacList, screenNameAgainstOfac } from '../src/services/ofacScreening.js';
 
 const optional = (name) => process.env[name]?.trim();
 
@@ -8,8 +9,6 @@ const config = {
   mexicoRfcApiKey: optional('MEXICO_RFC_API_KEY'),
   mexicoUifApiUrl: optional('MEXICO_UIF_API_URL'),
   mexicoUifApiKey: optional('MEXICO_UIF_API_KEY'),
-  ofacApiUrl: optional('OFAC_API_URL'),
-  ofacApiKey: optional('OFAC_API_KEY'),
   equifaxApiUrl: optional('EQUIFAX_API_URL'),
   equifaxApiKey: optional('EQUIFAX_API_KEY'),
   dubaiEmiratesIdApiUrl: optional('DUBAI_EMIRATES_ID_API_URL'),
@@ -99,6 +98,25 @@ async function testCompaniesHouse() {
   }
 }
 
+async function testOfacScreening() {
+  const name = 'OFAC SDN list screening (built-in, sin API key)';
+
+  try {
+    await primeOfacList();
+    const result = screenNameAgainstOfac('Banco Nacional de Cuba');
+    addResult({
+      name,
+      status: result.status === 'hit' ? 'pass' : 'fail',
+      detail: result.status === 'hit'
+        ? `lista descargada y deteccion de prueba funciono (${result.matches[0]?.name})`
+        : `no se detecto la coincidencia de prueba esperada: ${result.detail}`,
+      required: true
+    });
+  } catch (error) {
+    addResult({ name, status: 'fail', detail: error.message, required: true });
+  }
+}
+
 async function run() {
   console.log('NSD regulatory API connection tests');
   console.log(`Started: ${new Date().toISOString()}\n`);
@@ -122,12 +140,7 @@ async function run() {
     body: { name: 'Juan Perez Lopez' }
   });
 
-  await testOptionalPost({
-    name: 'USA OFAC screening API',
-    url: config.ofacApiUrl,
-    apiKey: config.ofacApiKey,
-    body: { name: 'John Doe' }
-  });
+  await testOfacScreening();
 
   await testOptionalPost({
     name: 'USA Equifax credit API',
