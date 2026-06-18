@@ -56,7 +56,9 @@ export const scoringAPI = {
     api.get(`/orders/${orderId}/scoring/institutional-memo.md`, {
       params: matrixKey ? { matrixKey } : {},
       responseType: 'blob'
-    })
+    }),
+  getRiskScore: (orderId, sector) =>
+    api.get(`/orders/${orderId}/scoring/risk-score`, { params: sector ? { sector } : {} })
 };
 
 export const regulatoryAPI = {

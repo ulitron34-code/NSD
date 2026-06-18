@@ -71,6 +71,24 @@ const demoPanelScoring = {
   ]
 };
 
+const demoPanelRiskScore = {
+  score_final: 38,
+  semaforo: "Amarillo",
+  recomendacion: "APROBADO_CON_CONDICIONES",
+  pilares: {
+    riesgo_regulatorio: 4,
+    riesgo_financiero: 8,
+    riesgo_operacional: 0,
+    riesgo_cumplimiento: 4
+  },
+  red_flags: [
+    { pilar: "financiero", rule_code: "BENCHMARK_APALANCAMIENTO", severidad: "warning", hallazgo: "Nivel de apalancamiento elevado para el sector" }
+  ],
+  informacion_pendiente: [
+    "2 verificación(es) regulatoria(s) sin proveedor configurado: Validacion SAT/RFC, Screening UIF"
+  ]
+};
+
 const demoShareReadiness = {
   canPublish: false,
   manualApproval: false,
@@ -181,6 +199,9 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
   const [scoring, setScoring] = useState(null);
   const [scoringLoading, setScoringLoading] = useState(true);
   const [scoringStatus, setScoringStatus] = useState("");
+  const [riskScore, setRiskScore] = useState(null);
+  const [riskScoreLoading, setRiskScoreLoading] = useState(true);
+  const [riskScoreStatus, setRiskScoreStatus] = useState("");
   const [reportStatus, setReportStatus] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -221,6 +242,21 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
     if (status === "pass" || status === "clear") return COLORS.green;
     if (status === "review" || status === "review_required" || status === "skipped" || status === "configured") return COLORS.amber;
     return "#C62828";
+  };
+
+  const getSemaforoColor = (semaforo) => ({
+    Verde: COLORS.green,
+    Amarillo: COLORS.amber,
+    Naranja: "#C2570C",
+    Rojo: "#C62828",
+    "Crítico": "#8A1C1C",
+  }[semaforo] || COLORS.textMuted);
+
+  const riskRecommendationLabels = {
+    APROBADO: "Aprobado",
+    APROBADO_CON_CONDICIONES: "Aprobado con condiciones",
+    APROBADO_CON_GARANTIAS_REFORZADAS: "Aprobado con garantías reforzadas",
+    RECHAZADO: "Rechazado",
   };
 
   const getGradeColor = (grade = "pendiente") => ({
@@ -504,6 +540,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
       await loadDocuments();
       await loadAuditLogs();
       await loadScoring();
+      await loadRiskScore();
       await loadShareReadiness();
     } catch (error) {
       setDocumentStatus(error.response?.data?.error || "No se pudo subir la evidencia del requerimiento.");
@@ -532,6 +569,25 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
     }
   };
 
+  const loadRiskScore = async () => {
+    setRiskScoreLoading(true);
+    try {
+      if (order.demo) {
+        setRiskScore(demoPanelRiskScore);
+        setRiskScoreStatus("");
+        return;
+      }
+
+      const { data } = await scoringAPI.getRiskScore(order.id);
+      setRiskScore(data);
+      setRiskScoreStatus("");
+    } catch (error) {
+      setRiskScoreStatus(error.response?.data?.error || "No se pudo calcular el score de riesgo");
+    } finally {
+      setRiskScoreLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadDocuments();
     loadReviewHistory();
@@ -541,6 +597,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
     loadInformationRequests();
     loadContactRequests();
     loadScoring();
+    loadRiskScore();
   }, [order.id]);
 
   useEffect(() => {
@@ -564,6 +621,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
             });
             await loadReviewHistory();
             await loadScoring();
+            await loadRiskScore();
             await loadAuditLogs();
           }
           return;
@@ -643,6 +701,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
       await loadDocuments();
       await loadAuditLogs();
       await loadScoring();
+      await loadRiskScore();
       await loadShareReadiness();
     } catch (error) {
       setDocumentStatus(error.response?.data?.error || "Error al subir documento");
@@ -684,6 +743,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
       await loadDocuments();
       await loadAuditLogs();
       await loadScoring();
+      await loadRiskScore();
       await loadShareReadiness();
     } catch (error) {
       setDocumentStatus(error.response?.data?.error || "No se pudo actualizar la clasificacion documental");
@@ -725,6 +785,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
       await loadReviewHistory();
       await loadAuditLogs();
       await loadScoring();
+      await loadRiskScore();
       await loadShareReadiness();
     } catch (error) {
       setDocumentStatus(error.response?.data?.error || "No se pudo generar la revision IA");
@@ -1498,6 +1559,74 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {riskScoreStatus && (
+              <p style={{ color: "#C62828", fontSize: "0.78rem", lineHeight: 1.4 }}>{riskScoreStatus}</p>
+            )}
+
+            {riskScoreLoading ? (
+              <p style={{ color: COLORS.textMuted, fontSize: "0.85rem" }}>Calculando score de riesgo...</p>
+            ) : riskScore && (
+              <div style={{ padding: "0.85rem", border: `1px solid ${COLORS.border}`, borderRadius: "8px", background: "white" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", marginBottom: "0.6rem", alignItems: "flex-start" }}>
+                  <div>
+                    <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase" }}>
+                      Score de riesgo compuesto
+                    </p>
+                    <p style={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.9rem" }}>
+                      {riskScore.score_final}/100 · {riskRecommendationLabels[riskScore.recomendacion] || riskScore.recomendacion}
+                    </p>
+                  </div>
+                  <span style={{
+                    color: "white",
+                    background: getSemaforoColor(riskScore.semaforo),
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    fontSize: "0.7rem",
+                    padding: "0.2rem 0.6rem",
+                    borderRadius: "999px",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {riskScore.semaforo}
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.65rem" }}>
+                  {[
+                    ["Regulatorio", riskScore.pilares?.riesgo_regulatorio],
+                    ["Financiero", riskScore.pilares?.riesgo_financiero],
+                    ["Operacional", riskScore.pilares?.riesgo_operacional],
+                    ["Cumplimiento", riskScore.pilares?.riesgo_cumplimiento],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ padding: "0.5rem 0.65rem", border: `1px solid ${COLORS.border}`, borderRadius: "8px" }}>
+                      <p style={{ color: COLORS.textMuted, fontSize: "0.66rem", fontWeight: 800, textTransform: "uppercase" }}>{label}</p>
+                      <p style={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.82rem" }}>{value ?? 0}/25</p>
+                    </div>
+                  ))}
+                </div>
+
+                {riskScore.red_flags?.length > 0 && (
+                  <div style={{ display: "grid", gap: "0.4rem", marginBottom: riskScore.informacion_pendiente?.length ? "0.6rem" : 0 }}>
+                    {riskScore.red_flags.slice(0, 4).map((flag, index) => (
+                      <div key={`${flag.rule_code}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: "0.65rem", alignItems: "flex-start" }}>
+                        <p style={{ color: COLORS.navy, fontSize: "0.74rem", lineHeight: 1.35, margin: 0 }}>
+                          [{flag.pilar}] {flag.hallazgo}
+                        </p>
+                        <span style={{ color: "#C62828", fontWeight: 900, textTransform: "uppercase", fontSize: "0.66rem", whiteSpace: "nowrap" }}>
+                          {flag.severidad}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {riskScore.informacion_pendiente?.length > 0 && (
+                  <p style={{ color: COLORS.textMuted, fontSize: "0.68rem", lineHeight: 1.4, fontStyle: "italic", margin: 0 }}>
+                    Pendiente: {riskScore.informacion_pendiente.join(" · ")}
+                  </p>
+                )}
               </div>
             )}
 

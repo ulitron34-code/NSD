@@ -287,6 +287,11 @@ export default function DocumentIntelligenceTab() {
     }
   };
 
+  const getProgressPercentage = (value, min, max) => {
+    if (value === undefined || value === null || Number.isNaN(value) || max === min) return 0;
+    return Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+  };
+
   const handleExportReport = () => {
     if (!selectedExpedienteId || !summary) return;
     
@@ -1257,6 +1262,82 @@ export default function DocumentIntelligenceTab() {
                     <span>0.0</span>
                     <span>{t('intel.financialBenchmarks')} (Max: 2.5)</span>
                     <span>3.0</span>
+                  </div>
+                </div>
+
+                {/* ROE */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                    <span style={{ fontWeight: "600" }}>{t('intel.roe')}</span>
+                    <span style={{ fontWeight: "700", color: COLORS.gold }}>
+                      {selectedDocMetrics?.roe !== undefined && selectedDocMetrics?.roe !== null
+                        ? `${(selectedDocMetrics.roe * 100).toFixed(1)}%`
+                        : "—"}
+                    </span>
+                  </div>
+                  <div style={{ position: "relative", height: "12px", background: "#ECEFF1", borderRadius: "6px", overflow: "hidden" }}>
+                    {/* Rango no sospechoso (0% - 50%) */}
+                    <div style={{ position: "absolute", left: "0", width: "41.6%", height: "100%", background: "rgba(46, 125, 50, 0.15)" }} />
+                    {/* Pin de valor actual */}
+                    <div style={{
+                      position: "absolute",
+                      left: `${getProgressPercentage(
+                        selectedDocMetrics?.roe !== undefined && selectedDocMetrics?.roe !== null
+                          ? selectedDocMetrics.roe * 100
+                          : 0,
+                        0,
+                        120
+                      )}%`,
+                      width: "12px",
+                      height: "12px",
+                      background: COLORS.navy,
+                      borderRadius: "50%",
+                      border: "2px solid white",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.3)"
+                    }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: COLORS.textMuted, marginTop: "0.25rem" }}>
+                    <span>0%</span>
+                    <span>{t('intel.financialBenchmarks')} (Sospechoso &gt;50%, Crítico &gt;100%)</span>
+                    <span>120%</span>
+                  </div>
+                </div>
+
+                {/* ROA */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                    <span style={{ fontWeight: "600" }}>{t('intel.roa')}</span>
+                    <span style={{ fontWeight: "700", color: COLORS.gold }}>
+                      {selectedDocMetrics?.roa !== undefined && selectedDocMetrics?.roa !== null
+                        ? `${(selectedDocMetrics.roa * 100).toFixed(1)}%`
+                        : "—"}
+                    </span>
+                  </div>
+                  <div style={{ position: "relative", height: "12px", background: "#ECEFF1", borderRadius: "6px", overflow: "hidden" }}>
+                    {/* Rango no sospechoso (0% - 30%) */}
+                    <div style={{ position: "absolute", left: "0", width: "42.8%", height: "100%", background: "rgba(46, 125, 50, 0.15)" }} />
+                    {/* Pin de valor actual */}
+                    <div style={{
+                      position: "absolute",
+                      left: `${getProgressPercentage(
+                        selectedDocMetrics?.roa !== undefined && selectedDocMetrics?.roa !== null
+                          ? selectedDocMetrics.roa * 100
+                          : 0,
+                        0,
+                        70
+                      )}%`,
+                      width: "12px",
+                      height: "12px",
+                      background: COLORS.navy,
+                      borderRadius: "50%",
+                      border: "2px solid white",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.3)"
+                    }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: COLORS.textMuted, marginTop: "0.25rem" }}>
+                    <span>0%</span>
+                    <span>{t('intel.financialBenchmarks')} (Anómalo &gt;30%, Crítico &gt;50%)</span>
+                    <span>70%</span>
                   </div>
                 </div>
 
