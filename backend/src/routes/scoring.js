@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { REQUIREMENTS_MATRIX } from '../config/requirementsMatrix.js';
 import { buildExecutiveReport, buildInstitutionalMemo, scoreExpedient } from '../services/scoringEngine.js';
+import { computeExpedienteRiskScore } from '../agents/agentRiskScorer.js';
 import { logAuditEvent } from '../utils/audit.js';
 
 const router = express.Router();
@@ -70,6 +71,16 @@ router.get('/orders/:orderId/scoring', authMiddleware, requirePermission('score:
       matrixKey: req.query.matrixKey
     });
 
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.get('/orders/:orderId/scoring/risk-score', authMiddleware, requirePermission('score:own:read'), async (req, res) => {
+  try {
+    const order = await loadOwnedOrder(req.params.orderId, req.userId);
+    const result = await computeExpedienteRiskScore(order.id, { order, sector: req.query.sector });
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
