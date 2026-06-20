@@ -24,6 +24,7 @@ const CertificationsPage = lazy(() => import("./pages/CertificationsPage"));
 const ServicesPage      = lazy(() => import("./pages/ServicesPage"));
 const ServiceOrdersPage = lazy(() => import("./pages/ServiceOrdersPage"));
 const CheckoutPage      = lazy(() => import("./pages/CheckoutPage"));
+const SharedDataRoomPage = lazy(() => import("./pages/SharedDataRoomPage"));
 const NotFoundPage      = lazy(() => import("./pages/NotFoundPage"));
 
 const Loader = () => (
@@ -54,6 +55,7 @@ function AppContent() {
           <Route path="/blog"           element={<><Header isLanding={true} /><BlogPage /></>} />
           <Route path="/certifications" element={<><Header isLanding={true} /><CertificationsPage /></>} />
           <Route path="/services"       element={<><Header isLanding={true} /><ServicesPage /></>} />
+          <Route path="/shared-data-room/:token" element={<><Header /><SharedDataRoomPage /></>} />
 
           {/* Dashboard protegido */}
           <Route
