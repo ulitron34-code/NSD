@@ -22,6 +22,8 @@ export default function ServiceRequestModal({ service, onClose, onSubmit }) {
     email: "",
     phone: "",
     companyName: "",
+    declaredPublicPosition: "",
+    declaredPublicPositionRelationship: "",
   });
 
   const handleChange = (e) => {
@@ -280,6 +282,54 @@ export default function ServiceRequestModal({ service, onClose, onSubmit }) {
                   </span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{
+              display: "block",
+              color: COLORS.navy,
+              fontWeight: 600,
+              marginBottom: "0.5rem",
+              fontSize: "0.9rem",
+            }}>
+              {L("Cargo publico (PEP)", "Public office (PEP)")}
+            </label>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", marginBottom: "0.6rem", lineHeight: 1.4 }}>
+              {L(
+                "Requisito LFPIORPI: declara si tu o un familiar cercano/socio ocupa o ha ocupado un cargo publico. Dejalo en blanco si no aplica.",
+                "LFPIORPI requirement: declare if you or a close relative/business partner holds or has held a public office. Leave blank if not applicable."
+              )}
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.75rem" }}>
+              <input
+                type="text"
+                name="declaredPublicPosition"
+                value={formData.declaredPublicPosition}
+                onChange={handleChange}
+                placeholder={L("Ej: Diputado local, Director de PEMEX...", "E.g: Local representative, PEMEX director...")}
+                style={{
+                  width: "100%",
+                  padding: "0.75rem 1rem",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "6px",
+                  fontSize: "1rem",
+                }}
+              />
+              <input
+                type="text"
+                name="declaredPublicPositionRelationship"
+                value={formData.declaredPublicPositionRelationship}
+                onChange={handleChange}
+                placeholder={L("Relacion: propio, conyuge, socio...", "Relationship: self, spouse, business partner...")}
+                style={{
+                  width: "100%",
+                  padding: "0.75rem 1rem",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "6px",
+                  fontSize: "1rem",
+                }}
+              />
             </div>
           </div>
 

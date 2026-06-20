@@ -1,4 +1,5 @@
 import { screenNameAgainstOfac } from './ofacScreening.js';
+import { screenCargoAgainstPepCatalog } from './pepScreening.js';
 
 const configured = (name) => Boolean(process.env[name]?.trim());
 const KNOWN_COUNTRIES = ['MX', 'US', 'AE', 'UK'];
@@ -156,6 +157,24 @@ export function validateRegulatoryProfile({ country = 'MX', applicant = {}, orde
     status: ofacResult.status === 'hit' ? 'fail' : ofacResult.status === 'clear' ? 'pass' : 'skipped',
     detail: ofacResult.detail,
     severity: ofacResult.status === 'hit' ? 'high' : ofacResult.status === 'clear' ? 'info' : 'low'
+  });
+
+  // PEP (Persona Politicamente Expuesta): Mexico no publica una lista de
+  // nombres gratuita, asi que se compara el cargo publico autodeclarado
+  // (propio o de beneficiarios controladores/relacionados) contra el
+  // catalogo de cargos del Anexo PEP (LFPIORPI). Se revisa para cualquier
+  // pais, igual que OFAC, porque el cliente puede declarar un cargo en
+  // cualquier jurisdiccion.
+  const declaredCargo = applicant.declaredPublicPosition || order?.metadata?.declaredPublicPosition;
+  const declaredCargoRelationship = applicant.declaredPublicPositionRelationship
+    || order?.metadata?.declaredPublicPositionRelationship;
+  const pepResult = screenCargoAgainstPepCatalog(declaredCargo, { relationship: declaredCargoRelationship });
+  addCheck(checks, {
+    provider: 'pep',
+    label: 'PEP screening (catalogo de cargos LFPIORPI)',
+    status: pepResult.status === 'hit' ? 'fail' : pepResult.status === 'clear' ? 'pass' : 'skipped',
+    detail: pepResult.detail,
+    severity: pepResult.status === 'hit' ? 'high' : pepResult.status === 'clear' ? 'info' : 'low'
   });
 
   const failed = checks.filter((check) => check.status === 'fail');

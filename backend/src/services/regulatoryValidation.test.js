@@ -4,13 +4,19 @@ vi.mock('./ofacScreening.js', () => ({
   screenNameAgainstOfac: vi.fn()
 }));
 
+vi.mock('./pepScreening.js', () => ({
+  screenCargoAgainstPepCatalog: vi.fn()
+}));
+
 import { validateRegulatoryProfile } from './regulatoryValidation.js';
 import { screenNameAgainstOfac } from './ofacScreening.js';
+import { screenCargoAgainstPepCatalog } from './pepScreening.js';
 
 describe('validateRegulatoryProfile', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     screenNameAgainstOfac.mockReturnValue({ status: 'clear', detail: 'Sin coincidencias', matches: [] });
+    screenCargoAgainstPepCatalog.mockReturnValue({ status: 'skipped', detail: 'Sin cargo declarado', matchedCategory: null });
   });
 
   it('valida formato de RFC para Mexico y agrega el check de OFAC', () => {
@@ -77,5 +83,53 @@ describe('validateRegulatoryProfile', () => {
     const ofacChecks = result.checks.filter((c) => c.provider === 'ofac');
     expect(ofacChecks).toHaveLength(1);
     expect(ofacChecks[0].detail).not.toMatch(/Pendiente configurar/);
+  });
+
+  it('agrega el check de PEP y lo pasa "skipped" cuando no hay cargo declarado', () => {
+    const result = validateRegulatoryProfile({ country: 'MX', applicant: {} });
+    const pepCheck = result.checks.find((c) => c.provider === 'pep');
+    expect(pepCheck.status).toBe('skipped');
+    expect(screenCargoAgainstPepCatalog).toHaveBeenCalledWith(undefined, { relationship: undefined });
+  });
+
+  it('marca el check de PEP como "fail" con severidad alta cuando hay un hit', () => {
+    screenCargoAgainstPepCatalog.mockReturnValue({
+      status: 'hit',
+      detail: 'Coincide con la categoria PEP "Ambito estatal"',
+      matchedCategory: 'Ambito estatal'
+    });
+    const result = validateRegulatoryProfile({
+      country: 'MX',
+      applicant: { rfc: 'ABC010101AB1', declaredPublicPosition: 'Gobernador del Estado de Mexico' }
+    });
+    const pepCheck = result.checks.find((c) => c.provider === 'pep');
+    expect(pepCheck.status).toBe('fail');
+    expect(pepCheck.severity).toBe('high');
+    expect(result.status).toBe('review_required');
+    expect(screenCargoAgainstPepCatalog).toHaveBeenCalledWith('Gobernador del Estado de Mexico', { relationship: undefined });
+  });
+
+  it('marca el check de PEP como "pass" cuando el cargo declarado no coincide con el catalogo', () => {
+    screenCargoAgainstPepCatalog.mockReturnValue({
+      status: 'clear',
+      detail: 'No coincide con ninguna categoria PEP',
+      matchedCategory: null
+    });
+    const result = validateRegulatoryProfile({
+      country: 'MX',
+      applicant: { rfc: 'ABC010101AB1', declaredPublicPosition: 'Gerente de ventas' }
+    });
+    const pepCheck = result.checks.find((c) => c.provider === 'pep');
+    expect(pepCheck.status).toBe('pass');
+    expect(pepCheck.severity).toBe('info');
+  });
+
+  it('toma el cargo declarado y la relacion desde order.metadata si no vienen en applicant', () => {
+    validateRegulatoryProfile({
+      country: 'MX',
+      applicant: {},
+      order: { metadata: { declaredPublicPosition: 'Senadora', declaredPublicPositionRelationship: 'madre' } }
+    });
+    expect(screenCargoAgainstPepCatalog).toHaveBeenCalledWith('Senadora', { relationship: 'madre' });
   });
 });

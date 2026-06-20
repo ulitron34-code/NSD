@@ -40,7 +40,11 @@ export const ordersAPI = {
   updateInstitutional: (orderId, payload) =>
     api.patch(`/orders/${orderId}/institutional`, payload),
   generateExecutiveReport: (orderId) =>
-    api.post(`/orders/${orderId}/executive-report`)
+    api.post(`/orders/${orderId}/executive-report`),
+  updateBeneficiaryOwners: (orderId, owners) =>
+    api.patch(`/orders/${orderId}/beneficiary-owners`, { owners }),
+  getBeneficiaryOwnersScreening: (orderId) =>
+    api.get(`/orders/${orderId}/beneficiary-owners/screening`)
 };
 
 export const scoringAPI = {

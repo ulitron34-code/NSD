@@ -5,6 +5,7 @@ import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { buildExecutiveReport, scoreExpedient } from '../services/scoringEngine.js';
 import { REQUIREMENTS_MATRIX } from '../config/requirementsMatrix.js';
 import { logAuditEvent } from '../utils/audit.js';
+import { normalizeBeneficiaryOwnerList, screenBeneficiaryOwners } from '../services/beneficiaryOwners.js';
 
 const router = express.Router();
 
@@ -87,6 +88,8 @@ function buildCaseMetadata(metadata = {}, serviceType) {
     contactPhone: metadata.phone || metadata.contactPhone || null,
     companyName: metadata.companyName || null,
     serviceName: metadata.serviceName || null,
+    declaredPublicPosition: metadata.declaredPublicPosition || null,
+    declaredPublicPositionRelationship: metadata.declaredPublicPositionRelationship || null,
     caseStage: metadata.caseStage || 'captura',
     riskLevel: metadata.riskLevel || 'pendiente',
     readinessGrade: metadata.readinessGrade || 'pendiente',
@@ -265,6 +268,79 @@ router.patch('/orders/:orderId/institutional', authMiddleware, requirePermission
     });
 
     res.json(data);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// GUARDAR BENEFICIARIOS CONTROLADORES (UBO) DEL EXPEDIENTE
+router.patch('/orders/:orderId/beneficiary-owners', authMiddleware, requirePermission('case:own:update'), async (req, res) => {
+  try {
+    const { data: currentOrder, error: currentError } = await supabaseAdmin
+      .from('service_orders')
+      .select()
+      .eq('id', req.params.orderId)
+      .eq('user_id', req.userId)
+      .single();
+
+    if (currentError || !currentOrder) {
+      throw new Error('Expediente no encontrado o sin permisos');
+    }
+
+    const beneficiaryOwners = normalizeBeneficiaryOwnerList(req.body?.owners);
+    const nextMetadata = {
+      ...(currentOrder.metadata || {}),
+      beneficiaryOwners,
+      beneficiaryOwnersUpdatedAt: new Date().toISOString()
+    };
+
+    const { data, error } = await supabaseAdmin
+      .from('service_orders')
+      .update({ metadata: nextMetadata })
+      .eq('id', req.params.orderId)
+      .eq('user_id', req.userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await logAuditEvent({
+      userId: req.userId,
+      action: 'case_institutional_updated',
+      entityType: 'service_order',
+      entityId: req.params.orderId,
+      orderId: req.params.orderId,
+      req,
+      metadata: { beneficiaryOwnersCount: beneficiaryOwners.length }
+    });
+
+    res.json(data);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// SCREENING OFAC + PEP DE LOS BENEFICIARIOS CONTROLADORES
+router.get('/orders/:orderId/beneficiary-owners/screening', authMiddleware, requirePermission('case:own:read'), async (req, res) => {
+  try {
+    const { data: order, error } = await supabaseAdmin
+      .from('service_orders')
+      .select()
+      .eq('id', req.params.orderId)
+      .eq('user_id', req.userId)
+      .single();
+
+    if (error) throw error;
+
+    const owners = normalizeBeneficiaryOwnerList(order?.metadata?.beneficiaryOwners);
+    const screening = screenBeneficiaryOwners(owners);
+
+    res.json({
+      orderId: req.params.orderId,
+      total: screening.length,
+      requiresReview: screening.filter((o) => o.status === 'review_required').length,
+      owners: screening
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
