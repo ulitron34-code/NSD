@@ -33,7 +33,7 @@ export default function Header({ isLanding = false }) {
   const navLinks = [
     { label: t("navbar.home"),     anchor: "/#inicio" },
     { label: t("navbar.about"),    anchor: "/#nosotros" },
-    { label: t("navbar.services"), anchor: "/#servicios" },
+    { label: t("navbar.services"), anchor: "/services" },
     { label: t("navbar.prices"),   anchor: "/#precios" },
     { label: "FAQ",                anchor: "/#faq" },
   ];
