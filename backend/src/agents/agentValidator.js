@@ -61,7 +61,7 @@ export async function validateDocumentContent(documentId, documentType, textCont
   const textNormalized = textContent.toUpperCase();
 
   // 1. REGLA: RFC (Aplica a CSF, Acta y CFDI)
-  if (['RFC_CSF', 'ACTA_CONST', 'CFDI'].includes(documentType)) {
+  if (['RFC_CSF', 'ACTA_CONST', 'CFDI_FACTURA'].includes(documentType)) {
     // Buscar RFCs potenciales
     const rfcMatches = textContent.match(/[A-ZÑ&]{3,4}\d{6}[A-Z\d]{3}/gi) || [];
     const uniqueRfcs = [...new Set(rfcMatches)];

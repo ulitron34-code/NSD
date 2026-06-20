@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '../config/supabase.js';
 
-// Catálogo de tipos de documento mexicanos
+// Catálogo de tipos de documento mexicanos.
+// Estos codigos deben coincidir EXACTAMENTE con document_type_catalog.code en
+// Supabase (documents.document_type tiene foreign key a esa tabla). Antes de
+// agregar o renombrar un codigo aqui, agregar/confirmar la fila correspondiente
+// en document_type_catalog primero, o cada clasificacion con ese codigo
+// fallara con "violates foreign key constraint documents_document_type_fkey".
 const DOCUMENT_TYPES = [
   { code: 'INE_FRENTE', name: 'INE Frente', category: 'Identidad' },
   { code: 'INE_REVERSO', name: 'INE Reverso', category: 'Identidad' },
@@ -9,15 +14,15 @@ const DOCUMENT_TYPES = [
   { code: 'COMP_DOMICILIO', name: 'Comprobante de Domicilio', category: 'Identidad' },
   { code: 'ACTA_CONST', name: 'Acta Constitutiva', category: 'Legal' },
   { code: 'EDOS_FINANCIEROS', name: 'Estados Financieros', category: 'Financiero' },
-  { code: 'DECLARACION_ANUAL', name: 'Declaración Anual', category: 'Fiscal' },
-  { code: 'DECLARACION_MENSUAL', name: 'Declaración Mensual', category: 'Fiscal' },
+  { code: 'DECL_ANUAL', name: 'Declaración Anual', category: 'Fiscal' },
+  { code: 'DECL_MENSUAL', name: 'Declaración Mensual', category: 'Fiscal' },
   { code: 'AVALUO', name: 'Avalúo Comercial', category: 'Garantías' },
   { code: 'BURO_CREDITO', name: 'Reporte de Buró de Crédito', category: 'Riesgo' },
-  { code: 'CONTRATO_ARRENDAMIENTO', name: 'Contrato de Arrendamiento', category: 'Legal' },
+  { code: 'CONTRATO_ARREND', name: 'Contrato de Arrendamiento', category: 'Legal' },
   { code: 'CEDULA_PROFESIONAL', name: 'Cédula Profesional', category: 'Identidad' },
   { code: 'CURP_DOC', name: 'CURP', category: 'Identidad' },
-  { code: 'CFDI', name: 'Factura / CFDI', category: 'Fiscal' },
-  { code: 'ESTADO_CUENTA', name: 'Estado de Cuenta Bancario', category: 'Financiero' },
+  { code: 'CFDI_FACTURA', name: 'Factura / CFDI', category: 'Fiscal' },
+  { code: 'EDO_CUENTA_BANC', name: 'Estado de Cuenta Bancario', category: 'Financiero' },
   { code: 'PODER_NOTARIAL', name: 'Poder Notarial', category: 'Legal' },
   { code: 'COMPROBANTE_PAGO', name: 'Comprobante de Pago / SPEI', category: 'Financiero' },
   { code: 'ACTA_ASAMBLEA', name: 'Acta de Asamblea', category: 'Legal' },
@@ -33,15 +38,15 @@ const CLASSIFICATION_KEYWORDS = {
   COMP_DOMICILIO: [/comprobante de domicilio/i, /recibo de luz/i, /recibo de agua/i, /telmex/i, /cfe/i, /servicio de energia/i, /totalplay/i],
   ACTA_CONST: [/acta constitutiva/i, /notario publico/i, /notaria/i, /escritura numero/i, /sociedad mercantil/i, /denominacion o razon social/i],
   EDOS_FINANCIEROS: [/estado de situacion financiera/i, /balance general/i, /estado de resultados/i, /activo total/i, /pasivo/i, /capital contable/i, /utilidad neta/i, /ingresos/i],
-  DECLARACION_ANUAL: [/declaracion anual/i, /ejercicio fiscal/i, /impuesto sobre la renta/i, /ingresos acumulables/i, /total de deducciones/i],
-  DECLARACION_MENSUAL: [/pago provisional/i, /declaracion mensual/i, /declaracion de impuestos/i, /impuesto al valor agregado/i],
+  DECL_ANUAL: [/declaracion anual/i, /ejercicio fiscal/i, /impuesto sobre la renta/i, /ingresos acumulables/i, /total de deducciones/i],
+  DECL_MENSUAL: [/pago provisional/i, /declaracion mensual/i, /declaracion de impuestos/i, /impuesto al valor agregado/i],
   AVALUO: [/avaluo/i, /perito valuador/i, /valor comercial/i, /descripcion del inmueble/i],
   BURO_CREDITO: [/buro de credito/i, /reporte de credito/i, /circulo de credito/i, /comportamiento de pago/i],
-  CONTRATO_ARRENDAMIENTO: [/contrato de arrendamiento/i, /arrendador/i, /arrendatario/i, /renta mensual/i, /inmueble arrendado/i],
+  CONTRATO_ARREND: [/contrato de arrendamiento/i, /arrendador/i, /arrendatario/i, /renta mensual/i, /inmueble arrendado/i],
   CEDULA_PROFESIONAL: [/cedula profesional/i, /secretaria de educacion publica/i, /registro nacional de profesionistas/i],
   CURP_DOC: [/clave unica de registro de poblacion/i, /curp/i, /gobierno de mexico/i],
-  CFDI: [/comprobante fiscal digital/i, /factura/i, /cfdi/i, /folio fiscal/i, /uuid/i, /emisor/i, /receptor/i],
-  ESTADO_CUENTA: [/estado de cuenta/i, /cuenta bancaria/i, /clabe/i, /saldo/i, /transacciones/i, /deposito/i],
+  CFDI_FACTURA: [/comprobante fiscal digital/i, /factura/i, /cfdi/i, /folio fiscal/i, /uuid/i, /emisor/i, /receptor/i],
+  EDO_CUENTA_BANC: [/estado de cuenta/i, /cuenta bancaria/i, /clabe/i, /saldo/i, /transacciones/i, /deposito/i],
   PODER_NOTARIAL: [/poder notarial/i, /apoderado/i, /mandato/i, /poder general/i],
   COMPROBANTE_PAGO: [/comprobante de pago/i, /transferencia/i, /spei/i, /clave de rastreo/i],
   ACTA_ASAMBLEA: [/acta de asamblea/i, /asamblea general/i, /socios/i, /capital social/i],
