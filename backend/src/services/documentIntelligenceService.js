@@ -280,14 +280,63 @@ export async function logAgentAction(agentName, action, details = {}, cost = 0.0
 }
 
 // 6. Cruce de Referencias
+// Igual que document_verifications, la tabla cross_references
+// (NAGMAR_SCHEMA_V3_FINAL.sql) usa columnas distintas a las que maneja
+// agentCrossRef.js/agentRiskScorer.js internamente:
+// expediente_id (no order_id), document_a_id/document_b_id (no
+// source_document_id/target_document_id), field_name (no
+// cross_reference_type), match_result (no status), similarity_score (no
+// confidence_score), message_es (no details).
+function toDbCrossReferenceRow(c) {
+  return {
+    expediente_id: c.order_id,
+    document_a_id: c.source_document_id,
+    document_b_id: c.target_document_id,
+    field_name: c.cross_reference_type,
+    match_result: c.status, // 'pass', 'fail', 'warning'
+    similarity_score: c.confidence_score ?? null,
+    is_critical: c.status === 'fail',
+    message_es: c.details || '',
+    created_by: 'agent_cross_ref'
+  };
+}
+
+function fromDbCrossReferenceRow(row) {
+  return {
+    ...row,
+    order_id: row.expediente_id,
+    cross_reference_type: row.field_name,
+    status: row.match_result,
+    confidence_score: row.similarity_score,
+    details: row.message_es || ''
+  };
+}
+
+export async function saveCrossReferences(expedienteId, crossReferences = []) {
+  await supabaseAdmin
+    .from('cross_references')
+    .delete()
+    .eq('expediente_id', expedienteId);
+
+  if (!crossReferences.length) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from('cross_references')
+    .insert(crossReferences.map(toDbCrossReferenceRow))
+    .select();
+
+  if (error) throw error;
+  return (data || []).map(fromDbCrossReferenceRow);
+}
+
 export async function getCrossReferences(expedienteId) {
   const { data, error } = await supabaseAdmin
     .from('cross_references')
     .select()
-    .eq('order_id', expedienteId);
+    .eq('expediente_id', expedienteId);
 
   if (error) throw error;
-  return data;
+  return (data || []).map(fromDbCrossReferenceRow);
 }
 
 // 7. Resúmenes de expediente

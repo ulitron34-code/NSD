@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../services/documentIntelligenceService.js', () => ({
   getExtraction: vi.fn(),
-  logAgentAction: vi.fn().mockResolvedValue(undefined)
+  logAgentAction: vi.fn().mockResolvedValue(undefined),
+  saveCrossReferences: vi.fn().mockResolvedValue([])
 }));
 
 vi.mock('../config/supabase.js', () => ({
@@ -11,7 +12,7 @@ vi.mock('../config/supabase.js', () => ({
 }));
 
 import { runCrossReferencesForExpediente } from './agentCrossRef.js';
-import { getExtraction } from '../services/documentIntelligenceService.js';
+import { getExtraction, saveCrossReferences } from '../services/documentIntelligenceService.js';
 import { supabaseAdmin } from '../config/supabase.js';
 
 function makeBuilder(result) {
@@ -27,13 +28,11 @@ function makeBuilder(result) {
 
 function setupDocuments(documents) {
   const documentsBuilder = makeBuilder({ data: documents, error: null });
-  const crossRefBuilder = makeBuilder({ data: null, error: null });
   supabaseAdmin.from.mockImplementation((table) => {
     if (table === 'documents') return documentsBuilder;
-    if (table === 'cross_references') return crossRefBuilder;
     throw new Error(`Tabla inesperada: ${table}`);
   });
-  return { documentsBuilder, crossRefBuilder };
+  return { documentsBuilder };
 }
 
 function mockExtractions(map) {
@@ -129,14 +128,15 @@ describe('agentCrossRef.runCrossReferencesForExpediente', () => {
     expect(check.status).toBe('pass');
   });
 
-  it('elimina cruces previos e inserta los nuevos en cross_references', async () => {
-    const { crossRefBuilder } = setupDocuments([
+  it('delega el guardado de cruces en saveCrossReferences', async () => {
+    setupDocuments([
       { id: 'csf', filename: 'csf.pdf', document_type: 'RFC_CSF' },
       { id: 'acta', filename: 'acta.pdf', document_type: 'ACTA_CONST' }
     ]);
     mockExtractions({ csf: 'RFC ABC010101AB1', acta: 'RFC ABC010101AB1' });
     await runCrossReferencesForExpediente('exp-7');
-    expect(crossRefBuilder.delete).toHaveBeenCalled();
-    expect(crossRefBuilder.insert).toHaveBeenCalled();
+    expect(saveCrossReferences).toHaveBeenCalledWith('exp-7', expect.arrayContaining([
+      expect.objectContaining({ cross_reference_type: 'RFC_MATCH', status: 'pass' })
+    ]));
   });
 });

@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase.js';
-import { logAgentAction, getExtraction } from '../services/documentIntelligenceService.js';
+import { logAgentAction, getExtraction, saveCrossReferences } from '../services/documentIntelligenceService.js';
 
 // Helper de normalización para Razón Social
 function normalizeCompanyName(name = '') {
@@ -254,19 +254,7 @@ export async function runCrossReferencesForExpediente(expedienteId) {
   }
 
   // 3. Guardar cruces en la tabla `cross_references`
-  if (crossReferences.length > 0) {
-    // Eliminar previos de esta orden
-    await supabaseAdmin
-      .from('cross_references')
-      .delete()
-      .eq('order_id', expedienteId);
-
-    const { error: insertError } = await supabaseAdmin
-      .from('cross_references')
-      .insert(crossReferences);
-
-    if (insertError) throw insertError;
-  }
+  await saveCrossReferences(expedienteId, crossReferences);
 
   const duration = (Date.now() - startTime) / 1000;
   await logAgentAction(

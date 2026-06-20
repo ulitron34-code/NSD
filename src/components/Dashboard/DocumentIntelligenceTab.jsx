@@ -292,6 +292,13 @@ export default function DocumentIntelligenceTab() {
     return Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
   };
 
+  const getTrafficLightColor = (trafficLight) => ({
+    green: COLORS.green,
+    yellow: COLORS.amber,
+    red: "#C62828",
+    white: COLORS.border,
+  }[trafficLight] || COLORS.textMuted);
+
   const handleExportReport = () => {
     if (!selectedExpedienteId || !summary) return;
     

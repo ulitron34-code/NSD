@@ -5,7 +5,7 @@ vi.mock('../config/supabase.js', () => ({
 }));
 
 import { supabaseAdmin } from '../config/supabase.js';
-import { saveVerifications, getVerifications, getDocumentRedFlags } from './documentIntelligenceService.js';
+import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences } from './documentIntelligenceService.js';
 
 // Regresion para el bug real encontrado en produccion: la tabla
 // document_verifications (NAGMAR_SCHEMA_V3_FINAL.sql) usa la columna
@@ -95,5 +95,77 @@ describe('getDocumentRedFlags', () => {
     await getDocumentRedFlags('doc-1');
 
     expect(inFilter).toHaveBeenCalledWith('result', ['fail', 'warning']);
+  });
+});
+
+// Regresion para el mismo tipo de bug en cross_references: la tabla real usa
+// expediente_id/document_a_id/document_b_id/field_name/match_result/
+// similarity_score/message_es, no order_id/source_document_id/
+// target_document_id/cross_reference_type/status/confidence_score/details
+// (shape interno que siguen usando agentCrossRef.js y agentRiskScorer.js).
+describe('saveCrossReferences', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('traduce el shape interno a las columnas reales de cross_references', async () => {
+    const deleteEq = vi.fn().mockResolvedValue({ data: null, error: null });
+    const insertSelect = vi.fn().mockResolvedValue({ data: [], error: null });
+    const insert = vi.fn(() => ({ select: insertSelect }));
+    supabaseAdmin.from.mockReturnValue({ delete: () => ({ eq: deleteEq }), insert });
+
+    await saveCrossReferences('exp-1', [{
+      order_id: 'exp-1',
+      source_document_id: 'doc-a',
+      target_document_id: 'doc-b',
+      cross_reference_type: 'RFC_MATCH',
+      status: 'fail',
+      confidence_score: 0,
+      details: 'no coincide'
+    }]);
+
+    expect(deleteEq).toHaveBeenCalledWith('expediente_id', 'exp-1');
+    expect(insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        expediente_id: 'exp-1',
+        document_a_id: 'doc-a',
+        document_b_id: 'doc-b',
+        field_name: 'RFC_MATCH',
+        match_result: 'fail',
+        similarity_score: 0,
+        is_critical: true,
+        message_es: 'no coincide'
+      })
+    ]);
+    const insertedRow = insert.mock.calls[0][0][0];
+    expect(insertedRow.order_id).toBeUndefined();
+    expect(insertedRow.status).toBeUndefined();
+  });
+
+  it('borra los cruces previos aunque la lista nueva venga vacia', async () => {
+    const deleteEq = vi.fn().mockResolvedValue({ data: null, error: null });
+    const insert = vi.fn();
+    supabaseAdmin.from.mockReturnValue({ delete: () => ({ eq: deleteEq }), insert });
+
+    const result = await saveCrossReferences('exp-1', []);
+    expect(deleteEq).toHaveBeenCalledWith('expediente_id', 'exp-1');
+    expect(insert).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
+  });
+});
+
+describe('getCrossReferences', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('filtra por expediente_id y mapea match_result -> status al leer', async () => {
+    const eq = vi.fn().mockResolvedValue({
+      data: [{ expediente_id: 'exp-1', field_name: 'RFC_MATCH', match_result: 'pass', similarity_score: 100, message_es: 'ok' }],
+      error: null
+    });
+    supabaseAdmin.from.mockReturnValue({ select: () => ({ eq }) });
+
+    const result = await getCrossReferences('exp-1');
+    expect(eq).toHaveBeenCalledWith('expediente_id', 'exp-1');
+    expect(result[0].status).toBe('pass');
+    expect(result[0].cross_reference_type).toBe('RFC_MATCH');
+    expect(result[0].details).toBe('ok');
   });
 });
