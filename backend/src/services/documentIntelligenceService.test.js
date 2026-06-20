@@ -5,7 +5,7 @@ vi.mock('../config/supabase.js', () => ({
 }));
 
 import { supabaseAdmin } from '../config/supabase.js';
-import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences, saveScore, getScore } from './documentIntelligenceService.js';
+import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences, saveScore, getScore, saveExtraction, getExtraction } from './documentIntelligenceService.js';
 
 // Regresion para el bug real encontrado en produccion: la tabla
 // document_verifications (NAGMAR_SCHEMA_V3_FINAL.sql) usa la columna
@@ -216,5 +216,54 @@ describe('getScore', () => {
     const result = await getScore('doc-1');
     expect(result.composite_score).toBe(72);
     expect(result.validity_score).toBe(90);
+  });
+});
+
+// Regresion para el mismo tipo de bug en document_extractions: la tabla real
+// requiere extraction_method (NOT NULL + CHECK de valores fijos) y
+// processed_by (NOT NULL), usa extraction_confidence (no confidence_score),
+// y no tiene constraint UNIQUE sobre document_id.
+describe('saveExtraction', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('infiere extraction_method del filename y completa los NOT NULL del esquema', async () => {
+    const deleteEq = vi.fn().mockResolvedValue({ data: null, error: null });
+    const insertSelect = vi.fn().mockResolvedValue({
+      data: { document_id: 'doc-1', extraction_confidence: 95, extracted_data: {} },
+      error: null
+    });
+    const insert = vi.fn(() => ({ select: () => ({ single: insertSelect }) }));
+    supabaseAdmin.from.mockReturnValue({ delete: () => ({ eq: deleteEq }), insert });
+
+    const result = await saveExtraction('doc-1', { filename: 'estado.xlsx', textContent: 'x' }, 95, 'AgentFinancial');
+
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      document_id: 'doc-1',
+      extraction_method: 'excel_parser',
+      extraction_confidence: 95,
+      processed_by: 'AgentFinancial'
+    }));
+    expect(result.confidence_score).toBe(95);
+  });
+
+  it('usa "manual" como extraction_method cuando no reconoce la extension', async () => {
+    const insert = vi.fn(() => ({ select: () => ({ single: vi.fn().mockResolvedValue({ data: {}, error: null }) }) }));
+    supabaseAdmin.from.mockReturnValue({ delete: () => ({ eq: vi.fn().mockResolvedValue({}) }), insert });
+
+    await saveExtraction('doc-1', { filename: 'archivo.raro' }, 50);
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ extraction_method: 'manual', processed_by: 'AgentClassifier' }));
+  });
+});
+
+describe('getExtraction', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('mapea extraction_confidence -> confidence_score al leer', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { extraction_confidence: 88, extracted_data: { textContent: 'hola' } }, error: null });
+    supabaseAdmin.from.mockReturnValue({ select: () => ({ eq: () => ({ maybeSingle }) }) });
+
+    const result = await getExtraction('doc-1');
+    expect(result.confidence_score).toBe(88);
+    expect(result.extracted_data.textContent).toBe('hola');
   });
 });

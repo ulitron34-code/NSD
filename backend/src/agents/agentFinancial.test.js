@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 vi.mock('../services/documentIntelligenceService.js', () => ({
   saveExtraction: vi.fn().mockResolvedValue(undefined),
   saveVerifications: vi.fn().mockResolvedValue(undefined),
+  getExtraction: vi.fn(),
   logAgentAction: vi.fn().mockResolvedValue(undefined)
 }));
 
@@ -18,7 +19,7 @@ import {
   collectMonetaryAmounts,
   analyzeBenfordLaw
 } from './agentFinancial.js';
-import { saveExtraction, saveVerifications } from '../services/documentIntelligenceService.js';
+import { saveExtraction, saveVerifications, getExtraction } from '../services/documentIntelligenceService.js';
 import { supabaseAdmin } from '../config/supabase.js';
 
 function buildWorkbook(rows) {
@@ -127,12 +128,11 @@ describe('analyzeFinancialDocument', () => {
   });
 
   function setup({ extraction, document, benchmarks, workbookRows }) {
-    const extractionBuilder = makeBuilder({ data: extraction, error: null });
     const documentBuilder = makeBuilder({ data: document, error: null });
     const benchmarksBuilder = makeBuilder({ data: benchmarks, error: null });
 
+    getExtraction.mockResolvedValue(extraction);
     supabaseAdmin.from.mockImplementation((table) => {
-      if (table === 'document_extractions') return extractionBuilder;
       if (table === 'documents') return documentBuilder;
       if (table === 'ref_financial_benchmarks') return benchmarksBuilder;
       throw new Error(`Tabla inesperada: ${table}`);
@@ -148,7 +148,7 @@ describe('analyzeFinancialDocument', () => {
   }
 
   it('lanza error si no existe la extracción del documento', async () => {
-    supabaseAdmin.from.mockImplementation(() => makeBuilder({ data: null, error: { message: 'not found' } }));
+    getExtraction.mockResolvedValue(null);
     await expect(analyzeFinancialDocument('doc-x')).rejects.toThrow(/Extracción de texto no encontrada/);
   });
 

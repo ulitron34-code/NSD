@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase.js';
-import { logAgentAction, saveExtraction, saveVerifications } from '../services/documentIntelligenceService.js';
+import { logAgentAction, saveExtraction, saveVerifications, getExtraction } from '../services/documentIntelligenceService.js';
 import * as XLSX from 'xlsx';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -208,13 +208,9 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
   const startTime = Date.now();
 
   // 1. Obtener la extracción de texto del clasificador
-  const { data: extraction, error } = await supabaseAdmin
-    .from('document_extractions')
-    .select('*')
-    .eq('document_id', documentId)
-    .single();
+  const extraction = await getExtraction(documentId);
 
-  if (error || !extraction) {
+  if (!extraction) {
     throw new Error(`Extracción de texto no encontrada para el documento ${documentId}`);
   }
 
@@ -455,7 +451,7 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
     benford_analysis: benfordAnalysis,
     analyzed_by_financial_agent: true,
     used_ai: usedAI
-  }, extraction.confidence_score);
+  }, extraction.confidence_score, 'AgentFinancial');
 
   const duration = (Date.now() - startTime) / 1000;
   await logAgentAction(

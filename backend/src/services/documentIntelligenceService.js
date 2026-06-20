@@ -108,20 +108,60 @@ export function classifyDocument(filename, textContent = '') {
 }
 
 // 2. Operaciones con Extractions
-export async function saveExtraction(documentId, extractedData, confidence) {
+//
+// document_extractions (NAGMAR_SCHEMA_V3_FINAL.sql) requiere
+// extraction_method (NOT NULL + CHECK de valores fijos) y processed_by (NOT
+// NULL), y usa extraction_confidence (no confidence_score, ni existe
+// extracted_at). Tampoco hay constraint UNIQUE sobre document_id, asi que el
+// upsert(onConflict:'document_id') original no era una operacion valida.
+const EXTRACTION_METHOD_BY_EXT = {
+  pdf: 'pdf_text',
+  xlsx: 'excel_parser',
+  xls: 'excel_parser',
+  csv: 'excel_parser',
+  png: 'ocr_tesseract',
+  jpg: 'ocr_tesseract',
+  jpeg: 'ocr_tesseract',
+  webp: 'ocr_tesseract',
+  tiff: 'ocr_tesseract',
+  doc: 'word_parser',
+  docx: 'word_parser'
+};
+
+function guessExtractionMethod(filename = '') {
+  const ext = String(filename).split('.').pop()?.toLowerCase();
+  return EXTRACTION_METHOD_BY_EXT[ext] || 'manual';
+}
+
+function fromDbExtractionRow(row) {
+  if (!row) return row;
+  return {
+    ...row,
+    confidence_score: row.extraction_confidence
+  };
+}
+
+export async function saveExtraction(documentId, extractedData, confidence, processedBy = 'AgentClassifier') {
+  await supabaseAdmin
+    .from('document_extractions')
+    .delete()
+    .eq('document_id', documentId);
+
   const { data, error } = await supabaseAdmin
     .from('document_extractions')
-    .upsert({
+    .insert({
       document_id: documentId,
-      extracted_data: extractedData,
-      confidence_score: confidence,
-      extracted_at: new Date().toISOString()
-    }, { onConflict: 'document_id' })
+      extraction_method: guessExtractionMethod(extractedData?.filename),
+      extraction_confidence: confidence ?? null,
+      extracted_data: extractedData || {},
+      processed_by: processedBy,
+      completed_at: new Date().toISOString()
+    })
     .select()
     .single();
 
   if (error) throw error;
-  return data;
+  return fromDbExtractionRow(data);
 }
 
 export async function getExtraction(documentId) {
@@ -132,7 +172,7 @@ export async function getExtraction(documentId) {
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return fromDbExtractionRow(data);
 }
 
 // 3. Operaciones con Verifications
