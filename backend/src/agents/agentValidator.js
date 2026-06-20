@@ -407,7 +407,7 @@ export async function validateDocumentContent(documentId, documentType, textCont
   });
 
   // Guardar verificaciones y score en la base de datos
-  await saveVerifications(documentId, verifications);
+  await saveVerifications(documentId, verifications, 'AgentValidator');
   await saveScore(documentId, scores);
 
   return {

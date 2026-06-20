@@ -136,7 +136,38 @@ export async function getExtraction(documentId) {
 }
 
 // 3. Operaciones con Verifications
-export async function saveVerifications(documentId, verifications = []) {
+// La tabla document_verifications (NAGMAR_SCHEMA_V3_FINAL.sql) usa columnas
+// distintas a las que maneja el resto del codigo internamente
+// (rule_code/status/severity/findings): el nombre real es result, no status,
+// y no existe una columna findings (se guarda en details/message_es). Estos
+// helpers traducen entre el shape interno usado por los agentes y el shape
+// real de la tabla, sin tener que tocar agentValidator/agentFinancial ni el
+// frontend que ya esperan {status, findings}.
+function toDbVerificationRow(documentId, v, agentName) {
+  return {
+    document_id: documentId,
+    verification_type: v.rule_code || 'general',
+    rule_code: v.rule_code,
+    result: v.status, // 'pass', 'fail', 'warning'
+    severity: v.severity || 'warning', // 'info', 'warning', 'error', 'critical'
+    details: { findings: v.findings || '' },
+    message_es: v.findings || '',
+    is_red_flag: v.status === 'fail' || v.status === 'warning',
+    red_flag_category: v.status === 'fail' || v.status === 'warning' ? v.rule_code : null,
+    verified_by: agentName || 'Sistema',
+    verified_at: new Date().toISOString()
+  };
+}
+
+function fromDbVerificationRow(row) {
+  return {
+    ...row,
+    status: row.result,
+    findings: row.details?.findings || row.message_es || ''
+  };
+}
+
+export async function saveVerifications(documentId, verifications = [], agentName = 'Sistema') {
   if (!verifications.length) return [];
 
   // Borrar previas para este doc
@@ -147,20 +178,11 @@ export async function saveVerifications(documentId, verifications = []) {
 
   const { data, error } = await supabaseAdmin
     .from('document_verifications')
-    .insert(
-      verifications.map(v => ({
-        document_id: documentId,
-        rule_code: v.rule_code,
-        status: v.status, // 'pass', 'fail', 'warning'
-        severity: v.severity || 'warning', // 'info', 'warning', 'error', 'critical'
-        findings: v.findings || '',
-        verified_at: new Date().toISOString()
-      }))
-    )
+    .insert(verifications.map((v) => toDbVerificationRow(documentId, v, agentName)))
     .select();
 
   if (error) throw error;
-  return data;
+  return (data || []).map(fromDbVerificationRow);
 }
 
 export async function getVerifications(documentId) {
@@ -170,7 +192,7 @@ export async function getVerifications(documentId) {
     .eq('document_id', documentId);
 
   if (error) throw error;
-  return data;
+  return (data || []).map(fromDbVerificationRow);
 }
 
 export async function getDocumentRedFlags(documentId) {
@@ -178,11 +200,11 @@ export async function getDocumentRedFlags(documentId) {
     .from('document_verifications')
     .select()
     .eq('document_id', documentId)
-    .in('status', ['fail', 'warning'])
+    .in('result', ['fail', 'warning'])
     .order('severity', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return (data || []).map(fromDbVerificationRow);
 }
 
 // 4. Operaciones con Scores
@@ -302,7 +324,7 @@ export async function getExpedienteSummary(expedienteId) {
     .from('document_verifications')
     .select()
     .in('document_id', documentIds)
-    .in('status', ['fail', 'warning']);
+    .in('result', ['fail', 'warning']);
 
   if (verError) throw verError;
 
@@ -345,12 +367,12 @@ export async function getExpedienteRedFlags(expedienteId) {
     .from('document_verifications')
     .select()
     .in('document_id', Object.keys(documentMap))
-    .in('status', ['fail', 'warning']);
+    .in('result', ['fail', 'warning']);
 
   if (verError) throw verError;
 
   return (verifications || []).map(v => ({
-    ...v,
+    ...fromDbVerificationRow(v),
     filename: documentMap[v.document_id]
   })).sort((a, b) => {
     const severityOrder = { critical: 4, error: 3, warning: 2, info: 1 };

@@ -186,7 +186,7 @@ describe('analyzeFinancialDocument', () => {
     expect(result.verifications.find(v => v.rule_code === 'FORENSE_ROE_ANOMALO').status).toBe('pass');
     expect(result.verifications.find(v => v.rule_code === 'FORENSE_ROA_ANOMALO').status).toBe('pass');
 
-    expect(saveVerifications).toHaveBeenCalledWith('doc-1', result.verifications);
+    expect(saveVerifications).toHaveBeenCalledWith('doc-1', result.verifications, 'AgentFinancial');
     expect(saveExtraction).toHaveBeenCalled();
   });
 

@@ -445,7 +445,7 @@ export async function analyzeFinancialDocument(documentId, sector = 'General') {
 
   // 4. Guardar verificaciones del agente financiero
   if (verifications.length > 0) {
-    await saveVerifications(documentId, verifications);
+    await saveVerifications(documentId, verifications, 'AgentFinancial');
   }
 
   // Guardar campos extraídos en la extracción

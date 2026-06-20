@@ -1,0 +1,99 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('../config/supabase.js', () => ({
+  supabaseAdmin: { from: vi.fn() }
+}));
+
+import { supabaseAdmin } from '../config/supabase.js';
+import { saveVerifications, getVerifications, getDocumentRedFlags } from './documentIntelligenceService.js';
+
+// Regresion para el bug real encontrado en produccion: la tabla
+// document_verifications (NAGMAR_SCHEMA_V3_FINAL.sql) usa la columna
+// "result", no "status", y no tiene columna "findings". El codigo de los
+// agentes (agentValidator/agentFinancial) sigue trabajando internamente con
+// {status, findings} -- estos tests verifican que documentIntelligenceService
+// traduzca correctamente hacia/desde el nombre real de las columnas.
+describe('saveVerifications', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('inserta usando la columna real "result" (no "status") y completa los NOT NULL del esquema', async () => {
+    const deleteEq = vi.fn().mockResolvedValue({ data: null, error: null });
+    const insertSelect = vi.fn().mockResolvedValue({
+      data: [{ document_id: 'doc-1', rule_code: 'RFC_FORMAT', result: 'pass', severity: 'info', details: { findings: 'ok' }, message_es: 'ok' }],
+      error: null
+    });
+    const insert = vi.fn(() => ({ select: insertSelect }));
+    supabaseAdmin.from.mockReturnValue({
+      delete: () => ({ eq: deleteEq }),
+      insert
+    });
+
+    await saveVerifications('doc-1', [
+      { rule_code: 'RFC_FORMAT', status: 'pass', severity: 'info', findings: 'ok' }
+    ], 'AgentValidator');
+
+    expect(insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        document_id: 'doc-1',
+        rule_code: 'RFC_FORMAT',
+        result: 'pass',
+        verification_type: 'RFC_FORMAT',
+        verified_by: 'AgentValidator',
+        details: { findings: 'ok' }
+      })
+    ]);
+    const insertedRow = insert.mock.calls[0][0][0];
+    expect(insertedRow.status).toBeUndefined();
+    expect(insertedRow.findings).toBeUndefined();
+  });
+
+  it('marca is_red_flag true para status fail/warning y false para pass', async () => {
+    const insert = vi.fn(() => ({ select: vi.fn().mockResolvedValue({ data: [], error: null }) }));
+    supabaseAdmin.from.mockReturnValue({ delete: () => ({ eq: vi.fn().mockResolvedValue({}) }), insert });
+
+    await saveVerifications('doc-1', [
+      { rule_code: 'A', status: 'fail', severity: 'critical', findings: 'mal' },
+      { rule_code: 'B', status: 'pass', severity: 'info', findings: 'bien' }
+    ]);
+
+    const rows = insert.mock.calls[0][0];
+    expect(rows[0].is_red_flag).toBe(true);
+    expect(rows[1].is_red_flag).toBe(false);
+  });
+
+  it('devuelve [] sin tocar supabase si no hay verificaciones', async () => {
+    const result = await saveVerifications('doc-1', []);
+    expect(result).toEqual([]);
+    expect(supabaseAdmin.from).not.toHaveBeenCalled();
+  });
+});
+
+describe('getVerifications', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('mapea result -> status y details.findings -> findings al leer', async () => {
+    const eq = vi.fn().mockResolvedValue({
+      data: [{ document_id: 'doc-1', rule_code: 'X', result: 'warning', severity: 'medium', details: { findings: 'ojo aqui' } }],
+      error: null
+    });
+    supabaseAdmin.from.mockReturnValue({ select: () => ({ eq }) });
+
+    const result = await getVerifications('doc-1');
+    expect(result[0].status).toBe('warning');
+    expect(result[0].findings).toBe('ojo aqui');
+  });
+});
+
+describe('getDocumentRedFlags', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('filtra por la columna real "result", no "status"', async () => {
+    const inFilter = vi.fn().mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) });
+    const eq = vi.fn(() => ({ in: inFilter }));
+    supabaseAdmin.from.mockReturnValue({ select: () => ({ eq }) });
+
+    await getDocumentRedFlags('doc-1');
+
+    expect(inFilter).toHaveBeenCalledWith('result', ['fail', 'warning']);
+  });
+});
