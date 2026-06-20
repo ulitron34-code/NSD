@@ -21,6 +21,9 @@ const TermsPage         = lazy(() => import("./pages/TermsPage"));
 const ContactPage       = lazy(() => import("./pages/ContactPage"));
 const BlogPage          = lazy(() => import("./pages/BlogPage"));
 const CertificationsPage = lazy(() => import("./pages/CertificationsPage"));
+const ServicesPage      = lazy(() => import("./pages/ServicesPage"));
+const ServiceOrdersPage = lazy(() => import("./pages/ServiceOrdersPage"));
+const CheckoutPage      = lazy(() => import("./pages/CheckoutPage"));
 const NotFoundPage      = lazy(() => import("./pages/NotFoundPage"));
 
 const Loader = () => (
@@ -50,6 +53,7 @@ function AppContent() {
           <Route path="/contact"        element={<><Header /><ContactPage /></>} />
           <Route path="/blog"           element={<><Header isLanding={true} /><BlogPage /></>} />
           <Route path="/certifications" element={<><Header isLanding={true} /><CertificationsPage /></>} />
+          <Route path="/services"       element={<><Header isLanding={true} /><ServicesPage /></>} />
 
           {/* Dashboard protegido */}
           <Route
@@ -65,6 +69,22 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <><Header /><ProfilePage /></>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/service-orders"
+            element={
+              <ProtectedRoute>
+                <><Header /><ServiceOrdersPage /></>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <><Header /><CheckoutPage /></>
               </ProtectedRoute>
             }
           />
