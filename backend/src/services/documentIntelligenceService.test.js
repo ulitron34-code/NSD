@@ -5,7 +5,7 @@ vi.mock('../config/supabase.js', () => ({
 }));
 
 import { supabaseAdmin } from '../config/supabase.js';
-import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences } from './documentIntelligenceService.js';
+import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences, saveScore, getScore } from './documentIntelligenceService.js';
 
 // Regresion para el bug real encontrado en produccion: la tabla
 // document_verifications (NAGMAR_SCHEMA_V3_FINAL.sql) usa la columna
@@ -167,5 +167,54 @@ describe('getCrossReferences', () => {
     expect(result[0].status).toBe('pass');
     expect(result[0].cross_reference_type).toBe('RFC_MATCH');
     expect(result[0].details).toBe('ok');
+  });
+});
+
+// Regresion para el mismo tipo de bug en document_scores: la tabla real
+// requiere expediente_id (NOT NULL, nunca se mandaba), usa overall_score
+// (no composite_score) y recency_score (no validity_score), y no tiene
+// constraint UNIQUE sobre document_id (por eso no se puede usar
+// upsert(onConflict: 'document_id')).
+describe('saveScore', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('busca el expediente_id del documento y lo incluye en el insert', async () => {
+    const documentsSelect = vi.fn(() => ({ eq: () => ({ single: vi.fn().mockResolvedValue({ data: { order_id: 'exp-1' }, error: null }) }) }));
+    const deleteEq = vi.fn().mockResolvedValue({ data: null, error: null });
+    const insertSelect = vi.fn().mockResolvedValue({ data: { document_id: 'doc-1', overall_score: 85, recency_score: 100, traffic_light: 'green' }, error: null });
+    const insert = vi.fn(() => ({ select: () => ({ single: insertSelect }) }));
+
+    supabaseAdmin.from.mockImplementation((table) => {
+      if (table === 'documents') return { select: documentsSelect };
+      if (table === 'document_scores') return { delete: () => ({ eq: deleteEq }), insert };
+      throw new Error(`Tabla inesperada: ${table}`);
+    });
+
+    const result = await saveScore('doc-1', { completeness: 100, authenticity: 100, consistency: 100, quality: 100, validity: 100 });
+
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      document_id: 'doc-1',
+      expediente_id: 'exp-1',
+      overall_score: 100,
+      recency_score: 100
+    }));
+    const insertedRow = insert.mock.calls[0][0];
+    expect(insertedRow.composite_score).toBeUndefined();
+    expect(insertedRow.validity_score).toBeUndefined();
+    expect(result.composite_score).toBe(85);
+    expect(result.validity_score).toBe(100);
+  });
+});
+
+describe('getScore', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('mapea overall_score -> composite_score y recency_score -> validity_score al leer', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { overall_score: 72, recency_score: 90, traffic_light: 'yellow' }, error: null });
+    supabaseAdmin.from.mockReturnValue({ select: () => ({ eq: () => ({ maybeSingle }) }) });
+
+    const result = await getScore('doc-1');
+    expect(result.composite_score).toBe(72);
+    expect(result.validity_score).toBe(90);
   });
 });

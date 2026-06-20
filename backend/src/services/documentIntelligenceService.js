@@ -208,6 +208,22 @@ export async function getDocumentRedFlags(documentId) {
 }
 
 // 4. Operaciones con Scores
+//
+// document_scores (NAGMAR_SCHEMA_V3_FINAL.sql) requiere expediente_id (NOT
+// NULL, el codigo nunca lo mandaba), usa overall_score (no composite_score)
+// y recency_score (no validity_score). Tampoco tiene una constraint UNIQUE
+// sobre document_id, asi que upsert(onConflict: 'document_id') fallaba
+// ("no unique or exclusion constraint"); se reemplaza por borrar+insertar,
+// igual que el resto de tablas operativas de este servicio.
+function fromDbScoreRow(row) {
+  if (!row) return row;
+  return {
+    ...row,
+    composite_score: row.overall_score,
+    validity_score: row.recency_score
+  };
+}
+
 export async function saveScore(documentId, scoreData) {
   // scoreData: { completeness, authenticity, consistency, quality, validity }
   const completeness = scoreData.completeness ?? 100;
@@ -230,24 +246,37 @@ export async function saveScore(documentId, scoreData) {
   if (compositeScore < 50) trafficLight = 'red';
   else if (compositeScore < 75) trafficLight = 'yellow';
 
+  const { data: documentRow, error: docError } = await supabaseAdmin
+    .from('documents')
+    .select('order_id')
+    .eq('id', documentId)
+    .single();
+  if (docError) throw docError;
+
+  await supabaseAdmin
+    .from('document_scores')
+    .delete()
+    .eq('document_id', documentId);
+
   const { data, error } = await supabaseAdmin
     .from('document_scores')
-    .upsert({
+    .insert({
       document_id: documentId,
-      composite_score: compositeScore,
+      expediente_id: documentRow.order_id,
+      overall_score: compositeScore,
       completeness_score: completeness,
       authenticity_score: authenticity,
       consistency_score: consistency,
       quality_score: quality,
-      validity_score: validity,
+      recency_score: validity,
       traffic_light: trafficLight,
       scored_at: new Date().toISOString()
-    }, { onConflict: 'document_id' })
+    })
     .select()
     .single();
 
   if (error) throw error;
-  return data;
+  return fromDbScoreRow(data);
 }
 
 export async function getScore(documentId) {
@@ -258,7 +287,7 @@ export async function getScore(documentId) {
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return fromDbScoreRow(data);
 }
 
 // 5. Bitácora de agentes
@@ -361,12 +390,13 @@ export async function getExpedienteSummary(expedienteId) {
   const documentIds = documents.map(d => d.id);
 
   // Obtener scores
-  const { data: scores, error: scoreError } = await supabaseAdmin
+  const { data: rawScores, error: scoreError } = await supabaseAdmin
     .from('document_scores')
     .select()
     .in('document_id', documentIds);
 
   if (scoreError) throw scoreError;
+  const scores = (rawScores || []).map(fromDbScoreRow);
 
   // Obtener red flags (verificaciones fallidas o con warning)
   const { data: verifications, error: verError } = await supabaseAdmin
