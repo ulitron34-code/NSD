@@ -336,21 +336,34 @@ export async function getScore(documentId) {
 }
 
 // 5. Bitácora de agentes
+// agent_review_log (NAGMAR_SCHEMA_V3_FINAL.sql) no tiene columnas details ni
+// cost_usd (es estimated_cost_usd), y exige document_id/expediente_id NOT
+// NULL que esta funcion nunca recibio (varias llamadas son a nivel de lote,
+// sin un solo documento). Es puro telemetria/auditoria de costo -- nunca debe
+// tumbar la operacion real del agente, asi que cualquier error se atrapa y
+// solo se reporta a consola en vez de propagarse al llamador.
 export async function logAgentAction(agentName, action, details = {}, cost = 0.0) {
-  const { data, error } = await supabaseAdmin
-    .from('agent_review_log')
-    .insert([{
-      agent_name: agentName,
-      action,
-      details,
-      cost_usd: cost,
-      created_at: new Date().toISOString()
-    }])
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('agent_review_log')
+      .insert([{
+        document_id: details?.documentId || details?.targetDocumentId || null,
+        expediente_id: details?.expedienteId || null,
+        agent_name: agentName,
+        action,
+        output_summary: JSON.stringify(details).slice(0, 2000),
+        estimated_cost_usd: cost,
+        completed_at: new Date().toISOString()
+      }])
+      .select()
+      .single();
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error(`logAgentAction fallo (no bloquea la operacion real): ${error.message}`);
+    return null;
+  }
 }
 
 // 6. Cruce de Referencias

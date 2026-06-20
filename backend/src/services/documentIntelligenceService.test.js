@@ -5,7 +5,7 @@ vi.mock('../config/supabase.js', () => ({
 }));
 
 import { supabaseAdmin } from '../config/supabase.js';
-import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences, saveScore, getScore, saveExtraction, getExtraction } from './documentIntelligenceService.js';
+import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences, saveScore, getScore, saveExtraction, getExtraction, logAgentAction } from './documentIntelligenceService.js';
 
 // Regresion para el bug real encontrado en produccion: la tabla
 // document_verifications (NAGMAR_SCHEMA_V3_FINAL.sql) usa la columna
@@ -265,5 +265,36 @@ describe('getExtraction', () => {
     const result = await getExtraction('doc-1');
     expect(result.confidence_score).toBe(88);
     expect(result.extracted_data.textContent).toBe('hola');
+  });
+});
+
+// agent_review_log es pura telemetria/auditoria de costo. No debe poder
+// tumbar la operacion real del agente que la invoca (eso fue exactamente lo
+// que paso en produccion: classify() devolvia 400 aunque la clasificacion
+// real ya se habia guardado, solo porque el log de auditoria fallaba).
+describe('logAgentAction', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('usa estimated_cost_usd (no cost_usd) y nunca lanza si el insert falla', async () => {
+    const insert = vi.fn(() => ({ select: () => ({ single: vi.fn().mockResolvedValue({ data: null, error: { message: "Could not find the 'cost_usd' column" } }) }) }));
+    supabaseAdmin.from.mockReturnValue({ insert });
+
+    const result = await logAgentAction('AgentClassifier', 'classify', { documentId: 'doc-1' }, 0.005);
+
+    expect(insert).toHaveBeenCalledWith([expect.objectContaining({
+      agent_name: 'AgentClassifier',
+      action: 'classify',
+      estimated_cost_usd: 0.005,
+      document_id: 'doc-1'
+    })]);
+    expect(result).toBeNull();
+  });
+
+  it('retorna el dato guardado cuando el insert si funciona', async () => {
+    const insert = vi.fn(() => ({ select: () => ({ single: vi.fn().mockResolvedValue({ data: { id: 'log-1' }, error: null }) }) }));
+    supabaseAdmin.from.mockReturnValue({ insert });
+
+    const result = await logAgentAction('AgentValidator', 'validate_batch', { expedienteId: 'exp-1' });
+    expect(result).toEqual({ id: 'log-1' });
   });
 });
