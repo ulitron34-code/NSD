@@ -16,10 +16,10 @@ import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossRefe
 describe('saveVerifications', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('inserta usando la columna real "result" (no "status") y completa los NOT NULL del esquema', async () => {
+  it('inserta usando la columna real "result" (no "status"), deja rule_code en NULL (tiene FK propia) y usa verification_type como fuente real', async () => {
     const deleteEq = vi.fn().mockResolvedValue({ data: null, error: null });
     const insertSelect = vi.fn().mockResolvedValue({
-      data: [{ document_id: 'doc-1', rule_code: 'RFC_FORMAT', result: 'pass', severity: 'info', details: { findings: 'ok' }, message_es: 'ok' }],
+      data: [{ document_id: 'doc-1', verification_type: 'RFC_FORMAT', rule_code: null, result: 'pass', severity: 'info', details: { findings: 'ok' }, message_es: 'ok' }],
       error: null
     });
     const insert = vi.fn(() => ({ select: insertSelect }));
@@ -28,14 +28,14 @@ describe('saveVerifications', () => {
       insert
     });
 
-    await saveVerifications('doc-1', [
+    const result = await saveVerifications('doc-1', [
       { rule_code: 'RFC_FORMAT', status: 'pass', severity: 'info', findings: 'ok' }
     ], 'AgentValidator');
 
     expect(insert).toHaveBeenCalledWith([
       expect.objectContaining({
         document_id: 'doc-1',
-        rule_code: 'RFC_FORMAT',
+        rule_code: null,
         result: 'pass',
         verification_type: 'RFC_FORMAT',
         verified_by: 'AgentValidator',
@@ -45,6 +45,7 @@ describe('saveVerifications', () => {
     const insertedRow = insert.mock.calls[0][0][0];
     expect(insertedRow.status).toBeUndefined();
     expect(insertedRow.findings).toBeUndefined();
+    expect(result[0].rule_code).toBe('RFC_FORMAT');
   });
 
   it('marca is_red_flag true para status fail/warning y false para pass', async () => {

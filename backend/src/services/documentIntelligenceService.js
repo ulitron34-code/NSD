@@ -188,17 +188,35 @@ export async function getExtraction(documentId) {
 // helpers traducen entre el shape interno usado por los agentes y el shape
 // real de la tabla, sin tener que tocar agentValidator/agentFinancial ni el
 // frontend que ya esperan {status, findings}.
+// document_verifications.severity tiene CHECK (severity IN ('info','low',
+// 'medium','high','critical','blocker')); los agentes internamente usan
+// 'warning'/'error' (entre otros), que no son valores validos ahi.
+const SEVERITY_TO_DB = { warning: 'medium', error: 'high' };
+function toDbSeverity(severity) {
+  return SEVERITY_TO_DB[severity] || severity || 'info';
+}
+
+// red_flag_category tiene CHECK (NULL o uno de 'fraud','inconsistency',
+// 'expired','missing','suspicious','regulatory'). No hay un mapeo confiable
+// rule_code -> categoria sin revisar cada regla una por una, asi que se deja
+// en NULL (permitido) en vez de arriesgar un valor inventado que tambien
+// viole el constraint.
+// rule_code ademas tiene FK a ref_validation_rules(rule_code) -- una tabla de
+// referencia separada cuyo contenido no controlamos desde aqui. En vez de
+// perseguir esa lista tambien, verification_type (NOT NULL, sin FK) es la
+// fuente real del codigo de regla en escritura Y lectura; rule_code se deja
+// en NULL para no arriesgar otra violacion de foreign key.
 function toDbVerificationRow(documentId, v, agentName) {
   return {
     document_id: documentId,
     verification_type: v.rule_code || 'general',
-    rule_code: v.rule_code,
+    rule_code: null,
     result: v.status, // 'pass', 'fail', 'warning'
-    severity: v.severity || 'warning', // 'info', 'warning', 'error', 'critical'
+    severity: toDbSeverity(v.severity),
     details: { findings: v.findings || '' },
     message_es: v.findings || '',
     is_red_flag: v.status === 'fail' || v.status === 'warning',
-    red_flag_category: v.status === 'fail' || v.status === 'warning' ? v.rule_code : null,
+    red_flag_category: null,
     verified_by: agentName || 'Sistema',
     verified_at: new Date().toISOString()
   };
@@ -207,6 +225,7 @@ function toDbVerificationRow(documentId, v, agentName) {
 function fromDbVerificationRow(row) {
   return {
     ...row,
+    rule_code: row.verification_type,
     status: row.result,
     findings: row.details?.findings || row.message_es || ''
   };
