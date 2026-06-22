@@ -14,6 +14,16 @@ async function downloadFileFromStorage(storagePath) {
   return Buffer.from(arrayBuffer);
 }
 
+// Evita que una extracción cuelgue el lote completo (Tesseract puede quedarse
+// esperando indefinidamente al descargar su modelo de lenguaje si la red es lenta).
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} excedio el tiempo limite de ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // Función principal de extracción de texto
 export async function extractText(filename, buffer) {
   const ext = String(filename || '').split('.').pop()?.toLowerCase();
@@ -21,17 +31,26 @@ export async function extractText(filename, buffer) {
 
   try {
     if (ext === 'pdf') {
-      const pdfParse = (await import('pdf-parse')).default;
-      const parsed = await pdfParse(buffer);
-      text = parsed.text || '';
-    } 
+      try {
+        const pdfParse = (await import('pdf-parse')).default;
+        const parsed = await withTimeout(pdfParse(buffer), 20000, 'pdf-parse');
+        text = parsed.text || '';
+      } catch (pdfError) {
+        console.error('pdf-parse failed or timed out, falling back to empty string:', pdfError);
+        text = `[PDF Extraction Failed: ${pdfError.message}]`;
+      }
+    }
     else if (['png', 'jpg', 'jpeg', 'webp', 'tiff'].includes(ext)) {
       try {
         const Tesseract = (await import('tesseract.js')).default;
-        const { data: { text: ocrText } } = await Tesseract.recognize(buffer, 'spa+eng');
+        const { data: { text: ocrText } } = await withTimeout(
+          Tesseract.recognize(buffer, 'spa+eng'),
+          45000,
+          'Tesseract OCR'
+        );
         text = ocrText || '';
       } catch (ocrError) {
-        console.error('OCR failed, falling back to empty string:', ocrError);
+        console.error('OCR failed or timed out, falling back to empty string:', ocrError);
         text = `[OCR Extraction Failed: ${ocrError.message}]`;
       }
     } 
@@ -91,7 +110,7 @@ export async function runClassifierForDocument(documentId) {
   if (ext === 'pdf') {
     try {
       const pdfParse = (await import('pdf-parse')).default;
-      const parsed = await pdfParse(buffer);
+      const parsed = await withTimeout(pdfParse(buffer), 20000, 'pdf-parse');
       textContent = parsed.text || '';
       pdfMetadata = parsed.info || null;
     } catch (e) {
