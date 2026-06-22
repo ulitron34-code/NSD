@@ -1,6 +1,14 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { supabaseAdmin } from '../config/supabase.js';
 import { processDocument, saveExtraction, logAgentAction } from '../services/documentIntelligenceService.js';
 import * as XLSX from 'xlsx';
+
+// Modelo de idioma empaquetado localmente para que el OCR no dependa de
+// descargar el CDN de jsdelivr en cada ejecucion (causa del cuelgue original).
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Forward slashes siempre, tesseract.js concatena "${langPath}/${lang}.traineddata.gz" tal cual.
+const TESSDATA_PATH = path.join(__dirname, '..', '..', 'tessdata').split(path.sep).join('/');
 
 // Función para descargar el archivo de Supabase Storage
 async function downloadFileFromStorage(storagePath) {
@@ -44,7 +52,7 @@ export async function extractText(filename, buffer) {
       try {
         const Tesseract = (await import('tesseract.js')).default;
         const { data: { text: ocrText } } = await withTimeout(
-          Tesseract.recognize(buffer, 'spa+eng'),
+          Tesseract.recognize(buffer, 'spa+eng', { langPath: TESSDATA_PATH, cacheMethod: 'none' }),
           45000,
           'Tesseract OCR'
         );
