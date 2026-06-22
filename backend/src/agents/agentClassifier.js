@@ -50,15 +50,18 @@ export async function extractText(filename, buffer) {
     }
     else if (['png', 'jpg', 'jpeg', 'webp', 'tiff'].includes(ext)) {
       try {
+        console.log(`[AgentClassifier] OCR: iniciando para ${filename} (${buffer?.length} bytes), langPath=${TESSDATA_PATH}`);
         const Tesseract = (await import('tesseract.js')).default;
+        console.log('[AgentClassifier] OCR: tesseract.js importado, llamando a Tesseract.recognize...');
         const { data: { text: ocrText } } = await withTimeout(
           Tesseract.recognize(buffer, 'spa+eng', { langPath: TESSDATA_PATH, cacheMethod: 'none' }),
           45000,
           'Tesseract OCR'
         );
+        console.log(`[AgentClassifier] OCR: completado, ${(ocrText || '').length} caracteres extraidos`);
         text = ocrText || '';
       } catch (ocrError) {
-        console.error('OCR failed or timed out, falling back to empty string:', ocrError);
+        console.error('[AgentClassifier] OCR failed or timed out, falling back to empty string:', ocrError);
         text = `[OCR Extraction Failed: ${ocrError.message}]`;
       }
     } 
@@ -95,7 +98,8 @@ export async function extractText(filename, buffer) {
 // Ejecutar clasificación para un documento específico
 export async function runClassifierForDocument(documentId) {
   const startTime = Date.now();
-  
+  console.log(`[AgentClassifier] Iniciando clasificacion de documento ${documentId}`);
+
   // 1. Obtener documento
   const { data: document, error } = await supabaseAdmin
     .from('documents')
@@ -107,8 +111,11 @@ export async function runClassifierForDocument(documentId) {
     throw new Error(`Documento con ID ${documentId} no encontrado`);
   }
 
+  console.log(`[AgentClassifier] Documento ${documentId} = ${document.filename}, descargando de storage_path=${document.storage_path}`);
+
   // 2. Descargar archivo
   const buffer = await downloadFileFromStorage(document.storage_path);
+  console.log(`[AgentClassifier] Descarga completa para ${documentId}: ${buffer?.length} bytes`);
 
   // 3. Extraer texto y metadatos
   let textContent = '';
@@ -153,6 +160,8 @@ export async function runClassifierForDocument(documentId) {
 
 // Procesar todos los documentos pendientes de un expediente
 export async function runClassifierBatch(expedienteId) {
+  console.log(`[AgentClassifier] runClassifierBatch: iniciando para expediente ${expedienteId}`);
+
   // Buscar documentos en la orden
   const { data: documents, error } = await supabaseAdmin
     .from('documents')
@@ -160,21 +169,29 @@ export async function runClassifierBatch(expedienteId) {
     .eq('order_id', expedienteId);
 
   if (error) throw error;
-  if (!documents || !documents.length) return [];
+  if (!documents || !documents.length) {
+    console.log(`[AgentClassifier] runClassifierBatch: sin documentos para expediente ${expedienteId}`);
+    return [];
+  }
+
+  console.log(`[AgentClassifier] runClassifierBatch: ${documents.length} documento(s) encontrados, estados=${documents.map(d => d.review_status).join(',')}`);
 
   const results = [];
   for (const doc of documents) {
     // Si aún no está clasificado o procesado
     if (doc.review_status === 'uploaded' || !doc.review_status) {
+      console.log(`[AgentClassifier] runClassifierBatch: procesando documento ${doc.id}`);
       try {
         const res = await runClassifierForDocument(doc.id);
+        console.log(`[AgentClassifier] runClassifierBatch: documento ${doc.id} clasificado OK`);
         results.push({ id: doc.id, success: true, classification: res.classification });
       } catch (err) {
-        console.error(`Error procesando documento ${doc.id} en lote:`, err);
+        console.error(`[AgentClassifier] Error procesando documento ${doc.id} en lote:`, err);
         results.push({ id: doc.id, success: false, error: err.message });
       }
     }
   }
 
+  console.log(`[AgentClassifier] runClassifierBatch: terminado para expediente ${expedienteId}`);
   return results;
 }
