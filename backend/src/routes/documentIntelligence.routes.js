@@ -13,7 +13,8 @@ import {
   getExpedienteSummary,
   getCrossReferences,
   getExpedienteRedFlags,
-  processDocument
+  processDocument,
+  getOrderCountry
 } from '../services/documentIntelligenceService.js';
 import { runClassifierBatch } from '../agents/agentClassifier.js';
 import { runValidatorBatch } from '../agents/agentValidator.js';
@@ -65,7 +66,7 @@ router.post('/intel/documents/:id/classify', authMiddleware, async (req, res) =>
     // Obtener información del documento
     const { data: document, error } = await supabaseAdmin
       .from('documents')
-      .select('filename, storage_path')
+      .select('filename, storage_path, order_id')
       .eq('id', id)
       .single();
 
@@ -74,7 +75,8 @@ router.post('/intel/documents/:id/classify', authMiddleware, async (req, res) =>
     }
 
     // Pipeline de procesamiento inicial
-    const result = await processDocument(id, document.filename, '');
+    const country = await getOrderCountry(document.order_id);
+    const result = await processDocument(id, document.filename, '', country);
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -85,10 +87,10 @@ router.post('/intel/documents/:id/extract', authMiddleware, async (req, res) => 
   try {
     const { id } = req.params;
     const { textContent } = req.body;
-    
+
     const { data: document, error } = await supabaseAdmin
       .from('documents')
-      .select('filename')
+      .select('filename, order_id')
       .eq('id', id)
       .single();
 
@@ -96,7 +98,8 @@ router.post('/intel/documents/:id/extract', authMiddleware, async (req, res) => 
       return res.status(404).json({ error: 'Documento no encontrado' });
     }
 
-    const result = await processDocument(id, document.filename, textContent || '');
+    const country = await getOrderCountry(document.order_id);
+    const result = await processDocument(id, document.filename, textContent || '', country);
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });

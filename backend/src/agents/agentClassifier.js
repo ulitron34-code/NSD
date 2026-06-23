@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { supabaseAdmin } from '../config/supabase.js';
-import { processDocument, saveExtraction, logAgentAction } from '../services/documentIntelligenceService.js';
+import { processDocument, saveExtraction, logAgentAction, getOrderCountry } from '../services/documentIntelligenceService.js';
 import * as XLSX from 'xlsx';
 
 // Modelo de idioma empaquetado localmente para que el OCR no dependa de
@@ -137,7 +137,10 @@ export async function runClassifierForDocument(documentId) {
   }
 
   // 4. Procesar clasificación y guardar en base de datos
-  const result = await processDocument(documentId, document.filename, textContent);
+  // El pais lo declara el solicitante al crear el expediente (service_orders.
+  // metadata.country); eso decide que catalogo de tipos de documento usar.
+  const country = await getOrderCountry(document.order_id);
+  const result = await processDocument(documentId, document.filename, textContent, country);
 
   // 5. Guardar el texto extraído para el validador
   await saveExtraction(documentId, {

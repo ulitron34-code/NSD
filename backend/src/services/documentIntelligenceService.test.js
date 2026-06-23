@@ -5,7 +5,7 @@ vi.mock('../config/supabase.js', () => ({
 }));
 
 import { supabaseAdmin } from '../config/supabase.js';
-import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences, saveScore, getScore, saveExtraction, getExtraction, logAgentAction } from './documentIntelligenceService.js';
+import { saveVerifications, getVerifications, getDocumentRedFlags, saveCrossReferences, getCrossReferences, saveScore, getScore, saveExtraction, getExtraction, logAgentAction, classifyDocument, getOrderCountry } from './documentIntelligenceService.js';
 
 // Regresion para el bug real encontrado en produccion: la tabla
 // document_verifications (NAGMAR_SCHEMA_V3_FINAL.sql) usa la columna
@@ -297,5 +297,71 @@ describe('logAgentAction', () => {
 
     const result = await logAgentAction('AgentValidator', 'validate_batch', { expedienteId: 'exp-1' });
     expect(result).toEqual({ id: 'log-1' });
+  });
+});
+
+// Expansion multi-pais: classifyDocument ahora recibe un tercer parametro
+// `country` que selecciona el bucket de keywords correspondiente. Por
+// defecto (sin pasar country) debe comportarse exactamente igual que antes
+// para Mexico, asi que los call-sites existentes (sin ese argumento) no se
+// rompen.
+describe('classifyDocument (multi-pais)', () => {
+  it('clasifica documentos mexicanos igual que antes cuando no se pasa country', () => {
+    const result = classifyDocument('cualquier_archivo.pdf', 'CONSTANCIA DE SITUACION FISCAL REGISTRO FEDERAL DE CONTRIBUYENTES');
+    expect(result.document_type_code).toBe('RFC_CSF');
+  });
+
+  it('clasifica una cedula de ciudadania colombiana cuando country=CO', () => {
+    const result = classifyDocument('documento.jpg', 'REPUBLICA DE COLOMBIA REGISTRADURIA NACIONAL CEDULA DE CIUDADANIA', 'CO');
+    expect(result.document_type_code).toBe('CO_CEDULA');
+  });
+
+  it('clasifica un EIN de USA cuando country=US', () => {
+    const result = classifyDocument('doc.pdf', 'INTERNAL REVENUE SERVICE EMPLOYER IDENTIFICATION NUMBER EIN CONFIRMATION', 'US');
+    expect(result.document_type_code).toBe('US_EIN');
+  });
+
+  it('clasifica un T2 Corporate Return cuando country=CA', () => {
+    const result = classifyDocument('doc.pdf', 'CANADA REVENUE AGENCY FORM T2 CORPORATE INCOME TAX RETURN', 'CA');
+    expect(result.document_type_code).toBe('CA_T2_RETURN');
+  });
+
+  it('un mismo texto generico ("escritura de constitucion") clasifica distinto segun el country declarado', () => {
+    const textoGenerico = 'ESCRITURA DE CONSTITUCION ANTE NOTARIA';
+    expect(classifyDocument('doc.pdf', textoGenerico, 'CO').document_type_code).toBe('CO_ESCRITURA');
+    expect(classifyDocument('doc.pdf', textoGenerico, 'EC').document_type_code).toBe('EC_ESCRITURA');
+    expect(classifyDocument('doc.pdf', textoGenerico, 'PE').document_type_code).toBe('PE_ESCRITURA');
+  });
+
+  it('cae al bucket de Mexico si recibe un country desconocido', () => {
+    const result = classifyDocument('doc.pdf', 'CONSTANCIA DE SITUACION FISCAL', 'ZZ');
+    expect(result.document_type_code).toBe('RFC_CSF');
+  });
+});
+
+describe('getOrderCountry', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('retorna el country declarado en service_orders.metadata', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { metadata: { country: 'US' } }, error: null });
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    supabaseAdmin.from.mockReturnValue({ select });
+
+    const country = await getOrderCountry('order-1');
+    expect(supabaseAdmin.from).toHaveBeenCalledWith('service_orders');
+    expect(country).toBe('US');
+  });
+
+  it('retorna MX por defecto si no hay metadata.country', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { metadata: {} }, error: null });
+    supabaseAdmin.from.mockReturnValue({ select: () => ({ eq: () => ({ maybeSingle }) }) });
+
+    expect(await getOrderCountry('order-2')).toBe('MX');
+  });
+
+  it('retorna MX sin consultar la base de datos si no hay orderId', async () => {
+    expect(await getOrderCountry(null)).toBe('MX');
+    expect(supabaseAdmin.from).not.toHaveBeenCalled();
   });
 });

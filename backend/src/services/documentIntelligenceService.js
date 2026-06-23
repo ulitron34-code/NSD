@@ -1,60 +1,311 @@
 import { supabaseAdmin } from '../config/supabase.js';
 
-// Catálogo de tipos de documento mexicanos.
+// Catálogo de tipos de documento, por país.
 // Estos codigos deben coincidir EXACTAMENTE con document_type_catalog.code en
 // Supabase (documents.document_type tiene foreign key a esa tabla). Antes de
 // agregar o renombrar un codigo aqui, agregar/confirmar la fila correspondiente
 // en document_type_catalog primero, o cada clasificacion con ese codigo
 // fallara con "violates foreign key constraint documents_document_type_fkey".
 const DOCUMENT_TYPES = [
-  { code: 'INE_FRENTE', name: 'INE Frente', category: 'Identidad' },
-  { code: 'INE_REVERSO', name: 'INE Reverso', category: 'Identidad' },
-  { code: 'RFC_CSF', name: 'Constancia de Situación Fiscal (CSF)', category: 'Fiscal' },
-  { code: 'OPINION_32D', name: 'Opinión de Cumplimiento 32-D', category: 'Fiscal' },
-  { code: 'COMP_DOMICILIO', name: 'Comprobante de Domicilio', category: 'Identidad' },
-  { code: 'ACTA_CONST', name: 'Acta Constitutiva', category: 'Legal' },
-  { code: 'EDOS_FINANCIEROS', name: 'Estados Financieros', category: 'Financiero' },
-  { code: 'DECL_ANUAL', name: 'Declaración Anual', category: 'Fiscal' },
-  { code: 'DECL_MENSUAL', name: 'Declaración Mensual', category: 'Fiscal' },
-  { code: 'AVALUO', name: 'Avalúo Comercial', category: 'Garantías' },
-  { code: 'BURO_CREDITO', name: 'Reporte de Buró de Crédito', category: 'Riesgo' },
-  { code: 'CONTRATO_ARREND', name: 'Contrato de Arrendamiento', category: 'Legal' },
-  { code: 'CEDULA_PROFESIONAL', name: 'Cédula Profesional', category: 'Identidad' },
-  { code: 'CURP_DOC', name: 'CURP', category: 'Identidad' },
-  { code: 'CFDI_FACTURA', name: 'Factura / CFDI', category: 'Fiscal' },
-  { code: 'EDO_CUENTA_BANC', name: 'Estado de Cuenta Bancario', category: 'Financiero' },
-  { code: 'PODER_NOTARIAL', name: 'Poder Notarial', category: 'Legal' },
-  { code: 'COMPROBANTE_PAGO', name: 'Comprobante de Pago / SPEI', category: 'Financiero' },
-  { code: 'ACTA_ASAMBLEA', name: 'Acta de Asamblea', category: 'Legal' },
-  { code: 'DIOT', name: 'Declaración Informativa de Operaciones con Terceros (DIOT)', category: 'Fiscal' }
+  // México (sin prefijo de país, códigos históricos)
+  { code: 'INE_FRENTE', name: 'INE Frente', category: 'Identidad', country: 'MX' },
+  { code: 'INE_REVERSO', name: 'INE Reverso', category: 'Identidad', country: 'MX' },
+  { code: 'RFC_CSF', name: 'Constancia de Situación Fiscal (CSF)', category: 'Fiscal', country: 'MX' },
+  { code: 'OPINION_32D', name: 'Opinión de Cumplimiento 32-D', category: 'Fiscal', country: 'MX' },
+  { code: 'COMP_DOMICILIO', name: 'Comprobante de Domicilio', category: 'Identidad', country: 'MX' },
+  { code: 'ACTA_CONST', name: 'Acta Constitutiva', category: 'Legal', country: 'MX' },
+  { code: 'EDOS_FINANCIEROS', name: 'Estados Financieros', category: 'Financiero', country: 'MX' },
+  { code: 'DECL_ANUAL', name: 'Declaración Anual', category: 'Fiscal', country: 'MX' },
+  { code: 'DECL_MENSUAL', name: 'Declaración Mensual', category: 'Fiscal', country: 'MX' },
+  { code: 'AVALUO', name: 'Avalúo Comercial', category: 'Garantías', country: 'MX' },
+  { code: 'BURO_CREDITO', name: 'Reporte de Buró de Crédito', category: 'Riesgo', country: 'MX' },
+  { code: 'CONTRATO_ARREND', name: 'Contrato de Arrendamiento', category: 'Legal', country: 'MX' },
+  { code: 'CEDULA_PROFESIONAL', name: 'Cédula Profesional', category: 'Identidad', country: 'MX' },
+  { code: 'CURP_DOC', name: 'CURP', category: 'Identidad', country: 'MX' },
+  { code: 'CFDI_FACTURA', name: 'Factura / CFDI', category: 'Fiscal', country: 'MX' },
+  { code: 'EDO_CUENTA_BANC', name: 'Estado de Cuenta Bancario', category: 'Financiero', country: 'MX' },
+  { code: 'PODER_NOTARIAL', name: 'Poder Notarial', category: 'Legal', country: 'MX' },
+  { code: 'COMPROBANTE_PAGO', name: 'Comprobante de Pago / SPEI', category: 'Financiero', country: 'MX' },
+  { code: 'ACTA_ASAMBLEA', name: 'Acta de Asamblea', category: 'Legal', country: 'MX' },
+  { code: 'DIOT', name: 'Declaración Informativa de Operaciones con Terceros (DIOT)', category: 'Fiscal', country: 'MX' },
+  // Colombia
+  { code: 'CO_CEDULA', name: 'Cédula de Ciudadanía', category: 'Identidad', country: 'CO' },
+  { code: 'CO_CEDULA_EXT', name: 'Cédula de Extranjería', category: 'Identidad', country: 'CO' },
+  { code: 'CO_PASAPORTE', name: 'Pasaporte Colombiano', category: 'Identidad', country: 'CO' },
+  { code: 'CO_NIT_RUT', name: 'RUT / NIT (DIAN)', category: 'Corporativo', country: 'CO' },
+  { code: 'CO_CERT_EXISTENCIA', name: 'Certificado de Existencia y Representación', category: 'Corporativo', country: 'CO' },
+  { code: 'CO_ESCRITURA', name: 'Escritura de Constitución', category: 'Corporativo', country: 'CO' },
+  { code: 'CO_EEFF_NIIF', name: 'Estados Financieros (NIIF)', category: 'Financiero', country: 'CO' },
+  { code: 'CO_DECL_RENTA', name: 'Declaración de Renta (DIAN)', category: 'Fiscal', country: 'CO' },
+  { code: 'CO_PAZ_SALVO', name: 'Paz y Salvo DIAN', category: 'Compliance', country: 'CO' },
+  { code: 'CO_DATACREDITO', name: 'Reporte DataCrédito', category: 'Riesgo', country: 'CO' },
+  { code: 'CO_COMP_DOMICILIO', name: 'Recibo de Servicios Públicos', category: 'Identidad', country: 'CO' },
+  // Ecuador
+  { code: 'EC_CEDULA', name: 'Cédula de Identidad', category: 'Identidad', country: 'EC' },
+  { code: 'EC_PASAPORTE', name: 'Pasaporte Ecuatoriano', category: 'Identidad', country: 'EC' },
+  { code: 'EC_RUC', name: 'RUC (SRI)', category: 'Corporativo', country: 'EC' },
+  { code: 'EC_ESCRITURA', name: 'Escritura de Constitución', category: 'Corporativo', country: 'EC' },
+  { code: 'EC_NOMBRAMIENTO', name: 'Nombramiento de Representante Legal', category: 'Corporativo', country: 'EC' },
+  { code: 'EC_EEFF_NIIF', name: 'Estados Financieros (NIIF)', category: 'Financiero', country: 'EC' },
+  { code: 'EC_DECL_SRI', name: 'Declaración Impuesto Renta (SRI)', category: 'Fiscal', country: 'EC' },
+  { code: 'EC_CERT_CUMPL', name: 'Certificado de Cumplimiento Tributario', category: 'Compliance', country: 'EC' },
+  { code: 'EC_SUPER_CIAS', name: 'Certificado Superintendencia de Compañías', category: 'Corporativo', country: 'EC' },
+  // Argentina
+  { code: 'AR_DNI', name: 'DNI (Documento Nacional de Identidad)', category: 'Identidad', country: 'AR' },
+  { code: 'AR_PASAPORTE', name: 'Pasaporte Argentino', category: 'Identidad', country: 'AR' },
+  { code: 'AR_CUIT', name: 'CUIT / Constancia AFIP', category: 'Corporativo', country: 'AR' },
+  { code: 'AR_CUIL', name: 'CUIL (persona física)', category: 'Identidad', country: 'AR' },
+  { code: 'AR_ESTATUTO', name: 'Estatuto Social / Contrato Social', category: 'Corporativo', country: 'AR' },
+  { code: 'AR_IGJ_INSCRIPCION', name: 'Inscripción IGJ / Registro Público', category: 'Corporativo', country: 'AR' },
+  { code: 'AR_EEFF', name: 'Estados Contables (RT FACPCE)', category: 'Financiero', country: 'AR' },
+  { code: 'AR_DDJJ_GANANCIAS', name: 'DDJJ Impuesto a las Ganancias (AFIP)', category: 'Fiscal', country: 'AR' },
+  { code: 'AR_CERT_FISCAL', name: 'Certificado de Cumplimiento Fiscal AFIP', category: 'Compliance', country: 'AR' },
+  { code: 'AR_VERAZ', name: 'Informe Veraz / Nosis', category: 'Riesgo', country: 'AR' },
+  { code: 'AR_PODER', name: 'Poder General/Especial', category: 'Legal', country: 'AR' },
+  // Perú
+  { code: 'PE_DNI', name: 'DNI (RENIEC)', category: 'Identidad', country: 'PE' },
+  { code: 'PE_CARNET_EXT', name: 'Carné de Extranjería', category: 'Identidad', country: 'PE' },
+  { code: 'PE_PASAPORTE', name: 'Pasaporte Peruano', category: 'Identidad', country: 'PE' },
+  { code: 'PE_RUC', name: 'RUC (SUNAT)', category: 'Corporativo', country: 'PE' },
+  { code: 'PE_FICHA_RUC', name: 'Ficha RUC (SUNAT)', category: 'Corporativo', country: 'PE' },
+  { code: 'PE_PART_REGISTRAL', name: 'Partida Registral (SUNARP)', category: 'Corporativo', country: 'PE' },
+  { code: 'PE_ESCRITURA', name: 'Escritura Pública de Constitución', category: 'Corporativo', country: 'PE' },
+  { code: 'PE_VIGENCIA_PODER', name: 'Vigencia de Poder (SUNARP)', category: 'Legal', country: 'PE' },
+  { code: 'PE_EEFF_NIIF', name: 'Estados Financieros (NIIF)', category: 'Financiero', country: 'PE' },
+  { code: 'PE_DDJJ_SUNAT', name: 'Declaración Jurada Anual (SUNAT)', category: 'Fiscal', country: 'PE' },
+  { code: 'PE_CERT_NO_ADEUDO', name: 'Certificado de No Adeudo (SUNAT)', category: 'Compliance', country: 'PE' },
+  { code: 'PE_SENTINEL', name: 'Reporte Sentinel / Equifax PE', category: 'Riesgo', country: 'PE' },
+  // Chile
+  { code: 'CL_CEDULA_RUN', name: 'Cédula de Identidad / RUN', category: 'Identidad', country: 'CL' },
+  { code: 'CL_PASAPORTE', name: 'Pasaporte Chileno', category: 'Identidad', country: 'CL' },
+  { code: 'CL_RUT', name: 'RUT Empresa (SII)', category: 'Corporativo', country: 'CL' },
+  { code: 'CL_ESCRITURA', name: 'Escritura de Constitución', category: 'Corporativo', country: 'CL' },
+  { code: 'CL_CERT_VIGENCIA', name: 'Certificado de Vigencia (CBR)', category: 'Corporativo', country: 'CL' },
+  { code: 'CL_EEFF_NIIF', name: 'Estados Financieros (NIIF Chile)', category: 'Financiero', country: 'CL' },
+  { code: 'CL_F22', name: 'Formulario 22 (Renta Anual SII)', category: 'Fiscal', country: 'CL' },
+  { code: 'CL_CERT_CUMPL_SII', name: 'Certificado de Cumplimiento SII', category: 'Compliance', country: 'CL' },
+  { code: 'CL_DICOM', name: 'Informe DICOM / Equifax CL', category: 'Riesgo', country: 'CL' },
+  // Bolivia
+  { code: 'BO_CEDULA', name: 'Cédula de Identidad', category: 'Identidad', country: 'BO' },
+  { code: 'BO_NIT', name: 'NIT (SIN)', category: 'Corporativo', country: 'BO' },
+  { code: 'BO_MATRICULA_COM', name: 'Matrícula de Comercio (SEPREC)', category: 'Corporativo', country: 'BO' },
+  { code: 'BO_ESCRITURA', name: 'Escritura de Constitución', category: 'Corporativo', country: 'BO' },
+  { code: 'BO_EEFF', name: 'Estados Financieros', category: 'Financiero', country: 'BO' },
+  { code: 'BO_RUPE', name: 'Certificado RUPE', category: 'Compliance', country: 'BO' },
+  // Paraguay
+  { code: 'PY_CEDULA', name: 'Cédula de Identidad', category: 'Identidad', country: 'PY' },
+  { code: 'PY_RUC', name: 'RUC (SET)', category: 'Corporativo', country: 'PY' },
+  { code: 'PY_ESCRITURA', name: 'Escritura de Constitución', category: 'Corporativo', country: 'PY' },
+  { code: 'PY_PATENTE_COM', name: 'Patente Comercial Municipal', category: 'Corporativo', country: 'PY' },
+  { code: 'PY_EEFF', name: 'Estados Financieros', category: 'Financiero', country: 'PY' },
+  { code: 'PY_CERT_CUMPL_SET', name: 'Certificado de Cumplimiento SET', category: 'Compliance', country: 'PY' },
+  { code: 'PY_INFORMCONF', name: 'Informe Informconf', category: 'Riesgo', country: 'PY' },
+  // Uruguay
+  { code: 'UY_CEDULA', name: 'Cédula de Identidad', category: 'Identidad', country: 'UY' },
+  { code: 'UY_RUT', name: 'RUT (DGI)', category: 'Corporativo', country: 'UY' },
+  { code: 'UY_ESCRITURA', name: 'Escritura de Constitución', category: 'Corporativo', country: 'UY' },
+  { code: 'UY_CERT_DGI', name: 'Certificado Único DGI', category: 'Compliance', country: 'UY' },
+  { code: 'UY_CERT_BPS', name: 'Certificado BPS', category: 'Compliance', country: 'UY' },
+  { code: 'UY_EEFF', name: 'Estados Financieros (NIIF)', category: 'Financiero', country: 'UY' },
+  { code: 'UY_CLEARING', name: 'Informe Clearing de Informes', category: 'Riesgo', country: 'UY' },
+  // USA
+  { code: 'US_DRIVERS_LIC', name: 'Licencia de Conducir USA', category: 'Identidad', country: 'US' },
+  { code: 'US_STATE_ID', name: 'State ID', category: 'Identidad', country: 'US' },
+  { code: 'US_PASSPORT', name: 'Pasaporte USA', category: 'Identidad', country: 'US' },
+  { code: 'US_SSN_CARD', name: 'Tarjeta Social Security', category: 'Identidad', country: 'US' },
+  { code: 'US_EIN', name: 'EIN Confirmation (IRS)', category: 'Corporativo', country: 'US' },
+  { code: 'US_ARTICLES_INC', name: 'Articles of Incorporation', category: 'Corporativo', country: 'US' },
+  { code: 'US_CERT_GOOD_STAND', name: 'Certificate of Good Standing', category: 'Corporativo', country: 'US' },
+  { code: 'US_OPERATING_AGR', name: 'Operating Agreement (LLC)', category: 'Corporativo', country: 'US' },
+  { code: 'US_BYLAWS', name: 'Bylaws (Corporation)', category: 'Corporativo', country: 'US' },
+  { code: 'US_EEFF_GAAP', name: 'Financial Statements (US GAAP)', category: 'Financiero', country: 'US' },
+  { code: 'US_TAX_RETURN', name: 'Tax Return (Form 1120/1040)', category: 'Fiscal', country: 'US' },
+  { code: 'US_W9', name: 'Formulario W-9', category: 'Compliance', country: 'US' },
+  { code: 'US_W8BEN', name: 'Formulario W-8BEN', category: 'Compliance', country: 'US' },
+  { code: 'US_CREDIT_REPORT', name: 'Credit Report (Experian/Equifax/TU)', category: 'Riesgo', country: 'US' },
+  { code: 'US_BANK_STATEMENT', name: 'Bank Statement', category: 'Financiero', country: 'US' },
+  // Canadá
+  { code: 'CA_DRIVERS_LIC', name: 'Licencia de Conducir Canadá', category: 'Identidad', country: 'CA' },
+  { code: 'CA_PASSPORT', name: 'Pasaporte Canadiense', category: 'Identidad', country: 'CA' },
+  { code: 'CA_PR_CARD', name: 'Tarjeta de Residencia Permanente', category: 'Identidad', country: 'CA' },
+  { code: 'CA_SIN', name: 'Social Insurance Number', category: 'Identidad', country: 'CA' },
+  { code: 'CA_BN', name: 'Business Number (CRA)', category: 'Corporativo', country: 'CA' },
+  { code: 'CA_ARTICLES_INC', name: 'Articles of Incorporation', category: 'Corporativo', country: 'CA' },
+  { code: 'CA_CORP_REGISTRY', name: 'Corporate Registry Extract', category: 'Corporativo', country: 'CA' },
+  { code: 'CA_EEFF_IFRS', name: 'Financial Statements (IFRS/ASPE)', category: 'Financiero', country: 'CA' },
+  { code: 'CA_T2_RETURN', name: 'T2 Corporate Return (CRA)', category: 'Fiscal', country: 'CA' },
+  { code: 'CA_T1_RETURN', name: 'T1 Personal Return (CRA)', category: 'Fiscal', country: 'CA' },
+  { code: 'CA_CERT_COMPLIANCE', name: 'Certificate of Compliance (CRA)', category: 'Compliance', country: 'CA' },
+  { code: 'CA_CREDIT_REPORT', name: 'Credit Report (Equifax CA/TU CA)', category: 'Riesgo', country: 'CA' }
 ];
 
-// Reglas de clasificación por keywords
-const CLASSIFICATION_KEYWORDS = {
-  INE_FRENTE: [/credencial para votar/i, /instituto nacional electoral/i, /clave de elector/i, /registro federal de electores/i],
-  INE_REVERSO: [/elecciones federales/i, /firma del elector/i, /indice derecho/i],
-  RFC_CSF: [/constancia de situacion fiscal/i, /registro federal de contribuyentes/i, /cedula de identificacion fiscal/i, /regimen simplificado de confianza/i, /actividad economica/i],
-  OPINION_32D: [/opinion del cumplimiento/i, /opinion de cumplimiento/i, /sat/i, /32-d/i, /sentido de la opinion/i],
-  COMP_DOMICILIO: [/comprobante de domicilio/i, /recibo de luz/i, /recibo de agua/i, /telmex/i, /cfe/i, /servicio de energia/i, /totalplay/i],
-  ACTA_CONST: [/acta constitutiva/i, /notario publico/i, /notaria/i, /escritura numero/i, /sociedad mercantil/i, /denominacion o razon social/i],
-  EDOS_FINANCIEROS: [/estado de situacion financiera/i, /balance general/i, /estado de resultados/i, /activo total/i, /pasivo/i, /capital contable/i, /utilidad neta/i, /ingresos/i],
-  DECL_ANUAL: [/declaracion anual/i, /ejercicio fiscal/i, /impuesto sobre la renta/i, /ingresos acumulables/i, /total de deducciones/i],
-  DECL_MENSUAL: [/pago provisional/i, /declaracion mensual/i, /declaracion de impuestos/i, /impuesto al valor agregado/i],
-  AVALUO: [/avaluo/i, /perito valuador/i, /valor comercial/i, /descripcion del inmueble/i],
-  BURO_CREDITO: [/buro de credito/i, /reporte de credito/i, /circulo de credito/i, /comportamiento de pago/i],
-  CONTRATO_ARREND: [/contrato de arrendamiento/i, /arrendador/i, /arrendatario/i, /renta mensual/i, /inmueble arrendado/i],
-  CEDULA_PROFESIONAL: [/cedula profesional/i, /secretaria de educacion publica/i, /registro nacional de profesionistas/i],
-  CURP_DOC: [/clave unica de registro de poblacion/i, /curp/i, /gobierno de mexico/i],
-  CFDI_FACTURA: [/comprobante fiscal digital/i, /factura/i, /cfdi/i, /folio fiscal/i, /uuid/i, /emisor/i, /receptor/i],
-  EDO_CUENTA_BANC: [/estado de cuenta/i, /cuenta bancaria/i, /clabe/i, /saldo/i, /transacciones/i, /deposito/i],
-  PODER_NOTARIAL: [/poder notarial/i, /apoderado/i, /mandato/i, /poder general/i],
-  COMPROBANTE_PAGO: [/comprobante de pago/i, /transferencia/i, /spei/i, /clave de rastreo/i],
-  ACTA_ASAMBLEA: [/acta de asamblea/i, /asamblea general/i, /socios/i, /capital social/i],
-  DIOT: [/declaracion informativa operaciones terceros/i, /diot/i, /iva retenido/i]
+// Reglas de clasificación por keywords, agrupadas por país. El país de cada
+// expediente se declara en service_orders.metadata.country (ver getOrderCountry
+// mas abajo); eso decide que bucket de keywords se usa, evitando que terminos
+// genericos compartidos entre paises (p.ej. "escritura de constitucion") se
+// confundan entre si. MX se mantiene intacto como bucket por defecto.
+const COUNTRY_CLASSIFICATION_KEYWORDS = {
+  MX: {
+    INE_FRENTE: [/credencial para votar/i, /instituto nacional electoral/i, /clave de elector/i, /registro federal de electores/i],
+    INE_REVERSO: [/elecciones federales/i, /firma del elector/i, /indice derecho/i],
+    RFC_CSF: [/constancia de situacion fiscal/i, /registro federal de contribuyentes/i, /cedula de identificacion fiscal/i, /regimen simplificado de confianza/i, /actividad economica/i],
+    OPINION_32D: [/opinion del cumplimiento/i, /opinion de cumplimiento/i, /sat/i, /32-d/i, /sentido de la opinion/i],
+    COMP_DOMICILIO: [/comprobante de domicilio/i, /recibo de luz/i, /recibo de agua/i, /telmex/i, /cfe/i, /servicio de energia/i, /totalplay/i],
+    ACTA_CONST: [/acta constitutiva/i, /notario publico/i, /notaria/i, /escritura numero/i, /sociedad mercantil/i, /denominacion o razon social/i],
+    EDOS_FINANCIEROS: [/estado de situacion financiera/i, /balance general/i, /estado de resultados/i, /activo total/i, /pasivo/i, /capital contable/i, /utilidad neta/i, /ingresos/i],
+    DECL_ANUAL: [/declaracion anual/i, /ejercicio fiscal/i, /impuesto sobre la renta/i, /ingresos acumulables/i, /total de deducciones/i],
+    DECL_MENSUAL: [/pago provisional/i, /declaracion mensual/i, /declaracion de impuestos/i, /impuesto al valor agregado/i],
+    AVALUO: [/avaluo/i, /perito valuador/i, /valor comercial/i, /descripcion del inmueble/i],
+    BURO_CREDITO: [/buro de credito/i, /reporte de credito/i, /circulo de credito/i, /comportamiento de pago/i],
+    CONTRATO_ARREND: [/contrato de arrendamiento/i, /arrendador/i, /arrendatario/i, /renta mensual/i, /inmueble arrendado/i],
+    CEDULA_PROFESIONAL: [/cedula profesional/i, /secretaria de educacion publica/i, /registro nacional de profesionistas/i],
+    CURP_DOC: [/clave unica de registro de poblacion/i, /curp/i, /gobierno de mexico/i],
+    CFDI_FACTURA: [/comprobante fiscal digital/i, /factura/i, /cfdi/i, /folio fiscal/i, /uuid/i, /emisor/i, /receptor/i],
+    EDO_CUENTA_BANC: [/estado de cuenta/i, /cuenta bancaria/i, /clabe/i, /saldo/i, /transacciones/i, /deposito/i],
+    PODER_NOTARIAL: [/poder notarial/i, /apoderado/i, /mandato/i, /poder general/i],
+    COMPROBANTE_PAGO: [/comprobante de pago/i, /transferencia/i, /spei/i, /clave de rastreo/i],
+    ACTA_ASAMBLEA: [/acta de asamblea/i, /asamblea general/i, /socios/i, /capital social/i],
+    DIOT: [/declaracion informativa operaciones terceros/i, /diot/i, /iva retenido/i]
+  },
+  CO: {
+    CO_CEDULA: [/cedula de ciudadania/i, /registraduria nacional/i, /numero de identificacion personal/i],
+    CO_CEDULA_EXT: [/cedula de extranjeria/i, /migracion colombia/i],
+    CO_PASAPORTE: [/pasaporte/i, /republica de colombia/i],
+    CO_NIT_RUT: [/registro unico tributario/i, /\bnit\b/i, /direccion de impuestos y aduanas nacionales/i, /\bdian\b/i],
+    CO_CERT_EXISTENCIA: [/certificado de existencia y representacion/i, /camara de comercio/i],
+    CO_ESCRITURA: [/escritura de constitucion/i, /notaria/i],
+    CO_EEFF_NIIF: [/estados financieros/i, /\bniif\b/i, /balance general/i, /estado de resultados/i],
+    CO_DECL_RENTA: [/declaracion de renta/i, /\bdian\b/i],
+    CO_PAZ_SALVO: [/paz y salvo/i, /\bdian\b/i],
+    CO_DATACREDITO: [/datacredito/i, /reporte de credito/i],
+    CO_COMP_DOMICILIO: [/recibo de servicios publicos/i, /factura de servicios/i]
+  },
+  EC: {
+    EC_CEDULA: [/cedula de identidad/i, /registro civil/i, /republica del ecuador/i],
+    EC_PASAPORTE: [/pasaporte/i, /republica del ecuador/i],
+    EC_RUC: [/\bruc\b/i, /servicio de rentas internas/i, /\bsri\b/i],
+    EC_ESCRITURA: [/escritura de constitucion/i, /notaria/i],
+    EC_NOMBRAMIENTO: [/nombramiento de representante legal/i, /representante legal/i],
+    EC_EEFF_NIIF: [/estados financieros/i, /\bniif\b/i, /balance general/i],
+    EC_DECL_SRI: [/declaracion del impuesto a la renta/i, /\bsri\b/i],
+    EC_CERT_CUMPL: [/certificado de cumplimiento tributario/i, /\bsri\b/i],
+    EC_SUPER_CIAS: [/superintendencia de companias/i]
+  },
+  AR: {
+    AR_DNI: [/documento nacional de identidad/i, /\bdni\b/i, /renaper/i],
+    AR_PASAPORTE: [/pasaporte/i, /republica argentina/i],
+    AR_CUIT: [/\bcuit\b/i, /administracion federal de ingresos publicos/i, /\bafip\b/i],
+    AR_CUIL: [/\bcuil\b/i],
+    AR_ESTATUTO: [/estatuto social/i, /contrato social/i],
+    AR_IGJ_INSCRIPCION: [/inspeccion general de justicia/i, /\bigj\b/i],
+    AR_EEFF: [/estados contables/i, /balance general/i, /facpce/i],
+    AR_DDJJ_GANANCIAS: [/impuesto a las ganancias/i, /\bafip\b/i, /declaracion jurada/i],
+    AR_CERT_FISCAL: [/certificado de cumplimiento fiscal/i, /\bafip\b/i],
+    AR_VERAZ: [/informe veraz/i, /\bnosis\b/i],
+    AR_PODER: [/poder general/i, /poder especial/i]
+  },
+  PE: {
+    PE_DNI: [/documento nacional de identidad/i, /\bdni\b/i, /reniec/i],
+    PE_CARNET_EXT: [/carne de extranjeria/i],
+    PE_PASAPORTE: [/pasaporte/i, /republica del peru/i],
+    PE_RUC: [/\bruc\b/i, /\bsunat\b/i],
+    PE_FICHA_RUC: [/ficha ruc/i, /\bsunat\b/i],
+    PE_PART_REGISTRAL: [/partida registral/i, /\bsunarp\b/i],
+    PE_ESCRITURA: [/escritura publica de constitucion/i, /notaria/i],
+    PE_VIGENCIA_PODER: [/vigencia de poder/i, /\bsunarp\b/i],
+    PE_EEFF_NIIF: [/estados financieros/i, /\bniif\b/i],
+    PE_DDJJ_SUNAT: [/declaracion jurada anual/i, /\bsunat\b/i],
+    PE_CERT_NO_ADEUDO: [/certificado de no adeudo/i, /\bsunat\b/i],
+    PE_SENTINEL: [/\bsentinel\b/i, /equifax/i]
+  },
+  CL: {
+    CL_CEDULA_RUN: [/cedula de identidad/i, /\brun\b/i, /republica de chile/i],
+    CL_PASAPORTE: [/pasaporte/i, /republica de chile/i],
+    CL_RUT: [/\brut\b/i, /servicio de impuestos internos/i, /\bsii\b/i],
+    CL_ESCRITURA: [/escritura de constitucion/i, /notaria/i],
+    CL_CERT_VIGENCIA: [/certificado de vigencia/i, /conservador de bienes raices/i],
+    CL_EEFF_NIIF: [/estados financieros/i, /\bniif\b/i],
+    CL_F22: [/formulario 22/i, /\bsii\b/i],
+    CL_CERT_CUMPL_SII: [/certificado de cumplimiento/i, /\bsii\b/i],
+    CL_DICOM: [/\bdicom\b/i, /equifax/i]
+  },
+  BO: {
+    BO_CEDULA: [/cedula de identidad/i, /estado plurinacional de bolivia/i],
+    BO_NIT: [/\bnit\b/i, /servicio de impuestos nacionales/i],
+    BO_MATRICULA_COM: [/matricula de comercio/i, /\bseprec\b/i],
+    BO_ESCRITURA: [/escritura de constitucion/i, /notaria/i],
+    BO_EEFF: [/estados financieros/i],
+    BO_RUPE: [/\brupe\b/i, /certificado rupe/i]
+  },
+  PY: {
+    PY_CEDULA: [/cedula de identidad/i, /republica del paraguay/i],
+    PY_RUC: [/\bruc\b/i, /subsecretaria de estado de tributacion/i, /\bset\b/i],
+    PY_ESCRITURA: [/escritura de constitucion/i, /notaria/i],
+    PY_PATENTE_COM: [/patente comercial/i, /municipal/i],
+    PY_EEFF: [/estados financieros/i],
+    PY_CERT_CUMPL_SET: [/certificado de cumplimiento/i, /\bset\b/i],
+    PY_INFORMCONF: [/informconf/i]
+  },
+  UY: {
+    UY_CEDULA: [/cedula de identidad/i, /republica oriental del uruguay/i],
+    UY_RUT: [/\brut\b/i, /direccion general impositiva/i, /\bdgi\b/i],
+    UY_ESCRITURA: [/escritura de constitucion/i, /notaria/i],
+    UY_CERT_DGI: [/certificado unico/i, /\bdgi\b/i],
+    UY_CERT_BPS: [/banco de prevision social/i, /\bbps\b/i],
+    UY_EEFF: [/estados financieros/i, /\bniif\b/i],
+    UY_CLEARING: [/clearing de informes/i]
+  },
+  US: {
+    US_DRIVERS_LIC: [/driver.?s licen[sc]e/i, /department of motor vehicles/i, /\bdmv\b/i],
+    US_STATE_ID: [/state id/i, /identification card/i],
+    US_PASSPORT: [/passport/i, /united states of america/i, /department of state/i],
+    US_SSN_CARD: [/social security/i, /\bssn\b/i],
+    US_EIN: [/employer identification number/i, /\bein\b/i, /internal revenue service/i, /\birs\b/i],
+    US_ARTICLES_INC: [/articles of incorporation/i, /secretary of state/i],
+    US_CERT_GOOD_STAND: [/certificate of good standing/i],
+    US_OPERATING_AGR: [/operating agreement/i, /\bllc\b/i],
+    US_BYLAWS: [/bylaws/i, /corporate bylaws/i],
+    US_EEFF_GAAP: [/balance sheet/i, /generally accepted accounting principles/i, /\bgaap\b/i, /profit and loss/i],
+    US_TAX_RETURN: [/form 1120/i, /form 1040/i, /federal tax return/i],
+    US_W9: [/form w-9/i, /\bw-9\b/i],
+    US_W8BEN: [/w-8ben/i],
+    US_CREDIT_REPORT: [/credit report/i, /experian|equifax|transunion/i],
+    US_BANK_STATEMENT: [/bank statement/i, /account summary/i]
+  },
+  CA: {
+    CA_DRIVERS_LIC: [/driver.?s licen[sc]e/i, /service ontario|icbc|service canada/i],
+    CA_PASSPORT: [/canadian passport/i, /passeport canadien/i],
+    CA_PR_CARD: [/permanent resident card/i, /carte de resident permanent/i],
+    CA_SIN: [/social insurance number/i, /\bsin\b/i],
+    CA_BN: [/business number/i, /canada revenue agency/i, /\bcra\b/i],
+    CA_ARTICLES_INC: [/articles of incorporation/i, /corporations canada/i],
+    CA_CORP_REGISTRY: [/corporate registry/i, /provincial corporate registry/i],
+    CA_EEFF_IFRS: [/financial statements/i, /\bifrs\b|\baspe\b/i],
+    CA_T2_RETURN: [/\bt2\b/i, /corporate income tax return/i],
+    CA_T1_RETURN: [/\bt1\b/i, /personal income tax return/i],
+    CA_CERT_COMPLIANCE: [/certificate of compliance/i, /\bcra\b/i],
+    CA_CREDIT_REPORT: [/credit report/i, /equifax canada|transunion canada/i]
+  }
 };
 
+// Obtiene el pais declarado por el solicitante al crear el expediente
+// (service_orders.metadata.country, ver routes/orders.js). Es la fuente de
+// verdad principal para decidir que catalogo de documentos usar; el usuario
+// ya lo declaro de entrada, asi que no hay que adivinarlo por OCR salvo como
+// señal de cruce (ver countryDetector.js).
+export async function getOrderCountry(orderId) {
+  if (!orderId) return 'MX';
+  const { data } = await supabaseAdmin
+    .from('service_orders')
+    .select('metadata')
+    .eq('id', orderId)
+    .maybeSingle();
+  return data?.metadata?.country || 'MX';
+}
+
 // 1. Clasificación por keywords
-export function classifyDocument(filename, textContent = '') {
+export function classifyDocument(filename, textContent = '', country = 'MX') {
+  const keywordSet = COUNTRY_CLASSIFICATION_KEYWORDS[country] || COUNTRY_CLASSIFICATION_KEYWORDS.MX;
   const normalizedFilename = String(filename || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -70,7 +321,7 @@ export function classifyDocument(filename, textContent = '') {
   let matchedBy = 'none';
 
   // Primero buscar por coincidencia en el nombre de archivo (peso alto)
-  for (const [code, patterns] of Object.entries(CLASSIFICATION_KEYWORDS)) {
+  for (const [code, patterns] of Object.entries(keywordSet)) {
     const codeLower = code.toLowerCase();
     const hasNameMatch = normalizedFilename.includes(codeLower) || 
       (codeLower === 'comp_domicilio' && (normalizedFilename.includes('domicilio') || normalizedFilename.includes('recibo') || normalizedFilename.includes('cfe') || normalizedFilename.includes('luz')));
@@ -85,7 +336,7 @@ export function classifyDocument(filename, textContent = '') {
 
   // Si no se clasificó por nombre de archivo o se quiere corroborar con texto
   if (matchedBy === 'none' && normalizedText.length > 0) {
-    for (const [code, patterns] of Object.entries(CLASSIFICATION_KEYWORDS)) {
+    for (const [code, patterns] of Object.entries(keywordSet)) {
       let count = 0;
       patterns.forEach(pattern => {
         if (pattern.test(normalizedText)) {
@@ -580,9 +831,9 @@ export async function getFraudPatterns() {
 }
 
 // 9. Pipeline general: clasificar y procesar
-export async function processDocument(documentId, filename, textContent = '') {
+export async function processDocument(documentId, filename, textContent = '', country = 'MX') {
   // Clasificar
-  const classification = classifyDocument(filename, textContent);
+  const classification = classifyDocument(filename, textContent, country);
 
   // Actualizar tabla principal `documents`
   const { error: updateError } = await supabaseAdmin

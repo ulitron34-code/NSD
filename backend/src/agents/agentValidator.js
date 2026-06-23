@@ -3,12 +3,64 @@ import {
   saveVerifications,
   saveScore,
   getExtraction,
-  logAgentAction
+  logAgentAction,
+  getOrderCountry
 } from '../services/documentIntelligenceService.js';
+import { detectCountryFromText } from '../services/countryDetector.js';
+import {
+  coValidarNit,
+  ecValidarCedula,
+  ecValidarRuc,
+  arValidarCuit,
+  arValidarDniFormato,
+  peValidarRuc,
+  peValidarDniFormato,
+  clValidarRut,
+  boValidarNitFormato,
+  pyValidarRuc,
+  uyValidarRutFormato,
+  usValidarEinFormato,
+  usValidarSsnFormato,
+  caValidarSin,
+  caValidarBnFormato
+} from '../services/idValidators.js';
 
 // Regex Helpers
 const RFC_REGEX = /^[A-ZÑ&]{3,4}\d{6}[A-Z\d]{3}$/i;
 const CURP_REGEX = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/i;
+
+// Reglas de validacion de IDs fiscales/nacionales por tipo de documento de la
+// expansion multi-pais. Cada regla busca un candidato en el texto (despues
+// de una etiqueta tipica del documento, p.ej. "NIT", "RUC", "EIN") y lo
+// valida con su algoritmo de digito verificador (o solo formato, donde no
+// existe un algoritmo publico confiable -- ver comentarios en idValidators.js).
+const ID_VALIDATION_RULES = {
+  CO_NIT_RUT: { ruleCode: 'CO_NIT_FORMAT', label: 'NIT', regex: /NIT[:\s.]{0,5}([\d.]{8,12}-?\d)/i, validate: coValidarNit },
+  EC_CEDULA: { ruleCode: 'EC_CEDULA_FORMAT', label: 'Cedula ecuatoriana', regex: /(?:CEDULA|C\.?I\.?)[^\d]{0,15}(\d{10})/i, validate: ecValidarCedula },
+  EC_RUC: { ruleCode: 'EC_RUC_FORMAT', label: 'RUC ecuatoriano', regex: /RUC[:\s.]{0,5}(\d{13})/i, validate: ecValidarRuc },
+  AR_CUIT: { ruleCode: 'AR_CUIT_FORMAT', label: 'CUIT', regex: /CUIT[:\s.]{0,5}([\d-]{11,13})/i, validate: arValidarCuit },
+  AR_CUIL: { ruleCode: 'AR_CUIL_FORMAT', label: 'CUIL', regex: /CUIL[:\s.]{0,5}([\d-]{11,13})/i, validate: arValidarCuit },
+  AR_DNI: { ruleCode: 'AR_DNI_FORMAT', label: 'DNI argentino', regex: /DNI[:\s.]{0,5}([\d.]{7,10})/i, validate: arValidarDniFormato },
+  PE_RUC: { ruleCode: 'PE_RUC_FORMAT', label: 'RUC peruano', regex: /RUC[:\s.]{0,5}(\d{11})/i, validate: peValidarRuc },
+  PE_DNI: { ruleCode: 'PE_DNI_FORMAT', label: 'DNI peruano', regex: /DNI[:\s.]{0,5}(\d{8})/i, validate: peValidarDniFormato },
+  CL_RUT: { ruleCode: 'CL_RUT_FORMAT', label: 'RUT chileno', regex: /RUT[:\s.]{0,5}([\d.]{7,9}-?[\dkK])/i, validate: clValidarRut },
+  CL_CEDULA_RUN: { ruleCode: 'CL_RUN_FORMAT', label: 'RUN chileno', regex: /RU[NT][:\s.]{0,5}([\d.]{7,9}-?[\dkK])/i, validate: clValidarRut },
+  BO_NIT: { ruleCode: 'BO_NIT_FORMAT', label: 'NIT boliviano', regex: /NIT[:\s.]{0,5}([\d-]{9,12})/i, validate: boValidarNitFormato },
+  PY_RUC: { ruleCode: 'PY_RUC_FORMAT', label: 'RUC paraguayo', regex: /RUC[:\s.]{0,5}([\d-]{7,10})/i, validate: pyValidarRuc },
+  UY_RUT: { ruleCode: 'UY_RUT_FORMAT', label: 'RUT uruguayo', regex: /RUT[:\s.]{0,5}([\d.\s-]{10,16})/i, validate: uyValidarRutFormato },
+  US_EIN: { ruleCode: 'US_EIN_FORMAT', label: 'EIN', regex: /EIN[:\s.]{0,5}(\d{2}-?\d{7})/i, validate: usValidarEinFormato },
+  US_SSN_CARD: { ruleCode: 'US_SSN_FORMAT', label: 'SSN', regex: /(?:SSN|SOCIAL SECURITY(?: NUMBER)?)[:\s.]{0,15}(\d{3}-?\d{2}-?\d{4})/i, validate: usValidarSsnFormato },
+  CA_SIN: { ruleCode: 'CA_SIN_FORMAT', label: 'SIN canadiense', regex: /SIN[:\s.]{0,5}(\d{3}[\s-]?\d{3}[\s-]?\d{3})/i, validate: caValidarSin },
+  CA_BN: { ruleCode: 'CA_BN_FORMAT', label: 'Business Number', regex: /(?:BN|BUSINESS NUMBER)[:\s.]{0,5}(\d{9})/i, validate: caValidarBnFormato }
+};
+
+// Codigos de Estados Financieros de la expansion multi-pais (NIIF/IFRS/GAAP)
+// que deben pasar por la misma logica de ecuacion contable que ya aplicaba a
+// EDOS_FINANCIEROS (Mexico).
+const EEFF_CODES_INTERNACIONALES = [
+  'CO_EEFF_NIIF', 'EC_EEFF_NIIF', 'AR_EEFF', 'PE_EEFF_NIIF', 'CL_EEFF_NIIF',
+  'BO_EEFF', 'PY_EEFF', 'UY_EEFF', 'US_EEFF_GAAP', 'CA_EEFF_IFRS'
+];
 
 // Extraer fecha del texto e intentar parsearla
 function findDatesInText(text) {
@@ -47,8 +99,13 @@ function findDatesInText(text) {
   return dates.filter(d => !isNaN(d.getTime()));
 }
 
-// Lógica de validación por tipo
-export async function validateDocumentContent(documentId, documentType, textContent = '') {
+// Lógica de validación por tipo. declaredCountry es el pais que el
+// solicitante declaro al crear el expediente (service_orders.metadata.
+// country, ver runValidatorBatch); se usa solo como señal de cruce contra lo
+// que el OCR detecta en el documento (ver countryDetector.js), nunca para
+// decidir que reglas de documentType aplicar -- eso ya lo decide el
+// documentType mismo (su prefijo ya es el del pais correcto).
+export async function validateDocumentContent(documentId, documentType, textContent = '', declaredCountry = 'MX') {
   const verifications = [];
   const scores = {
     completeness: 100,
@@ -114,6 +171,40 @@ export async function validateDocumentContent(documentId, documentType, textCont
         status: 'fail',
         severity: 'error',
         findings: 'No se detectó ninguna CURP con formato válido en el documento'
+      });
+    }
+  }
+
+  // 2.1 REGLA: IDs fiscales/nacionales de la expansion multi-pais (NIT, RUC,
+  // CUIT, RUT, EIN, SSN, SIN, etc.) -- ver ID_VALIDATION_RULES mas arriba.
+  const idRule = ID_VALIDATION_RULES[documentType];
+  if (idRule) {
+    const idMatch = textContent.match(idRule.regex);
+    if (idMatch) {
+      const candidate = idMatch[1];
+      if (idRule.validate(candidate)) {
+        verifications.push({
+          rule_code: idRule.ruleCode,
+          status: 'pass',
+          severity: 'info',
+          findings: `${idRule.label} detectado y validado correctamente: ${candidate}`
+        });
+      } else {
+        scores.authenticity -= 40;
+        verifications.push({
+          rule_code: idRule.ruleCode,
+          status: 'fail',
+          severity: 'error',
+          findings: `${idRule.label} encontrado (${candidate}) no es válido (formato o dígito verificador incorrecto)`
+        });
+      }
+    } else {
+      scores.authenticity -= 20;
+      verifications.push({
+        rule_code: idRule.ruleCode,
+        status: 'warning',
+        severity: 'warning',
+        findings: `No se detectó ${idRule.label} en el documento`
       });
     }
   }
@@ -228,7 +319,9 @@ export async function validateDocumentContent(documentId, documentType, textCont
   }
 
   // 6. REGLA: Lógica de Estados Financieros / Números Redondos
-  if (['EDOS_FINANCIEROS', 'BALANCE', 'EDO_RES'].includes(documentType)) {
+  // Incluye los codigos de EEFF de la expansion multi-pais (NIIF/IFRS/GAAP):
+  // misma ecuacion contable Activo = Pasivo + Capital, distinta terminologia.
+  if (['EDOS_FINANCIEROS', 'BALANCE', 'EDO_RES', ...EEFF_CODES_INTERNACIONALES].includes(documentType)) {
     // Buscar números sospechosos (terminados en 000)
     const numbers = textContent.match(/\b\d+[\d,]*\b/g) || [];
     const validNumbers = numbers.map(n => parseInt(n.replace(/,/g, ''))).filter(n => n > 100);
@@ -257,9 +350,9 @@ export async function validateDocumentContent(documentId, documentType, textCont
 
     // Reglas financieras de coherencia (si se detectan números de balance)
     // Buscamos patrones de Activo Total, Pasivo y Capital
-    const activoMatch = textContent.match(/(?:activo\s+total|total\s+activo)[\s\:\$]*([\d,]+)/i);
-    const pasivoMatch = textContent.match(/(?:pasivo\s+total|total\s+pasivo)[\s\:\$]*([\d,]+)/i);
-    const capitalMatch = textContent.match(/(?:capital\s+contable|total\s+capital)[\s\:\$]*([\d,]+)/i);
+    const activoMatch = textContent.match(/(?:activo\s+total|total\s+activo|total\s+assets)[\s\:\$]*([\d,]+)/i);
+    const pasivoMatch = textContent.match(/(?:pasivo\s+total|total\s+pasivo|total\s+liabilities)[\s\:\$]*([\d,]+)/i);
+    const capitalMatch = textContent.match(/(?:capital\s+contable|total\s+capital|patrimonio|total\s+equity|stockholders\s+equity)[\s\:\$]*([\d,]+)/i);
 
     if (activoMatch && pasivoMatch && capitalMatch) {
       const activo = parseFloat(activoMatch[1].replace(/,/g, ''));
@@ -311,6 +404,30 @@ export async function validateDocumentContent(documentId, documentType, textCont
           findings: `Inconsistencia: Utilidad (${utilidad}) no puede ser mayor que Ingresos (${ingresos})`
         });
       }
+    }
+  }
+
+  // 6.1 REGLA: Cruce de pais declarado vs pais detectado por OCR. Es solo una
+  // señal de alerta (requiere revision manual) -- nunca cambia que reglas de
+  // documentType se aplicaron, y solo dispara con una deteccion de confianza
+  // razonable (>= 0.8) para evitar falsos positivos por una sola palabra suelta.
+  const countryDetection = detectCountryFromText(textContent);
+  if (countryDetection.country && countryDetection.confidence >= 0.8) {
+    if (countryDetection.country === declaredCountry) {
+      verifications.push({
+        rule_code: 'COUNTRY_MISMATCH',
+        status: 'pass',
+        severity: 'info',
+        findings: `El país detectado en el documento (${countryDetection.country}) coincide con el país declarado del expediente.`
+      });
+    } else {
+      scores.consistency -= 20;
+      verifications.push({
+        rule_code: 'COUNTRY_MISMATCH',
+        status: 'warning',
+        severity: 'warning',
+        findings: `El expediente declara país ${declaredCountry}, pero el documento parece ser de ${countryDetection.country} (señales: ${countryDetection.matches.join(', ')}). Requiere revisión manual.`
+      });
     }
   }
 
@@ -423,14 +540,14 @@ export async function runValidatorBatch(expedienteId = null, targetDocumentId = 
   if (targetDocumentId) {
     const { data, error } = await supabaseAdmin
       .from('documents')
-      .select('id, document_type')
+      .select('id, document_type, order_id')
       .eq('id', targetDocumentId)
       .single();
     if (data) documents = [data];
   } else if (expedienteId) {
     const { data, error } = await supabaseAdmin
       .from('documents')
-      .select('id, document_type')
+      .select('id, document_type, order_id')
       .eq('order_id', expedienteId);
     if (data) documents = data;
   }
@@ -443,7 +560,8 @@ export async function runValidatorBatch(expedienteId = null, targetDocumentId = 
       // Obtener la extracción de texto
       const ext = await getExtraction(doc.id);
       if (ext && ext.extracted_data && ext.extracted_data.textContent) {
-        const valRes = await validateDocumentContent(doc.id, doc.document_type, ext.extracted_data.textContent);
+        const declaredCountry = await getOrderCountry(doc.order_id);
+        const valRes = await validateDocumentContent(doc.id, doc.document_type, ext.extracted_data.textContent, declaredCountry);
         
         // Actualizar estatus a 'approved' si no hay fallos graves, o 'observed' si hay flags
         const hasCriticalOrError = valRes.verifications.some(v => v.status === 'fail' && ['critical', 'error'].includes(v.severity));

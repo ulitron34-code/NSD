@@ -4,7 +4,8 @@ vi.mock('../services/documentIntelligenceService.js', () => ({
   saveVerifications: vi.fn().mockResolvedValue(undefined),
   saveScore: vi.fn().mockResolvedValue(undefined),
   getExtraction: vi.fn().mockResolvedValue(null),
-  logAgentAction: vi.fn().mockResolvedValue(undefined)
+  logAgentAction: vi.fn().mockResolvedValue(undefined),
+  getOrderCountry: vi.fn().mockResolvedValue('MX')
 }));
 
 vi.mock('../config/supabase.js', () => ({
@@ -149,6 +150,109 @@ describe('agentValidator.validateDocumentContent', () => {
     Object.values(result.scores).forEach(score => {
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
+    });
+  });
+
+  // Expansion multi-pais: IDs fiscales/nacionales con digito verificador.
+  describe('IDs fiscales internacionales', () => {
+    it('CO_NIT_FORMAT: aprueba un NIT colombiano con digito verificador correcto', async () => {
+      const result = await validateDocumentContent('doc-co-1', 'CO_NIT_RUT', 'RUT - DIAN. NIT: 899999068-1. Razon social: Ecopetrol S.A.');
+      expect(findVerification(result, 'CO_NIT_FORMAT').status).toBe('pass');
+    });
+
+    it('CO_NIT_FORMAT: marca fallo cuando el digito verificador es incorrecto', async () => {
+      const result = await validateDocumentContent('doc-co-2', 'CO_NIT_RUT', 'NIT: 899999068-5');
+      expect(findVerification(result, 'CO_NIT_FORMAT').status).toBe('fail');
+      expect(result.scores.authenticity).toBeLessThan(100);
+    });
+
+    it('CO_NIT_FORMAT: marca warning cuando no se detecta ningun NIT', async () => {
+      const result = await validateDocumentContent('doc-co-3', 'CO_NIT_RUT', 'Documento sin identificador fiscal visible');
+      expect(findVerification(result, 'CO_NIT_FORMAT').status).toBe('warning');
+    });
+
+    it('AR_CUIT_FORMAT: aprueba un CUIT argentino valido', async () => {
+      const result = await validateDocumentContent('doc-ar-1', 'AR_CUIT', 'CUIT: 20-12345678-6. AFIP - Constancia de Inscripcion');
+      expect(findVerification(result, 'AR_CUIT_FORMAT').status).toBe('pass');
+    });
+
+    it('AR_CUIT_FORMAT: marca fallo con digito verificador incorrecto', async () => {
+      const result = await validateDocumentContent('doc-ar-2', 'AR_CUIT', 'CUIT: 20-12345678-9');
+      expect(findVerification(result, 'AR_CUIT_FORMAT').status).toBe('fail');
+    });
+
+    it('PE_RUC_FORMAT: aprueba un RUC peruano valido', async () => {
+      const result = await validateDocumentContent('doc-pe-1', 'PE_RUC', 'RUC: 20100070971. SUNAT');
+      expect(findVerification(result, 'PE_RUC_FORMAT').status).toBe('pass');
+    });
+
+    it('CL_RUT_FORMAT: aprueba un RUT chileno con digito verificador K', async () => {
+      const result = await validateDocumentContent('doc-cl-1', 'CL_RUT', 'RUT: 1000005-K. Servicio de Impuestos Internos');
+      expect(findVerification(result, 'CL_RUT_FORMAT').status).toBe('pass');
+    });
+
+    it('US_EIN_FORMAT: aprueba un EIN con prefijo valido', async () => {
+      const result = await validateDocumentContent('doc-us-1', 'US_EIN', 'Internal Revenue Service. EIN: 12-3456789');
+      expect(findVerification(result, 'US_EIN_FORMAT').status).toBe('pass');
+    });
+
+    it('US_EIN_FORMAT: marca fallo con un prefijo que el IRS nunca asigna', async () => {
+      const result = await validateDocumentContent('doc-us-2', 'US_EIN', 'EIN: 07-3456789');
+      expect(findVerification(result, 'US_EIN_FORMAT').status).toBe('fail');
+    });
+
+    it('US_SSN_FORMAT: aprueba un SSN con formato y rangos validos', async () => {
+      const result = await validateDocumentContent('doc-us-3', 'US_SSN_CARD', 'Social Security Number: 123-45-6789');
+      expect(findVerification(result, 'US_SSN_FORMAT').status).toBe('pass');
+    });
+
+    it('CA_SIN_FORMAT: aprueba un SIN canadiense valido (Luhn)', async () => {
+      const result = await validateDocumentContent('doc-ca-1', 'CA_SIN', 'Social Insurance Number SIN: 046 454 286');
+      expect(findVerification(result, 'CA_SIN_FORMAT').status).toBe('pass');
+    });
+
+    it('CA_SIN_FORMAT: marca fallo cuando el Luhn no cuadra', async () => {
+      const result = await validateDocumentContent('doc-ca-2', 'CA_SIN', 'SIN: 046 454 287');
+      expect(findVerification(result, 'CA_SIN_FORMAT').status).toBe('fail');
+    });
+
+    it('BO_NIT_FORMAT: aprueba solo por formato (sin algoritmo de digito verificador)', async () => {
+      const result = await validateDocumentContent('doc-bo-1', 'BO_NIT', 'NIT: 1234567015. Servicio de Impuestos Nacionales');
+      expect(findVerification(result, 'BO_NIT_FORMAT').status).toBe('pass');
+    });
+
+    it('un documentType sin regla de ID asociada no agrega ninguna verificacion de ID', async () => {
+      const result = await validateDocumentContent('doc-co-4', 'CO_CERT_EXISTENCIA', 'Certificado de Existencia y Representacion Legal');
+      expect(result.verifications.some(v => v.rule_code?.endsWith('_FORMAT'))).toBe(false);
+    });
+  });
+
+  describe('COUNTRY_MISMATCH', () => {
+    it('aprueba cuando el pais detectado coincide con el declarado', async () => {
+      const result = await validateDocumentContent(
+        'doc-mismatch-1',
+        'CO_CEDULA',
+        'REPUBLICA DE COLOMBIA REGISTRADURIA NACIONAL CEDULA DE CIUDADANIA',
+        'CO'
+      );
+      expect(findVerification(result, 'COUNTRY_MISMATCH').status).toBe('pass');
+    });
+
+    it('marca warning cuando el expediente declara un pais distinto al detectado en el documento', async () => {
+      const result = await validateDocumentContent(
+        'doc-mismatch-2',
+        'CO_CEDULA',
+        'INSTITUTO NACIONAL ELECTORAL CLAVE DE ELECTOR ESTADOS UNIDOS MEXICANOS',
+        'CO'
+      );
+      const v = findVerification(result, 'COUNTRY_MISMATCH');
+      expect(v.status).toBe('warning');
+      expect(result.scores.consistency).toBeLessThan(100);
+    });
+
+    it('no agrega la verificacion si no hay señales de pais detectables en el texto', async () => {
+      const result = await validateDocumentContent('doc-mismatch-3', 'RFC_CSF', 'texto sin ninguna señal de pais', 'MX');
+      expect(findVerification(result, 'COUNTRY_MISMATCH')).toBeUndefined();
     });
   });
 });
