@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../../utils/constants";
-import { auditAPI, documentsAPI, informationRequestsAPI, otorganteAPI, scoringAPI, sharesAPI } from "../../services/api";
+import { auditAPI, documentsAPI, informationRequestsAPI, ordersAPI, otorganteAPI, scoringAPI, sharesAPI } from "../../services/api";
 import AIReviewPanel from "./AIReviewPanel";
 import ComplianceReadinessPanel from "./ComplianceReadinessPanel";
 import DocumentMatrixPanel from "./DocumentMatrixPanel";
@@ -86,6 +86,15 @@ const demoPanelRiskScore = {
   ],
   informacion_pendiente: [
     "2 verificación(es) regulatoria(s) sin proveedor configurado: Validacion SAT/RFC, Screening UIF"
+  ]
+};
+
+const demoBeneficiaryScreening = {
+  total: 2,
+  requiresReview: 0,
+  owners: [
+    { fullName: "María Rodríguez García", ownershipPercentage: 60, nationality: "MX", declaredPublicPosition: null, declaredPublicPositionRelationship: null, ofac: { status: "clear", matchCount: 0 }, pep: { status: "clear" }, relationshipInPepScope: false, status: "clear" },
+    { fullName: "Carlos Mendoza López", ownershipPercentage: 40, nationality: "MX", declaredPublicPosition: null, declaredPublicPositionRelationship: null, ofac: { status: "clear", matchCount: 0 }, pep: { status: "clear" }, relationshipInPepScope: false, status: "clear" }
   ]
 };
 
@@ -203,6 +212,13 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
   const [riskScoreLoading, setRiskScoreLoading] = useState(true);
   const [riskScoreStatus, setRiskScoreStatus] = useState("");
   const [reportStatus, setReportStatus] = useState("");
+  const [beneficiaryOwners, setBeneficiaryOwners] = useState([]);
+  const [beneficiaryScreening, setBeneficiaryScreening] = useState(null);
+  const [beneficiaryScreeningLoading, setBeneficiaryScreeningLoading] = useState(true);
+  const [beneficiaryScreeningStatus, setBeneficiaryScreeningStatus] = useState("");
+  const [savingBeneficiaries, setSavingBeneficiaries] = useState(false);
+  const [showBeneficiaryForm, setShowBeneficiaryForm] = useState(false);
+  const [beneficiaryForm, setBeneficiaryForm] = useState({ fullName: "", ownershipPercentage: "", nationality: "", declaredPublicPosition: "", declaredPublicPositionRelationship: "" });
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -588,6 +604,44 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
     }
   };
 
+  const loadBeneficiaryScreening = async () => {
+    setBeneficiaryScreeningLoading(true);
+    try {
+      if (order.demo) {
+        setBeneficiaryScreening(demoBeneficiaryScreening);
+        setBeneficiaryOwners(demoBeneficiaryScreening.owners.map(({ fullName, ownershipPercentage, nationality, declaredPublicPosition, declaredPublicPositionRelationship }) => ({ fullName, ownershipPercentage, nationality, declaredPublicPosition, declaredPublicPositionRelationship })));
+        return;
+      }
+      const { data } = await ordersAPI.getBeneficiaryOwnersScreening(order.id);
+      setBeneficiaryScreening(data);
+      setBeneficiaryOwners((data?.owners || []).map(({ fullName, ownershipPercentage, nationality, declaredPublicPosition, declaredPublicPositionRelationship }) => ({ fullName, ownershipPercentage, nationality, declaredPublicPosition, declaredPublicPositionRelationship })));
+    } catch (error) {
+      setBeneficiaryScreeningStatus(error.response?.data?.error || "No se pudo cargar los beneficiarios");
+    } finally {
+      setBeneficiaryScreeningLoading(false);
+    }
+  };
+
+  const handleSaveBeneficiaryOwners = async () => {
+    setSavingBeneficiaries(true);
+    setBeneficiaryScreeningStatus("");
+    try {
+      if (order.demo) {
+        setBeneficiaryScreeningStatus("Beneficiarios actualizados en demo.");
+        return;
+      }
+      await ordersAPI.updateBeneficiaryOwners(order.id, beneficiaryOwners);
+      setBeneficiaryScreeningStatus("Beneficiarios guardados correctamente.");
+      await loadBeneficiaryScreening();
+      await loadRiskScore();
+      await loadAuditLogs();
+    } catch (error) {
+      setBeneficiaryScreeningStatus(error.response?.data?.error || "No se pudo guardar los beneficiarios.");
+    } finally {
+      setSavingBeneficiaries(false);
+    }
+  };
+
   useEffect(() => {
     loadDocuments();
     loadReviewHistory();
@@ -598,6 +652,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
     loadContactRequests();
     loadScoring();
     loadRiskScore();
+    loadBeneficiaryScreening();
   }, [order.id]);
 
   useEffect(() => {
@@ -1636,6 +1691,154 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
           </div>
         ) : (
           <p style={{ color: COLORS.textMuted, fontSize: "0.9rem" }}>Sin scoring disponible.</p>
+        )}
+      </div>
+
+      {/* Beneficiarios Controladores */}
+      <div style={{ padding: "1.5rem", borderBottom: `1px solid ${COLORS.border}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
+          <div>
+            <h3 style={{ color: COLORS.navy, fontSize: "0.95rem", fontWeight: 700, marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Beneficiarios Controladores
+            </h3>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>
+              Personas físicas con participación ≥25% del capital o control efectivo (LFPIORPI Art. 19). Screening OFAC/PEP automático.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowBeneficiaryForm((v) => !v)}
+            style={{ padding: "0.55rem 0.75rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", background: "white", color: COLORS.navy, fontWeight: 800, cursor: "pointer", fontSize: "0.78rem", whiteSpace: "nowrap" }}
+          >
+            {showBeneficiaryForm ? "Cancelar" : "+ Agregar"}
+          </button>
+        </div>
+
+        {showBeneficiaryForm && (
+          <div style={{ padding: "1rem", border: `1px solid ${COLORS.border}`, borderRadius: "8px", background: COLORS.bg, marginBottom: "1rem", display: "grid", gap: "0.6rem" }}>
+            <input
+              placeholder="Nombre completo *"
+              value={beneficiaryForm.fullName}
+              onChange={(e) => setBeneficiaryForm((p) => ({ ...p, fullName: e.target.value }))}
+              style={{ padding: "0.6rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", fontSize: "0.82rem" }}
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
+              <input
+                placeholder="% participación"
+                type="number"
+                min="0"
+                max="100"
+                value={beneficiaryForm.ownershipPercentage}
+                onChange={(e) => setBeneficiaryForm((p) => ({ ...p, ownershipPercentage: e.target.value }))}
+                style={{ padding: "0.6rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", fontSize: "0.82rem" }}
+              />
+              <input
+                placeholder="Nacionalidad"
+                value={beneficiaryForm.nationality}
+                onChange={(e) => setBeneficiaryForm((p) => ({ ...p, nationality: e.target.value }))}
+                style={{ padding: "0.6rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", fontSize: "0.82rem" }}
+              />
+            </div>
+            <input
+              placeholder="Cargo público (si aplica)"
+              value={beneficiaryForm.declaredPublicPosition}
+              onChange={(e) => setBeneficiaryForm((p) => ({ ...p, declaredPublicPosition: e.target.value }))}
+              style={{ padding: "0.6rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", fontSize: "0.82rem" }}
+            />
+            <input
+              placeholder="Relación con PEP (si aplica)"
+              value={beneficiaryForm.declaredPublicPositionRelationship}
+              onChange={(e) => setBeneficiaryForm((p) => ({ ...p, declaredPublicPositionRelationship: e.target.value }))}
+              style={{ padding: "0.6rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", fontSize: "0.82rem" }}
+            />
+            <button
+              disabled={!beneficiaryForm.fullName.trim()}
+              onClick={() => {
+                setBeneficiaryOwners((prev) => [...prev, {
+                  fullName: beneficiaryForm.fullName.trim(),
+                  ownershipPercentage: beneficiaryForm.ownershipPercentage !== "" ? Number(beneficiaryForm.ownershipPercentage) : null,
+                  nationality: beneficiaryForm.nationality.trim() || null,
+                  declaredPublicPosition: beneficiaryForm.declaredPublicPosition.trim() || null,
+                  declaredPublicPositionRelationship: beneficiaryForm.declaredPublicPositionRelationship.trim() || null,
+                }]);
+                setBeneficiaryForm({ fullName: "", ownershipPercentage: "", nationality: "", declaredPublicPosition: "", declaredPublicPositionRelationship: "" });
+                setShowBeneficiaryForm(false);
+              }}
+              style={{ padding: "0.6rem", border: "none", borderRadius: "6px", background: !beneficiaryForm.fullName.trim() ? COLORS.border : COLORS.gold, color: COLORS.navy, fontWeight: 900, cursor: !beneficiaryForm.fullName.trim() ? "not-allowed" : "pointer", fontSize: "0.82rem" }}
+            >
+              Agregar a la lista
+            </button>
+          </div>
+        )}
+
+        {beneficiaryOwners.length > 0 && (
+          <div style={{ display: "grid", gap: "0.6rem", marginBottom: "0.85rem" }}>
+            {beneficiaryOwners.map((owner, index) => {
+              const screeningResult = beneficiaryScreening?.owners?.[index];
+              const hasHit = screeningResult?.status === "review_required";
+              return (
+                <div key={`${owner.fullName}-${index}`} style={{ padding: "0.75rem", border: `1px solid ${hasHit ? "#C62828" : COLORS.border}`, borderRadius: "8px", background: hasHit ? "rgba(198,40,40,0.04)" : "white" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", alignItems: "flex-start", marginBottom: "0.35rem" }}>
+                    <p style={{ color: COLORS.navy, fontWeight: 800, fontSize: "0.85rem" }}>{owner.fullName}</p>
+                    <button
+                      onClick={() => setBeneficiaryOwners((prev) => prev.filter((_, i) => i !== index))}
+                      style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: "0.72rem", fontWeight: 800, whiteSpace: "nowrap" }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: screeningResult ? "0.45rem" : 0 }}>
+                    {owner.ownershipPercentage != null && (
+                      <span style={{ padding: "0.2rem 0.45rem", borderRadius: "999px", background: "rgba(27,58,92,0.08)", color: COLORS.navy, fontSize: "0.68rem", fontWeight: 800 }}>
+                        {owner.ownershipPercentage}%
+                      </span>
+                    )}
+                    {owner.nationality && (
+                      <span style={{ padding: "0.2rem 0.45rem", borderRadius: "999px", background: "rgba(0,0,0,0.04)", color: COLORS.textMuted, fontSize: "0.68rem", fontWeight: 800 }}>
+                        {owner.nationality}
+                      </span>
+                    )}
+                    {owner.declaredPublicPosition && (
+                      <span style={{ padding: "0.2rem 0.45rem", borderRadius: "999px", background: "rgba(201,168,76,0.12)", color: COLORS.gold, fontSize: "0.68rem", fontWeight: 800 }}>
+                        PEP declarado
+                      </span>
+                    )}
+                  </div>
+                  {screeningResult && (
+                    <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                      <span style={{ padding: "0.2rem 0.45rem", borderRadius: "999px", background: screeningResult.ofac?.status === "hit" ? "rgba(198,40,40,0.08)" : "rgba(46,125,50,0.08)", color: screeningResult.ofac?.status === "hit" ? "#C62828" : COLORS.green, fontSize: "0.66rem", fontWeight: 900 }}>
+                        OFAC: {screeningResult.ofac?.status === "hit" ? "ALERTA" : "claro"}
+                      </span>
+                      <span style={{ padding: "0.2rem 0.45rem", borderRadius: "999px", background: screeningResult.pep?.status === "hit" ? "rgba(198,40,40,0.08)" : "rgba(46,125,50,0.08)", color: screeningResult.pep?.status === "hit" ? "#C62828" : COLORS.green, fontSize: "0.66rem", fontWeight: 900 }}>
+                        PEP: {screeningResult.pep?.status === "hit" ? "ALERTA" : "claro"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {beneficiaryScreeningStatus && (
+          <p style={{ color: beneficiaryScreeningStatus.includes("No se") || beneficiaryScreeningStatus.includes("Error") ? "#C62828" : COLORS.green, fontSize: "0.8rem", lineHeight: 1.45, marginBottom: "0.75rem" }}>
+            {beneficiaryScreeningStatus}
+          </p>
+        )}
+
+        {beneficiaryScreeningLoading ? (
+          <p style={{ color: COLORS.textMuted, fontSize: "0.82rem" }}>Cargando beneficiarios...</p>
+        ) : beneficiaryOwners.length === 0 && !showBeneficiaryForm ? (
+          <p style={{ color: COLORS.textMuted, fontSize: "0.82rem" }}>Aún no se han registrado beneficiarios controladores.</p>
+        ) : null}
+
+        {beneficiaryOwners.length > 0 && (
+          <button
+            onClick={handleSaveBeneficiaryOwners}
+            disabled={savingBeneficiaries}
+            style={{ width: "100%", padding: "0.65rem", border: "none", borderRadius: "6px", background: savingBeneficiaries ? COLORS.border : COLORS.navy, color: "white", fontWeight: 900, cursor: savingBeneficiaries ? "not-allowed" : "pointer", fontSize: "0.82rem" }}
+          >
+            {savingBeneficiaries ? "Guardando..." : "Guardar y ejecutar screening OFAC/PEP"}
+          </button>
         )}
       </div>
 
