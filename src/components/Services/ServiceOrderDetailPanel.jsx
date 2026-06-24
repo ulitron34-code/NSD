@@ -4,6 +4,7 @@ import { auditAPI, documentsAPI, informationRequestsAPI, ordersAPI, otorganteAPI
 import AIReviewPanel from "./AIReviewPanel";
 import ComplianceReadinessPanel from "./ComplianceReadinessPanel";
 import ComplianceMonitorPanel from "./ComplianceMonitorPanel";
+import DynamicChecklistPanel from "./DynamicChecklistPanel";
 import DocumentMatrixPanel from "./DocumentMatrixPanel";
 import RemediationPlanPanel from "./RemediationPlanPanel";
 import { DOCUMENT_STATUSES, DOCUMENT_TYPES, formatDocumentStatus, formatDocumentType } from "../../utils/institutional";
@@ -1841,6 +1842,11 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
             {savingBeneficiaries ? "Guardando..." : "Guardar y ejecutar screening OFAC/PEP"}
           </button>
         )}
+      </div>
+
+      {/* Checklist dinámico de documentos requeridos */}
+      <div style={{ padding: "1.5rem", borderBottom: `1px solid ${COLORS.border}` }}>
+        <DynamicChecklistPanel order={order} demoMode={!order?.id} />
       </div>
 
       {/* Compliance Monitor */}

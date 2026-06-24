@@ -187,6 +187,11 @@ export const aiAgentsAPI = {
     api.get(`/ai-agents/orchestration/${orderId}`)
 };
 
+export const checklistAPI = {
+  getChecklist: (orderId) =>
+    api.get(`/orders/${orderId}/checklist`)
+};
+
 export const complianceAPI = {
   getMonitor: (orderId) =>
     api.get(`/orders/${orderId}/compliance-monitor`),
