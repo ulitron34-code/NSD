@@ -27,6 +27,7 @@ import otorganteRoutes from './routes/otorgante.js';
 import institutionalRoutes from './routes/institutional.js';
 import informationRequestsRoutes from './routes/informationRequests.js';
 import documentIntelligenceRoutes from './routes/documentIntelligence.routes.js';
+import complianceRoutes from './routes/compliance.js';
 import { primeOfacList, getOfacListStatus } from './services/ofacScreening.js';
 
 const app = express();
@@ -90,6 +91,7 @@ app.use('/api', otorganteRoutes);
 app.use('/api', institutionalRoutes);
 app.use('/api', informationRequestsRoutes);
 app.use('/api', documentIntelligenceRoutes);
+app.use('/api', complianceRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

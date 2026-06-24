@@ -187,6 +187,15 @@ export const aiAgentsAPI = {
     api.get(`/ai-agents/orchestration/${orderId}`)
 };
 
+export const complianceAPI = {
+  getMonitor: (orderId) =>
+    api.get(`/orders/${orderId}/compliance-monitor`),
+  updateCovenants: (orderId, covenants) =>
+    api.patch(`/orders/${orderId}/compliance-covenants`, { covenants }),
+  updateSchedule: (orderId, schedule) =>
+    api.patch(`/orders/${orderId}/compliance-schedule`, schedule)
+};
+
 export const intelAPI = {
   getDocumentTypes: () => api.get('/intel/reference/document-types'),
   getValidationRules: (type) => api.get('/intel/reference/validation-rules', { params: type ? { type } : {} }),

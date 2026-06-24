@@ -3,6 +3,7 @@ import { COLORS } from "../../utils/constants";
 import { auditAPI, documentsAPI, informationRequestsAPI, ordersAPI, otorganteAPI, scoringAPI, sharesAPI } from "../../services/api";
 import AIReviewPanel from "./AIReviewPanel";
 import ComplianceReadinessPanel from "./ComplianceReadinessPanel";
+import ComplianceMonitorPanel from "./ComplianceMonitorPanel";
 import DocumentMatrixPanel from "./DocumentMatrixPanel";
 import RemediationPlanPanel from "./RemediationPlanPanel";
 import { DOCUMENT_STATUSES, DOCUMENT_TYPES, formatDocumentStatus, formatDocumentType } from "../../utils/institutional";
@@ -1840,6 +1841,11 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
             {savingBeneficiaries ? "Guardando..." : "Guardar y ejecutar screening OFAC/PEP"}
           </button>
         )}
+      </div>
+
+      {/* Compliance Monitor */}
+      <div style={{ padding: "1.5rem", borderBottom: `1px solid ${COLORS.border}` }}>
+        <ComplianceMonitorPanel order={order} demoMode={!order?.id} />
       </div>
 
       {/* Information requests */}
