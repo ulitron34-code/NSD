@@ -29,6 +29,7 @@ import informationRequestsRoutes from './routes/informationRequests.js';
 import documentIntelligenceRoutes from './routes/documentIntelligence.routes.js';
 import complianceRoutes from './routes/compliance.js';
 import checklistRoutes from './routes/checklist.js';
+import apiKeysRoutes from './routes/apiKeys.js';
 import { primeOfacList, getOfacListStatus } from './services/ofacScreening.js';
 import { startComplianceCron } from './services/complianceAlertCron.js';
 
@@ -95,6 +96,7 @@ app.use('/api', informationRequestsRoutes);
 app.use('/api', documentIntelligenceRoutes);
 app.use('/api', complianceRoutes);
 app.use('/api', checklistRoutes);
+app.use('/api', apiKeysRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

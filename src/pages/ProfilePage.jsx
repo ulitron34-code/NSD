@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import { COLORS } from "../utils/constants";
+import ApiKeysPanel from "../components/Profile/ApiKeysPanel";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -59,6 +60,7 @@ export default function ProfilePage() {
           {[
             {id: "perfil", label: "Mi Perfil", icon: "👤"},
             {id: "seguridad", label: "Seguridad", icon: "🔒"},
+            {id: "apikeys", label: "API Keys", icon: "🔑"},
             {id: "historial", label: "Historial", icon: "📊"},
             {id: "descargas", label: "Descargas", icon: "📥"},
           ].map((item) => (
@@ -284,6 +286,11 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* API Keys */}
+          {activeTab === "apikeys" && (
+            <ApiKeysPanel />
           )}
 
           {/* Historial */}

@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { supabaseAdmin } from '../config/supabase.js';
 import { generateDocumentAlerts } from './complianceMonitorService.js';
 import { sendEmail, buildExpiryAlertHtml } from './emailService.js';
+import { sendWhatsApp, buildExpiryAlertWhatsApp } from './whatsappService.js';
 
 // Corre todos los días a las 8:00am hora Ciudad de México.
 // En producción (Render) la zona horaria del servidor es UTC —
@@ -25,16 +26,17 @@ async function runComplianceAlertJob() {
       return;
     }
 
-    // Traer emails de usuarios en lote
+    // Traer perfiles de usuarios en lote
     const userIds = [...new Set(orders.map((o) => o.user_id))];
     const { data: profiles } = await supabaseAdmin
-      .from('profiles')
-      .select('id, email, full_name')
+      .from('users')
+      .select('id, email, full_name, phone')
       .in('id', userIds);
 
     const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
 
     let emailsSent = 0;
+    let whatsappSent = 0;
     let alertsFound = 0;
 
     for (const order of orders) {
@@ -58,24 +60,35 @@ async function runComplianceAlertJob() {
 
       const orderName = order.metadata?.projectName || order.service_type || order.id;
 
-      try {
-        await sendEmail({
-          to: profile.email,
-          subject: `⚠️ NAGMAR — ${urgentAlerts.length} documento(s) por vencer en "${orderName}"`,
-          html: buildExpiryAlertHtml({
-            userName: profile.full_name,
-            alerts: urgentAlerts,
-            orderId: order.id,
-            orderName
-          })
-        });
-        emailsSent++;
-      } catch (emailErr) {
-        console.error(`[ComplianceCron] Error enviando email a ${profile.email}:`, emailErr.message);
+      // Email
+      if (profile.email) {
+        try {
+          await sendEmail({
+            to: profile.email,
+            subject: `⚠️ NAGMAR — ${urgentAlerts.length} documento(s) por vencer en "${orderName}"`,
+            html: buildExpiryAlertHtml({ userName: profile.full_name, alerts: urgentAlerts, orderId: order.id, orderName })
+          });
+          emailsSent++;
+        } catch (emailErr) {
+          console.error(`[ComplianceCron] Error email a ${profile.email}:`, emailErr.message);
+        }
+      }
+
+      // WhatsApp (si el usuario tiene teléfono configurado)
+      if (profile.phone) {
+        try {
+          await sendWhatsApp({
+            to: profile.phone,
+            message: buildExpiryAlertWhatsApp({ userName: profile.full_name, alerts: urgentAlerts, orderName })
+          });
+          whatsappSent++;
+        } catch (waErr) {
+          console.error(`[ComplianceCron] Error WhatsApp a ${profile.phone}:`, waErr.message);
+        }
       }
     }
 
-    console.log(`[ComplianceCron] Completado — ${alertsFound} alertas urgentes, ${emailsSent} emails enviados.`);
+    console.log(`[ComplianceCron] Completado — ${alertsFound} alertas urgentes, ${emailsSent} emails, ${whatsappSent} WhatsApp enviados.`);
   } catch (err) {
     console.error('[ComplianceCron] Error en job:', err.message);
   }

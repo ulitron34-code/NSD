@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from '../config/supabase.js';
+import { validateApiKey } from '../services/apiKeyService.js';
 
 const ROLE_ALIASES = {
   admin: 'administrador',
@@ -41,13 +42,43 @@ function hasPermission(role, permission) {
 }
 
 /**
- * Validate JWT token and attach user to request
+ * Validate JWT token and attach user to request.
+ * Si el header X-API-Key está presente, intenta autenticar por API key primero.
  */
 export async function authMiddleware(req, res, next) {
+  // --- API key auth ---
+  const rawApiKey = req.headers['x-api-key'];
+  if (rawApiKey) {
+    try {
+      const keyData = await validateApiKey(rawApiKey);
+      if (!keyData) {
+        return res.status(401).json({ error: 'API key inválida o expirada', code: 'API_KEY_INVALID' });
+      }
+
+      const { data: profile } = await supabaseAdmin
+        .from('users')
+        .select('id, email, profile_type, created_at')
+        .eq('id', keyData.user_id)
+        .maybeSingle();
+
+      req.userId = keyData.user_id;
+      req.user = { id: keyData.user_id };
+      req.userRole = normalizeRole(profile?.profile_type || 'solicitante');
+      req.userProfile = profile || null;
+      req.apiKeyPermissions = keyData.permissions;
+      req.authMethod = 'api_key';
+      return next();
+    } catch (err) {
+      console.error('[AUTH] API key validation error:', err.message);
+      return res.status(401).json({ error: 'Error al validar API key', code: 'API_KEY_ERROR' });
+    }
+  }
+
+  // --- JWT auth ---
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'No authorization token provided',
       code: 'AUTH_MISSING'
     });

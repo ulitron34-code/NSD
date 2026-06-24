@@ -192,6 +192,17 @@ export const checklistAPI = {
     api.get(`/orders/${orderId}/checklist`)
 };
 
+export const apiKeysAPI = {
+  list: () =>
+    api.get('/api-keys'),
+  create: (payload) =>
+    api.post('/api-keys', payload),
+  revoke: (id) =>
+    api.patch(`/api-keys/${id}/revoke`),
+  delete: (id) =>
+    api.delete(`/api-keys/${id}`)
+};
+
 export const complianceAPI = {
   getMonitor: (orderId) =>
     api.get(`/orders/${orderId}/compliance-monitor`),
