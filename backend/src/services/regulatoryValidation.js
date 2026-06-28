@@ -1,8 +1,10 @@
 import { screenNameAgainstOfac } from './ofacScreening.js';
 import { screenCargoAgainstPepCatalog } from './pepScreening.js';
+import { isConfigured as chConfigured } from './companiesHouseService.js';
+import { isEmiratesIdConfigured, isTradeLicenseConfigured } from './aeRegulatoryService.js';
 
 const configured = (name) => Boolean(process.env[name]?.trim());
-const KNOWN_COUNTRIES = ['MX', 'US', 'AE', 'UK'];
+const KNOWN_COUNTRIES = ['MX', 'US', 'AE', 'UK', 'CA'];
 
 function normalizeCountry(country = 'MX') {
   const value = String(country).trim().toUpperCase();
@@ -10,6 +12,7 @@ function normalizeCountry(country = 'MX') {
   if (['US', 'USA', 'UNITED_STATES'].includes(value)) return 'US';
   if (['AE', 'UAE', 'DUBAI'].includes(value)) return 'AE';
   if (['UK', 'GB', 'UNITED_KINGDOM'].includes(value)) return 'UK';
+  if (['CA', 'CANADA', 'CANADÁ'].includes(value)) return 'CA';
   return value || 'MX';
 }
 
@@ -100,22 +103,34 @@ export function validateRegulatoryProfile({ country = 'MX', applicant = {}, orde
   if (normalizedCountry === 'AE') {
     addCheck(checks, formatCheck({
       provider: 'format',
-      label: 'Emirates ID',
+      label: 'Emirates ID (formato 784-XXXX-XXXXXXX-X)',
       value: applicant.emiratesId || order?.metadata?.emiratesId,
       pattern: /^784-\d{4}-\d{7}-\d$/
     }));
-    addCheck(checks, optionalProviderCheck({
-      provider: 'dubai',
-      label: 'Dubai Emirates ID API',
-      envUrl: 'DUBAI_EMIRATES_ID_API_URL',
-      envKey: 'DUBAI_EMIRATES_ID_API_KEY'
+    addCheck(checks, formatCheck({
+      provider: 'format',
+      label: 'TRN (Tax Registration Number, 15 digitos)',
+      value: applicant.trn || order?.metadata?.trn,
+      pattern: /^\d{15}$/
     }));
-    addCheck(checks, optionalProviderCheck({
-      provider: 'dubai',
-      label: 'Dubai Trade License API',
-      envUrl: 'DUBAI_TRADE_LICENSE_API_URL',
-      envKey: 'DUBAI_TRADE_LICENSE_API_KEY'
-    }));
+    addCheck(checks, {
+      provider: 'dubai_eid',
+      label: 'Emirates ID API (ICA)',
+      status: isEmiratesIdConfigured() ? 'configured' : 'skipped',
+      detail: isEmiratesIdConfigured()
+        ? 'Configurada — usar POST /api/regulatory/ae/emirates-id para verificacion en tiempo real'
+        : 'Pendiente configurar DUBAI_EMIRATES_ID_API_URL',
+      severity: 'low'
+    });
+    addCheck(checks, {
+      provider: 'dubai_tl',
+      label: 'Trade Licence API (DED Dubai)',
+      status: isTradeLicenseConfigured() ? 'configured' : 'skipped',
+      detail: isTradeLicenseConfigured()
+        ? 'Configurada — usar POST /api/regulatory/ae/trade-license para verificacion en tiempo real'
+        : 'Pendiente configurar DUBAI_TRADE_LICENSE_API_URL',
+      severity: 'low'
+    });
   }
 
   if (normalizedCountry === 'UK') {
@@ -128,11 +143,41 @@ export function validateRegulatoryProfile({ country = 'MX', applicant = {}, orde
     addCheck(checks, {
       provider: 'companies_house',
       label: 'Companies House API',
-      status: configured('COMPANIES_HOUSE_API_KEY') ? 'configured' : 'skipped',
-      detail: configured('COMPANIES_HOUSE_API_KEY')
-        ? 'Proveedor configurado para consulta'
+      status: chConfigured() ? 'configured' : 'skipped',
+      detail: chConfigured()
+        ? 'Configurada — usar GET /api/regulatory/ca/company/:number para verificacion en tiempo real'
         : 'Pendiente configurar COMPANIES_HOUSE_API_KEY',
       severity: 'low'
+    });
+  }
+
+  if (normalizedCountry === 'CA') {
+    // Canada: Business Number (BN) de la CRA — 9 digitos numericos (formato basico).
+    addCheck(checks, formatCheck({
+      provider: 'format',
+      label: 'Canada Business Number (BN)',
+      value: applicant.businessNumber || applicant.bn || order?.metadata?.businessNumber,
+      pattern: /^\d{9}$/
+    }));
+    // Para entidades incorporadas en UK / con registro en Companies House:
+    addCheck(checks, {
+      provider: 'companies_house',
+      label: 'Companies House (entidades con registro UK)',
+      status: chConfigured() ? 'configured' : 'skipped',
+      detail: chConfigured()
+        ? 'Configurada — usar GET /api/regulatory/ca/company/:number para verificacion en tiempo real'
+        : 'Pendiente configurar COMPANIES_HOUSE_API_KEY',
+      severity: 'low'
+    });
+    // FINTRAC beneficial ownership — requerimiento clave para Canada.
+    addCheck(checks, {
+      provider: 'fintrac',
+      label: 'FINTRAC: beneficiario final (UBO)',
+      status: (applicant.ubo || order?.metadata?.ubo) ? 'pass' : 'fail',
+      detail: (applicant.ubo || order?.metadata?.ubo)
+        ? 'Beneficiario final declarado conforme a FINTRAC'
+        : 'FINTRAC requiere identificacion del 25%+ de propiedad o control efectivo',
+      severity: (applicant.ubo || order?.metadata?.ubo) ? 'info' : 'medium'
     });
   }
 

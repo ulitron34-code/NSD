@@ -32,6 +32,7 @@ import checklistRoutes from './routes/checklist.js';
 import apiKeysRoutes from './routes/apiKeys.js';
 import screeningRoutes from './routes/screening.js';
 import transactionRoutes from './routes/transactionOversight.js';
+import f6Routes from './routes/f6Regulatory.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { startComplianceCron } from './services/complianceAlertCron.js';
@@ -102,6 +103,7 @@ app.use('/api', checklistRoutes);
 app.use('/api', apiKeysRoutes);
 app.use('/api', screeningRoutes);
 app.use('/api', transactionRoutes);
+app.use('/api', f6Routes);
 
 // Health check
 app.get('/health', (req, res) => {
