@@ -46,6 +46,7 @@ const ImplementationRoadmapTab = lazy(() => import("../components/Dashboard/Impl
 const ServiceOrdersPage = lazy(() => import("../pages/ServiceOrdersPage"));
 const CommissionsPage = lazy(() => import("../pages/CommissionsPage"));
 const DocumentIntelligenceTab = lazy(() => import("../components/Dashboard/DocumentIntelligenceTab"));
+const TransactionOversightTab = lazy(() => import("../components/Dashboard/TransactionOversightTab"));
 
 function DashboardLoadingFallback() {
   return (
@@ -158,6 +159,7 @@ export default function DashboardPage() {
         { id: "scoring_ae", label: L("Scoring A-E", "A-E Scoring"), icon: "AE" },
         { id: "committee_memo", label: L("Memo Comite", "Committee Memo"), icon: "COM" },
         { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
+        { id: "transaction_oversight", label: L("Supervision TX", "TX Oversight"), icon: "TX" },
       ];
     }
     return [
@@ -182,6 +184,7 @@ export default function DashboardPage() {
       { id: "document_intel", label: L("Inteligencia Doc.", "Document Intelligence"), icon: "IDI" },
       { id: "admin_comisiones", label: L("Comisiones y Cierres", "Commissions and Closings"), icon: "CO" },
       { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
+      { id: "transaction_oversight", label: L("Supervision TX", "TX Oversight"), icon: "TX" },
     ];
   };
 
@@ -418,6 +421,7 @@ export default function DashboardPage() {
       if (activeTab === "requirements") return <RequirementsTab />;
       if (activeTab === "analytics") return <AnalyticsTab />;
       if (activeTab === "committee_memo") return <CommitteeMemoTab />;
+      if (activeTab === "transaction_oversight") return <TransactionOversightTab />;
       return renderOtorganteCommand();
     }
 
@@ -437,6 +441,7 @@ export default function DashboardPage() {
     if (activeTab === "predeploy") return <PredeployGoNoGoTab />;
     if (activeTab === "traceability") return <TraceabilityLogTab />;
     if (activeTab === "admin_comisiones") return <CommissionsPage />;
+    if (activeTab === "transaction_oversight") return <TransactionOversightTab />;
     return <ServiceOrdersPage />;
   };
 
