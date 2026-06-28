@@ -34,6 +34,7 @@ import screeningRoutes from './routes/screening.js';
 import transactionRoutes from './routes/transactionOversight.js';
 import f6Routes from './routes/f6Regulatory.js';
 import whatsappRoutes from './routes/whatsapp.js';
+import nsdApplicantRoutes from './routes/nsdApplicant.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { startComplianceCron } from './services/complianceAlertCron.js';
@@ -107,6 +108,7 @@ app.use('/api', screeningRoutes);
 app.use('/api', transactionRoutes);
 app.use('/api', f6Routes);
 app.use('/api', whatsappRoutes);
+app.use('/api', nsdApplicantRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -130,6 +132,9 @@ app.get('/health', (req, res) => {
       deepseekApiKey: Boolean(process.env.DEEPSEEK_API_KEY),
       nvidiaApiKey: Boolean(process.env.NVIDIA_API_KEY),
       twilioWhatsapp: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+      applicantAgent: Boolean(process.env.ANTHROPIC_API_KEY),
+      satApi: Boolean(process.env.SAT_API_URL && process.env.SAT_API_KEY),
+      buroApi: Boolean(process.env.BURO_API_URL && process.env.BURO_API_KEY),
       regulatoryProviders: {
         companiesHouse: Boolean(process.env.COMPANIES_HOUSE_API_KEY),
         mexicoRfc: Boolean(process.env.MEXICO_RFC_API_URL && process.env.MEXICO_RFC_API_KEY),
