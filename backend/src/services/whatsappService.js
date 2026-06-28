@@ -67,6 +67,6 @@ export function buildExpiryAlertWhatsApp({ userName, alerts, orderName }) {
     });
   }
 
-  msg += `\n📁 Expediente: *${orderName}*\nActualiza tus documentos en nagmar.com`;
+  msg += `\n📁 Expediente: *${orderName}*\nActualiza tus documentos en nsd.global`;
   return msg;
 }

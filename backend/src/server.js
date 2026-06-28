@@ -33,6 +33,7 @@ import apiKeysRoutes from './routes/apiKeys.js';
 import screeningRoutes from './routes/screening.js';
 import transactionRoutes from './routes/transactionOversight.js';
 import f6Routes from './routes/f6Regulatory.js';
+import whatsappRoutes from './routes/whatsapp.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { startComplianceCron } from './services/complianceAlertCron.js';
@@ -81,8 +82,9 @@ app.use('/api/auth', rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 }));
-// Exclude webhook from JSON parser
+// Stripe webhook necesita raw body; Twilio webhook llega como form-encoded
 app.use('/api/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/whatsapp/webhook', express.urlencoded({ extended: false }));
 app.use(express.json({ limit: '1mb' }));
 
 // Routes
@@ -104,6 +106,7 @@ app.use('/api', apiKeysRoutes);
 app.use('/api', screeningRoutes);
 app.use('/api', transactionRoutes);
 app.use('/api', f6Routes);
+app.use('/api', whatsappRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -126,6 +129,7 @@ app.get('/health', (req, res) => {
       anthropicApiKey: Boolean(process.env.ANTHROPIC_API_KEY),
       deepseekApiKey: Boolean(process.env.DEEPSEEK_API_KEY),
       nvidiaApiKey: Boolean(process.env.NVIDIA_API_KEY),
+      twilioWhatsapp: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
       regulatoryProviders: {
         companiesHouse: Boolean(process.env.COMPANIES_HOUSE_API_KEY),
         mexicoRfc: Boolean(process.env.MEXICO_RFC_API_URL && process.env.MEXICO_RFC_API_KEY),
