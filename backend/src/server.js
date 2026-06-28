@@ -30,7 +30,9 @@ import documentIntelligenceRoutes from './routes/documentIntelligence.routes.js'
 import complianceRoutes from './routes/compliance.js';
 import checklistRoutes from './routes/checklist.js';
 import apiKeysRoutes from './routes/apiKeys.js';
-import { primeOfacList, getOfacListStatus } from './services/ofacScreening.js';
+import screeningRoutes from './routes/screening.js';
+import { getOfacListStatus } from './services/ofacScreening.js';
+import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { startComplianceCron } from './services/complianceAlertCron.js';
 
 const app = express();
@@ -97,6 +99,7 @@ app.use('/api', documentIntelligenceRoutes);
 app.use('/api', complianceRoutes);
 app.use('/api', checklistRoutes);
 app.use('/api', apiKeysRoutes);
+app.use('/api', screeningRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -122,7 +125,7 @@ app.get('/health', (req, res) => {
         companiesHouse: Boolean(process.env.COMPANIES_HOUSE_API_KEY),
         mexicoRfc: Boolean(process.env.MEXICO_RFC_API_URL && process.env.MEXICO_RFC_API_KEY),
         mexicoUif: Boolean(process.env.MEXICO_UIF_API_URL && process.env.MEXICO_UIF_API_KEY),
-        ofac: getOfacListStatus().loaded,
+        sanctionsGateway: getGatewayStatus(),
         equifax: Boolean(process.env.EQUIFAX_API_URL && process.env.EQUIFAX_API_KEY),
         dubaiEmiratesId: Boolean(process.env.DUBAI_EMIRATES_ID_API_URL && process.env.DUBAI_EMIRATES_ID_API_KEY),
         dubaiTradeLicense: Boolean(process.env.DUBAI_TRADE_LICENSE_API_URL && process.env.DUBAI_TRADE_LICENSE_API_KEY)
@@ -144,6 +147,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
-  primeOfacList();
+  primeAllLists();
   startComplianceCron();
 });
