@@ -101,6 +101,64 @@ const COUNTRY_KEYWORDS = {
     ['canadian dollars', 0.80],
     ['form t2', 0.90],
     ['fintrac', 0.85]
+  ],
+  HN: [
+    ['servicio de administracion de rentas', 0.95],
+    ['republica de honduras', 0.90],
+    ['registro tributario nacional', 0.90],
+    ['identidad nacional', 0.80],
+    ['lempiras', 0.80],
+    ['camara de comercio e industrias de', 0.85]
+  ],
+  GT: [
+    ['superintendencia de administracion tributaria', 0.90],
+    ['registro mercantil de la republica de guatemala', 0.95],
+    ['republica de guatemala', 0.85],
+    ['quetzales', 0.80],
+    ['numero de identificacion tributaria', 0.90],
+    ['camara de comercio de guatemala', 0.85]
+  ],
+  SV: [
+    ['ministerio de hacienda', 0.85],
+    ['republica de el salvador', 0.90],
+    ['registro de comercio', 0.80],
+    ['documento unico de identidad', 0.95],
+    ['dui', 0.70],
+    ['colones salvadorenos', 0.85]
+  ],
+  CR: [
+    ['ministerio de hacienda costa rica', 0.95],
+    ['registro nacional de costa rica', 0.95],
+    ['sugef', 0.85],
+    ['colones costarricenses', 0.85],
+    ['cedula juridica', 0.90],
+    ['republica de costa rica', 0.90]
+  ],
+  PA: [
+    ['ministerio de economia y finanzas', 0.85],
+    ['registro publico de panama', 0.95],
+    ['autoridad nacional de ingresos publicos', 0.95],
+    ['republica de panama', 0.90],
+    ['balboa', 0.80],
+    ['superintendencia de bancos de panama', 0.90]
+  ],
+  DO: [
+    ['direccion general de impuestos internos', 0.95],
+    ['republica dominicana', 0.90],
+    ['pesos dominicanos', 0.85],
+    ['registro mercantil dominicano', 0.90],
+    ['cedula de identidad y electoral', 0.95],
+    ['superintendencia de bancos', 0.80]
+  ],
+  AE: [
+    ['federal tax authority', 0.95],
+    ['emirates id', 0.90],
+    ['trade licence', 0.85],
+    ['dubai', 0.70],
+    ['abu dhabi', 0.70],
+    ['dirhams', 0.80],
+    ['united arab emirates', 0.90],
+    ['department of economic development', 0.90]
   ]
 };
 

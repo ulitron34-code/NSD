@@ -232,3 +232,94 @@ export function caValidarSin(sin) {
 export function caValidarBnFormato(bn) {
   return /^\d{9}$/.test(String(bn).replace(/[\s-]/g, ''));
 }
+
+// ───────────────────────── Honduras ─────────────────────────
+
+// RTN (Registro Tributario Nacional): 14 digitos. No hay algoritmo de digito
+// verificador publicamente documentado; solo se valida el formato.
+export function hnValidarRtnFormato(rtn) {
+  return /^\d{14}$/.test(String(rtn).replace(/[\s-]/g, ''));
+}
+
+// ───────────────────────── Guatemala ─────────────────────────
+
+// NIT guatemalteco (SAT): cuerpo numerico + guion + digito verificador (0-9 o K).
+// Algoritmo oficial SAT: pesos 2..9 ciclicos de derecha a izquierda, mod 11.
+// rem 0 → DV=0; rem 1 → DV='K'; otro → DV=11-rem.
+export function gtValidarNit(nit) {
+  const clean = String(nit).replace(/[\s.]/g, '').toUpperCase();
+  const match = clean.match(/^(\d+)-?([0-9K])$/);
+  if (!match) return false;
+  const cuerpo = match[1];
+  const dvDeclarado = match[2];
+
+  let sum = 0;
+  let weight = 2;
+  for (let i = cuerpo.length - 1; i >= 0; i--) {
+    sum += parseInt(cuerpo[i], 10) * weight;
+    weight = weight === 9 ? 2 : weight + 1;
+  }
+  const rem = sum % 11;
+  const dvEsperado = rem === 0 ? '0' : rem === 1 ? 'K' : String(11 - rem);
+  return dvEsperado === dvDeclarado;
+}
+
+// ───────────────────────── El Salvador ─────────────────────────
+
+// NIT salvadoreño: 14 digitos (DDMMAAAA + 3 secuencial + 1 verificador).
+// No hay algoritmo verificador publicamente documentado; solo se valida formato.
+export function svValidarNitFormato(nit) {
+  return /^\d{14}$/.test(String(nit).replace(/[\s-]/g, ''));
+}
+
+// DUI (Documento Unico de Identidad): 8 digitos + guion + 1 digito.
+export function svValidarDuiFormato(dui) {
+  return /^\d{8}-?\d$/.test(String(dui).replace(/\s/g, ''));
+}
+
+// ───────────────────────── Costa Rica ─────────────────────────
+
+// Cedula juridica: formato X-XXX-XXXXXX (tipo 3 dig, secuencia 3 dig, numero 6 dig).
+export function crValidarCedulaJuridicaFormato(cedula) {
+  const clean = String(cedula).replace(/[\s]/g, '');
+  return /^\d{3}-\d{3}-\d{6}$/.test(clean) || /^\d{10}$/.test(clean);
+}
+
+// Cedula fisica: 9 digitos (formato 0-0000-0000).
+export function crValidarCedulaFisicaFormato(cedula) {
+  const clean = String(cedula).replace(/[-\s]/g, '');
+  return /^\d{9}$/.test(clean);
+}
+
+// ───────────────────────── Panamá ─────────────────────────
+
+// RUC persona natural: cedula-digito-digito (ej. 8-888-88888).
+// RUC persona juridica: N-XXX-XXXXXX. No hay algoritmo verificador publico;
+// solo se valida el formato general.
+export function paValidarRucFormato(ruc) {
+  const clean = String(ruc).replace(/\s/g, '');
+  return /^\d{1,3}-\d{1,4}-\d{1,6}$/.test(clean) || /^\d{7,14}$/.test(clean);
+}
+
+// ───────────────────────── República Dominicana ─────────────────────────
+
+// RNC (Registro Nacional del Contribuyente): 9 digitos para empresas,
+// 11 digitos para personas (cedula). No hay algoritmo verificador publico
+// uniforme; solo se valida el formato.
+export function doValidarRncFormato(rnc) {
+  const clean = String(rnc).replace(/[-\s]/g, '');
+  return /^\d{9}$/.test(clean) || /^\d{11}$/.test(clean);
+}
+
+// ───────────────────────── Emiratos Arabes Unidos ─────────────────────────
+
+// TRN (Tax Registration Number, FTA): 15 digitos.
+export function aeValidarTrnFormato(trn) {
+  return /^\d{15}$/.test(String(trn).replace(/[\s-]/g, ''));
+}
+
+// Trade Licence number: formato alfanumerico variable segun emirato; solo
+// se valida que tenga entre 5 y 20 caracteres alfanumericos.
+export function aeValidarTradeLicenceFormato(licence) {
+  return /^[A-Z0-9]{5,20}$/i.test(String(licence).replace(/[\s-/]/g, ''));
+}

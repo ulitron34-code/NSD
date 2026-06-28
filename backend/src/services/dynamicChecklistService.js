@@ -87,6 +87,184 @@ const CHECKLIST_DB = {
         { id: 'CO-SV-004', nombre: 'RUT Actualizado', criticality: 'HIGH', descripcion: 'Registro Único Tributario', mintoThreshold: 0 },
         { id: 'CO-SV-005', nombre: 'Declaración de Renta', criticality: 'HIGH', descripcion: 'Últimas 2 declaraciones de renta', mintoThreshold: 0 }
       ]
+    },
+    realEstate: {
+      name: 'Bienes Raíces',
+      documentos: [
+        { id: 'CO-RE-001', nombre: 'Escritura Pública del Inmueble', criticality: 'CRITICAL', descripcion: 'Escritura registrada ante notaría', mintoThreshold: 0 },
+        { id: 'CO-RE-002', nombre: 'Certificado de Tradición y Libertad', criticality: 'CRITICAL', descripcion: 'Expedido por la SNR, vigencia ≤30 días', mintoThreshold: 0 },
+        { id: 'CO-RE-003', nombre: 'Avalúo Comercial', criticality: 'CRITICAL', descripcion: 'Avalúo por perito inscrito en Lonja de Propiedad Raíz', mintoThreshold: 500000000 },
+        { id: 'CO-RE-004', nombre: 'Paz y Salvo Predial', criticality: 'HIGH', descripcion: 'Certificado de no adeudo de impuesto predial', mintoThreshold: 0 },
+        { id: 'CO-RE-005', nombre: 'NIT o Cédula del Vendedor', criticality: 'CRITICAL', descripcion: 'Identificación del propietario actual', mintoThreshold: 0 }
+      ]
+    }
+  },
+  AR: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'AR-SV-001', nombre: 'CUIT (Constancia AFIP)', criticality: 'CRITICAL', descripcion: 'Código Único de Identificación Tributaria vigente', mintoThreshold: 0 },
+        { id: 'AR-SV-002', nombre: 'Estatuto Social / Contrato Social', criticality: 'CRITICAL', descripcion: 'Escritura con inscripción IGJ o Registro Público', mintoThreshold: 0 },
+        { id: 'AR-SV-003', nombre: 'Acta de Asamblea / Directorio vigente', criticality: 'CRITICAL', descripcion: 'Autoridades societarias actuales', mintoThreshold: 0 },
+        { id: 'AR-SV-004', nombre: 'Estados Contables Auditados', criticality: 'CRITICAL', descripcion: 'EEFF auditados según RT FACPCE, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'AR-SV-005', nombre: 'DDJJ Ganancias (AFIP)', criticality: 'HIGH', descripcion: 'Declaración jurada de impuesto a las ganancias', mintoThreshold: 0 },
+        { id: 'AR-SV-006', nombre: 'Certificado de Cumplimiento Fiscal AFIP', criticality: 'HIGH', descripcion: 'Constancia de cumplimiento de obligaciones fiscales', mintoThreshold: 0 },
+        { id: 'AR-SV-007', nombre: 'Informe Veraz / Nosis', criticality: 'HIGH', descripcion: 'Reporte de riesgo crediticio comercial', mintoThreshold: 0 },
+        { id: 'AR-SV-008', nombre: 'DNI de apoderados y beneficiarios finales', criticality: 'CRITICAL', descripcion: 'Identificación de personas con control real', mintoThreshold: 0 }
+      ]
+    },
+    realEstate: {
+      name: 'Bienes Raíces',
+      documentos: [
+        { id: 'AR-RE-001', nombre: 'Escritura de Dominio', criticality: 'CRITICAL', descripcion: 'Escritura traslativa con inscripción registral', mintoThreshold: 0 },
+        { id: 'AR-RE-002', nombre: 'Informe de Dominio (Registro de la Propiedad)', criticality: 'CRITICAL', descripcion: 'Certificación registral actualizada', mintoThreshold: 0 },
+        { id: 'AR-RE-003', nombre: 'Tasación Profesional', criticality: 'CRITICAL', descripcion: 'Tasación por martillero o tasador matriculado', mintoThreshold: 0 },
+        { id: 'AR-RE-004', nombre: 'CUIT del titular', criticality: 'CRITICAL', descripcion: 'Identificación fiscal del propietario', mintoThreshold: 0 },
+        { id: 'AR-RE-005', nombre: 'Libre de Deuda Municipal (ABL)', criticality: 'HIGH', descripcion: 'Alumbrado, barrido y limpieza sin deuda', mintoThreshold: 0 }
+      ]
+    }
+  },
+  CL: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'CL-SV-001', nombre: 'RUT Empresa (SII)', criticality: 'CRITICAL', descripcion: 'Rol Único Tributario de la empresa', mintoThreshold: 0 },
+        { id: 'CL-SV-002', nombre: 'Escritura de Constitución', criticality: 'CRITICAL', descripcion: 'Escritura con inscripción CBR o RES', mintoThreshold: 0 },
+        { id: 'CL-SV-003', nombre: 'Certificado de Vigencia (CBR / RES)', criticality: 'CRITICAL', descripcion: 'Constancia de vigencia societaria, menos de 60 días', mintoThreshold: 0 },
+        { id: 'CL-SV-004', nombre: 'Estados Financieros Auditados (NIIF Chile)', criticality: 'CRITICAL', descripcion: 'EEFF auditados, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'CL-SV-005', nombre: 'Formulario 22 (SII)', criticality: 'HIGH', descripcion: 'Declaración anual de impuesto a la renta', mintoThreshold: 0 },
+        { id: 'CL-SV-006', nombre: 'Certificado de Cumplimiento SII', criticality: 'HIGH', descripcion: 'Constancia de cumplimiento tributario', mintoThreshold: 0 },
+        { id: 'CL-SV-007', nombre: 'Informe DICOM / Equifax CL', criticality: 'HIGH', descripcion: 'Reporte de riesgo crediticio comercial', mintoThreshold: 0 },
+        { id: 'CL-SV-008', nombre: 'Cédula de Identidad de representantes', criticality: 'CRITICAL', descripcion: 'RUN de los firmantes y beneficiarios finales', mintoThreshold: 0 }
+      ]
+    },
+    realEstate: {
+      name: 'Bienes Raíces',
+      documentos: [
+        { id: 'CL-RE-001', nombre: 'Escritura de Compraventa / Dominio', criticality: 'CRITICAL', descripcion: 'Escritura pública e inscripción CBR', mintoThreshold: 0 },
+        { id: 'CL-RE-002', nombre: 'Certificado de Hipotecas y Gravámenes', criticality: 'CRITICAL', descripcion: 'Emitido por CBR, con antigüedad máx 30 días', mintoThreshold: 0 },
+        { id: 'CL-RE-003', nombre: 'Tasación Fiscal (SII)', criticality: 'CRITICAL', descripcion: 'Avalúo fiscal SII del inmueble', mintoThreshold: 0 },
+        { id: 'CL-RE-004', nombre: 'Certificado de Contribuciones al Día', criticality: 'HIGH', descripcion: 'Pago de contribuciones sin deuda', mintoThreshold: 0 }
+      ]
+    }
+  },
+  EC: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'EC-SV-001', nombre: 'RUC (SRI)', criticality: 'CRITICAL', descripcion: 'Registro Único de Contribuyentes vigente', mintoThreshold: 0 },
+        { id: 'EC-SV-002', nombre: 'Escritura de Constitución', criticality: 'CRITICAL', descripcion: 'Escritura con aprobación Superintendencia de Compañías', mintoThreshold: 0 },
+        { id: 'EC-SV-003', nombre: 'Nombramiento del Representante Legal', criticality: 'CRITICAL', descripcion: 'Nombramiento inscrito y vigente', mintoThreshold: 0 },
+        { id: 'EC-SV-004', nombre: 'Certificado Superintendencia de Compañías', criticality: 'HIGH', descripcion: 'Constancia de obligaciones al día', mintoThreshold: 0 },
+        { id: 'EC-SV-005', nombre: 'Estados Financieros Auditados (NIIF)', criticality: 'CRITICAL', descripcion: 'EEFF auditados, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'EC-SV-006', nombre: 'Declaración Impuesto a la Renta (SRI)', criticality: 'HIGH', descripcion: 'Formulario 101 de los últimos 2 años', mintoThreshold: 0 },
+        { id: 'EC-SV-007', nombre: 'Certificado de Cumplimiento Tributario', criticality: 'HIGH', descripcion: 'SRI — sin deuda pendiente', mintoThreshold: 0 },
+        { id: 'EC-SV-008', nombre: 'Cédula del representante legal y accionistas', criticality: 'CRITICAL', descripcion: 'Cédulas de identidad ecuatorianas o pasaportes', mintoThreshold: 0 }
+      ]
+    }
+  },
+  PE: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'PE-SV-001', nombre: 'RUC (SUNAT)', criticality: 'CRITICAL', descripcion: 'Registro Único de Contribuyentes activo', mintoThreshold: 0 },
+        { id: 'PE-SV-002', nombre: 'Ficha RUC (SUNAT)', criticality: 'CRITICAL', descripcion: 'Ficha de información del contribuyente', mintoThreshold: 0 },
+        { id: 'PE-SV-003', nombre: 'Partida Registral SUNARP', criticality: 'CRITICAL', descripcion: 'Partida electrónica de la sociedad', mintoThreshold: 0 },
+        { id: 'PE-SV-004', nombre: 'Vigencia de Poder (SUNARP)', criticality: 'HIGH', descripcion: 'Certificado de poderes vigentes del representante', mintoThreshold: 0 },
+        { id: 'PE-SV-005', nombre: 'Estados Financieros Auditados (NIIF)', criticality: 'CRITICAL', descripcion: 'EEFF auditados, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'PE-SV-006', nombre: 'Declaración Jurada Anual (SUNAT)', criticality: 'HIGH', descripcion: 'PDT 710 de los últimos 2 años', mintoThreshold: 0 },
+        { id: 'PE-SV-007', nombre: 'Certificado de No Adeudo (SUNAT)', criticality: 'HIGH', descripcion: 'Constancia de sin deuda tributaria', mintoThreshold: 0 },
+        { id: 'PE-SV-008', nombre: 'DNI del representante legal y socios', criticality: 'CRITICAL', descripcion: 'Identificación vigente', mintoThreshold: 0 }
+      ]
+    },
+    realEstate: {
+      name: 'Bienes Raíces',
+      documentos: [
+        { id: 'PE-RE-001', nombre: 'Partida Registral SUNARP del Inmueble', criticality: 'CRITICAL', descripcion: 'Partida electrónica actualizada', mintoThreshold: 0 },
+        { id: 'PE-RE-002', nombre: 'Tasación Comercial', criticality: 'CRITICAL', descripcion: 'Tasación por perito CREA o equivalente', mintoThreshold: 0 },
+        { id: 'PE-RE-003', nombre: 'HR y PU (Hoja de Resumen / Predial Urbano)', criticality: 'HIGH', descripcion: 'Impuesto predial sin deuda', mintoThreshold: 0 },
+        { id: 'PE-RE-004', nombre: 'Escritura Pública de Compraventa', criticality: 'CRITICAL', descripcion: 'Escritura con inscripción SUNARP', mintoThreshold: 0 }
+      ]
+    }
+  },
+  BO: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'BO-SV-001', nombre: 'NIT (SIN)', criticality: 'CRITICAL', descripcion: 'Número de Identificación Tributaria vigente', mintoThreshold: 0 },
+        { id: 'BO-SV-002', nombre: 'Matrícula de Comercio (SEPREC)', criticality: 'CRITICAL', descripcion: 'Inscripción en el Registro de Comercio', mintoThreshold: 0 },
+        { id: 'BO-SV-003', nombre: 'Escritura de Constitución', criticality: 'CRITICAL', descripcion: 'Escritura pública protocolizada', mintoThreshold: 0 },
+        { id: 'BO-SV-004', nombre: 'Estados Financieros', criticality: 'CRITICAL', descripcion: 'EEFF auditados o revisados, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'BO-SV-005', nombre: 'Certificado RUPE', criticality: 'HIGH', descripcion: 'Registro de proveedores del Estado (si aplica)', mintoThreshold: 0 },
+        { id: 'BO-SV-006', nombre: 'Cédula de Identidad de representantes', criticality: 'CRITICAL', descripcion: 'CI boliviana vigente', mintoThreshold: 0 }
+      ]
+    }
+  },
+  PY: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'PY-SV-001', nombre: 'RUC (SET)', criticality: 'CRITICAL', descripcion: 'Registro Único de Contribuyentes vigente', mintoThreshold: 0 },
+        { id: 'PY-SV-002', nombre: 'Escritura de Constitución', criticality: 'CRITICAL', descripcion: 'Escritura protocolizada e inscrita en Registro Público', mintoThreshold: 0 },
+        { id: 'PY-SV-003', nombre: 'Patente Comercial Municipal', criticality: 'HIGH', descripcion: 'Habilitación municipal vigente', mintoThreshold: 0 },
+        { id: 'PY-SV-004', nombre: 'Estados Financieros', criticality: 'CRITICAL', descripcion: 'EEFF auditados, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'PY-SV-005', nombre: 'Certificado de Cumplimiento SET', criticality: 'HIGH', descripcion: 'Sin deuda tributaria pendiente', mintoThreshold: 0 },
+        { id: 'PY-SV-006', nombre: 'Informe Informconf', criticality: 'HIGH', descripcion: 'Reporte de riesgo crediticio', mintoThreshold: 0 },
+        { id: 'PY-SV-007', nombre: 'Cédula de Identidad de representantes', criticality: 'CRITICAL', descripcion: 'CI paraguaya vigente', mintoThreshold: 0 }
+      ]
+    }
+  },
+  UY: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'UY-SV-001', nombre: 'RUT (DGI)', criticality: 'CRITICAL', descripcion: 'Registro Único Tributario vigente', mintoThreshold: 0 },
+        { id: 'UY-SV-002', nombre: 'Escritura de Constitución', criticality: 'CRITICAL', descripcion: 'Escritura con inscripción en Registro de Personas Jurídicas', mintoThreshold: 0 },
+        { id: 'UY-SV-003', nombre: 'Certificado Único DGI', criticality: 'CRITICAL', descripcion: 'Constancia de cumplimiento tributario', mintoThreshold: 0 },
+        { id: 'UY-SV-004', nombre: 'Certificado BPS', criticality: 'HIGH', descripcion: 'Constancia de aportes sociales al día', mintoThreshold: 0 },
+        { id: 'UY-SV-005', nombre: 'Estados Financieros Auditados (NIIF)', criticality: 'CRITICAL', descripcion: 'EEFF auditados, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'UY-SV-006', nombre: 'Informe Clearing de Informes', criticality: 'HIGH', descripcion: 'Reporte de riesgo crediticio', mintoThreshold: 0 },
+        { id: 'UY-SV-007', nombre: 'Cédula de Identidad de representantes y beneficiarios', criticality: 'CRITICAL', descripcion: 'CI uruguaya vigente', mintoThreshold: 0 }
+      ]
+    }
+  },
+  PA: {
+    servicios: {
+      name: 'Servicios / Empresas',
+      documentos: [
+        { id: 'PA-SV-001', nombre: 'RUC (ANIP)', criticality: 'CRITICAL', descripcion: 'Registro Único de Contribuyente', mintoThreshold: 0 },
+        { id: 'PA-SV-002', nombre: 'Aviso de Operación', criticality: 'CRITICAL', descripcion: 'Licencia comercial municipal vigente', mintoThreshold: 0 },
+        { id: 'PA-SV-003', nombre: 'Pacto Social / Escritura', criticality: 'CRITICAL', descripcion: 'Documento constitutivo con inscripción Registro Público', mintoThreshold: 0 },
+        { id: 'PA-SV-004', nombre: 'Certificado de Registro Público', criticality: 'CRITICAL', descripcion: 'Certificado de vigencia e incumbencia', mintoThreshold: 0 },
+        { id: 'PA-SV-005', nombre: 'Estados Financieros Auditados', criticality: 'CRITICAL', descripcion: 'EEFF auditados por CPA panameño, últimos 2 años', mintoThreshold: 0 },
+        { id: 'PA-SV-006', nombre: 'Paz y Salvo de la DGI', criticality: 'HIGH', descripcion: 'Constancia de cumplimiento fiscal', mintoThreshold: 0 },
+        { id: 'PA-SV-007', nombre: 'Cédula o Pasaporte de directores y accionistas', criticality: 'CRITICAL', descripcion: 'Identificación vigente + UBO Declaration', mintoThreshold: 0 }
+      ]
+    }
+  },
+  CA: {
+    servicios: {
+      name: 'Business / Servicios',
+      documentos: [
+        { id: 'CA-SV-001', nombre: 'Business Number (CRA)', criticality: 'CRITICAL', descripcion: 'Número de negocio de Canada Revenue Agency', mintoThreshold: 0 },
+        { id: 'CA-SV-002', nombre: 'Articles of Incorporation', criticality: 'CRITICAL', descripcion: 'Acta constitutiva federal o provincial', mintoThreshold: 0 },
+        { id: 'CA-SV-003', nombre: 'Corporate Registry Extract', criticality: 'CRITICAL', descripcion: 'Extracto del registro provincial actualizado', mintoThreshold: 0 },
+        { id: 'CA-SV-004', nombre: 'Financial Statements (IFRS/ASPE)', criticality: 'CRITICAL', descripcion: 'EEFF auditados o revisados, últimos 2 ejercicios', mintoThreshold: 0 },
+        { id: 'CA-SV-005', nombre: 'T2 Corporate Tax Return (CRA)', criticality: 'HIGH', descripcion: 'Declaración fiscal corporativa de los últimos 2 años', mintoThreshold: 0 },
+        { id: 'CA-SV-006', nombre: 'Certificate of Compliance (CRA)', criticality: 'HIGH', descripcion: 'Certificado de cumplimiento fiscal', mintoThreshold: 0 },
+        { id: 'CA-SV-007', nombre: 'Credit Report (Equifax CA / TransUnion CA)', criticality: 'HIGH', descripcion: 'Reporte de riesgo crediticio comercial', mintoThreshold: 0 },
+        { id: 'CA-SV-008', nombre: 'Passport o Drivers Licence de directores', criticality: 'CRITICAL', descripcion: 'ID vigente + FINTRAC beneficial ownership', mintoThreshold: 0 }
+      ]
+    },
+    realEstate: {
+      name: 'Real Estate',
+      documentos: [
+        { id: 'CA-RE-001', nombre: 'Title Certificate / Land Title', criticality: 'CRITICAL', descripcion: 'Título de propiedad registrado en Land Registry provincial', mintoThreshold: 0 },
+        { id: 'CA-RE-002', nombre: 'Property Appraisal', criticality: 'CRITICAL', descripcion: 'Avalúo por appraiser certificado AACI/CRA', mintoThreshold: 0 },
+        { id: 'CA-RE-003', nombre: 'Title Insurance', criticality: 'HIGH', descripcion: 'Seguro de título de propiedad', mintoThreshold: 0 },
+        { id: 'CA-RE-004', nombre: 'Property Tax Certificate', criticality: 'HIGH', descripcion: 'Constancia de pago de impuestos municipales', mintoThreshold: 0 },
+        { id: 'CA-RE-005', nombre: 'Survey / Building Location Certificate', criticality: 'HIGH', descripcion: 'Plano de ubicación y linderos', mintoThreshold: 0 }
+      ]
     }
   }
 };
