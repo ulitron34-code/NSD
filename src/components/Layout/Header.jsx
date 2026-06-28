@@ -31,11 +31,12 @@ export default function Header({ isLanding = false }) {
   };
 
   const navLinks = [
-    { label: t("navbar.home"),     anchor: "/#inicio" },
-    { label: t("navbar.about"),    anchor: "/#nosotros" },
-    { label: t("navbar.services"), anchor: "/services" },
-    { label: t("navbar.prices"),   anchor: "/#precios" },
-    { label: "FAQ",                anchor: "/#faq" },
+    { label: t("navbar.home"),         anchor: "/" },
+    { label: t("navbar.platform"),     anchor: "/plataforma" },
+    { label: t("navbar.coverage"),     anchor: "/cobertura-global" },
+    { label: t("navbar.industries"),   anchor: "/industrias" },
+    { label: t("navbar.integrations"), anchor: "/integraciones" },
+    { label: t("navbar.modalities"),   anchor: "/modalidades" },
   ];
 
   const linkStyle = {

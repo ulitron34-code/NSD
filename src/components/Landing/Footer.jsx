@@ -79,6 +79,11 @@ export default function Footer({ onNavigate }) {
                   {t("footer.legal.terms")}
                 </a>
               </li>
+              <li style={{ marginBottom: "0.5rem" }}>
+                <a onClick={() => navigate("/terms")} style={{ color: "rgba(255,255,255,0.8)", textDecoration: "none", cursor: "pointer" }}>
+                  Aviso legal
+                </a>
+              </li>
               <li>
                 <a onClick={() => navigate("/contact")} style={{ color: "rgba(255,255,255,0.8)", textDecoration: "none", cursor: "pointer" }}>
                   {t("footer.legal.contact")}

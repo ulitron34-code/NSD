@@ -1,6 +1,7 @@
 import React from "react";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
+import LegalDisclaimer from "../components/Shared/LegalDisclaimer";
 
 const sections = [
   ["1. Aceptacion de terminos", [
@@ -98,6 +99,7 @@ export default function TermsPage() {
             </section>
           ))}
         </div>
+        <LegalDisclaimer />
       </div>
       <Footer />
     </div>

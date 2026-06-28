@@ -27,6 +27,15 @@ const CheckoutPage      = lazy(() => import("./pages/CheckoutPage"));
 const SharedDataRoomPage = lazy(() => import("./pages/SharedDataRoomPage"));
 const NotFoundPage      = lazy(() => import("./pages/NotFoundPage"));
 
+// Nuevas páginas globales — lazy load
+const ModalidadesPage        = lazy(() => import("./pages/ModalidadesPage"));
+const PlataformaPage         = lazy(() => import("./pages/PlataformaPage"));
+const GlobalCoveragePage     = lazy(() => import("./pages/GlobalCoveragePage"));
+const ComplianceIntelPage    = lazy(() => import("./pages/ComplianceIntelligencePage"));
+const IntegracionesPage      = lazy(() => import("./pages/IntegracionesPage"));
+const IndustriasPage         = lazy(() => import("./pages/IndustriasPage"));
+const RecursosPage           = lazy(() => import("./pages/RecursosPage"));
+
 const Loader = () => (
   <div style={{
     minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center",
@@ -48,14 +57,28 @@ function AppContent() {
           <Route path="/login"  element={<><Header /><LoginComponent /></>} />
           <Route path="/signup" element={<><Header /><SignupComponent /></>} />
 
-          {/* Páginas públicas */}
+          {/* Páginas públicas existentes */}
           <Route path="/privacy"        element={<><Header /><PrivacyPage /></>} />
           <Route path="/terms"          element={<><Header /><TermsPage /></>} />
           <Route path="/contact"        element={<><Header /><ContactPage /></>} />
+          <Route path="/contacto"       element={<><Header /><ContactPage /></>} />
           <Route path="/blog"           element={<><Header isLanding={true} /><BlogPage /></>} />
           <Route path="/certifications" element={<><Header isLanding={true} /><CertificationsPage /></>} />
           <Route path="/services"       element={<><Header isLanding={true} /><ServicesPage /></>} />
           <Route path="/shared-data-room/:token" element={<><Header /><SharedDataRoomPage /></>} />
+
+          {/* Nuevas páginas globales */}
+          <Route path="/modalidades"      element={<><Header isLanding={true} /><ModalidadesPage /></>} />
+          <Route path="/plataforma"       element={<><Header isLanding={true} /><PlataformaPage /></>} />
+          <Route path="/cobertura-global" element={<><Header isLanding={true} /><GlobalCoveragePage /></>} />
+          <Route path="/inteligencia"     element={<><Header isLanding={true} /><ComplianceIntelPage /></>} />
+          <Route path="/integraciones"    element={<><Header isLanding={true} /><IntegracionesPage /></>} />
+          <Route path="/industrias"       element={<><Header isLanding={true} /><IndustriasPage /></>} />
+          <Route path="/industrias/:sector" element={<><Header isLanding={true} /><IndustriasPage /></>} />
+          <Route path="/recursos"         element={<><Header isLanding={true} /><RecursosPage /></>} />
+
+          {/* Redirects de URLs anteriores */}
+          <Route path="/pricing" element={<Navigate to="/modalidades" replace />} />
 
           {/* Dashboard protegido */}
           <Route
