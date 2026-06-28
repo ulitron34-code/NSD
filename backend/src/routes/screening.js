@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { screenEntity, getGatewayStatus } from '../services/sanctionsGateway.js';
 
 const router = Router();

@@ -4,7 +4,7 @@
 //   GET  /api/whatsapp/status   — estado de la configuracion
 import { Router } from 'express';
 import crypto from 'crypto';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { sendWhatsApp } from '../services/whatsappService.js';
 
 const router = Router();

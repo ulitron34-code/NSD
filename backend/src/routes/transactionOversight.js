@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { evaluateTransaction, getTransactionRules } from '../services/transactionOversightService.js';
 
 const router = Router();

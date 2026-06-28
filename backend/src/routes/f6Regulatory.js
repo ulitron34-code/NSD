@@ -1,6 +1,6 @@
 // Rutas F6: integraciones regulatorias Canada (Companies House) y EAU (Dubai).
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { lookupCompany, searchCompanies } from '../services/companiesHouseService.js';
 import { verifyEmiratesId, verifyTradeLicense } from '../services/aeRegulatoryService.js';
 
