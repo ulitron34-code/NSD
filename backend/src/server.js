@@ -125,6 +125,7 @@ app.get('/health', (req, res) => {
       stripeWebhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       anthropicApiKey: Boolean(process.env.ANTHROPIC_API_KEY),
       deepseekApiKey: Boolean(process.env.DEEPSEEK_API_KEY),
+      nvidiaApiKey: Boolean(process.env.NVIDIA_API_KEY),
       regulatoryProviders: {
         companiesHouse: Boolean(process.env.COMPANIES_HOUSE_API_KEY),
         mexicoRfc: Boolean(process.env.MEXICO_RFC_API_URL && process.env.MEXICO_RFC_API_KEY),

@@ -4,39 +4,42 @@ import { AI_PROMPTS } from '../config/aiPrompts.js';
 
 // Configuración opcional por si las llaves aún no están en .env
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_KEY  = process.env.DEEPSEEK_API_KEY;
+const NVIDIA_KEY    = process.env.NVIDIA_API_KEY; // temporal — pruebas NIM
 
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
-const deepseek = DEEPSEEK_KEY ? new OpenAI({ 
-  apiKey: DEEPSEEK_KEY, 
-  baseURL: 'https://api.deepseek.com/v1' 
-}) : null;
+const deepseek  = DEEPSEEK_KEY  ? new OpenAI({ apiKey: DEEPSEEK_KEY,  baseURL: 'https://api.deepseek.com/v1' }) : null;
+// NVIDIA NIM expone API compatible con OpenAI en integrate.api.nvidia.com
+const nvidia    = NVIDIA_KEY    ? new OpenAI({ apiKey: NVIDIA_KEY,    baseURL: 'https://integrate.api.nvidia.com/v1' }) : null;
 
 /**
- * Fase 1: DeepSeek realiza la extracción barata de datos (Monto, Fechas, RFC, OCR básico)
+ * Fase 1: extracción de datos (NVIDIA NIM si está disponible, DeepSeek como fallback).
+ * NVIDIA usa meta/llama-3.1-8b-instruct — rápido y económico para extracción estructurada.
+ * Remover cliente nvidia y NVIDIA_KEY cuando termine el periodo de pruebas.
  */
 async function extractDataWithDeepSeek(documentText) {
-  if (!deepseek) {
-    console.warn("DeepSeek no configurado. Simulando extracción.");
-    return {
-      entidad: "Entidad simulada",
-      fecha: new Date().toISOString().split('T')[0],
-      esValido: true
-    };
+  const client = nvidia || deepseek;
+  const model  = nvidia ? 'meta/llama-3.1-8b-instruct' : 'deepseek-chat';
+  const provider = nvidia ? 'NVIDIA NIM' : 'DeepSeek';
+
+  if (!client) {
+    console.warn("Sin proveedor de extracción configurado (NVIDIA_API_KEY / DEEPSEEK_API_KEY). Simulando.");
+    return { entidad: "Entidad simulada", fecha: new Date().toISOString().split('T')[0], esValido: true };
   }
 
   try {
-    const completion = await deepseek.chat.completions.create({
-      model: "deepseek-chat",
+    const completion = await client.chat.completions.create({
+      model,
       messages: [
         { role: "system", content: AI_PROMPTS.DEEPSEEK_EXTRACTOR_SYSTEM },
-        { role: "user", content: `Analiza este texto:\n\n${documentText}` }
+        { role: "user",   content: `Analiza este texto:\n\n${documentText}` }
       ],
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
+    console.info(`[aiEngine] Extracción via ${provider} (${model})`);
     return JSON.parse(completion.choices[0].message.content);
   } catch (error) {
-    console.error("Error en DeepSeek:", error);
+    console.error(`Error en ${provider}:`, error);
     return null;
   }
 }
