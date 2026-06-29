@@ -198,21 +198,33 @@ export function exportExpedientePDF(expediente, language = 'es') {
 }
 
 /**
- * Export data as Excel (.xlsx) — xlsx loaded lazily to avoid bundle impact
+ * Export data as Excel (.xlsx) — exceljs loaded lazily to avoid bundle impact
  */
 export async function exportToXLSX(data, filename, headers) {
   if (!data || data.length === 0) return;
 
-  const { utils, writeFile } = await import('xlsx');
+  const { default: ExcelJS } = await import('exceljs');
 
-  const rows = data.map(row =>
-    Object.fromEntries(headers.map(h => [h.label, row[h.key] ?? '']))
-  );
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Datos');
 
-  const ws = utils.json_to_sheet(rows);
-  const wb = utils.book_new();
-  utils.book_append_sheet(wb, ws, 'Datos');
-  writeFile(wb, `${filename}.xlsx`);
+  worksheet.addRow(headers.map(h => h.label));
+  worksheet.getRow(1).font = { bold: true };
+
+  data.forEach(row => {
+    worksheet.addRow(headers.map(h => row[h.key] ?? ''));
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 
   apiLogger.success('Export', `Exported ${data.length} rows to XLSX`);
 }
