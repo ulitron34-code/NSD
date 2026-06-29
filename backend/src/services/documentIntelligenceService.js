@@ -447,27 +447,48 @@ function toDbSeverity(severity) {
   return SEVERITY_TO_DB[severity] || severity || 'info';
 }
 
-// red_flag_category tiene CHECK (NULL o uno de 'fraud','inconsistency',
-// 'expired','missing','suspicious','regulatory'). No hay un mapeo confiable
-// rule_code -> categoria sin revisar cada regla una por una, asi que se deja
-// en NULL (permitido) en vez de arriesgar un valor inventado que tambien
-// viole el constraint.
-// rule_code ademas tiene FK a ref_validation_rules(rule_code) -- una tabla de
-// referencia separada cuyo contenido no controlamos desde aqui. En vez de
-// perseguir esa lista tambien, verification_type (NOT NULL, sin FK) es la
-// fuente real del codigo de regla en escritura Y lectura; rule_code se deja
-// en NULL para no arriesgar otra violacion de foreign key.
+// red_flag_category CHECK (NULL o 'fraud','inconsistency','expired','missing','suspicious','regulatory')
+// rule_code tiene FK a ref_validation_rules — se deja NULL para evitar violaciones de FK.
+// verification_type (sin FK) es la fuente del código de regla en escritura y lectura.
+const RED_FLAG_CATEGORY_MAP = {
+  // Formato de identificadores fiscales / corporativos
+  RFC_FORMAT: 'regulatory', CURP_FORMAT: 'regulatory',
+  CSF_ESTATUS_ACTIVO: 'regulatory', OPINION_32D_POSITIVA: 'regulatory',
+  CO_NIT_FORMAT: 'regulatory', EC_CEDULA_FORMAT: 'regulatory', EC_RUC_FORMAT: 'regulatory',
+  AR_CUIT_FORMAT: 'regulatory', AR_CUIL_FORMAT: 'regulatory', AR_DNI_FORMAT: 'regulatory',
+  PE_RUC_FORMAT: 'regulatory', PE_DNI_FORMAT: 'regulatory',
+  CL_RUT_FORMAT: 'regulatory', CL_RUN_FORMAT: 'regulatory',
+  BO_NIT_FORMAT: 'regulatory', PY_RUC_FORMAT: 'regulatory', UY_RUT_FORMAT: 'regulatory',
+  US_EIN_FORMAT: 'regulatory', US_SSN_FORMAT: 'regulatory',
+  CA_SIN_FORMAT: 'regulatory', CA_BN_FORMAT: 'regulatory',
+  // Vigencia
+  VIGENCIA_NO_VENCIDA: 'expired',
+  // Inconsistencias contables / financieras
+  BALANCE_CUADRA: 'inconsistency', UTILIDAD_COHERENTE: 'inconsistency',
+  COUNTRY_MISMATCH: 'inconsistency',
+  BENCHMARK_MARGEN_NETO: 'inconsistency', BENCHMARK_APALANCAMIENTO: 'inconsistency',
+  BENCHMARK_DSCR: 'inconsistency',
+  // Señales sospechosas
+  NUMEROS_REDONDOS: 'suspicious', FORENSE_ROE_ANOMALO: 'suspicious',
+  FORENSE_ROA_ANOMALO: 'suspicious',
+  // Fraude
+  FRAUD_METADATA_EDIT: 'fraud', FORENSE_BENFORD_LAW: 'fraud',
+  // Incompleto
+  COMPLETITUD_GENERAL: 'missing',
+};
+
 function toDbVerificationRow(documentId, v, agentName) {
+  const isRedFlag = v.status === 'fail' || v.status === 'warning';
   return {
     document_id: documentId,
     verification_type: v.rule_code || 'general',
     rule_code: null,
-    result: v.status, // 'pass', 'fail', 'warning'
+    result: v.status,
     severity: toDbSeverity(v.severity),
     details: { findings: v.findings || '' },
     message_es: v.findings || '',
-    is_red_flag: v.status === 'fail' || v.status === 'warning',
-    red_flag_category: null,
+    is_red_flag: isRedFlag,
+    red_flag_category: isRedFlag ? (RED_FLAG_CATEGORY_MAP[v.rule_code] || null) : null,
     verified_by: agentName || 'Sistema',
     verified_at: new Date().toISOString()
   };
