@@ -199,6 +199,18 @@ Se directo y conciso.`;
   const globalRisk = calculateGlobalRisk({ rfcData, bureauData, ofacData, pepData, equifaxData });
   const flagsResult = detectFlags({ rfcData, bureauData, ofacData, pepData });
 
+  const dataSources = {
+    rfc_validation: rfcData.source   ?? 'UNKNOWN',
+    credit_score:   bureauData.source ?? 'UNKNOWN',
+    sanctions:      ofacData.source   ?? 'REAL',
+    pep:            pepData.source    ?? 'REAL',
+    equifax:        equifaxData.source ?? 'UNKNOWN',
+    clarity:        clarityData.source ?? 'UNKNOWN',
+  };
+  const mockSources = Object.entries(dataSources)
+    .filter(([, src]) => String(src).startsWith('MOCK'))
+    .map(([key]) => key);
+
   return {
     status: 'completed',
     rfc: rfcNorm,
@@ -212,10 +224,14 @@ Se directo y conciso.`;
       equifax:         equifaxData,
       clarity:         clarityData
     },
-    nsd_score:   nsdScore,
-    global_risk: globalRisk,
-    flags:       flagsResult.flags,
+    nsd_score:      nsdScore,
+    global_risk:    globalRisk,
+    flags:          flagsResult.flags,
     severity_level: flagsResult.severity_level,
+    data_sources:   dataSources,
+    mock_warning:   mockSources.length > 0
+      ? `Datos simulados (MOCK) en: ${mockSources.join(', ')}. Configurar APIs reales para producción.`
+      : null,
     iterations,
     model: MODEL,
     evaluated_at: new Date().toISOString()

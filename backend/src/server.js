@@ -42,7 +42,7 @@ import { startComplianceCron } from './services/complianceAlertCron.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 const isDev = process.env.NODE_ENV !== 'production';
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://127.0.0.1:5173,http://localhost:5173')
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://127.0.0.1:5173,http://localhost:5173,https://nsd-pi.vercel.app')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
