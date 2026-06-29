@@ -95,7 +95,11 @@ const CHECKLIST_DB = {
         { id: 'CO-RE-002', nombre: 'Certificado de Tradición y Libertad', criticality: 'CRITICAL', descripcion: 'Expedido por la SNR, vigencia ≤30 días', mintoThreshold: 0 },
         { id: 'CO-RE-003', nombre: 'Avalúo Comercial', criticality: 'CRITICAL', descripcion: 'Avalúo por perito inscrito en Lonja de Propiedad Raíz', mintoThreshold: 500000000 },
         { id: 'CO-RE-004', nombre: 'Paz y Salvo Predial', criticality: 'HIGH', descripcion: 'Certificado de no adeudo de impuesto predial', mintoThreshold: 0 },
-        { id: 'CO-RE-005', nombre: 'NIT o Cédula del Vendedor', criticality: 'CRITICAL', descripcion: 'Identificación del propietario actual', mintoThreshold: 0 }
+        { id: 'CO-RE-005', nombre: 'NIT o Cédula del Vendedor', criticality: 'CRITICAL', descripcion: 'Identificación del propietario actual', mintoThreshold: 0 },
+        { id: 'CO-RE-006', nombre: 'Declaración de Origen de Fondos (UIAF)', criticality: 'CRITICAL', descripcion: 'Formulario SARLAFT — obligatorio para operaciones inmobiliarias según Ley 1762/2015 y Circular UIAF 042', mintoThreshold: 0 },
+        { id: 'CO-RE-007', nombre: 'Formulario UIAF de Umbral (si aplica)', criticality: 'HIGH', descripcion: 'Reporte a la UIAF cuando la operación supere el umbral vigente (≥ 410 SMMLV)', mintoThreshold: 0 },
+        { id: 'CO-RE-008', nombre: 'Plano Catastral IGAC', criticality: 'HIGH', descripcion: 'Plano del predio expedido por el IGAC o la Curaduría municipal — confirma linderos y área registral', mintoThreshold: 0 },
+        { id: 'CO-RE-009', nombre: 'Certificado de Estrato y Uso del Suelo (IGAC/POT)', criticality: 'MEDIUM', descripcion: 'Certifica el uso permitido del inmueble conforme al Plan de Ordenamiento Territorial', mintoThreshold: 0 }
       ]
     }
   },

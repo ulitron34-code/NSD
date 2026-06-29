@@ -198,6 +198,26 @@ export function exportExpedientePDF(expediente, language = 'es') {
 }
 
 /**
+ * Export data as Excel (.xlsx) — xlsx loaded lazily to avoid bundle impact
+ */
+export async function exportToXLSX(data, filename, headers) {
+  if (!data || data.length === 0) return;
+
+  const { utils, writeFile } = await import('xlsx');
+
+  const rows = data.map(row =>
+    Object.fromEntries(headers.map(h => [h.label, row[h.key] ?? '']))
+  );
+
+  const ws = utils.json_to_sheet(rows);
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, ws, 'Datos');
+  writeFile(wb, `${filename}.xlsx`);
+
+  apiLogger.success('Export', `Exported ${data.length} rows to XLSX`);
+}
+
+/**
  * Export pipeline as CSV
  */
 export function exportPipelineCSV(pipeline, language = 'es') {
@@ -228,6 +248,7 @@ export default {
   downloadFile,
   exportToCSV,
   exportToJSON,
+  exportToXLSX,
   exportToPDF,
   exportExpedientePDF,
   exportPipelineCSV,
