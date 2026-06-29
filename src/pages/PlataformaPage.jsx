@@ -14,7 +14,7 @@ const MODULES = [
   { id: "risk",         name: "NSD Risk Engine",               desc: "Matrices, reglas, factores, ponderaciones, excepciones, niveles de riesgo y explicación de resultados.", status: "disponible" },
   { id: "cases",        name: "NSD Case Manager",              desc: "Bandejas, asignaciones, comentarios, solicitudes de aclaración, escalamiento, SLA, dictámenes y aprobaciones.", status: "disponible" },
   { id: "monitoring",   name: "NSD Monitoring",                desc: "Vencimientos, revisiones periódicas, cambios corporativos, re-screening, eventos y actualización del expediente.", status: "disponible" },
-  { id: "transaction",  name: "NSD Transaction Oversight",     desc: "Reglas y alertas sobre comportamiento u operaciones cuando existan datos e integraciones disponibles.", status: "proximo" },
+  { id: "transaction",  name: "NSD Transaction Oversight",     desc: "Reglas y alertas sobre comportamiento u operaciones cuando existan datos e integraciones disponibles.", status: "disponible" },
   { id: "credit",       name: "NSD Credit Review",             desc: "Análisis de estados financieros, capacidad de pago, deuda, garantías, contratos y preparación del expediente para la decisión del cliente.", status: "disponible" },
   { id: "investor",     name: "NSD Investor Due Diligence",    desc: "Revisión de promotores, empresas, fondos, coinversionistas, origen de recursos, riesgos y data room.", status: "disponible" },
   { id: "regulatory",   name: "NSD Regulatory Workspace",      desc: "Expedientes, evidencias, reportes y flujos configurables para responsables, auditores y supervisores.", status: "disponible" },

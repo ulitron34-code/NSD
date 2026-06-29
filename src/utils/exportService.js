@@ -201,6 +201,7 @@ export function exportExpedientePDF(expediente, language = 'es') {
  * Export pipeline as CSV
  */
 export function exportPipelineCSV(pipeline, language = 'es') {
+  const L = (es, en) => language === 'es' ? es : en;
   const headers = [
     { key: 'id', label: L('ID', 'ID') },
     { key: 'name', label: L('Proyecto', 'Project') },
