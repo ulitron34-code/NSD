@@ -37,6 +37,7 @@ import whatsappRoutes from './routes/whatsapp.js';
 import nsdApplicantRoutes from './routes/nsdApplicant.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
+import { primeRegulatoryLists } from './services/regulatoryGateway.js';
 import { startComplianceCron } from './services/complianceAlertCron.js';
 
 const app = express();
@@ -162,5 +163,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   primeAllLists();
+  primeRegulatoryLists();
   startComplianceCron();
 });
