@@ -30,6 +30,15 @@ import { screenNameAgainstAsic, getAsicListStatus, primeAsicList } from './asicS
 import { screenNameAgainstWorldBank, getWorldBankListStatus, primeWorldBankList } from './worldBankScreening.js';
 import { screenNameAgainstFcaUk, getFcaUkListStatus, primeFcaUkList } from './fcaUkScreening.js';
 
+// 5A — Europa adicional
+import { screenNameAgainstFinma, getFinmaListStatus, primeFinmaList } from './finmaScreening.js';
+import { screenNameAgainstBafin, getBafinListStatus, primeBafinList } from './bafinScreening.js';
+import { screenNameAgainstCnmv, getCnmvListStatus, primeCnmvList } from './cnmvScreening.js';
+
+// 5B — LATAM adicional
+import { screenNameAgainstBcra, getBcraListStatus, primeBcraList } from './bcraScreening.js';
+import { screenNameAgainstCvmBrazil, getCvmBrazilListStatus, primeCvmBrazilList } from './cvmBrazilScreening.js';
+
 import { fromLegacyMatch } from './entityModel.js';
 
 // Envuelve cualquier screener (sync o async) en un Promise que nunca rechaza.
@@ -60,6 +69,13 @@ export function primeRegulatoryLists() {
   // 4B — Globales adicionales
   primeWorldBankList();
   primeFcaUkList();
+  // 5A — Europa adicional
+  primeFinmaList();
+  primeBafinList();
+  primeCnmvList();
+  // 5B — LATAM adicional
+  primeBcraList();
+  primeCvmBrazilList();
   // SEC y BCB son live-search — no precargan
 }
 
@@ -95,7 +111,12 @@ export async function screenEntityFull(name, country = null) {
     sfcHkResult,
     asicResult,
     worldBankResult,
-    fcaUkResult
+    fcaUkResult,
+    finmaResult,
+    bafinResult,
+    cnmvResult,
+    bcraResult,
+    cvmBrazilResult
   ] = await Promise.all([
     safeRun('sanctionsGateway', () => screenEntity(trimmed)),
     safeRun('interpol',         () => screenNameAgainstInterpol(trimmed)),
@@ -110,7 +131,12 @@ export async function screenEntityFull(name, country = null) {
     safeRun('sfc_hk',           () => screenNameAgainstSfcHk(trimmed)),
     safeRun('asic',             () => screenNameAgainstAsic(trimmed)),
     safeRun('world_bank',       () => screenNameAgainstWorldBank(trimmed)),
-    safeRun('fca_uk',           () => screenNameAgainstFcaUk(trimmed))
+    safeRun('fca_uk',           () => screenNameAgainstFcaUk(trimmed)),
+    safeRun('finma',            () => screenNameAgainstFinma(trimmed)),
+    safeRun('bafin',            () => screenNameAgainstBafin(trimmed)),
+    safeRun('cnmv',             () => screenNameAgainstCnmv(trimmed)),
+    safeRun('bcra',             () => screenNameAgainstBcra(trimmed)),
+    safeRun('cvm_brazil',       () => screenNameAgainstCvmBrazil(trimmed))
   ]);
 
   const fatfResult = country ? checkCountryFatfRisk(country) : null;
@@ -129,7 +155,8 @@ export async function screenEntityFull(name, country = null) {
   const regulatoryResults = [
     interpolResult, secResult, dfsaResult, varaResult,
     cnbvResult, bcbResult, sfResult, cmfResult,
-    masResult, sfcHkResult, asicResult, worldBankResult, fcaUkResult
+    masResult, sfcHkResult, asicResult, worldBankResult, fcaUkResult,
+    finmaResult, bafinResult, cnmvResult, bcraResult, cvmBrazilResult
   ];
   for (const r of regulatoryResults) {
     if (r.status === 'hit' && Array.isArray(r.matches)) {
@@ -190,7 +217,14 @@ export async function screenEntityFull(name, country = null) {
       // APAC
       mas:         buildSource(masResult,        'MAS (Monetary Authority of Singapore)'),
       sfc_hk:      buildSource(sfcHkResult,      'SFC (Securities and Futures Commission, Hong Kong)'),
-      asic:        buildSource(asicResult,       'ASIC (Australian Securities and Investments Commission)')
+      asic:        buildSource(asicResult,       'ASIC (Australian Securities and Investments Commission)'),
+      // Europa adicional
+      finma:       buildSource(finmaResult,      'FINMA (Swiss Financial Market Supervisory Authority)'),
+      bafin:       buildSource(bafinResult,      'BaFin (Bundesanstalt fur Finanzdienstleistungsaufsicht, Germany)'),
+      cnmv:        buildSource(cnmvResult,       'CNMV (Comision Nacional del Mercado de Valores, Spain)'),
+      // LATAM adicional
+      bcra:        buildSource(bcraResult,       'BCRA (Banco Central de la Republica Argentina)'),
+      cvm_brazil:  buildSource(cvmBrazilResult,  'CVM (Comissao de Valores Mobiliarios, Brazil)')
     },
     jurisdiction: fatfResult
       ? {
@@ -229,7 +263,14 @@ export function getRegulatoryGatewayStatus() {
       // APAC
       mas:         getMasListStatus(),
       sfc_hk:      getSfcHkListStatus(),
-      asic:        getAsicListStatus()
+      asic:        getAsicListStatus(),
+      // Europa adicional
+      finma:       getFinmaListStatus(),
+      bafin:       getBafinListStatus(),
+      cnmv:        getCnmvListStatus(),
+      // LATAM adicional
+      bcra:        getBcraListStatus(),
+      cvm_brazil:  getCvmBrazilListStatus()
     }
   };
 }
