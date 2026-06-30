@@ -47,6 +47,7 @@ const ServiceOrdersPage = lazy(() => import("../pages/ServiceOrdersPage"));
 const CommissionsPage = lazy(() => import("../pages/CommissionsPage"));
 const DocumentIntelligenceTab = lazy(() => import("../components/Dashboard/DocumentIntelligenceTab"));
 const TransactionOversightTab = lazy(() => import("../components/Dashboard/TransactionOversightTab"));
+const NagmarCaseManagerTab = lazy(() => import("../components/Dashboard/NagmarCaseManagerTab"));
 
 function DashboardLoadingFallback() {
   return (
@@ -160,6 +161,7 @@ export default function DashboardPage() {
         { id: "committee_memo", label: L("Memo Comite", "Committee Memo"), icon: "COM" },
         { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
         { id: "transaction_oversight", label: L("Supervision TX", "TX Oversight"), icon: "TX" },
+        { id: "nagmar_cases", label: L("NAGMAR Screening", "NAGMAR Screening"), icon: "NGM" },
       ];
     }
     return [
@@ -185,6 +187,7 @@ export default function DashboardPage() {
       { id: "admin_comisiones", label: L("Comisiones y Cierres", "Commissions and Closings"), icon: "CO" },
       { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
       { id: "transaction_oversight", label: L("Supervision TX", "TX Oversight"), icon: "TX" },
+      { id: "nagmar_cases", label: L("NAGMAR Screening", "NAGMAR Screening"), icon: "NGM" },
     ];
   };
 
@@ -403,6 +406,7 @@ export default function DashboardPage() {
     if (activeTab === "scoring_ae") return <ScoringAETab />;
     if (activeTab === "biometricos") return <BiometricosTab />;
     if (activeTab === "document_intel") return <DocumentIntelligenceTab />;
+    if (activeTab === "nagmar_cases") return <NagmarCaseManagerTab />;
 
     if (userMode === "solicitante") {
       if (activeTab === "readiness") return <FundingReadinessTab />;

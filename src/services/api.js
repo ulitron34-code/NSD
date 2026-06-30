@@ -233,4 +233,17 @@ export const intelAPI = {
   chat: (expedienteId, message) => api.post(`/intel/expediente/${expedienteId}/chat`, { message })
 };
 
+export const nagmarAPI = {
+  screen: (name, country) =>
+    api.post('/nagmar/screen', { name, country }),
+  getCases: (params = {}) =>
+    api.get('/nagmar/cases', { params }),
+  getCase: (id) =>
+    api.get(`/nagmar/cases/${id}`),
+  addAction: (id, payload) =>
+    api.post(`/nagmar/cases/${id}/actions`, payload),
+  updateCase: (id, payload) =>
+    api.patch(`/nagmar/cases/${id}`, payload)
+};
+
 export default api;
