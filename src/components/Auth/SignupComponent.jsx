@@ -151,7 +151,7 @@ export default function SignupComponent() {
                 <a href="/privacy" target="_blank" style={{ color: COLORS.gold, fontWeight: 700 }}>
                   Aviso de Privacidad
                 </a>{" "}
-                de NSD International Finance y consiento el tratamiento de mis datos personales conforme a la{" "}
+                de NSDU International Finance y consiento el tratamiento de mis datos personales conforme a la{" "}
                 <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong>.
               </span>
             </label>

@@ -1,14 +1,13 @@
 export const BRAND = {
-  productName: "NSD Platform",
-  shortName: "NSD IF",
-  legalName: "NSD International Finance",
-  futureName: "NAGMAR International Finance",
-  tagline: "Compliance + NSD IF",
+  name: "NSDU",
+  legalName: "NSDU International Finance",
+  tagline: "Boutique International Finance",
+  productName: "NSDU Platform",
   category: "Compliance SaaS",
   contactEmail: "info@nsd.com",
   contactPhone: "+52 XX XXXX XXXX",
   location: "Ciudad de Mexico",
-  logoAlt: "NSD Platform",
+  logoAlt: "NSDU",
 };
 
 export function brandLabel(key, fallback = "") {

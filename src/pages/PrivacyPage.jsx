@@ -1,10 +1,11 @@
 import React from "react";
 import { COLORS } from "../utils/constants";
+import { BRAND } from "../config/brand";
 import Footer from "../components/Landing/Footer";
 
 const sections = [
   ["1. Responsable del tratamiento", [
-    "NSD Platform / NSD International Finance sera responsable del tratamiento de datos personales conforme a la legislacion mexicana aplicable en materia de proteccion de datos personales.",
+    `${BRAND.productName} / ${BRAND.legalName} sera responsable del tratamiento de datos personales conforme a la legislacion mexicana aplicable en materia de proteccion de datos personales.`,
     "Datos corporativos definitivos, RFC, domicilio fiscal y datos del oficial de privacidad deberan integrarse antes de publicacion comercial."
   ]],
   ["2. Datos que podemos tratar", [

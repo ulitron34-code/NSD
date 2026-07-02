@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 export default function Footer({ onNavigate }) {
   const navigate = useNavigate();
@@ -109,7 +110,7 @@ export default function Footer({ onNavigate }) {
         <hr style={{ borderColor: "rgba(255,255,255,0.2)", margin: "2rem 0" }} />
 
         <div style={{ textAlign: "center", color: "rgba(255,255,255,0.6)", fontSize: "0.9rem" }}>
-          <p>© 2026 NSD International Finance. {t("footer.rights")}</p>
+          <p>© 2026 {BRAND.legalName}. {t("footer.rights")}</p>
         </div>
       </div>
     </footer>

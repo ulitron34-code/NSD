@@ -95,9 +95,9 @@ const resources = {
         title: "Tecnología, experiencia y gobierno",
         whoTitle: "¿Quiénes somos?",
         whoText1:
-          "NSD International Finance es una firma tecnológica independiente que desarrolla soluciones de cumplimiento, riesgo y análisis inteligente de expedientes para organizaciones que operan en entornos regulados o toman decisiones financieras, corporativas y de inversión de alta relevancia.",
+          "NSDU International Finance es una firma tecnológica independiente que desarrolla soluciones de cumplimiento, riesgo y análisis inteligente de expedientes para organizaciones que operan en entornos regulados o toman decisiones financieras, corporativas y de inversión de alta relevancia.",
         whoText2:
-          "A través de NSD Global Compliance Platform, integramos información fiscal, corporativa, legal, financiera y reputacional en un entorno seguro y trazable. La plataforma ayuda a identificar personas y empresas, comprender estructuras de propiedad y control, detectar inconsistencias, gestionar alertas y preparar expedientes sólidos.",
+          "A través de NSDU Global Compliance Platform, integramos información fiscal, corporativa, legal, financiera y reputacional en un entorno seguro y trazable. La plataforma ayuda a identificar personas y empresas, comprender estructuras de propiedad y control, detectar inconsistencias, gestionar alertas y preparar expedientes sólidos.",
         missionTitle: "Nuestra Misión",
         missionText:
           "Facilitar que organizaciones de cualquier tamaño integren procesos de conocimiento del cliente, validación empresarial, prevención de riesgos, revisión financiera y monitoreo mediante una tecnología flexible, explicable y adaptable a cada jurisdicción, sector y política interna.",
@@ -109,7 +109,7 @@ const resources = {
       },
 
       history: {
-        title: "Historia de NSD International Finance",
+        title: "Historia de NSDU International Finance",
         teamTitle: "Nuestro Equipo",
         timeline: [
           { year: 2022, title: "Fundación",         desc: "NSD nace con la misión de preparar proyectos para inversionistas internacionales" },
@@ -182,7 +182,7 @@ const resources = {
           {
             category: "Plataforma",
             questions: [
-              { q: "¿Qué es NSD Global Compliance Platform?", a: "Una plataforma SaaS global de cumplimiento, riesgo y revisión inteligente de expedientes. Centraliza KYC, KYB, beneficiario final, validación fiscal, sanciones, riesgo y monitoreo en un expediente único, configurable por jurisdicción y sector." },
+              { q: "¿Qué es NSDU Global Compliance Platform?", a: "Una plataforma SaaS global de cumplimiento, riesgo y revisión inteligente de expedientes. Centraliza KYC, KYB, beneficiario final, validación fiscal, sanciones, riesgo y monitoreo en un expediente único, configurable por jurisdicción y sector." },
               { q: "¿NSD es exclusiva para México?", a: "No. NSD opera con un núcleo tecnológico común y activa paquetes jurisdiccionales para México, Latinoamérica, Estados Unidos, Canadá, Emiratos Árabes Unidos y futuras jurisdicciones." },
               { q: "¿Es segura mi información?", a: "Sí. La plataforma utiliza cifrado en tránsito y en reposo, autenticación multifactor, roles y segregación de funciones, bitácora de auditoría y políticas de privacidad desde el diseño." },
               { q: "¿La plataforma garantiza el cumplimiento legal?", a: "No. NSD ayuda a configurar, ejecutar, documentar y monitorear procesos. La organización usuaria conserva la responsabilidad de determinar sus obligaciones con asesoría local." },
@@ -228,7 +228,7 @@ const resources = {
       },
 
       footer: {
-        companyName: "NSD International Finance",
+        companyName: "NSDU International Finance",
         companyDesc: "Preparamos empresas y proyectos para inversionistas globales.",
         navTitle: "Navegación",
         nav: {
@@ -421,10 +421,10 @@ const resources = {
       },
 
       about: {
-        title: "About NSD International Finance",
+        title: "About NSDU International Finance",
         whoTitle: "Who We Are",
         whoText1:
-          "NSD International Finance is an independent boutique firm that helps convert projects, companies, and investment opportunities into financially presentable, documented, and defensible dossiers for national and international capital sources.",
+          "NSDU International Finance is an independent boutique firm that helps convert projects, companies, and investment opportunities into financially presentable, documented, and defensible dossiers for national and international capital sources.",
         whoText2:
           "Our team combines expertise in corporate finance, capital structuring, regulatory compliance, and international business.",
         missionTitle: "Our Mission",
@@ -438,7 +438,7 @@ const resources = {
       },
 
       history: {
-        title: "History of NSD International Finance",
+        title: "History of NSDU International Finance",
         teamTitle: "Our Team",
         timeline: [
           { year: 2022, title: "Founded",            desc: "NSD is born with the mission of preparing projects for international investors" },
@@ -511,7 +511,7 @@ const resources = {
           {
             category: "Platform",
             questions: [
-              { q: "What is NSD International Finance?", a: "A boutique platform that prepares projects for international investors" },
+              { q: "What is NSDU International Finance?", a: "A boutique platform that prepares projects for international investors" },
               { q: "Is my information secure?",          a: "Yes, we use SSL/TLS encryption and comply with LGPD/GDPR" },
               { q: "How much does it cost?",             a: "Plans from $99 USD/month. Contact us for a custom quote" },
             ],
@@ -548,7 +548,7 @@ const resources = {
       },
 
       footer: {
-        companyName: "NSD International Finance",
+        companyName: "NSDU International Finance",
         companyDesc: "We prepare companies and projects for global investors.",
         navTitle: "Navigation",
         nav: {
