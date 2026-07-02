@@ -5,6 +5,8 @@ import { COLORS } from "../utils/constants";
 import NotificationCenter from "../components/NotificationCenter";
 import DashboardStats from "../components/Dashboard/DashboardStats";
 import RecentActivityFeed from "../components/Dashboard/RecentActivityFeed";
+import GuidedSidebar from "../components/Dashboard/GuidedSidebar";
+import SectionGuide, { getGuideFor } from "../components/Dashboard/SectionGuide";
 
 import { ordersAPI, otorganteAPI } from "../services/api";
 import { demoServiceOrders } from "../data/demoServiceOrders";
@@ -71,6 +73,7 @@ export default function DashboardPage() {
   const copy = (value) => translateCopy(value, i18n.language);
   const [userMode, setUserMode] = useState(() => localStorage.getItem("nsd_demo_profile") || "solicitante");
   const [activeTab, setActiveTab] = useState("perfil");
+  const [uiView, setUiView] = useState(() => localStorage.getItem("nsd_ui_view") || "new");
   const [otorganteOpportunities, setOtorganteOpportunities] = useState([]);
 
   useEffect(() => {
@@ -192,6 +195,12 @@ export default function DashboardPage() {
   };
 
   const tabs = getTabs();
+
+  const toggleUiView = () => {
+    const next = uiView === "classic" ? "new" : "classic";
+    localStorage.setItem("nsd_ui_view", next);
+    setUiView(next);
+  };
 
   const handleModeSwitch = (mode) => {
     localStorage.setItem("nsd_demo_profile", mode);
@@ -489,18 +498,41 @@ export default function DashboardPage() {
           <p style={{ color: "white", fontWeight: 600, fontSize: "0.82rem", wordBreak: "break-word" }}>{user?.email}</p>
         </div>
 
-        <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", paddingLeft: "0.5rem", marginBottom: "0.75rem" }}>
-          {L("Navegacion", "Navigation")}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingLeft: "0.5rem", marginBottom: "0.75rem" }}>
+          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
+            {L("Navegacion", "Navigation")}
+          </p>
+          <button
+            type="button"
+            onClick={toggleUiView}
+            title={L("Cambiar de vista sin perder nada", "Switch views without losing anything")}
+            style={{
+              padding: "0.3rem 0.6rem",
+              fontSize: "0.68rem",
+              fontWeight: 800,
+              borderRadius: "999px",
+              background: "rgba(201,168,76,0.18)",
+              color: COLORS.goldLight,
+              border: "1px solid rgba(201,168,76,0.4)",
+              cursor: "pointer",
+            }}
+          >
+            {uiView === "classic" ? L("Vista nueva", "New view") : L("Vista clasica", "Classic view")}
+          </button>
+        </div>
 
-        <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}>
-              <span style={{ fontSize: "0.78rem", marginRight: "0.5rem", fontWeight: 800 }}>{tab.icon}</span>
-              <span style={{ fontSize: "0.85rem", minWidth: 0, overflowWrap: "anywhere", lineHeight: 1.25 }}>{tab.label}</span>
-            </button>
-          ))}
-        </nav>
+        {uiView === "classic" ? (
+          <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            {tabs.map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}>
+                <span style={{ fontSize: "0.78rem", marginRight: "0.5rem", fontWeight: 800 }}>{tab.icon}</span>
+                <span style={{ fontSize: "0.85rem", minWidth: 0, overflowWrap: "anywhere", lineHeight: 1.25 }}>{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+        ) : (
+          <GuidedSidebar tabs={tabs} activeTab={activeTab} onSelect={setActiveTab} userMode={userMode} L={L} />
+        )}
 
         <div style={{ paddingTop: "2rem" }}>
           <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", marginBottom: "1rem" }} />
@@ -581,6 +613,7 @@ export default function DashboardPage() {
           <NotificationCenter userId={user?.id || 'current-user'} />
         </div>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          {uiView === "new" && <SectionGuide {...(getGuideFor(activeTab, userMode, L) || {})} />}
           <Suspense fallback={<DashboardLoadingFallback />}>
             {renderContent()}
           </Suspense>
