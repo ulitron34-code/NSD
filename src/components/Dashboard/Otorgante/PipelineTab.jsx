@@ -7,6 +7,7 @@ import { informationRequestsAPI, ordersAPI, otorganteAPI, scoringAPI } from "../
 import { demoServiceOrders } from "../../../data/demoServiceOrders";
 import { buildOtorganteAnalytics, buildOtorgantePipeline, buildOtorgantePipelineFromEntries } from "../../../data/otorgantePipeline";
 import { useAuth } from "../../../hooks/useAuth";
+import { useSelectedExpediente } from "../../../hooks/useSelectedExpediente";
 import { DOCUMENT_TYPES } from "../../../utils/institutional";
 import { buildInternationalReadiness } from "../../../utils/localization";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
@@ -365,6 +366,7 @@ export default function PipelineTab() {
 
   const { addNotification } = useNotification();
   const { user } = useAuth();
+  const { getSelectedExpedienteId, setSelectedExpedienteId } = useSelectedExpediente();
   const [filter, setFilter] = useState("Todos");
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -405,7 +407,11 @@ export default function PipelineTab() {
 
         if (!active) return;
         setOpportunities(mapped);
-        setSelected((current) => current && mapped.find((item) => item.id === current.id) ? current : mapped[0] || null);
+        setSelected((current) => {
+          if (current && mapped.find((item) => item.id === current.id)) return current;
+          const persistedId = getSelectedExpedienteId();
+          return mapped.find((item) => item.id === persistedId) || mapped[0] || null;
+        });
         setSelectedDoc(mapped[0]?.documents?.[0] || "");
       } catch (err) {
         if (!active) return;
@@ -518,6 +524,7 @@ export default function PipelineTab() {
 
   const selectOpportunity = (item) => {
     setSelected(item);
+    setSelectedExpedienteId(item.id);
     setSelectedDoc(item.documents?.[0] || "");
     setAiReview(null);
     setInterestStatus(item.interest?.status || "interested");

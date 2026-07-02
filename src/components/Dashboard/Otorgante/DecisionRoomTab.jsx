@@ -2,6 +2,7 @@ import { error, debug, info, warn } from '../../../utils/logger';
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
+import { useSelectedExpediente } from "../../../hooks/useSelectedExpediente";
 import { COLORS } from "../../../utils/constants";
 import { ordersAPI, otorganteAPI } from "../../../services/api";
 import { demoServiceOrders } from "../../../data/demoServiceOrders";
@@ -69,6 +70,7 @@ export default function DecisionRoomTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (value) => translateCopy(value, i18n.language);
+  const { getSelectedExpedienteId, setSelectedExpedienteId } = useSelectedExpediente();
   const [opportunities, setOpportunities] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -97,7 +99,11 @@ export default function DecisionRoomTab() {
 
         if (!active) return;
         setOpportunities(mapped);
-        setSelectedId((current) => current || mapped[0]?.id || "");
+        setSelectedId((current) => {
+          if (current) return current;
+          const persistedId = getSelectedExpedienteId();
+          return mapped.find((item) => item.id === persistedId)?.id || mapped[0]?.id || "";
+        });
       } catch {
         if (!active) return;
         const mapped = buildOtorgantePipeline(demoServiceOrders);
@@ -159,7 +165,7 @@ export default function DecisionRoomTab() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setSelectedId(item.id)}
+                onClick={() => { setSelectedId(item.id); setSelectedExpedienteId(item.id); }}
                 style={{
                   padding: "0.78rem",
                   borderRadius: "8px",
