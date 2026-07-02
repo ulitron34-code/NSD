@@ -124,7 +124,7 @@ export default function LoginComponent() {
           marginBottom: "0.5rem",
           textAlign: "center",
         }}>
-          {uiText(i18n, "Acceso a NSD Platform", "Access NSD Platform")}
+          {uiText(i18n, "Acceso a NSDU Platform", "Access NSDU Platform")}
         </h1>
         <p style={{
           color: COLORS.textMuted,

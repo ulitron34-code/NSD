@@ -81,7 +81,7 @@ export default function SignupComponent() {
           Crear cuenta
         </h1>
         <p style={{ color: COLORS.textMuted, textAlign: "center", marginBottom: "2rem", fontSize: "0.95rem" }}>
-          Unete a NSD Platform y prueba los modulos de solicitante, otorgante o administracion.
+          Unete a NSDU Platform y prueba los modulos de solicitante, otorgante o administracion.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -93,7 +93,7 @@ export default function SignupComponent() {
               {[
                 { value: "solicitante", label: "Solicitante" },
                 { value: "otorgante", label: "Otorgante" },
-                { value: "analista", label: "NSD" },
+                { value: "analista", label: "NSDU" },
               ].map((option) => (
                 <label key={option.value} style={{
                   display: "flex",

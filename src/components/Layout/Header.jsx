@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { BRAND } from "../../config/brand";
 
 export default function Header({ isLanding = false }) {
   const { user, logout, isLoggedIn } = useAuth();
@@ -74,25 +75,39 @@ export default function Header({ isLanding = false }) {
       }}>
         {/* Logo */}
         <div
-          style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer" }}
+          style={{ display: "flex", flexDirection: "column", cursor: "pointer" }}
           onClick={() => { navigate("/"); setShowMobileNav(false); }}
         >
-          <div style={{
-            width: "38px", height: "38px", borderRadius: "8px",
-            background: "linear-gradient(135deg, #C9A84C, #E4C878)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 900, fontSize: "0.95rem", color: "#1B3A5C",
-            boxShadow: "0 2px 8px rgba(201,168,76,0.4)",
-          }}>
-            NSD
+          <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
+            <span style={{
+              width: "22px", height: "22px", borderRadius: "50%",
+              border: "1px solid rgba(201,168,76,0.65)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#C9A84C" }} />
+            </span>
+            <span style={{
+              fontFamily: "'Playfair Display', serif", fontWeight: 700,
+              fontSize: "1.2rem", letterSpacing: "0.05em", color: "white",
+            }}>
+              {BRAND.name}
+            </span>
           </div>
-          <div>
-            <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "white", lineHeight: 1.2 }}>
-              NSD International
-            </div>
-            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              Boutique Finance
-            </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.2rem", marginLeft: "1.85rem" }}>
+            <span style={{ width: "16px", height: "1px", background: "rgba(255,255,255,0.3)" }} />
+            <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: "#C9A84C" }} />
+            <span style={{ width: "16px", height: "1px", background: "rgba(255,255,255,0.3)" }} />
+          </div>
+
+          <div style={{
+            fontSize: "0.62rem", color: "rgba(255,255,255,0.5)",
+            letterSpacing: "0.14em", textTransform: "uppercase",
+            marginTop: "0.2rem", marginLeft: "1.85rem",
+            fontFamily: "'Playfair Display', serif",
+          }}>
+            {BRAND.tagline}
           </div>
         </div>
 

@@ -25,7 +25,18 @@ export default function AboutSection() {
           gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 400px), 1fr))",
           gap: "3rem",
           marginBottom: "3rem",
+          alignItems: "center",
         }}>
+          <img
+            src="/img-boardroom.jpg"
+            alt={t("about.whoTitle")}
+            style={{
+              width: "100%", height: "100%", minHeight: "320px",
+              objectFit: "cover", borderRadius: "16px",
+              boxShadow: COLORS.shadowMd,
+            }}
+          />
+
           <div>
             <h3 style={{ color: COLORS.navy, fontSize: "1.4rem", marginBottom: "1rem" }}>
               {t("about.whoTitle")}
@@ -37,7 +48,14 @@ export default function AboutSection() {
               {t("about.whoText2")}
             </p>
           </div>
+        </div>
 
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 400px), 1fr))",
+          gap: "3rem",
+          marginBottom: "3rem",
+        }}>
           <div>
             <h3 style={{ color: COLORS.navy, fontSize: "1.4rem", marginBottom: "1rem" }}>
               {t("about.missionTitle")}
@@ -45,14 +63,15 @@ export default function AboutSection() {
             <p style={{
               color: COLORS.textMuted,
               lineHeight: "1.85",
-              marginBottom: "2rem",
               fontStyle: "italic",
               borderLeft: `4px solid ${COLORS.gold}`,
               paddingLeft: "1rem",
             }}>
               {t("about.missionText")}
             </p>
+          </div>
 
+          <div>
             <h3 style={{ color: COLORS.navy, fontSize: "1.4rem", marginBottom: "1rem" }}>
               {t("about.visionTitle")}
             </h3>

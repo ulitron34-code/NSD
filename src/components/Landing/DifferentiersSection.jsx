@@ -26,6 +26,16 @@ export default function DifferentiersSection() {
           </p>
         </div>
 
+        <img
+          src="/img-team.jpg"
+          alt={t("differentiators.title")}
+          style={{
+            width: "100%", maxHeight: "360px", objectFit: "cover",
+            borderRadius: "20px", marginBottom: "3rem",
+            boxShadow: "0 20px 48px rgba(27,58,92,0.14)",
+          }}
+        />
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
           {items.map((diff, i) => (
             <div

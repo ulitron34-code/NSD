@@ -19,7 +19,7 @@ const resources = {
         industries: "Industrias",
         integrations: "Integraciones",
         modalities: "Modalidades",
-        knowNsd: "Conocer NSD",
+        knowNsd: "Conocer NSDU",
       },
 
       hero: {
@@ -51,7 +51,7 @@ const resources = {
       },
 
       differentiators: {
-        eyebrow: "POR QUÉ NSD",
+        eyebrow: "POR QUÉ NSDU",
         title: "Nuestros Diferenciadores",
         subtitle:
           "Combinamos tecnología de punta con experiencia humana para llevar tu proyecto al siguiente nivel.",
@@ -70,21 +70,21 @@ const resources = {
           {
             company: "TechStartup XYZ",
             quote:
-              "Con NSD logramos preparar nuestro expediente en 2 meses en lugar de 6. Conseguimos financiamiento de $2M de un family office europeo.",
+              "Con NSDU logramos preparar nuestro expediente en 2 meses en lugar de 6. Conseguimos financiamiento de $2M de un family office europeo.",
             author: "CEO, TechStartup XYZ",
             sector: "Tecnología",
           },
           {
             company: "Desarrollos Inmobiliarios ABC",
             quote:
-              "El rigor técnico y la estructura que NSD nos ayudó a armar fue crucial para cerrar una ronda de $5M con fondos de capital privado.",
+              "El rigor técnico y la estructura que NSDU nos ayudó a armar fue crucial para cerrar una ronda de $5M con fondos de capital privado.",
             author: "Director Financiero",
             sector: "Bienes Raíces",
           },
           {
             company: "Asociación Civil de Impacto",
             quote:
-              "NSD transformó nuestra propuesta de valor en números defendibles. Ahora somos elegibles para financiamiento de organismos multilaterales.",
+              "NSDU transformó nuestra propuesta de valor en números defendibles. Ahora somos elegibles para financiamiento de organismos multilaterales.",
             author: "Directora Ejecutiva",
             sector: "Impacto Social",
           },
@@ -112,11 +112,11 @@ const resources = {
         title: "Historia de NSDU International Finance",
         teamTitle: "Nuestro Equipo",
         timeline: [
-          { year: 2022, title: "Fundación",         desc: "NSD nace con la misión de preparar proyectos para inversionistas internacionales" },
+          { year: 2022, title: "Fundación",         desc: "NSDU nace con la misión de preparar proyectos para inversionistas internacionales" },
           { year: 2023, title: "Primer Millón",      desc: "Financiamos primer proyecto por $1M USD con family office europeo" },
           { year: 2024, title: "Expansión Regional", desc: "Extensión a Latinoamérica con oficinas en Colombia y Perú" },
           { year: 2025, title: "Plataforma Digital", desc: "Lanzamiento de plataforma SaaS para análisis automatizado" },
-          { year: 2026, title: "Hoy",                desc: "NSD acompaña +100 proyectos con acceso a capital privado global" },
+          { year: 2026, title: "Hoy",                desc: "NSDU acompaña +100 proyectos con acceso a capital privado global" },
         ],
         team: [
           { name: "Ulises Salgado", role: "Fundador & CEO",       bio: "15+ años en finanzas corporativas y SOFOM" },
@@ -183,9 +183,9 @@ const resources = {
             category: "Plataforma",
             questions: [
               { q: "¿Qué es NSDU Global Compliance Platform?", a: "Una plataforma SaaS global de cumplimiento, riesgo y revisión inteligente de expedientes. Centraliza KYC, KYB, beneficiario final, validación fiscal, sanciones, riesgo y monitoreo en un expediente único, configurable por jurisdicción y sector." },
-              { q: "¿NSD es exclusiva para México?", a: "No. NSD opera con un núcleo tecnológico común y activa paquetes jurisdiccionales para México, Latinoamérica, Estados Unidos, Canadá, Emiratos Árabes Unidos y futuras jurisdicciones." },
+              { q: "¿NSDU es exclusiva para México?", a: "No. NSDU opera con un núcleo tecnológico común y activa paquetes jurisdiccionales para México, Latinoamérica, Estados Unidos, Canadá, Emiratos Árabes Unidos y futuras jurisdicciones." },
               { q: "¿Es segura mi información?", a: "Sí. La plataforma utiliza cifrado en tránsito y en reposo, autenticación multifactor, roles y segregación de funciones, bitácora de auditoría y políticas de privacidad desde el diseño." },
-              { q: "¿La plataforma garantiza el cumplimiento legal?", a: "No. NSD ayuda a configurar, ejecutar, documentar y monitorear procesos. La organización usuaria conserva la responsabilidad de determinar sus obligaciones con asesoría local." },
+              { q: "¿La plataforma garantiza el cumplimiento legal?", a: "No. NSDU ayuda a configurar, ejecutar, documentar y monitorear procesos. La organización usuaria conserva la responsabilidad de determinar sus obligaciones con asesoría local." },
             ],
           },
           {
@@ -199,7 +199,7 @@ const resources = {
           {
             category: "Decisiones e IA",
             questions: [
-              { q: "¿La inteligencia artificial toma decisiones?", a: "No. Los agentes de NSD apoyan la lectura, clasificación, comparación y síntesis de información. La aprobación, rechazo, escalamiento o excepción corresponde a las personas autorizadas por la organización." },
+              { q: "¿La inteligencia artificial toma decisiones?", a: "No. Los agentes de NSDU apoyan la lectura, clasificación, comparación y síntesis de información. La aprobación, rechazo, escalamiento o excepción corresponde a las personas autorizadas por la organización." },
               { q: "¿Puede usarse para inversiones y crédito?", a: "Sí. Los módulos de revisión financiera e investor due diligence organizan información, riesgos, garantías, contratos, beneficiarios y pendientes para que el cliente final tome la decisión." },
               { q: "¿Cómo se define la implementación?", a: "Mediante un diagnóstico de procesos, jurisdicciones, volumen, módulos, usuarios, integraciones, seguridad, soporte y gobierno. Cada organización recibe una configuración específica." },
             ],
@@ -207,7 +207,7 @@ const resources = {
           {
             category: "Seguridad y privacidad",
             questions: [
-              { q: "¿Quién puede ver mis datos?", a: "Solo el personal autorizado de su organización. NSD no comparte información sin consentimiento y aplica controles de acceso, segregación de funciones y bitácora de auditoría." },
+              { q: "¿Quién puede ver mis datos?", a: "Solo el personal autorizado de su organización. NSDU no comparte información sin consentimiento y aplica controles de acceso, segregación de funciones y bitácora de auditoría." },
               { q: "¿Cómo reclamo mis derechos ARCO?", a: "Contacta a privacidad@nsd.com para ejercer tus derechos de Acceso, Rectificación, Cancelación y Oposición." },
               { q: "¿Qué sucede si cambia una regulación?", a: "Los paquetes jurisdiccionales se mantienen versionados. Los cambios se analizan, configuran, prueban y documentan antes de su publicación en la plataforma." },
             ],
@@ -219,7 +219,7 @@ const resources = {
         eyebrow: "DISEÑA TU IMPLEMENTACIÓN",
         title: "Una plataforma global para decisiones\ninstitucionales mejor documentadas.",
         subtitle:
-          "Conozca cómo NSD puede adaptar expedientes, documentos, reglas, riesgos e integraciones a la estructura de su organización y a los países en los que opera.",
+          "Conozca cómo NSDU puede adaptar expedientes, documentos, reglas, riesgos e integraciones a la estructura de su organización y a los países en los que opera.",
         cta1: "Conocer la plataforma",
         cta2: "Solicitar diagnóstico institucional",
         trust1: "🔒 Cifrado y trazabilidad",
@@ -348,7 +348,7 @@ const resources = {
         industries: "Industries",
         integrations: "Integrations",
         modalities: "Implementation",
-        knowNsd: "Know NSD",
+        knowNsd: "Know NSDU",
       },
 
       hero: {
@@ -380,7 +380,7 @@ const resources = {
       },
 
       differentiators: {
-        eyebrow: "WHY NSD",
+        eyebrow: "WHY NSDU",
         title: "Our Differentiators",
         subtitle:
           "We combine cutting-edge technology with human expertise to take your project to the next level.",
@@ -399,21 +399,21 @@ const resources = {
           {
             company: "TechStartup XYZ",
             quote:
-              "With NSD we prepared our dossier in 2 months instead of 6. We secured $2M financing from a European family office.",
+              "With NSDU we prepared our dossier in 2 months instead of 6. We secured $2M financing from a European family office.",
             author: "CEO, TechStartup XYZ",
             sector: "Technology",
           },
           {
             company: "ABC Real Estate Developments",
             quote:
-              "The technical rigor and structure that NSD helped us build was crucial to close a $5M round with private equity funds.",
+              "The technical rigor and structure that NSDU helped us build was crucial to close a $5M round with private equity funds.",
             author: "CFO",
             sector: "Real Estate",
           },
           {
             company: "Impact Civil Association",
             quote:
-              "NSD transformed our value proposition into defensible numbers. We are now eligible for multilateral organization financing.",
+              "NSDU transformed our value proposition into defensible numbers. We are now eligible for multilateral organization financing.",
             author: "Executive Director",
             sector: "Social Impact",
           },
@@ -441,11 +441,11 @@ const resources = {
         title: "History of NSDU International Finance",
         teamTitle: "Our Team",
         timeline: [
-          { year: 2022, title: "Founded",            desc: "NSD is born with the mission of preparing projects for international investors" },
+          { year: 2022, title: "Founded",            desc: "NSDU is born with the mission of preparing projects for international investors" },
           { year: 2023, title: "First Million",      desc: "We financed the first project for $1M USD with a European family office" },
           { year: 2024, title: "Regional Expansion", desc: "Expansion to Latin America with offices in Colombia and Peru" },
           { year: 2025, title: "Digital Platform",   desc: "Launch of SaaS platform for automated analysis" },
-          { year: 2026, title: "Today",              desc: "NSD supports 100+ projects with access to global private capital" },
+          { year: 2026, title: "Today",              desc: "NSDU supports 100+ projects with access to global private capital" },
         ],
         team: [
           { name: "Ulises Salgado", role: "Founder & CEO",             bio: "15+ years in corporate finance and SOFOM" },
