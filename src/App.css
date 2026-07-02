@@ -4,32 +4,34 @@
    DESIGN SYSTEM — NSD FINTECH (MEJORADO)
    ============================ */
 :root {
-  /* Primary Colors */
-  --navy:        #0A192F; /* Deepen the navy for a more premium look */
-  --navy-light:  #172A45;
-  --navy-dark:   #020C1B;
-  
+  /* Primary Colors — reconciled to match src/utils/constants.js COLORS,
+     the palette actually used by ~86 inline-styled components. Keeping a
+     single true palette avoids drift like the old .sidebar-tab gold. */
+  --navy:        #1B3A5C;
+  --navy-light:  #2A527A;
+  --navy-dark:   #0F1F2E;
+
   /* Secondary Colors */
-  --gold:        #D4AF37; /* Metallic Gold */
-  --gold-light:  #F3E5AB;
-  --gold-pale:   #FAF8F5;
-  
+  --gold:        #C9A84C;
+  --gold-light:  #E4C878;
+  --gold-pale:   #F5EDD8;
+
   /* Backgrounds */
-  --bg:          #F9F9F9; /* Very clean off-white */
+  --bg:          #F2EFE9;
   --bg-card:     #FFFFFF;
-  --bg-subtle:   #F3F3F3;
-  --bg-dark:     #0A192F;
-  
+  --bg-subtle:   #EDEAE3;
+  --bg-dark:     #0F1F2E;
+
   /* Text */
-  --text:        #333333;
-  --text-muted:  #666666;
-  
+  --text:        #1A1A1A;
+  --text-muted:  #6B6560;
+
   /* Borders & Shadows */
-  --border:      rgba(10,25,47,0.08);
-  --shadow-sm:   0 2px 8px rgba(10,25,47,0.05);
-  --shadow-md:   0 8px 24px rgba(10,25,47,0.08);
-  --shadow-lg:   0 20px 60px rgba(10,25,47,0.12);
-  
+  --border:      rgba(27,58,92,0.12);
+  --shadow-sm:   0 2px 8px rgba(27,58,92,0.06);
+  --shadow-md:   0 8px 24px rgba(27,58,92,0.10);
+  --shadow-lg:   0 20px 48px rgba(27,58,92,0.14);
+
   /* Status Colors */
   --green:       #2E7D32;
   --green-bg:    #E8F5E9;
@@ -37,7 +39,7 @@
   --amber-bg:    #FEF3C7;
   --red:         #C62828;
   --red-bg:      #FFEBEE;
-  
+
   /* Radius & Transitions */
   --radius-sm:   4px; /* More squared off for a corporate look */
   --radius-md:   8px;
