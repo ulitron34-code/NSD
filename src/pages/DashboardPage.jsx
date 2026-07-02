@@ -463,7 +463,7 @@ export default function DashboardPage() {
       <aside className="dashboard-sidebar" style={{
         width: "260px",
         background: "linear-gradient(180deg, #0F1F2E 0%, #1B3A5C 100%)",
-        padding: "1.75rem 1rem",
+        padding: "2rem 1.25rem",
         position: "sticky",
         top: "72px",
         maxHeight: "calc(100vh - 72px)",
@@ -471,11 +471,11 @@ export default function DashboardPage() {
         flexShrink: 0,
       }}>
         <div style={{
-          padding: "1rem",
+          padding: "1.25rem",
           background: "rgba(255,255,255,0.06)",
-          borderRadius: "10px",
-          marginBottom: "1.5rem",
-          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "14px",
+          marginBottom: "1.75rem",
+          border: "1px solid rgba(255,255,255,0.08)",
         }}>
           <div style={{
             width: "40px",
@@ -493,7 +493,7 @@ export default function DashboardPage() {
             {user?.email?.[0]?.toUpperCase() || "U"}
           </div>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NSD Admin"}
+            {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NSDU Admin"}
           </p>
           <p style={{ color: "white", fontWeight: 600, fontSize: "0.82rem", wordBreak: "break-word" }}>{user?.email}</p>
         </div>
@@ -543,7 +543,7 @@ export default function DashboardPage() {
             {[
               ["solicitante", L("Solicitante", "Applicant")],
               ["otorgante", L("Otorgante", "Funding Provider")],
-              ["nsd_admin", "NSD Admin"],
+              ["nsd_admin", "NSDU Admin"],
             ].map(([mode, label]) => (
               <button
                 key={mode}

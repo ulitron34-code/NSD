@@ -3,6 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BRAND } from "../../config/brand";
+import { COLORS } from "../../utils/constants";
 
 export default function Header({ isLanding = false }) {
   const { user, logout, isLoggedIn } = useAuth();
@@ -185,8 +186,8 @@ export default function Header({ isLanding = false }) {
               {showMenu && (
                 <div style={{
                   position: "absolute", right: 0, top: "calc(100% + 8px)",
-                  background: "white", borderRadius: "10px",
-                  minWidth: "200px", boxShadow: "0 12px 36px rgba(0,0,0,0.2)",
+                  background: "white", borderRadius: "14px",
+                  minWidth: "200px", boxShadow: COLORS.shadowLg,
                   zIndex: 200, overflow: "hidden",
                   border: "1px solid rgba(27,58,92,0.1)",
                 }}>
