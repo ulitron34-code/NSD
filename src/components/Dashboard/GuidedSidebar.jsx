@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { COLORS } from "../../utils/constants";
+import Icon from "../common/icons";
 
 const GROUPS_BY_ROLE = {
   solicitante: [
@@ -24,7 +25,7 @@ const GROUPS_BY_ROLE = {
   ],
 };
 
-export default function GuidedSidebar({ tabs, activeTab, onSelect, userMode, L }) {
+export default function GuidedSidebar({ tabs, activeTab, onSelect, userMode, L, collapsed = false }) {
   const groups = GROUPS_BY_ROLE[userMode] || [];
   // Tracks collapsed group ids instead of open ones, so switching roles (new group ids)
   // always defaults to "open" without needing to reset state on userMode change.
@@ -54,69 +55,82 @@ export default function GuidedSidebar({ tabs, activeTab, onSelect, userMode, L }
   };
 
   return (
-    <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+    <nav style={{ display: "flex", flexDirection: "column", gap: collapsed ? "0.9rem" : "0.5rem" }}>
       {groups.map((group, index) => {
-        const isOpen = !closedGroups.has(group.id);
+        const isOpen = collapsed || !closedGroups.has(group.id);
         const groupTabs = group.tabIds.map((id) => tabsById[id]).filter(Boolean);
         if (groupTabs.length === 0) return null;
 
         return (
           <div key={group.id}>
-            <button
-              type="button"
-              onClick={() => toggleGroup(group.id)}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.6rem",
-                padding: "0.5rem 0.5rem",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <span style={{
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                background: COLORS.gold,
-                color: COLORS.navy,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 900,
-                fontSize: "0.72rem",
-                flexShrink: 0,
+            {collapsed ? (
+              <div title={group.title(L)} style={{
+                width: "22px", height: "22px", borderRadius: "50%",
+                background: COLORS.gold, color: COLORS.navy,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 900, fontSize: "0.72rem", margin: "0 auto 0.4rem",
               }}>
                 {index + 1}
-              </span>
-              <span style={{
-                flex: 1,
-                color: "rgba(255,255,255,0.55)",
-                fontSize: "0.7rem",
-                fontWeight: 800,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}>
-                {group.title(L)}
-              </span>
-              <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem" }}>
-                {isOpen ? "▼" : "▶"}
-              </span>
-            </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.id)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                  padding: "0.5rem 0.5rem",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <span style={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "50%",
+                  background: COLORS.gold,
+                  color: COLORS.navy,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: "0.72rem",
+                  flexShrink: 0,
+                }}>
+                  {index + 1}
+                </span>
+                <span style={{
+                  flex: 1,
+                  color: "rgba(255,255,255,0.55)",
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}>
+                  {group.title(L)}
+                </span>
+                <Icon name={isOpen ? "chevronDown" : "chevronRight"} size={12} color="rgba(255,255,255,0.35)" />
+              </button>
+            )}
 
             {isOpen && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", paddingLeft: "0.5rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", paddingLeft: collapsed ? 0 : "0.5rem" }}>
                 {groupTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => onSelect(tab.id)}
+                    title={collapsed ? tab.label : undefined}
                     className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}
+                    style={collapsed ? { justifyContent: "center", padding: "0.6rem" } : undefined}
                   >
-                    <span style={{ fontSize: "0.78rem", marginRight: "0.5rem", fontWeight: 800 }}>{tab.icon}</span>
-                    <span style={{ fontSize: "0.85rem", minWidth: 0, overflowWrap: "anywhere", lineHeight: 1.25 }}>{tab.label}</span>
+                    <span style={{ fontSize: "0.78rem", marginRight: collapsed ? 0 : "0.5rem", fontWeight: 800 }}>{tab.icon}</span>
+                    {!collapsed && (
+                      <span style={{ fontSize: "0.85rem", minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.25 }}>{tab.label}</span>
+                    )}
                   </button>
                 ))}
               </div>

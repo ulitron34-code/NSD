@@ -7,6 +7,7 @@ import DashboardStats from "../components/Dashboard/DashboardStats";
 import RecentActivityFeed from "../components/Dashboard/RecentActivityFeed";
 import GuidedSidebar from "../components/Dashboard/GuidedSidebar";
 import SectionGuide, { getGuideFor } from "../components/Dashboard/SectionGuide";
+import Icon from "../components/common/icons";
 
 import { ordersAPI, otorganteAPI } from "../services/api";
 import { demoServiceOrders } from "../data/demoServiceOrders";
@@ -75,6 +76,23 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("perfil");
   const [uiView, setUiView] = useState(() => localStorage.getItem("nsd_ui_view") || "new");
   const [otorganteOpportunities, setOtorganteOpportunities] = useState([]);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("nsd_sidebar_collapsed") === "1");
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("nsd_sidebar_collapsed", next ? "1" : "0");
+      return next;
+    });
+  };
 
   useEffect(() => {
     let active = true;
@@ -458,24 +476,106 @@ export default function DashboardPage() {
     return <ServiceOrdersPage />;
   };
 
+  const railWidth = "76px";
+  const fullWidth = "260px";
+  const sidebarOpen = isMobile ? mobileNavOpen : true;
+  const sidebarCollapsed = !isMobile && collapsed;
+
   return (
-    <div className="dashboard-shell" style={{ display: "flex", minHeight: "calc(100vh - 72px)" }}>
+    <div className="dashboard-shell" style={{ display: "flex", minHeight: "calc(100vh - 72px)", position: "relative" }}>
+      {isMobile && (
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen(true)}
+          title={L("Abrir menu", "Open menu")}
+          style={{
+            position: "fixed",
+            top: "84px",
+            left: "1rem",
+            zIndex: 210,
+            width: "40px",
+            height: "40px",
+            borderRadius: "10px",
+            background: "#1B3A5C",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "white",
+            display: mobileNavOpen ? "none" : "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: COLORS.shadowMd,
+          }}
+        >
+          <Icon name="chevronsRight" size={18} color="white" />
+        </button>
+      )}
+
+      {isMobile && mobileNavOpen && (
+        <div
+          onClick={() => setMobileNavOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 199 }}
+        />
+      )}
+
       <aside className="dashboard-sidebar" style={{
-        width: "260px",
+        width: sidebarCollapsed ? railWidth : fullWidth,
         background: "linear-gradient(180deg, #0F1F2E 0%, #1B3A5C 100%)",
-        padding: "2rem 1.25rem",
-        position: "sticky",
-        top: "72px",
-        maxHeight: "calc(100vh - 72px)",
+        padding: sidebarCollapsed ? "1.5rem 0.75rem" : "2rem 1.25rem",
+        position: isMobile ? "fixed" : "sticky",
+        top: isMobile ? 0 : "72px",
+        left: 0,
+        bottom: isMobile ? 0 : "auto",
+        height: isMobile ? "100vh" : "auto",
+        maxHeight: isMobile ? "100vh" : "calc(100vh - 72px)",
         overflowY: "auto",
+        overflowX: "hidden",
         flexShrink: 0,
+        zIndex: 200,
+        transition: "width 0.25s ease, padding 0.25s ease, transform 0.25s ease",
+        transform: isMobile ? (sidebarOpen ? "translateX(0)" : "translateX(-100%)") : "none",
       }}>
         <div style={{
-          padding: "1.25rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: sidebarCollapsed ? "center" : "space-between",
+          marginBottom: "1rem",
+        }}>
+          {!sidebarCollapsed && (
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.68rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              NEXUS
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={isMobile ? () => setMobileNavOpen(false) : toggleCollapsed}
+            title={isMobile ? L("Cerrar menu", "Close menu") : (collapsed ? L("Expandir menu", "Expand menu") : L("Contraer menu", "Collapse menu"))}
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.7)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <Icon name={isMobile || !collapsed ? "chevronsLeft" : "chevronsRight"} size={16} color="rgba(255,255,255,0.7)" />
+          </button>
+        </div>
+
+        <div style={{
+          padding: sidebarCollapsed ? "0.75rem 0.5rem" : "1.25rem",
           background: "rgba(255,255,255,0.06)",
           borderRadius: "14px",
           marginBottom: "1.75rem",
           border: "1px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: sidebarCollapsed ? "center" : "stretch",
         }}>
           <div style={{
             width: "40px",
@@ -488,70 +588,88 @@ export default function DashboardPage() {
             fontWeight: 800,
             fontSize: "1rem",
             color: "#1B3A5C",
-            marginBottom: "0.75rem",
-          }}>
+            marginBottom: sidebarCollapsed ? 0 : "0.75rem",
+            flexShrink: 0,
+          }} title={user?.email}>
             {user?.email?.[0]?.toUpperCase() || "U"}
           </div>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NEXUS Admin"}
-          </p>
-          <p style={{ color: "white", fontWeight: 600, fontSize: "0.82rem", wordBreak: "break-word" }}>{user?.email}</p>
+          {!sidebarCollapsed && (
+            <>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NEXUS Admin"}
+              </p>
+              <p style={{ color: "white", fontWeight: 600, fontSize: "0.82rem", wordBreak: "break-word" }}>{user?.email}</p>
+            </>
+          )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingLeft: "0.5rem", marginBottom: "0.75rem" }}>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
-            {L("Navegacion", "Navigation")}
-          </p>
-          <button
-            type="button"
-            onClick={toggleUiView}
-            title={L("Cambiar de vista sin perder nada", "Switch views without losing anything")}
-            style={{
-              padding: "0.3rem 0.6rem",
-              fontSize: "0.68rem",
-              fontWeight: 800,
-              borderRadius: "999px",
-              background: "rgba(201,168,76,0.18)",
-              color: COLORS.goldLight,
-              border: "1px solid rgba(201,168,76,0.4)",
-              cursor: "pointer",
-            }}
-          >
-            {uiView === "classic" ? L("Vista nueva", "New view") : L("Vista clasica", "Classic view")}
-          </button>
-        </div>
+        {!sidebarCollapsed && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingLeft: "0.5rem", marginBottom: "0.75rem" }}>
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
+              {L("Navegacion", "Navigation")}
+            </p>
+            <button
+              type="button"
+              onClick={toggleUiView}
+              title={L("Cambiar de vista sin perder nada", "Switch views without losing anything")}
+              style={{
+                padding: "0.3rem 0.6rem",
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                borderRadius: "999px",
+                background: "rgba(201,168,76,0.18)",
+                color: COLORS.goldLight,
+                border: "1px solid rgba(201,168,76,0.4)",
+                cursor: "pointer",
+              }}
+            >
+              {uiView === "classic" ? L("Vista nueva", "New view") : L("Vista clasica", "Classic view")}
+            </button>
+          </div>
+        )}
 
         {uiView === "classic" ? (
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             {tabs.map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}>
-                <span style={{ fontSize: "0.78rem", marginRight: "0.5rem", fontWeight: 800 }}>{tab.icon}</span>
-                <span style={{ fontSize: "0.85rem", minWidth: 0, overflowWrap: "anywhere", lineHeight: 1.25 }}>{tab.label}</span>
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                title={sidebarCollapsed ? tab.label : undefined}
+                className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}
+                style={sidebarCollapsed ? { justifyContent: "center", padding: "0.6rem" } : undefined}
+              >
+                <span style={{ fontSize: "0.78rem", marginRight: sidebarCollapsed ? 0 : "0.5rem", fontWeight: 800 }}>{tab.icon}</span>
+                {!sidebarCollapsed && (
+                  <span style={{ fontSize: "0.85rem", minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.25 }}>{tab.label}</span>
+                )}
               </button>
             ))}
           </nav>
         ) : (
-          <GuidedSidebar tabs={tabs} activeTab={activeTab} onSelect={setActiveTab} userMode={userMode} L={L} />
+          <GuidedSidebar tabs={tabs} activeTab={activeTab} onSelect={setActiveTab} userMode={userMode} L={L} collapsed={sidebarCollapsed} />
         )}
 
         <div style={{ paddingTop: "2rem" }}>
           <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", marginBottom: "1rem" }} />
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", paddingLeft: "0.5rem", marginBottom: "0.75rem" }}>
-            {L("Cambiar perfil demo", "Switch demo profile")}
-          </p>
+          {!sidebarCollapsed && (
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", paddingLeft: "0.5rem", marginBottom: "0.75rem" }}>
+              {L("Cambiar perfil demo", "Switch demo profile")}
+            </p>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.25rem" }}>
             {[
-              ["solicitante", L("Solicitante", "Applicant")],
-              ["otorgante", L("Otorgante", "Funding Provider")],
-              ["nsd_admin", "NEXUS Admin"],
-            ].map(([mode, label]) => (
+              ["solicitante", L("Solicitante", "Applicant"), "S"],
+              ["otorgante", L("Otorgante", "Funding Provider"), "O"],
+              ["nsd_admin", "NEXUS Admin", "N"],
+            ].map(([mode, label, initial]) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => handleModeSwitch(mode)}
+                title={sidebarCollapsed ? label : undefined}
                 style={{
                   width: "100%",
-                  padding: "0.72rem 0.85rem",
+                  padding: sidebarCollapsed ? "0.6rem" : "0.72rem 0.85rem",
                   fontSize: "0.82rem",
                   fontWeight: 800,
                   borderRadius: "6px",
@@ -563,7 +681,7 @@ export default function DashboardPage() {
                   lineHeight: 1.2,
                 }}
               >
-                {label}
+                {sidebarCollapsed ? initial : label}
               </button>
             ))}
           </div>
@@ -572,9 +690,10 @@ export default function DashboardPage() {
             onClick={() => {
               logout();
             }}
+            title={sidebarCollapsed ? L("Cerrar sesion", "Sign out") : undefined}
             style={{
               width: "100%",
-              padding: "0.75rem",
+              padding: sidebarCollapsed ? "0.6rem" : "0.75rem",
               fontSize: "0.85rem",
               fontWeight: 700,
               borderRadius: "4px",
@@ -582,7 +701,11 @@ export default function DashboardPage() {
               color: "#FF6B6B",
               border: `1px solid #FF6B6B`,
               cursor: "pointer",
-              transition: "all 0.2s"
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
             }}
             onMouseEnter={(e) => {
               e.target.style.background = "rgba(198, 40, 40, 0.4)";
@@ -591,7 +714,8 @@ export default function DashboardPage() {
               e.target.style.background = "rgba(198, 40, 40, 0.2)";
             }}
           >
-            {L("Cerrar sesion", "Sign out")}
+            <Icon name="logout" size={15} color="#FF6B6B" />
+            {!sidebarCollapsed && L("Cerrar sesion", "Sign out")}
           </button>
         </div>
       </aside>

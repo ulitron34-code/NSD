@@ -213,6 +213,32 @@ export const IconShield = (props) => (
   </Svg>
 );
 
+export const IconChevronsLeft = (props) => (
+  <Svg {...props}>
+    <path d="M13 5.5 6.5 12l6.5 6.5" />
+    <path d="M18.5 5.5 12 12l6.5 6.5" />
+  </Svg>
+);
+
+export const IconChevronsRight = (props) => (
+  <Svg {...props}>
+    <path d="M11 5.5 17.5 12 11 18.5" />
+    <path d="M5.5 5.5 12 12l-6.5 6.5" />
+  </Svg>
+);
+
+export const IconChevronDown = (props) => (
+  <Svg {...props}>
+    <path d="M5.5 9 12 15.5 18.5 9" />
+  </Svg>
+);
+
+export const IconChevronRight = (props) => (
+  <Svg {...props}>
+    <path d="M9 5.5 15.5 12 9 18.5" />
+  </Svg>
+);
+
 const ICONS = {
   search: IconSearch,
   shieldCheck: IconShieldCheck,
@@ -224,6 +250,10 @@ const ICONS = {
   mapPin: IconMapPin,
   lock: IconLock,
   shield: IconShield,
+  chevronsLeft: IconChevronsLeft,
+  chevronsRight: IconChevronsRight,
+  chevronDown: IconChevronDown,
+  chevronRight: IconChevronRight,
   ruler: IconRuler,
   globe: IconGlobe,
   building: IconBuilding,
