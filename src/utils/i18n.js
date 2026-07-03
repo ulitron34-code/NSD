@@ -63,34 +63,6 @@ const resources = {
         ],
       },
 
-      testimonials: {
-        eyebrow: "TESTIMONIOS",
-        title: "Lo que dicen nuestros clientes",
-        items: [
-          {
-            company: "TechStartup XYZ",
-            quote:
-              "Con NSDU logramos preparar nuestro expediente en 2 meses en lugar de 6. Conseguimos financiamiento de $2M de un family office europeo.",
-            author: "CEO, TechStartup XYZ",
-            sector: "Tecnología",
-          },
-          {
-            company: "Desarrollos Inmobiliarios ABC",
-            quote:
-              "El rigor técnico y la estructura que NSDU nos ayudó a armar fue crucial para cerrar una ronda de $5M con fondos de capital privado.",
-            author: "Director Financiero",
-            sector: "Bienes Raíces",
-          },
-          {
-            company: "Asociación Civil de Impacto",
-            quote:
-              "NSDU transformó nuestra propuesta de valor en números defendibles. Ahora somos elegibles para financiamiento de organismos multilaterales.",
-            author: "Directora Ejecutiva",
-            sector: "Impacto Social",
-          },
-        ],
-      },
-
       about: {
         title: "Tecnología, experiencia y gobierno",
         whoTitle: "¿Quiénes somos?",
@@ -389,34 +361,6 @@ const resources = {
           { titulo: "Comprehensive Preparation", desc: "We never present a project to investors without a complete dossier, financial narrative, and verified minimum structure." },
           { titulo: "Multidisciplinary Team",  desc: "Finance, legal, compliance, technical, and international expertise integrated under one roof." },
           { titulo: "Technical Rigor",         desc: "World-class technical, financial, legal, and documentary analysis before any presentation." },
-        ],
-      },
-
-      testimonials: {
-        eyebrow: "TESTIMONIALS",
-        title: "What our clients say",
-        items: [
-          {
-            company: "TechStartup XYZ",
-            quote:
-              "With NSDU we prepared our dossier in 2 months instead of 6. We secured $2M financing from a European family office.",
-            author: "CEO, TechStartup XYZ",
-            sector: "Technology",
-          },
-          {
-            company: "ABC Real Estate Developments",
-            quote:
-              "The technical rigor and structure that NSDU helped us build was crucial to close a $5M round with private equity funds.",
-            author: "CFO",
-            sector: "Real Estate",
-          },
-          {
-            company: "Impact Civil Association",
-            quote:
-              "NSDU transformed our value proposition into defensible numbers. We are now eligible for multilateral organization financing.",
-            author: "Executive Director",
-            sector: "Social Impact",
-          },
         ],
       },
 

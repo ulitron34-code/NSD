@@ -5,7 +5,6 @@ import Hero from "../components/Landing/Hero";
 import HowItWorksSection from "../components/Landing/HowItWorksSection";
 import ClientsSection from "../components/Landing/ClientsSection";
 import DifferentiersSection from "../components/Landing/DifferentiersSection";
-import TestimonialsSection from "../components/Landing/TestimonialsSection";
 import AboutSection from "../components/Landing/AboutSection";
 import PricingSection from "../components/Landing/PricingSection";
 import FAQSection from "../components/Landing/FAQSection";
@@ -40,7 +39,13 @@ export default function LandingPage() {
         <DifferentiersSection />
       </div>
 
-      <TestimonialsSection />
+      <div style={{ position: "relative", height: "clamp(320px, 42vw, 480px)", overflow: "hidden" }}>
+        <img
+          src="/about-full.jpg"
+          alt="NEXUS Secure Due-Diligence Unit"
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      </div>
 
       <div id="precios">
         <PricingSection />
