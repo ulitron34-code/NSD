@@ -105,8 +105,6 @@ const resources = {
         plans: [
           {
             name: "Núcleo de Cumplimiento",
-            price: "A medida",
-            period: "",
             desc: "Para organizaciones que inician su proceso de cumplimiento digital",
             features: [
               "Expediente digital y onboarding",
@@ -119,8 +117,6 @@ const resources = {
           },
           {
             name: "Orquestación Avanzada",
-            price: "A medida",
-            period: "",
             desc: "Para equipos que requieren automatización y análisis inteligente",
             features: [
               "Todo del Núcleo",
@@ -133,8 +129,6 @@ const resources = {
           },
           {
             name: "Infraestructura Institucional",
-            price: "A medida",
-            period: "",
             desc: "Para instituciones con requerimientos de integración y gobierno",
             features: [
               "Todo de Orquestación",

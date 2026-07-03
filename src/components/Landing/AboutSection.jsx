@@ -87,21 +87,20 @@ export default function AboutSection() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.bg, padding: "2.5rem", borderRadius: "12px" }}>
-          <h3 style={{ color: COLORS.navy, fontSize: "1.2rem", marginBottom: "1.5rem" }}>
+        <div style={{ background: COLORS.bg, padding: "2.75rem", borderRadius: "18px" }}>
+          <h3 style={{ color: COLORS.navy, fontSize: "1.2rem", marginBottom: "1.75rem" }}>
             {t("about.valuesTitle")}
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "1.25rem" }}>
             {values.map((valor, i) => (
               <div key={i} style={{
-                background: COLORS.white,
-                padding: "1.25rem 1rem",
-                borderRadius: "8px",
+                background: "rgba(255,255,255,0.65)",
+                padding: "1.6rem 1.25rem",
+                borderRadius: "12px",
                 textAlign: "center",
-                borderLeft: `3px solid ${COLORS.gold}`,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                borderTop: `2px solid rgba(201,168,76,0.5)`,
               }}>
-                <p style={{ color: COLORS.navy, fontWeight: "600", fontSize: "0.9rem" }}>{valor}</p>
+                <p style={{ color: COLORS.navy, fontWeight: "600", fontSize: "0.92rem" }}>{valor}</p>
               </div>
             ))}
           </div>

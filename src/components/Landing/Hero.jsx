@@ -48,7 +48,7 @@ export default function Hero() {
     }}>
       <div style={{
         position: "absolute", inset: 0,
-        backgroundImage: "url(/hero-lobby.jpg)",
+        backgroundImage: "url(/hero-bg.jpg)",
         backgroundSize: "cover", backgroundPosition: "center",
         zIndex: 0,
       }} />
@@ -72,12 +72,12 @@ export default function Hero() {
 
       <div style={{ maxWidth: "1100px", margin: "0 auto", position: "relative", zIndex: 3 }}>
         <div style={{
-          background: "rgba(249,247,242,0.95)",
+          background: "rgba(249,247,242,0.74)",
           borderRadius: "20px",
           padding: "3rem 3.5rem",
           boxShadow: COLORS.shadowLg,
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
           textAlign: "center",
         }}>
         <div style={{

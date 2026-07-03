@@ -2,6 +2,8 @@ import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
+import SectionBackground from "../components/common/SectionBackground";
+import { overlays } from "../utils/visualStyle";
 
 const INDUSTRIES = [
   { id: "banca",          name: "Banca y financieras" },
@@ -355,45 +357,59 @@ export default function IndustriasPage() {
   if (industry) return <SectorPage industry={industry} />;
 
   return (
-    <div style={{ background: "#F2EFE9", minHeight: "100vh" }}>
-      <section style={{ background: `linear-gradient(135deg, ${COLORS.navy} 0%, #0F2D4A 100%)`, padding: "5rem 2rem 4rem", textAlign: "center" }}>
-        <p style={{ color: COLORS.gold, fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-          INDUSTRIAS
-        </p>
-        <h1 style={{ color: "#fff", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 800, lineHeight: 1.2, maxWidth: "700px", margin: "0 auto 1.25rem" }}>
-          Cumplimiento configurado para su industria
-        </h1>
-        <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "1rem", maxWidth: "620px", margin: "0 auto", lineHeight: 1.65 }}>
-          NEXUS se adapta a los requerimientos regulatorios de 15 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
-        </p>
-      </section>
+    <div style={{ position: "relative", minHeight: "100vh" }}>
+      <SectionBackground image="/industries-bg.jpg" overlay={overlays.creamSoft} />
 
-      <section style={{ padding: "4rem 2rem", maxWidth: "1100px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: "1.25rem" }}>
-          {INDUSTRIES.map((ind) => {
-            const c = INDUSTRY_CONTENT[ind.id];
-            return (
-              <div
-                key={ind.id}
-                onClick={() => navigate(`/industrias/${ind.id}`)}
-                style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid rgba(27,58,92,0.08)", cursor: "pointer", transition: "box-shadow 0.2s, border-color 0.2s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 20px rgba(27,58,92,0.12)"; e.currentTarget.style.borderColor = COLORS.navy; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = "rgba(27,58,92,0.08)"; }}
-              >
-                <h3 style={{ fontSize: "0.97rem", fontWeight: 800, color: COLORS.navy, marginBottom: "0.5rem" }}>{ind.name}</h3>
-                <p style={{ fontSize: "0.82rem", color: COLORS.textMuted, lineHeight: 1.55, margin: "0 0 0.85rem" }}>{c.desc}</p>
-                <div style={{ marginBottom: "0.75rem" }}>
-                  {c.modulos.slice(0, 3).map((m) => <Tag key={m}>{m}</Tag>)}
-                  {c.modulos.length > 3 && <Tag color={COLORS.textMuted} bg="#F2EFE9">+{c.modulos.length - 3}</Tag>}
+      <div style={{ position: "relative", zIndex: 3 }}>
+        <section style={{ background: `linear-gradient(135deg, ${COLORS.navy} 0%, #0F2D4A 100%)`, padding: "5rem 2rem 4rem", textAlign: "center" }}>
+          <p style={{ color: COLORS.gold, fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+            INDUSTRIAS
+          </p>
+          <h1 style={{ color: "#fff", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 800, lineHeight: 1.2, maxWidth: "700px", margin: "0 auto 1.25rem" }}>
+            Cumplimiento configurado para su industria
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "1rem", maxWidth: "620px", margin: "0 auto", lineHeight: 1.65 }}>
+            NEXUS se adapta a los requerimientos regulatorios de 15 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
+          </p>
+        </section>
+
+        <section style={{ padding: "4rem 2rem", maxWidth: "1140px", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: "1.5rem" }}>
+            {INDUSTRIES.map((ind) => {
+              const c = INDUSTRY_CONTENT[ind.id];
+              return (
+                <div
+                  key={ind.id}
+                  onClick={() => navigate(`/industrias/${ind.id}`)}
+                  style={{
+                    background: "rgba(255,255,255,0.82)",
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)",
+                    borderRadius: "16px",
+                    padding: "1.85rem",
+                    border: "1px solid rgba(27,58,92,0.06)",
+                    boxShadow: "0 2px 12px rgba(27,58,92,0.05)",
+                    cursor: "pointer",
+                    transition: "box-shadow 0.2s, border-color 0.2s, transform 0.2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 10px 28px rgba(27,58,92,0.13)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(27,58,92,0.05)"; e.currentTarget.style.borderColor = "rgba(27,58,92,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <h3 style={{ fontSize: "0.99rem", fontWeight: 800, color: COLORS.navy, marginBottom: "0.55rem" }}>{ind.name}</h3>
+                  <p style={{ fontSize: "0.84rem", color: COLORS.textMuted, lineHeight: 1.6, margin: "0 0 1rem" }}>{c.desc}</p>
+                  <div style={{ marginBottom: "0.85rem" }}>
+                    {c.modulos.slice(0, 3).map((m) => <Tag key={m}>{m}</Tag>)}
+                    {c.modulos.length > 3 && <Tag color={COLORS.textMuted} bg="#F2EFE9">+{c.modulos.length - 3}</Tag>}
+                  </div>
+                  <span style={{ fontSize: "0.8rem", color: COLORS.gold, fontWeight: 700 }}>Ver casos de uso →</span>
                 </div>
-                <span style={{ fontSize: "0.8rem", color: COLORS.gold, fontWeight: 700 }}>Ver casos de uso →</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

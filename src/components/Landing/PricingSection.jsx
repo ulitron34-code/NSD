@@ -59,18 +59,20 @@ export default function PricingSection() {
               <h3 style={{ color: COLORS.navy, fontSize: "1.5rem", marginBottom: "0.5rem", fontWeight: "600" }}>
                 {plan.name}
               </h3>
-              <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+              <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", marginBottom: plan.price ? "1.5rem" : "2.25rem" }}>
                 {plan.desc}
               </p>
 
-              <div style={{ marginBottom: "1.5rem" }}>
-                <span style={{ color: COLORS.navy, fontWeight: "700", fontSize: "2.5rem" }}>
-                  {plan.price}
-                </span>
-                <span style={{ color: COLORS.textMuted, fontSize: "1rem" }}>
-                  {plan.period}
-                </span>
-              </div>
+              {plan.price && (
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <span style={{ color: COLORS.navy, fontWeight: "700", fontSize: "2.5rem" }}>
+                    {plan.price}
+                  </span>
+                  <span style={{ color: COLORS.textMuted, fontSize: "1rem" }}>
+                    {plan.period}
+                  </span>
+                </div>
+              )}
 
               <button
                 onClick={() => navigate("/signup")}

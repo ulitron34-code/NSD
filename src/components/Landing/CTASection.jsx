@@ -2,6 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "../common/icons";
+import SectionBackground from "../common/SectionBackground";
+import { overlays } from "../../utils/visualStyle";
 
 const TRUST_ICONS = ["shieldCheck", "bolt", "globe"];
 
@@ -14,19 +16,21 @@ export default function CTASection() {
   return (
     <section style={{
       padding: "6rem 2rem",
-      background: "linear-gradient(135deg, #0F1F2E 0%, #1B3A5C 60%, #2A527A 100%)",
       position: "relative",
       overflow: "hidden",
     }}>
+      <SectionBackground image="/cta-bg.jpg" overlay={overlays.navyStrong} />
+
       <div style={{
         position: "absolute", top: "50%", left: "50%",
         transform: "translate(-50%,-50%)",
         width: "600px", height: "400px",
         background: "radial-gradient(ellipse, rgba(201,168,76,0.1) 0%, transparent 70%)",
         pointerEvents: "none",
+        zIndex: 2,
       }} />
 
-      <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center", position: "relative" }}>
+      <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center", position: "relative", zIndex: 3 }}>
         <p style={{
           color: "#C9A84C", fontWeight: 700, fontSize: "0.78rem",
           letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: "1rem",
