@@ -1,27 +1,28 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import Icon from "../common/icons";
 
 export default function SecuritySection() {
   const { t } = useTranslation();
 
   const features = [
     {
-      icon: "🔐",
+      icon: "lock",
       title: t("security.encryption.title", "End-to-End Encryption"),
       desc: t("security.encryption.desc", "All financial and documentary information is transmitted and stored under AES-256 encryption. Data in transit is protected with bank-grade TLS 1.3."),
     },
     {
-      icon: "🛡️",
+      icon: "shield",
       title: t("security.rbac.title", "Role-Based Access Control"),
       desc: t("security.rbac.desc", "RBAC architecture that ensures only authorized personnel access sensitive data. Each user level has granular permissions auditable by role, department and jurisdiction."),
     },
     {
-      icon: "📋",
+      icon: "checklist",
       title: t("security.auditLog.title", "Immutable Audit Trail"),
       desc: t("security.auditLog.desc", "Chronological record of every action: access, modifications, downloads and approvals. Prepared for inspections by CNBV, FIU, OFAC and external auditors under ISO 27001 standards."),
     },
     {
-      icon: "🏛️",
+      icon: "institution",
       title: t("security.compliance.title", "Multinational Regulatory Compliance"),
       desc: t("security.compliance.desc", "Designed to meet AML/CFT requirements, Federal Personal Data Protection Law (LFPDPPP), European GDPR and international financial privacy standards."),
     },
@@ -61,7 +62,9 @@ export default function SecuritySection() {
             onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(212,175,55,0.3)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
             >
-              <div style={{ fontSize: "1.8rem", marginBottom: "1rem" }}>{f.icon}</div>
+              <div style={{ marginBottom: "1rem" }}>
+                <Icon name={f.icon} size={26} color="#C9A84C" />
+              </div>
               <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.05rem", fontWeight: 500, marginBottom: "0.75rem", color: "white" }}>
                 {f.title}
               </h3>
@@ -74,7 +77,7 @@ export default function SecuritySection() {
         <div style={{ marginTop: "4rem", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
           <img 
             src="/img-dashboard.jpg" 
-            alt="NSD Security Dashboard" 
+            alt="NEXUS Security Dashboard"
             style={{ width: "100%", height: "auto", display: "block" }} 
           />
         </div>

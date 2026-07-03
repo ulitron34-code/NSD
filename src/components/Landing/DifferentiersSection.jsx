@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import Icon from "../common/icons";
 
-const icons = ["🎯", "📋", "🌐", "🔬"];
+const icons = ["target", "checklist", "network", "microscope"];
 const numbers = ["01", "02", "03", "04"];
 
 export default function DifferentiersSection() {
@@ -73,10 +74,10 @@ export default function DifferentiersSection() {
                 width: "48px", height: "48px", borderRadius: "12px",
                 background: "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05))",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "1.5rem", marginBottom: "1.25rem",
+                marginBottom: "1.25rem",
                 border: "1px solid rgba(201,168,76,0.2)",
               }}>
-                {icons[i]}
+                <Icon name={icons[i]} size={24} color="#C9A84C" />
               </div>
 
               <h3 style={{ color: "#1B3A5C", fontWeight: 700, marginBottom: "0.75rem", fontSize: "1.05rem" }}>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { BRAND } from "../../config/brand";
+import Icon from "../common/icons";
 
 export default function Footer({ onNavigate }) {
   const navigate = useNavigate();
@@ -98,11 +99,13 @@ export default function Footer({ onNavigate }) {
             <h4 style={{ color: COLORS.gold, marginBottom: "1rem", fontWeight: "600" }}>
               {t("footer.contactTitle")}
             </h4>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", marginBottom: "0.5rem" }}>
-              📧 contacto@nsd.mx
+            <p style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", marginBottom: "0.5rem" }}>
+              <Icon name="mail" size={15} color="rgba(255,255,255,0.6)" />
+              contacto@nsd.mx
             </p>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", marginBottom: "0.5rem" }}>
-              📍 Ciudad de México
+            <p style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", marginBottom: "0.5rem" }}>
+              <Icon name="mapPin" size={15} color="rgba(255,255,255,0.6)" />
+              Ciudad de México
             </p>
           </div>
         </div>

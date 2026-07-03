@@ -1,6 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import Icon from "../common/icons";
+
+const TRUST_ICONS = ["shieldCheck", "bolt", "globe"];
 
 export default function CTASection() {
   const navigate = useNavigate();
@@ -81,7 +84,11 @@ export default function CTASection() {
           marginTop: "3.5rem", flexWrap: "wrap",
         }}>
           {trustItems.map((item, i) => (
-            <p key={i} style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500 }}>
+            <p key={i} style={{
+              display: "flex", alignItems: "center", gap: "0.5rem",
+              color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", fontWeight: 500,
+            }}>
+              <Icon name={TRUST_ICONS[i]} size={16} color="#C9A84C" />
               {item}
             </p>
           ))}

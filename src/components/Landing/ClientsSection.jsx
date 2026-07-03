@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import Icon from "../common/icons";
 
-const icons = ["🏢", "🏗️", "🏛️", "❤️", "🎓", "💰"];
+const icons = ["building", "construction", "institution", "heart", "graduationCap", "coin"];
 
 export default function ClientsSection() {
   const { t } = useTranslation();
@@ -50,13 +51,13 @@ export default function ClientsSection() {
               }}
             >
               <div style={{
-                fontSize: "1.75rem", flexShrink: 0,
+                flexShrink: 0,
                 width: "48px", height: "48px",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 background: "rgba(201,168,76,0.1)", borderRadius: "10px",
                 border: "1px solid rgba(201,168,76,0.2)",
               }}>
-                {icons[i]}
+                <Icon name={icons[i]} size={24} color="#C9A84C" />
               </div>
               <div>
                 <h3 style={{ color: "#1B3A5C", fontWeight: 700, marginBottom: "0.4rem", fontSize: "0.98rem" }}>

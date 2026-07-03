@@ -1,23 +1,24 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import Icon from "../common/icons";
 
 const STEPS_ES = [
   {
     number: "01",
-    icon: "🔍",
+    icon: "search",
     title: "Diagnóstico",
     desc: "Analizamos tu proyecto, empresa y documentación existente. Identificamos fortalezas, brechas y el perfil de inversionista ideal.",
   },
   {
     number: "02",
-    icon: "📐",
+    icon: "ruler",
     title: "Estructuración",
     desc: "Preparamos el expediente financiero, narrativa de inversión y cumplimiento regulatorio para que tu proyecto sea presentable ante capital internacional.",
   },
   {
     number: "03",
-    icon: "🌎",
+    icon: "globe",
     title: "Presentación",
     desc: "Te conectamos con nuestra red de 120+ financiadores globales — family offices, fondos de deuda, capital privado y organismos multilaterales.",
   },
@@ -26,19 +27,19 @@ const STEPS_ES = [
 const STEPS_EN = [
   {
     number: "01",
-    icon: "🔍",
+    icon: "search",
     title: "Diagnosis",
     desc: "We analyze your project, company and existing documentation. We identify strengths, gaps and the ideal investor profile.",
   },
   {
     number: "02",
-    icon: "📐",
+    icon: "ruler",
     title: "Structuring",
     desc: "We prepare the financial dossier, investment narrative, and regulatory compliance so your project is ready for international capital.",
   },
   {
     number: "03",
-    icon: "🌎",
+    icon: "globe",
     title: "Presentation",
     desc: "We connect you with our network of 120+ global lenders — family offices, debt funds, private equity, and multilateral organizations.",
   },
@@ -120,14 +121,14 @@ export default function HowItWorksSection() {
 
               <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1.25rem" }}>
                 <span style={{
-                  fontSize: "2rem", lineHeight: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                   background: "rgba(201,168,76,0.1)",
                   border: "1px solid rgba(201,168,76,0.2)",
                   borderRadius: "12px",
-                  padding: "0.5rem 0.6rem",
+                  width: "3rem", height: "3rem",
                   flexShrink: 0,
                 }}>
-                  {step.icon}
+                  <Icon name={step.icon} size={24} color="#E4C878" />
                 </span>
                 <p style={{
                   fontSize: "3rem", fontWeight: 900, lineHeight: 1,

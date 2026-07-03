@@ -222,9 +222,9 @@ const resources = {
           "Conozca cómo NSDU puede adaptar expedientes, documentos, reglas, riesgos e integraciones a la estructura de su organización y a los países en los que opera.",
         cta1: "Conocer la plataforma",
         cta2: "Solicitar diagnóstico institucional",
-        trust1: "🔒 Cifrado y trazabilidad",
-        trust2: "⚡ IA con supervisión humana",
-        trust3: "🌎 Cobertura multijurisdiccional",
+        trust1: "Cifrado y trazabilidad",
+        trust2: "IA con supervisión humana",
+        trust3: "Cobertura multijurisdiccional",
       },
 
       footer: {
@@ -542,9 +542,9 @@ const resources = {
           "Access our Compliance Platform and begin your applicant analysis today.",
         cta1: "Create Free Account →",
         cta2: "Talk to an Expert",
-        trust1: "🔒 Secure data",
-        trust2: "⚡ Analysis in seconds",
-        trust3: "🌎 Global lender network",
+        trust1: "Secure data",
+        trust2: "Analysis in seconds",
+        trust3: "Global lender network",
       },
 
       footer: {

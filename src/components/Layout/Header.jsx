@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BRAND } from "../../config/brand";
 import { COLORS } from "../../utils/constants";
+import Icon from "../common/icons";
 
 export default function Header({ isLanding = false }) {
   const { user, logout, isLoggedIn } = useAuth();
@@ -196,17 +197,19 @@ export default function Header({ isLanding = false }) {
                     <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1B3A5C", wordBreak: "break-all" }}>{user.email}</p>
                   </div>
                   {[
-                    { label: `🏠 ${t("dashboard.title")}`, action: () => { navigate("/dashboard"); setShowMenu(false); } },
-                    { label: `👤 ${t("dashboard.miPerfil")}`,  action: () => { navigate("/profile");   setShowMenu(false); } },
+                    { icon: "home", label: t("dashboard.title"), action: () => { navigate("/dashboard"); setShowMenu(false); } },
+                    { icon: "user", label: t("dashboard.miPerfil"),  action: () => { navigate("/profile");   setShowMenu(false); } },
                   ].map((item, i) => (
                     <button key={i} onClick={item.action} style={{
                       width: "100%", padding: "0.75rem 1rem", border: "none",
                       background: "transparent", color: "#1B3A5C", cursor: "pointer",
                       textAlign: "left", fontSize: "0.88rem", fontWeight: 500,
+                      display: "flex", alignItems: "center", gap: "0.6rem",
                       transition: "background 0.15s",
                     }}
-                    onMouseEnter={e => e.target.style.background = "#F2EFE9"}
-                    onMouseLeave={e => e.target.style.background = "transparent"}>
+                    onMouseEnter={e => e.currentTarget.style.background = "#F2EFE9"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <Icon name={item.icon} size={16} color="#1B3A5C" />
                       {item.label}
                     </button>
                   ))}
@@ -215,11 +218,13 @@ export default function Header({ isLanding = false }) {
                     width: "100%", padding: "0.75rem 1rem", border: "none",
                     background: "transparent", color: "#B45309", cursor: "pointer",
                     textAlign: "left", fontSize: "0.88rem", fontWeight: 600,
+                    display: "flex", alignItems: "center", gap: "0.6rem",
                     transition: "background 0.15s",
                   }}
-                  onMouseEnter={e => e.target.style.background = "#FEF3C7"}
-                  onMouseLeave={e => e.target.style.background = "transparent"}>
-                    🚪 {t("dashboard.cerrarSesion")}
+                  onMouseEnter={e => e.currentTarget.style.background = "#FEF3C7"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <Icon name="logout" size={16} color="#B45309" />
+                    {t("dashboard.cerrarSesion")}
                   </button>
                 </div>
               )}
@@ -340,12 +345,14 @@ export default function Header({ isLanding = false }) {
           {isLoggedIn && user ? (
             <>
               <button onClick={() => { navigate("/dashboard"); setShowMobileNav(false); }}
-                style={{ width: "100%", padding: "0.9rem 1.5rem", background: "transparent", border: "none", color: "rgba(255,255,255,0.85)", cursor: "pointer", textAlign: "left", fontSize: "1rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                🏠 {t("dashboard.title")}
+                style={{ width: "100%", padding: "0.9rem 1.5rem", background: "transparent", border: "none", color: "rgba(255,255,255,0.85)", cursor: "pointer", textAlign: "left", fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.6rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <Icon name="home" size={17} color="rgba(255,255,255,0.85)" />
+                {t("dashboard.title")}
               </button>
               <button onClick={handleLogout}
-                style={{ width: "100%", padding: "0.9rem 1.5rem", background: "transparent", border: "none", color: "#E4C878", cursor: "pointer", textAlign: "left", fontSize: "1rem" }}>
-                🚪 {t("dashboard.cerrarSesion")}
+                style={{ width: "100%", padding: "0.9rem 1.5rem", background: "transparent", border: "none", color: "#E4C878", cursor: "pointer", textAlign: "left", fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <Icon name="logout" size={17} color="#E4C878" />
+                {t("dashboard.cerrarSesion")}
               </button>
             </>
           ) : (
