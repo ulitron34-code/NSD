@@ -77,40 +77,14 @@ export default function Header({ isLanding = false }) {
       }}>
         {/* Logo */}
         <div
-          style={{ display: "flex", flexDirection: "column", cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
           onClick={() => { navigate("/"); setShowMobileNav(false); }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
-            <span style={{
-              width: "22px", height: "22px", borderRadius: "50%",
-              border: "1px solid rgba(201,168,76,0.65)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#C9A84C" }} />
-            </span>
-            <span style={{
-              fontFamily: "'Playfair Display', serif", fontWeight: 700,
-              fontSize: "1.2rem", letterSpacing: "0.05em", color: "white",
-            }}>
-              {BRAND.name}
-            </span>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.2rem", marginLeft: "1.85rem" }}>
-            <span style={{ width: "16px", height: "1px", background: "rgba(255,255,255,0.3)" }} />
-            <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: "#C9A84C" }} />
-            <span style={{ width: "16px", height: "1px", background: "rgba(255,255,255,0.3)" }} />
-          </div>
-
-          <div style={{
-            fontSize: "0.62rem", color: "rgba(255,255,255,0.5)",
-            letterSpacing: "0.14em", textTransform: "uppercase",
-            marginTop: "0.2rem", marginLeft: "1.85rem",
-            fontFamily: "'Playfair Display', serif",
-          }}>
-            {BRAND.tagline}
-          </div>
+          <img
+            src="/logo-nexus.png"
+            alt={BRAND.logoAlt}
+            style={{ height: "50px", width: "auto", display: "block" }}
+          />
         </div>
 
         {/* Nav links — desktop only */}
