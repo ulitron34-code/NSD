@@ -1,13 +1,13 @@
 export const BRAND = {
-  name: "NSDU",
-  legalName: "NSDU International Finance",
-  tagline: "Boutique International Finance",
-  productName: "NSDU Platform",
+  name: "NEXUS",
+  legalName: "NEXUS Secure Due-Diligence Unit",
+  tagline: "Secure Due-diligence Unit",
+  productName: "NEXUS Platform",
   category: "Compliance SaaS",
   contactEmail: "info@nsd.com",
   contactPhone: "+52 XX XXXX XXXX",
   location: "Ciudad de Mexico",
-  logoAlt: "NSDU",
+  logoAlt: "NEXUS",
 };
 
 export function brandLabel(key, fallback = "") {
