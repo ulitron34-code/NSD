@@ -8,6 +8,8 @@ import RecentActivityFeed from "../components/Dashboard/RecentActivityFeed";
 import GuidedSidebar from "../components/Dashboard/GuidedSidebar";
 import SectionGuide, { getGuideFor } from "../components/Dashboard/SectionGuide";
 import Icon from "../components/common/icons";
+import SectionBackground from "../components/common/SectionBackground";
+import { overlays } from "../utils/visualStyle";
 
 import { ordersAPI, otorganteAPI } from "../services/api";
 import { demoServiceOrders } from "../data/demoServiceOrders";
@@ -728,6 +730,7 @@ export default function DashboardPage() {
         minWidth: 0,
         position: "relative",
       }}>
+        <SectionBackground image="/dashboard-bg.jpg" overlay={overlays.creamSoft} />
         <div style={{
           position: "absolute",
           top: "2rem",
@@ -736,7 +739,7 @@ export default function DashboardPage() {
         }}>
           <NotificationCenter userId={user?.id || 'current-user'} />
         </div>
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 3 }}>
           {uiView === "new" && <SectionGuide {...(getGuideFor(activeTab, userMode, L) || {})} />}
           <Suspense fallback={<DashboardLoadingFallback />}>
             {renderContent()}
