@@ -251,7 +251,7 @@ function SectorPage({ industry }) {
             CASOS DE USO
           </p>
           <h2 style={{ color: COLORS.navy, fontSize: "1.3rem", fontWeight: 800, marginBottom: "1.5rem" }}>
-            Cómo NSD resuelve los retos de su sector
+            Cómo NEXUS resuelve los retos de su sector
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(430px, 1fr))", gap: "1.1rem" }}>
             {content.casos.map((caso, i) => (
@@ -277,10 +277,10 @@ function SectorPage({ industry }) {
         {/* Módulos + Regulaciones + Docs en 3 columnas */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.25rem" }}>
 
-          {/* Módulos NSD */}
+          {/* Módulos NEXUS */}
           <div style={{ background: "#fff", border: "1px solid rgba(27,58,92,0.09)", borderRadius: "12px", padding: "1.4rem 1.5rem" }}>
             <p style={{ color: COLORS.gold, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-              MÓDULOS NSD APLICABLES
+              MÓDULOS NEXUS APLICABLES
             </p>
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {content.modulos.map((m) => (
@@ -364,7 +364,7 @@ export default function IndustriasPage() {
           Cumplimiento configurado para su industria
         </h1>
         <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "1rem", maxWidth: "620px", margin: "0 auto", lineHeight: 1.65 }}>
-          NSD se adapta a los requerimientos regulatorios de 15 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
+          NEXUS se adapta a los requerimientos regulatorios de 15 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
         </p>
       </section>
 

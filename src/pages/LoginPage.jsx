@@ -59,7 +59,7 @@ export default function LoginPage({ onLoginSuccess }) {
             margin: "0 0 0.5rem 0",
             fontWeight: 800
           }}>
-            NSD Platform
+            NEXUS Platform
           </h1>
           <p style={{
             color: "rgba(255,255,255,0.6)",

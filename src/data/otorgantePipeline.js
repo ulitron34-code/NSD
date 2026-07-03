@@ -59,7 +59,7 @@ export function mapOrderToOpportunity(order) {
     id: order.id,
     order,
     name: order.projectName || metadata.projectName || `Expediente ${String(order.id).slice(0, 8)}`,
-    applicant: metadata.companyName || metadata.email || "Solicitante NSD",
+    applicant: metadata.companyName || metadata.email || "Solicitante NEXUS",
     sector,
     country: metadata.country || "MX",
     amount,

@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - TOAST NOTIFICATIONS CONTEXT
+// NEXUS PLATFORM - TOAST NOTIFICATIONS CONTEXT
 // Beautiful, accessible toast notifications
 // ============================================
 

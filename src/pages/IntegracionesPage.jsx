@@ -37,10 +37,10 @@ export default function IntegracionesPage() {
     <div style={{ background: "#F2EFE9", minHeight: "100vh" }}>
       <section style={{ background: `linear-gradient(135deg, ${COLORS.navy} 0%, #0F2D4A 100%)`, padding: "5rem 2rem 4rem", textAlign: "center" }}>
         <p style={{ color: COLORS.gold, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem" }}>
-          NSD CONNECT — INTEGRACIONES
+          NEXUS CONNECT — INTEGRACIONES
         </p>
         <h1 style={{ color: "#fff", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, lineHeight: 1.2, maxWidth: "700px", margin: "0 auto 1.25rem" }}>
-          Conecte NSD con sus fuentes, registros y sistemas
+          Conecte NEXUS con sus fuentes, registros y sistemas
         </h1>
         <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "1.05rem", maxWidth: "620px", margin: "0 auto 2rem", lineHeight: 1.65 }}>
           API pública, webhooks e integraciones con proveedores de identidad, registros, listas, firma, CRM, core y almacenamiento. La disponibilidad depende de la jurisdicción y el módulo contratado.

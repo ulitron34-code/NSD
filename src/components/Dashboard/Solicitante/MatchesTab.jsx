@@ -42,7 +42,7 @@ export default function MatchesTab() {
 
   const presentationPack = [
     [L("Resumen ejecutivo", "Executive Summary"), L("Proyecto, uso de fondos, monto, estructura y etapa.", "Project, use of funds, amount, structure and stage.")],
-    [L("Score NSD", "NSD Score"), L("Lectura A-E, riesgos visibles y brechas por subsanar.", "A-E reading, visible risks and gaps to remediate.")],
+    [L("Score NEXUS", "NEXUS Score"), L("Lectura A-E, riesgos visibles y brechas por subsanar.", "A-E reading, visible risks and gaps to remediate.")],
     [L("Data room", "Data Room"), L("Documentos clave, version, vigencia y permisos de acceso.", "Key documents, version, validity and access permissions.")],
     [L("Preguntas esperadas", "Expected Questions"), L("Requerimientos que probablemente pedira cada tipo de otorgante.", "Requirements each type of funding provider will likely request.")],
   ];
@@ -65,8 +65,8 @@ export default function MatchesTab() {
         </h1>
         <p style={{ color: COLORS.textMuted, maxWidth: "820px", fontWeight: 300, fontSize: "0.95rem", lineHeight: 1.7 }}>
           {L(
-            "La compatibilidad se calcula con score NSD, ticket, sector, documentos, riesgo visible y apetito institucional. No garantiza fondeo; ayuda a priorizar a que otorgantes conviene presentar el expediente.",
-            "Compatibility is calculated with NSD score, ticket size, sector, documents, visible risk and institutional appetite. It does not guarantee funding; it helps prioritize which funding providers should receive the file."
+            "La compatibilidad se calcula con score NEXUS, ticket, sector, documentos, riesgo visible y apetito institucional. No garantiza fondeo; ayuda a priorizar a que otorgantes conviene presentar el expediente.",
+            "Compatibility is calculated with NEXUS score, ticket size, sector, documents, visible risk and institutional appetite. It does not guarantee funding; it helps prioritize which funding providers should receive the file."
           )}
         </p>
       </div>

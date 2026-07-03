@@ -337,7 +337,7 @@ export default function DocumentIntelligenceTab() {
     }
 
     reportMd += `\n=========================================\n`;
-    reportMd += `NSD International Finance - Platform compliance Audit`;
+    reportMd += `NEXUS Secure Due-Diligence Unit - Platform compliance Audit`;
 
     const blob = new Blob([reportMd], { type: "text/markdown;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -491,7 +491,7 @@ export default function DocumentIntelligenceTab() {
               style={{ marginTop: "3px" }}
               required
             />
-            Acepto los términos de servicio de NSD Platform y las políticas de retención limitada de documentos.
+            Acepto los términos de servicio de NEXUS Platform y las políticas de retención limitada de documentos.
           </label>
 
           <label style={{ display: "flex", gap: "0.8rem", cursor: "pointer", fontSize: "0.88rem", color: COLORS.text }}>

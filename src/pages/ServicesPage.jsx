@@ -59,7 +59,7 @@ const SERVICES = [
     features: [
       "DCF modelado profesional",
       "Analisis de sensibilidad",
-      "Scoring crediticio NSD",
+      "Scoring crediticio NEXUS",
       "Metricas de rentabilidad",
       "Mapeo de riesgos",
       "Observaciones para revision de credito"
@@ -154,7 +154,7 @@ export default function ServicesPage() {
             marginBottom: "1rem",
             lineHeight: 1.2,
           }}>
-            {copy("Servicios profesionales NSD IF")}
+            {copy("Servicios profesionales NEXUS")}
           </h1>
           <p style={{
             fontSize: "1.2rem",

@@ -95,7 +95,7 @@ export const demoServiceOrders = [
       readinessLevel: "Listo para comite",
       financialScore: 89,
       complianceScore: 92,
-      documents: ["Resumen ejecutivo", "Business plan", "Estados financieros", "Permisos y certificaciones", "Garantias", "Reporte NSD"],
+      documents: ["Resumen ejecutivo", "Business plan", "Estados financieros", "Permisos y certificaciones", "Garantias", "Reporte NEXUS"],
       share: { status: "accepted", recipientName: "Banca desarrollo", acceptedAt: "2026-05-24T09:00:00.000Z" },
       interest: { status: "term_sheet", notes: "Perfil listo para propuesta indicativa.", created_at: "2026-05-25T13:00:00.000Z" },
       contactRequest: { status: "approved", created_at: "2026-05-25T15:30:00.000Z" },
@@ -134,7 +134,7 @@ export function mapServiceOrder(order) {
     amount: order.amount,
     specialist: {
       id: "spec-auto",
-      name: status === "pending" ? "Pendiente Asignacion" : "Mesa NSD",
+      name: status === "pending" ? "Pendiente Asignacion" : "Mesa NEXUS",
       email: "contacto@nsd.com",
       avatar: status === "pending" ? "PA" : "NS",
     },

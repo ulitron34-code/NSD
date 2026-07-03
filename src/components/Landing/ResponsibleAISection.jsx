@@ -5,7 +5,7 @@ import { uiText } from "../../utils/runtimeCopy";
 
 const pillars = [
   ["IA explicable", "Revision documental, faltantes, semaforos y memo ejecutivo con evidencia."],
-  ["Decision humana", "NSD IF no aprueba credito ni reemplaza al comite del otorgante."],
+  ["Decision humana", "NEXUS no aprueba credito ni reemplaza al comite del otorgante."],
   ["Cumplimiento vivo", "Requisitos, trazabilidad y data room se ordenan por expediente."],
   ["Privacidad", "Datos sensibles y biometricos futuros requieren consentimiento y controles."],
 ];
@@ -27,8 +27,8 @@ export default function ResponsibleAISection() {
             </h2>
             <p style={{ color: "rgba(255,255,255,0.76)", lineHeight: 1.7, fontSize: "1rem", margin: 0 }}>
               {L(
-                "NSD IF usa IA para organizar expedientes, detectar faltantes y preparar lecturas institucionales. La decision final permanece en manos de personas autorizadas, con evidencia, permisos y trazabilidad.",
-                "NSD IF uses AI to organize files, detect gaps and prepare institutional readouts. Final decisions remain with authorized people, with evidence, permissions and traceability."
+                "NEXUS usa IA para organizar expedientes, detectar faltantes y preparar lecturas institucionales. La decision final permanece en manos de personas autorizadas, con evidencia, permisos y trazabilidad.",
+                "NEXUS uses AI to organize files, detect gaps and prepare institutional readouts. Final decisions remain with authorized people, with evidence, permissions and traceability."
               )}
             </p>
           </div>

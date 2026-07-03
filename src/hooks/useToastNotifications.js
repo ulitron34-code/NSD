@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - TOAST HOOK
+// NEXUS PLATFORM - TOAST HOOK
 // Easy-to-use hook for toast notifications
 // ============================================
 

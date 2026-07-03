@@ -70,7 +70,7 @@ function buildMarkdown(actions, scoring, shareReadiness) {
   const score = shareReadiness?.finalScore || scoring?.finalScore || 0;
   const status = shareReadiness?.canPublish ? "Listo para presentacion" : "Pendiente de subsanacion";
   const lines = [
-    "# Plan de subsanacion NSD",
+    "# Plan de subsanacion NEXUS",
     "",
     `- Estado: ${status}`,
     `- Grado: ${grade}`,

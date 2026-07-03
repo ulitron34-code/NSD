@@ -89,7 +89,7 @@ export default function SharedDataRoomPage() {
       }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <p style={{ color: COLORS.goldLight, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", fontSize: "0.78rem", marginBottom: "0.75rem" }}>
-            NSD Data Room Compartido
+            NEXUS Data Room Compartido
           </p>
           <h1 style={{ fontSize: "2.4rem", marginBottom: "0.75rem" }}>
             Expediente para revision de otorgante
@@ -154,7 +154,7 @@ export default function SharedDataRoomPage() {
               </div>
               <div>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "0.25rem" }}>
-                  Resumen institucional NSD
+                  Resumen institucional NEXUS
                 </p>
                 <h2 style={{ color: COLORS.navy, fontSize: "1.25rem", marginBottom: "0.35rem" }}>
                   {scoring.readinessGrade?.label || "Preparacion pendiente"}

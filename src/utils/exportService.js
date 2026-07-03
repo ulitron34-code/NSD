@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - EXPORT SERVICE
+// NEXUS PLATFORM - EXPORT SERVICE
 // PDF/CSV/Excel Export Functionality
 // ============================================
 
@@ -68,7 +68,7 @@ export function exportToJSON(data, filename) {
  */
 export function exportToPDF(reportData, filename, options = {}) {
   const {
-    title = 'NSD Report',
+    title = 'NEXUS Report',
     subtitle = '',
     dateFormat = 'long'
   } = options;
@@ -142,7 +142,7 @@ export function exportToPDF(reportData, filename, options = {}) {
       ` : ''}
       
       <div class="footer">
-        <p>NSD Platform - Compliance as a Service | NSD.com</p>
+        <p>NEXUS Platform - Compliance as a Service | NEXUS.com</p>
         <p>Este documento es confidencial y esta protegido por medidas de seguridad.</p>
       </div>
     </body>

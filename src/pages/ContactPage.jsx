@@ -42,7 +42,7 @@ export default function ContactPage() {
       } else {
         // Fallback: abre cliente de correo
         const body = encodeURIComponent(`Nombre: ${formData.name}\nEmail: ${formData.email}\nTeléfono: ${formData.phone}\nAsunto: ${formData.subject}\n\n${formData.message}`);
-        window.location.href = `mailto:contacto@nsd.mx?subject=${encodeURIComponent(formData.subject || "Contacto NSD")}&body=${body}`;
+        window.location.href = `mailto:contacto@nsd.mx?subject=${encodeURIComponent(formData.subject || "Contacto NEXUS")}&body=${body}`;
       }
 
       addNotification(

@@ -6,10 +6,10 @@ import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const memoBlocks = [
   ["Problema", "Solicitantes y entidades financieras pierden tiempo por expedientes incompletos, requisitos dispersos, baja comparabilidad documental y revisiones manuales."],
-  ["Solucion", "NSD convierte solicitudes de financiamiento en expedientes institucionales con IA, data room, scoring, requerimientos y trazabilidad."],
-  ["Producto", "Plataforma SaaS para solicitantes, otorgantes y NSD Admin: carga de proyecto, revision IA, data room, pipeline de oportunidades, mensajeria, requerimientos y auditoria."],
+  ["Solucion", "NEXUS convierte solicitudes de financiamiento en expedientes institucionales con IA, data room, scoring, requerimientos y trazabilidad."],
+  ["Producto", "Plataforma SaaS para solicitantes, otorgantes y NEXUS Admin: carga de proyecto, revision IA, data room, pipeline de oportunidades, mensajeria, requerimientos y auditoria."],
   ["Mercado inicial", "Mexico: PyMEs, startups, proyectos productivos, SOFOMES, fintechs, fondos, bancos y despachos financieros."],
-  ["Modelo de negocio", "SaaS B2B, fee por expediente, servicios profesionales NSD IF y modulos premium como OCR, biometria, KYB, antifraude e integraciones."],
+  ["Modelo de negocio", "SaaS B2B, fee por expediente, servicios profesionales NEXUS y modulos premium como OCR, biometria, KYB, antifraude e integraciones."],
   ["Diferenciacion", "No es solo data room, KYC o consultoria. Es un flujo vertical que prepara al solicitante y reduce friccion para el otorgante."],
   ["Traccion buscada", "Pilotos con entidades y aliados, 50+ expedientes piloto, primera conversion a interes institucional y primer MRR demostrable."],
   ["Ask", "$250K - $500K pre-seed para producto, IA/integraciones, pilotos, go-to-market y base legal/operativa."],
@@ -17,7 +17,7 @@ const memoBlocks = [
 
 const quickFacts = [
   ["Estado", "Demo local funcional"],
-  ["Perfiles", "Solicitante / Otorgante / NSD Admin"],
+  ["Perfiles", "Solicitante / Otorgante / NEXUS Admin"],
   ["Mercado inicial", "Mexico"],
   ["Expansion", "USA despues de pilotos"],
   ["Riesgo clave", "Regulatorio / reputacional"],
@@ -43,7 +43,7 @@ export default function InvestorOnePagerTab() {
           {L("One pager inversionista", "Investor One Pager")}
         </p>
         <h1 style={{ color: "white", fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 2.9rem)", lineHeight: 1.05, marginBottom: "0.8rem" }}>
-          {L("NSD Platform: infraestructura para preparar y revisar solicitudes financieras.", "NSD Platform: infrastructure to prepare and review financing requests.")}
+          {L("NEXUS Platform: infraestructura para preparar y revisar solicitudes financieras.", "NEXUS Platform: infrastructure to prepare and review financing requests.")}
         </h1>
         <p style={{ color: "rgba(255,255,255,0.78)", maxWidth: "900px", lineHeight: 1.7 }}>
           {L("Una lectura ejecutiva para inversionistas: que problema resuelve, como monetiza, por que puede defenderse y que se financiaria.", "An executive read for investors: what problem it solves, how it monetizes, why it can be defended and what would be funded.")}
@@ -77,7 +77,7 @@ export default function InvestorOnePagerTab() {
           <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
             <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "0.75rem" }}>{L("Frase de 20 segundos", "20-second pitch")}</h2>
             <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", lineHeight: 1.65 }}>
-              {L("NSD ayuda a empresas y proyectos a preparar expedientes financieros con IA, data room y trazabilidad, para que bancos, SOFOMES, fintechs y fondos revisen oportunidades con menos friccion y mejor evidencia.", "NSD helps companies and projects prepare financing files with AI, data room and traceability, so banks, lenders, fintechs and funds can review opportunities with less friction and better evidence.")}
+              {L("NEXUS ayuda a empresas y proyectos a preparar expedientes financieros con IA, data room y trazabilidad, para que bancos, SOFOMES, fintechs y fondos revisen oportunidades con menos friccion y mejor evidencia.", "NEXUS helps companies and projects prepare financing files with AI, data room and traceability, so banks, lenders, fintechs and funds can review opportunities with less friction and better evidence.")}
             </p>
           </div>
 

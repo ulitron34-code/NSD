@@ -10,11 +10,11 @@ export default function DataRoomIndexTab() {
 
   const folders = [
     ["00", L("Resumen Ejecutivo", "Executive Summary"), L("Memo, score, semaforo, uso de recursos", "Memo, score, traffic light, use of funds"), "Completo", L("Otorgantes", "Funding Providers")],
-    ["01", L("Identidad y KYB", "Identity & KYB"), L("RFC, poderes, beneficiario controlador, identificaciones", "Tax ID, powers of attorney, beneficial owner, identifications"), "Completo", L("NSD + Otorgantes", "NSD + Funding Providers")],
-    ["02", L("Corporativo Legal", "Corporate Legal"), L("Actas, estatutos, estructura, autorizaciones", "Bylaws, articles, structure, authorizations"), "En revision", "NSD"],
-    ["03", L("Financiero", "Financial"), L("Estados financieros, flujo, deuda, ingresos", "Financial statements, cash flow, debt, revenue"), "Faltantes", L("NSD + Otorgantes", "NSD + Funding Providers")],
+    ["01", L("Identidad y KYB", "Identity & KYB"), L("RFC, poderes, beneficiario controlador, identificaciones", "Tax ID, powers of attorney, beneficial owner, identifications"), "Completo", L("NEXUS + Otorgantes", "NEXUS + Funding Providers")],
+    ["02", L("Corporativo Legal", "Corporate Legal"), L("Actas, estatutos, estructura, autorizaciones", "Bylaws, articles, structure, authorizations"), "En revision", "NEXUS"],
+    ["03", L("Financiero", "Financial"), L("Estados financieros, flujo, deuda, ingresos", "Financial statements, cash flow, debt, revenue"), "Faltantes", L("NEXUS + Otorgantes", "NEXUS + Funding Providers")],
     ["04", L("Proyecto", "Project"), L("Plan, presupuesto, hitos, contratos, soporte operativo", "Plan, budget, milestones, contracts, operational support"), "En revision", L("Otorgantes", "Funding Providers")],
-    ["05", L("Cumplimiento", "Compliance"), L("Declaraciones, antifraude, PLD/KYC, listas internas", "Declarations, anti-fraud, AML/KYC, internal screening lists"), "Completo", "NSD"],
+    ["05", L("Cumplimiento", "Compliance"), L("Declaraciones, antifraude, PLD/KYC, listas internas", "Declarations, anti-fraud, AML/KYC, internal screening lists"), "Completo", "NEXUS"],
     ["06", L("Comite", "Committee"), L("Memo, condiciones, term sheet, observaciones", "Memo, terms, term sheet, observations"), "Pendiente", L("Otorgantes", "Funding Providers")],
   ];
 
@@ -27,7 +27,7 @@ export default function DataRoomIndexTab() {
 
   const infoCards = [
     [L("Control de versiones", "Version Control"), L("Cada documento debe conservar fecha, propietario, estado y sustitucion.", "Each document must retain date, owner, status and replacement history.")],
-    [L("Permisos por rol", "Permissions by Role"), L("El solicitante carga, NSD revisa y el otorgante ve solo lo autorizado.", "The applicant uploads, NSD reviews, and the funding provider only sees authorized items.")],
+    [L("Permisos por rol", "Permissions by Role"), L("El solicitante carga, NEXUS revisa y el otorgante ve solo lo autorizado.", "The applicant uploads, NEXUS reviews, and the funding provider only sees authorized items.")],
     [L("Evidencia para comite", "Evidence for Committee"), L("El data room debe alimentar memo, score y checklist de decision.", "The data room must populate the memo, score, and decision checklist.")],
   ];
 
@@ -48,8 +48,8 @@ export default function DataRoomIndexTab() {
         </h1>
         <p style={{ margin: 0, maxWidth: "820px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(
-            "Esta estructura ayuda a solicitantes, NSD IF y otorgantes a revisar el mismo expediente sin perder trazabilidad, permisos ni version documental.",
-            "This structure helps applicants, NSD IF and funders review the same file without losing traceability, permissions or document versioning."
+            "Esta estructura ayuda a solicitantes, NEXUS y otorgantes a revisar el mismo expediente sin perder trazabilidad, permisos ni version documental.",
+            "This structure helps applicants, NEXUS and funders review the same file without losing traceability, permissions or document versioning."
           )}
         </p>
       </section>

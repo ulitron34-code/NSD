@@ -1,7 +1,7 @@
 import { COLORS } from "../utils/constants";
 
 // ============================================
-// NSD PLATFORM - REALISTIC DEMO DATA
+// NEXUS PLATFORM - REALISTIC DEMO DATA
 // Data that impresses investors
 // ============================================
 
@@ -248,8 +248,8 @@ export const demoUsers = {
   admin: {
     id: "user-003",
     email: "admin@nsd.com",
-    name: "Admin NSD",
-    company: "NSD Platform",
+    name: "Admin NEXUS",
+    company: "NEXUS Platform",
     role: "administrador",
     avatar: "AN",
     usersManaged: 156,

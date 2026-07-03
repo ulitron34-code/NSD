@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - LOADING SKELETON COMPONENTS
+// NEXUS PLATFORM - LOADING SKELETON COMPONENTS
 // Beautiful skeleton loaders for better UX
 // ============================================
 

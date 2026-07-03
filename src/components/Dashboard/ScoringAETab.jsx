@@ -49,8 +49,8 @@ export default function ScoringAETab() {
         </h1>
         <p style={{ margin: 0, maxWidth: "820px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(
-            "La escala A-E traduce revision documental, riesgo y completitud en una lectura simple para solicitantes, NSD IF y otorgantes. No sustituye aprobacion crediticia.",
-            "The A-E scale translates document review, risk and completeness into a simple readout for applicants, NSD IF and funders. It does not replace credit approval."
+            "La escala A-E traduce revision documental, riesgo y completitud en una lectura simple para solicitantes, NEXUS y otorgantes. No sustituye aprobacion crediticia.",
+            "The A-E scale translates document review, risk and completeness into a simple readout for applicants, NEXUS and funders. It does not replace credit approval."
           )}
         </p>
       </section>

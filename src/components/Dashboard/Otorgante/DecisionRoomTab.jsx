@@ -43,7 +43,7 @@ function buildDecision(opportunity, L, copy) {
     label: L("Pausar y subsanar", "Pause and remediate"),
     tone: "#C62828",
     detail: copy("No conviene llevarlo a comite hasta cerrar brechas documentales, KYB, riesgo o uso de fondos."),
-    nextAction: L("Mantener contacto controlado por NSD y pedir paquete documental minimo.", "Keep contact controlled by NSD and request minimum document package."),
+    nextAction: L("Mantener contacto controlado por NEXUS y pedir paquete documental minimo.", "Keep contact controlled by NEXUS and request minimum document package."),
   };
 }
 
@@ -59,7 +59,7 @@ function buildGateRows(opportunity, L) {
   return [
     [L("Acceso autorizado", "Authorized access"), hasShare, L("Data room compartido, invitacion aceptada o acceso institucional trazable.", "Shared data room, accepted invitation or traceable institutional access.")],
     [L("Evidencia suficiente", "Sufficient evidence"), docs >= 5, `${docs} ${L("documentos visibles para revision.", "documents visible for review.")}`],
-    [L("Score minimo", "Minimum score"), score >= 65, `${score}/100 ${L("como lectura preliminar NSD.", "as NSD preliminary read.")}`],
+    [L("Score minimo", "Minimum score"), score >= 65, `${score}/100 ${L("como lectura preliminar NEXUS.", "as NEXUS preliminary read.")}`],
     [L("Interes registrado", "Registered interest"), hasInterest, L("La entidad puede documentar apetito o decision interna.", "The institution can document appetite or internal decision.")],
     [L("Contacto controlado", "Controlled contact"), contactApproved, L("Solo se habilita al cerrar gates y autorizacion.", "Enabled only after gates and authorization.")],
   ];

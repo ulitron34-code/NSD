@@ -160,7 +160,7 @@ function buildForensicMemo(opportunity, findings, verdict, custodyEvents, L, cop
   if (!opportunity) return "";
 
   return [
-    `# ${L("Analisis forense preliminar NSD", "NSD Preliminary Forensic Analysis")}`,
+    `# ${L("Analisis forense preliminar NEXUS", "NEXUS Preliminary Forensic Analysis")}`,
     "",
     `- ${L("Expediente", "File")}: ${opportunity.id}`,
     `- ${L("Proyecto", "Project")}: ${copy(opportunity.name)}`,

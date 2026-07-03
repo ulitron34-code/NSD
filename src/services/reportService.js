@@ -350,7 +350,7 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
     </div>
 
     <div class="footer">
-      <p>Este reporte fue generado automáticamente por el sistema NSD.</p>
+      <p>Este reporte fue generado automáticamente por el sistema NEXUS.</p>
       <p>Para más información, contacte al administrador de cumplimiento.</p>
     </div>
   </div>

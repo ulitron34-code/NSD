@@ -81,7 +81,7 @@ export default function SignupComponent() {
           Crear cuenta
         </h1>
         <p style={{ color: COLORS.textMuted, textAlign: "center", marginBottom: "2rem", fontSize: "0.95rem" }}>
-          Unete a NSDU Platform y prueba los modulos de solicitante, otorgante o administracion.
+          Unete a NEXUS Platform y prueba los modulos de solicitante, otorgante o administracion.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -93,7 +93,7 @@ export default function SignupComponent() {
               {[
                 { value: "solicitante", label: "Solicitante" },
                 { value: "otorgante", label: "Otorgante" },
-                { value: "analista", label: "NSDU" },
+                { value: "analista", label: "NEXUS" },
               ].map((option) => (
                 <label key={option.value} style={{
                   display: "flex",
@@ -151,7 +151,7 @@ export default function SignupComponent() {
                 <a href="/privacy" target="_blank" style={{ color: COLORS.gold, fontWeight: 700 }}>
                   Aviso de Privacidad
                 </a>{" "}
-                de NSDU International Finance y consiento el tratamiento de mis datos personales conforme a la{" "}
+                de NEXUS Secure Due-Diligence Unit y consiento el tratamiento de mis datos personales conforme a la{" "}
                 <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong>.
               </span>
             </label>

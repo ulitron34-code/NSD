@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - ERROR BOUNDARY COMPONENT
+// NEXUS PLATFORM - ERROR BOUNDARY COMPONENT
 // Catches React errors and displays fallback UI
 // ============================================
 

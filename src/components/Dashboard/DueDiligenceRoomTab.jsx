@@ -11,7 +11,7 @@ const readinessBlocks = [
     score: "82%",
     points: [
       "Pagina publica SaaS con narrativa de cumplimiento, otorgantes, solicitantes e internacional.",
-      "Dashboard demo con tres perfiles: solicitante, otorgante y NSD Admin.",
+      "Dashboard demo con tres perfiles: solicitante, otorgante y NEXUS Admin.",
       "Flujo de expediente, carga documental, data room y revision con IA simulado/operativo.",
     ],
   },
@@ -57,7 +57,7 @@ const evidenceItems = [
 ];
 
 const investorRisks = [
-  ["Regulatorio", "Aclarar que NSD IF no sustituye dictamen legal, regulatorio ni decision crediticia."],
+  ["Regulatorio", "Aclarar que NEXUS no sustituye dictamen legal, regulatorio ni decision crediticia."],
   ["Datos sensibles", "Fortalecer consentimiento, auditoria, retencion documental y politicas de acceso."],
   ["Dependencia IA", "Mantener revision asistida y explicable; evitar decisiones automaticas opacas."],
   ["Adopcion otorgantes", "Validar con pilotos pequenos antes de escalar equipo comercial."],

@@ -145,7 +145,7 @@ export default function DashboardPage() {
         { id: "cumplimiento", label: L("Cumplimiento", "Compliance"), icon: "CUM" },
         { id: "mensajeria", label: L("Mensajeria", "Messaging"), icon: "MSG" },
         { id: "matches", label: L("Instituciones Compatibles", "Compatible Institutions"), icon: "FI" },
-        { id: "mis_proyectos", label: L("Servicios", "Services"), icon: "NSD" },
+        { id: "mis_proyectos", label: L("Servicios", "Services"), icon: "NEXUS" },
         { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
       ];
     }
@@ -493,7 +493,7 @@ export default function DashboardPage() {
             {user?.email?.[0]?.toUpperCase() || "U"}
           </div>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NSDU Admin"}
+            {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NEXUS Admin"}
           </p>
           <p style={{ color: "white", fontWeight: 600, fontSize: "0.82rem", wordBreak: "break-word" }}>{user?.email}</p>
         </div>
@@ -543,7 +543,7 @@ export default function DashboardPage() {
             {[
               ["solicitante", L("Solicitante", "Applicant")],
               ["otorgante", L("Otorgante", "Funding Provider")],
-              ["nsd_admin", "NSDU Admin"],
+              ["nsd_admin", "NEXUS Admin"],
             ].map(([mode, label]) => (
               <button
                 key={mode}

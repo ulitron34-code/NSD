@@ -435,7 +435,7 @@ export default function SubirProyectoTab() {
             <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800 }}>{copy("Antes de compartir con otorgantes")}</p>
             <h2 style={{ color: COLORS.navy, fontSize: "1.2rem" }}>{copy("Checklist de preparacion institucional")}</h2>
           </div>
-          <button onClick={() => addNotification("Checklist listo para prevalidacion NSD", "success")} style={{ padding: "0.75rem 1rem", borderRadius: "6px", border: "none", background: COLORS.gold, color: COLORS.navy, fontWeight: 900, cursor: "pointer" }}>
+          <button onClick={() => addNotification("Checklist listo para prevalidacion NEXUS", "success")} style={{ padding: "0.75rem 1rem", borderRadius: "6px", border: "none", background: COLORS.gold, color: COLORS.navy, fontWeight: 900, cursor: "pointer" }}>
             {copy("Solicitar prevalidacion")}
           </button>
         </div>

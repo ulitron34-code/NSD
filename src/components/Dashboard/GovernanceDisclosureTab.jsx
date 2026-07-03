@@ -49,7 +49,7 @@ export default function GovernanceDisclosureTab() {
           {L("Gobernanza y limites", "Governance and limits")}
         </p>
         <h1 style={{ margin: "0.35rem 0", color: COLORS.white, fontSize: "1.55rem" }}>
-          {L("Como presentar NSD IF sin sobrerregular ni sobreprometer", "How to present NSD IF without overpromising")}
+          {L("Como presentar NEXUS sin sobrerregular ni sobreprometer", "How to present NEXUS without overpromising")}
         </h1>
         <p style={{ margin: 0, maxWidth: "820px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(

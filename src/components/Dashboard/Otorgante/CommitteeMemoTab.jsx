@@ -128,8 +128,8 @@ export default function CommitteeMemoTab() {
           </h2>
           <p style={{ margin: 0, color: "rgba(255,255,255,0.76)", fontSize: "0.86rem", lineHeight: 1.55 }}>
             {L(
-              "El expediente puede avanzar a conversacion con el solicitante si se cierran los faltantes amarillos y se confirma la fuente de repago. NSD IF no aprueba credito; organiza evidencia para la decision del otorgante.",
-              "The file may move to applicant conversation if yellow gaps are closed and repayment source is confirmed. NSD IF does not approve credit; it organizes evidence for the funder's decision."
+              "El expediente puede avanzar a conversacion con el solicitante si se cierran los faltantes amarillos y se confirma la fuente de repago. NEXUS no aprueba credito; organiza evidencia para la decision del otorgante.",
+              "The file may move to applicant conversation if yellow gaps are closed and repayment source is confirmed. NEXUS does not approve credit; it organizes evidence for the funder's decision."
             )}
           </p>
         </aside>

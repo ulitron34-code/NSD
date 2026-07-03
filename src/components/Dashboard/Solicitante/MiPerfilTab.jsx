@@ -37,7 +37,7 @@ export default function MiPerfilTab() {
   const readinessGrade = {
     grade: "B+",
     label: "Compartible con condiciones",
-    detail: "El expediente puede avanzar a prevalidacion NSD, pero conviene cerrar documentos bloqueantes antes de abrirlo a otorgantes."
+    detail: "El expediente puede avanzar a prevalidacion NEXUS, pero conviene cerrar documentos bloqueantes antes de abrirlo a otorgantes."
   };
 
   const sharePackage = [
@@ -80,7 +80,7 @@ export default function MiPerfilTab() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
         <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
-          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>NSD Readiness Score</h2>
+          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>NEXUS Readiness Score</h2>
           <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
             <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: COLORS.greenBg, color: COLORS.green, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700 }}>
               85
@@ -146,8 +146,8 @@ export default function MiPerfilTab() {
               <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.82rem", lineHeight: 1.45 }}>{copy(readinessGrade.detail)}</p>
             </div>
           </div>
-          <button onClick={() => addNotification(L("Paquete enviado a prevalidación NSD", "Package sent to NSD pre-validation"), "success")} style={{ width: "100%", padding: "0.75rem", border: "none", borderRadius: "6px", background: COLORS.gold, color: COLORS.navy, fontWeight: 900, cursor: "pointer" }}>
-            {L("Enviar a prevalidación NSD", "Send to NSD Pre-Validation")}
+          <button onClick={() => addNotification(L("Paquete enviado a prevalidación NEXUS", "Package sent to NEXUS pre-validation"), "success")} style={{ width: "100%", padding: "0.75rem", border: "none", borderRadius: "6px", background: COLORS.gold, color: COLORS.navy, fontWeight: 900, cursor: "pointer" }}>
+            {L("Enviar a prevalidación NEXUS", "Send to NEXUS Pre-Validation")}
           </button>
         </div>
 

@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - ANALYTICS DASHBOARD COMPONENT
+// NEXUS PLATFORM - ANALYTICS DASHBOARD COMPONENT
 // Enhanced metrics and KPIs for admin dashboard
 // ============================================
 

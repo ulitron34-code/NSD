@@ -48,7 +48,7 @@ export default function FundingReadinessTab() {
 
   const financingSteps = [
     ["1", L("Preparar expediente", "Prepare File"), L("Completar documentos base y datos del proyecto.", "Complete base documents and project details.")],
-    ["2", L("Revision IA / NSD", "AI / NSD Review"), L("Detectar faltantes, score, riesgos y memo ejecutivo.", "Detect gaps, score, risks and executive memo.")],
+    ["2", L("Revision IA / NEXUS", "AI / NEXUS Review"), L("Detectar faltantes, score, riesgos y memo ejecutivo.", "Detect gaps, score, risks and executive memo.")],
     ["3", L("Liberar data room", "Release Data Room"), L("Compartir expediente con otorgantes compatibles.", "Share file with compatible funding providers.")],
     ["4", L("Atender requerimientos", "Address Requests"), L("Responder solicitudes y sustituir documentos vencidos.", "Respond to requests and replace expired documents.")],
     ["5", L("Comite / term sheet", "Committee / Term Sheet"), L("Llegar con evidencia ordenada para decision del otorgante.", "Arrive with organized evidence for funding provider decision.")],
@@ -107,8 +107,8 @@ export default function FundingReadinessTab() {
         </h1>
         <p style={{ margin: 0, maxWidth: "820px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(
-            "NSD IF organiza documentos, revisa faltantes, prioriza riesgos y prepara una lectura institucional para que el solicitante llegue mejor armado a una entidad financiera.",
-            "NSD IF organizes documents, reviews gaps, prioritizes risks and prepares an institutional readout so the applicant reaches a financial institution better prepared."
+            "NEXUS organiza documentos, revisa faltantes, prioriza riesgos y prepara una lectura institucional para que el solicitante llegue mejor armado a una entidad financiera.",
+            "NEXUS organizes documents, reviews gaps, prioritizes risks and prepares an institutional readout so the applicant reaches a financial institution better prepared."
           )}
         </p>
       </section>

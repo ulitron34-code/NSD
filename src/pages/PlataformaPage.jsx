@@ -4,22 +4,22 @@ import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
 
 const MODULES = [
-  { id: "onboarding",    name: "NSD Global Onboarding",        desc: "Incorporación digital, consentimiento, cuestionarios dinámicos, carga documental, recordatorios y estatus por país, tipo de persona, producto y riesgo.", status: "disponible" },
-  { id: "kyc",          name: "NSD Identity – KYC",            desc: "Identificación de personas, documentos oficiales, domicilio, residencia fiscal, actividad, representación y evidencias.", status: "disponible" },
-  { id: "kyb",          name: "NSD Business – KYB",            desc: "Verificación de empresas, constitución, registros, licencias, accionistas, administradores, representantes y situación corporativa.", status: "disponible" },
-  { id: "ownership",    name: "NSD Ownership",                 desc: "Mapeo de beneficiarios finales, control directo o indirecto, cadenas de propiedad, fideicomisos y relaciones entre entidades.", status: "disponible" },
-  { id: "tax",          name: "NSD Tax & Corporate",           desc: "Captura, validación y comparación de identificadores fiscales y corporativos según la jurisdicción.", status: "disponible" },
-  { id: "screening",    name: "NSD Screening",                 desc: "Sanciones, PEP, listas internas, jurisdicciones, noticias adversas y alertas reputacionales mediante fuentes autorizadas incluyendo OFAC.", status: "disponible" },
-  { id: "docai",        name: "NSD Document AI",               desc: "Clasificación, extracción, vigencia, integridad, comparación y detección de inconsistencias en documentos.", status: "disponible" },
-  { id: "risk",         name: "NSD Risk Engine",               desc: "Matrices, reglas, factores, ponderaciones, excepciones, niveles de riesgo y explicación de resultados.", status: "disponible" },
-  { id: "cases",        name: "NSD Case Manager",              desc: "Bandejas, asignaciones, comentarios, solicitudes de aclaración, escalamiento, SLA, dictámenes y aprobaciones.", status: "disponible" },
-  { id: "monitoring",   name: "NSD Monitoring",                desc: "Vencimientos, revisiones periódicas, cambios corporativos, re-screening, eventos y actualización del expediente.", status: "disponible" },
-  { id: "transaction",  name: "NSD Transaction Oversight",     desc: "Reglas y alertas sobre comportamiento u operaciones cuando existan datos e integraciones disponibles.", status: "disponible" },
-  { id: "credit",       name: "NSD Credit Review",             desc: "Análisis de estados financieros, capacidad de pago, deuda, garantías, contratos y preparación del expediente para la decisión del cliente.", status: "disponible" },
-  { id: "investor",     name: "NSD Investor Due Diligence",    desc: "Revisión de promotores, empresas, fondos, coinversionistas, origen de recursos, riesgos y data room.", status: "disponible" },
-  { id: "regulatory",   name: "NSD Regulatory Workspace",      desc: "Expedientes, evidencias, reportes y flujos configurables para responsables, auditores y supervisores.", status: "disponible" },
-  { id: "audit",        name: "NSD Audit & Governance",        desc: "Bitácora, control de versiones, segregación de funciones, evidencia de reglas y trazabilidad de decisiones.", status: "disponible" },
-  { id: "connect",      name: "NSD Connect",                   desc: "API, webhooks e integraciones con registros, proveedores de identidad, listas, firma, CRM, core y almacenamiento.", status: "disponible" },
+  { id: "onboarding",    name: "NEXUS Global Onboarding",        desc: "Incorporación digital, consentimiento, cuestionarios dinámicos, carga documental, recordatorios y estatus por país, tipo de persona, producto y riesgo.", status: "disponible" },
+  { id: "kyc",          name: "NEXUS Identity – KYC",            desc: "Identificación de personas, documentos oficiales, domicilio, residencia fiscal, actividad, representación y evidencias.", status: "disponible" },
+  { id: "kyb",          name: "NEXUS Business – KYB",            desc: "Verificación de empresas, constitución, registros, licencias, accionistas, administradores, representantes y situación corporativa.", status: "disponible" },
+  { id: "ownership",    name: "NEXUS Ownership",                 desc: "Mapeo de beneficiarios finales, control directo o indirecto, cadenas de propiedad, fideicomisos y relaciones entre entidades.", status: "disponible" },
+  { id: "tax",          name: "NEXUS Tax & Corporate",           desc: "Captura, validación y comparación de identificadores fiscales y corporativos según la jurisdicción.", status: "disponible" },
+  { id: "screening",    name: "NEXUS Screening",                 desc: "Sanciones, PEP, listas internas, jurisdicciones, noticias adversas y alertas reputacionales mediante fuentes autorizadas incluyendo OFAC.", status: "disponible" },
+  { id: "docai",        name: "NEXUS Document AI",               desc: "Clasificación, extracción, vigencia, integridad, comparación y detección de inconsistencias en documentos.", status: "disponible" },
+  { id: "risk",         name: "NEXUS Risk Engine",               desc: "Matrices, reglas, factores, ponderaciones, excepciones, niveles de riesgo y explicación de resultados.", status: "disponible" },
+  { id: "cases",        name: "NEXUS Case Manager",              desc: "Bandejas, asignaciones, comentarios, solicitudes de aclaración, escalamiento, SLA, dictámenes y aprobaciones.", status: "disponible" },
+  { id: "monitoring",   name: "NEXUS Monitoring",                desc: "Vencimientos, revisiones periódicas, cambios corporativos, re-screening, eventos y actualización del expediente.", status: "disponible" },
+  { id: "transaction",  name: "NEXUS Transaction Oversight",     desc: "Reglas y alertas sobre comportamiento u operaciones cuando existan datos e integraciones disponibles.", status: "disponible" },
+  { id: "credit",       name: "NEXUS Credit Review",             desc: "Análisis de estados financieros, capacidad de pago, deuda, garantías, contratos y preparación del expediente para la decisión del cliente.", status: "disponible" },
+  { id: "investor",     name: "NEXUS Investor Due Diligence",    desc: "Revisión de promotores, empresas, fondos, coinversionistas, origen de recursos, riesgos y data room.", status: "disponible" },
+  { id: "regulatory",   name: "NEXUS Regulatory Workspace",      desc: "Expedientes, evidencias, reportes y flujos configurables para responsables, auditores y supervisores.", status: "disponible" },
+  { id: "audit",        name: "NEXUS Audit & Governance",        desc: "Bitácora, control de versiones, segregación de funciones, evidencia de reglas y trazabilidad de decisiones.", status: "disponible" },
+  { id: "connect",      name: "NEXUS Connect",                   desc: "API, webhooks e integraciones con registros, proveedores de identidad, listas, firma, CRM, core y almacenamiento.", status: "disponible" },
 ];
 
 const STATUS_COLORS = {
@@ -42,7 +42,7 @@ export default function PlataformaPage() {
         }}
       >
         <p style={{ color: COLORS.gold, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem" }}>
-          NSD GLOBAL COMPLIANCE PLATFORM
+          NEXUS SECURE DUE-DILIGENCE UNIT
         </p>
         <h1 style={{ color: "#fff", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, lineHeight: 1.2, maxWidth: "700px", margin: "0 auto 1.25rem" }}>
           Una plataforma. Dieciséis módulos. Un expediente institucional.

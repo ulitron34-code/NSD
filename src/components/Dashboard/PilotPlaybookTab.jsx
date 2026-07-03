@@ -6,7 +6,7 @@ import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const pilotTimeline = [
   ["Semana 1", "Setup", "Configurar perfiles, cargar matriz documental, seleccionar 10 expedientes y definir responsables."],
-  ["Semana 2", "Carga y revision", "Solicitantes suben evidencia; NSD ejecuta checklist, IA, score y plan de subsanacion."],
+  ["Semana 2", "Carga y revision", "Solicitantes suben evidencia; NEXUS ejecuta checklist, IA, score y plan de subsanacion."],
   ["Semana 3", "Otorgante", "La entidad revisa data rooms, pide informacion y registra interes o descarte razonado."],
   ["Semana 4", "Cierre", "Medir tiempos, faltantes, conversion, friccion, satisfaccion y posibles ingresos."],
 ];
@@ -15,13 +15,13 @@ const successMetrics = [
   ["Tiempo de primera revision", "Meta: -40%", "Reducir dias entre expediente recibido y primera lectura util."],
   ["Faltantes detectados", "Meta: 90%+", "Detectar requisitos criticos antes de enviar al otorgante."],
   ["Interes institucional", "Meta: 20%", "Medir cuantos expedientes generan interes o solicitud adicional."],
-  ["Ingresos piloto", "Meta: 1-3 tickets", "Validar fee por expediente o servicios NSD IF pagados."],
+  ["Ingresos piloto", "Meta: 1-3 tickets", "Validar fee por expediente o servicios NEXUS pagados."],
   ["Retencion de entidad", "Meta: 1 renovacion", "Lograr que el otorgante quiera procesar otro lote."],
 ];
 
 const pilotRoles = [
   ["Solicitante", "Carga proyecto, documentos, uso de fondos y responde requerimientos."],
-  ["NSD IF", "Estructura expediente, revisa con IA, genera score, memo y plan de subsanacion."],
+  ["NEXUS", "Estructura expediente, revisa con IA, genera score, memo y plan de subsanacion."],
   ["Otorgante", "Revisa data room, solicita informacion, registra interes y retroalimenta criterios."],
   ["Admin", "Controla trazabilidad, metricas, actividad, conversion y aprendizajes del piloto."],
 ];
@@ -48,7 +48,7 @@ export default function PilotPlaybookTab() {
           {L("Un piloto de 30 dias para convertir la demo en evidencia.", "A 30-day pilot to turn the demo into evidence.")}
         </h1>
         <p style={{ color: COLORS.textMuted, maxWidth: "900px", lineHeight: 1.7 }}>
-          {L("Esta vista define como validar NSD con una entidad financiera o aliado: participantes, calendario, metricas, entregables y criterios de exito.", "This view defines how to validate NSD with a financial institution or partner: participants, timeline, metrics, deliverables and success criteria.")}
+          {L("Esta vista define como validar NEXUS con una entidad financiera o aliado: participantes, calendario, metricas, entregables y criterios de exito.", "This view defines how to validate NEXUS with a financial institution or partner: participants, timeline, metrics, deliverables and success criteria.")}
         </p>
       </section>
 

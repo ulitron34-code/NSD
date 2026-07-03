@@ -72,7 +72,7 @@ export default function ComplianceReadinessPanel({ scoring, shareReadiness, load
             {loading ? "Evaluando expediente..." : config.title}
           </p>
           <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.3rem" }}>
-            {shareReadiness?.nextAction || "NSD revisa documentos, observaciones IA, matriz y publicabilidad institucional."}
+            {shareReadiness?.nextAction || "NEXUS revisa documentos, observaciones IA, matriz y publicabilidad institucional."}
           </p>
         </div>
         <span style={{

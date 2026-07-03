@@ -6,17 +6,17 @@ import { uiText, translateCopy } from "../../utils/runtimeCopy";
 
 const events = [
   ["09:12", "Solicitante", "Cargo estados financieros 2025", "Documento", "Registrado"],
-  ["09:18", "IA NSD", "Detecto faltante de flujo proyectado", "Revision", "Atencion"],
-  ["09:24", "NSD Analyst", "Marco expediente como B+ preliminar", "Scoring", "Registrado"],
+  ["09:18", "IA NEXUS", "Detecto faltante de flujo proyectado", "Revision", "Atencion"],
+  ["09:24", "NEXUS Analyst", "Marco expediente como B+ preliminar", "Scoring", "Registrado"],
   ["09:31", "Otorgante", "Abrio data room compartido", "Acceso", "Registrado"],
   ["09:36", "Otorgante", "Solicito soporte de fuente de repago", "Requerimiento", "Pendiente"],
-  ["09:42", "NSD Admin", "Genero memo para comite", "Comite", "Registrado"],
+  ["09:42", "NEXUS Admin", "Genero memo para comite", "Comite", "Registrado"],
 ];
 
 const controls = [
   ["Auditoria", "Eventos clave con usuario, hora, tipo y resultado."],
   ["Evidencia", "Cada accion relevante debe apuntar a documento, expediente o requerimiento."],
-  ["Permisos", "Las vistas dependen del rol: solicitante, otorgante, NSD Admin."],
+  ["Permisos", "Las vistas dependen del rol: solicitante, otorgante, NEXUS Admin."],
   ["Privacidad", "Biometricos y datos sensibles requieren consentimiento y proveedor especializado."],
 ];
 

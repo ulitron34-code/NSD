@@ -64,7 +64,7 @@ const MODALIDADES = [
     nombre: "Cumplimiento Administrado",
     descriptor: "Acompañamiento profesional para integración, operación y remediación",
     capacidades: [
-      "Configuración inicial asistida por especialistas NSD",
+      "Configuración inicial asistida por especialistas NEXUS",
       "Revisión de expedientes y apoyo en remediación",
       "Capacitación del equipo responsable",
       "Soporte operativo continuo según contrato",

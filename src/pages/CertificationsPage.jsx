@@ -16,7 +16,7 @@ export default function CertificationsPage() {
           Certificaciones y Cumplimiento
         </h1>
         <p style={{color: COLORS.textMuted, marginBottom: "3rem", fontSize: "1.1rem"}}>
-          NSD cumple con los más altos estándares internacionales de seguridad y privacidad.
+          NEXUS cumple con los más altos estándares internacionales de seguridad y privacidad.
         </p>
 
         {/* Certifications */}

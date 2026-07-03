@@ -10,7 +10,7 @@ export default function BusinessModelSection() {
   const streams = [
     ["SaaS B2B", "Suscripcion para entidades que requieren pipeline, expedientes, roles, auditoria y data room.", "Recurring software revenue for institutions."],
     ["Fee por expediente", "Cobro por preparacion, checklist, score, revision documental y data room por caso.", "Transaction revenue per reviewed file."],
-    ["Servicios NSD IF", "Business plan, analisis financiero, pitch deck, memo de comite y preparacion para fondeo.", "Professional services attached to the platform."],
+    ["Servicios NEXUS", "Business plan, analisis financiero, pitch deck, memo de comite y preparacion para fondeo.", "Professional services attached to the platform."],
     ["Modulos premium", "Biometria, OCR, antifraude, KYB, integraciones, monitoreo y reportes avanzados.", "Higher-margin add-ons as adoption grows."],
   ];
 
@@ -25,7 +25,7 @@ export default function BusinessModelSection() {
             {L("Una plataforma con ingresos SaaS, expediente y servicios de alto valor.", "A platform with SaaS, file-based and high-value services revenue.")}
           </h2>
           <p style={{ color: "rgba(255,255,255,0.74)", lineHeight: 1.75, fontSize: "0.98rem" }}>
-            {L("La tesis de startup no depende de un solo cobro. NSD puede capturar valor cuando prepara al solicitante, cuando el otorgante revisa oportunidades y cuando se agregan modulos avanzados de cumplimiento.", "The startup thesis does not depend on a single fee. NSD can capture value when it prepares the applicant, when the funder reviews opportunities and when advanced compliance modules are added.")}
+            {L("La tesis de startup no depende de un solo cobro. NEXUS puede capturar valor cuando prepara al solicitante, cuando el otorgante revisa oportunidades y cuando se agregan modulos avanzados de cumplimiento.", "The startup thesis does not depend on a single fee. NEXUS can capture value when it prepares the applicant, when the funder reviews opportunities and when advanced compliance modules are added.")}
           </p>
         </div>
 

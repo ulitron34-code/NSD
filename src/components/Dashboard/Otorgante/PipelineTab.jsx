@@ -27,7 +27,7 @@ const dataRoomFolders = [
   "05 Tecnico",
   "06 Garantias",
   "08 Compliance",
-  "09 Reportes NSD",
+  "09 Reportes NEXUS",
   "10 Observaciones",
 ];
 
@@ -87,11 +87,11 @@ function buildGateStatus(selected, interestStatus, aiReview, copy = (value) => v
       complete: contactReady,
       requestable: contactPrerequisitesReady,
       detail: contactReady
-        ? copy("Contacto aprobado por solicitante/NSD.")
+        ? copy("Contacto aprobado por solicitante/NEXUS.")
         : contactStatus === "requested"
-          ? copy("Solicitud enviada; pendiente de autorizacion del solicitante/NSD.")
+          ? copy("Solicitud enviada; pendiente de autorizacion del solicitante/NEXUS.")
           : contactPrerequisitesReady
-            ? copy("Listo para solicitar contacto formal con trazabilidad NSD.")
+            ? copy("Listo para solicitar contacto formal con trazabilidad NEXUS.")
             : copy("Bloqueado hasta cerrar NDA, usuario y revision.")
     }
   ];
@@ -151,8 +151,8 @@ function buildExecutiveBrief(selected, aiReview, infoRequests, copy = (value) =>
       : copy("Requiere fortalecimiento antes de comite.");
 
   return [
-    [copy("Tesis NSD"), selected.use || copy("Uso de fondos pendiente de confirmar")],
-    [copy("Solicitante"), selected.applicant || copy("Solicitante NSD")],
+    [copy("Tesis NEXUS"), selected.use || copy("Uso de fondos pendiente de confirmar")],
+    [copy("Solicitante"), selected.applicant || copy("Solicitante NEXUS")],
     [copy("Monto / ticket"), selected.amountLabel || copy("Por definir")],
     [copy("Score integral"), `${score}/100 - ${copy("Riesgo")} ${copy(selected.risk)}`],
     [copy("Riesgos visibles"), selected.risk === "Alto" ? copy("Riesgo alto: revisar alertas, faltantes y consistencia.") : copy("Sin alertas criticas en lectura preliminar.")],
@@ -183,7 +183,7 @@ function buildDecisionBoard(selected, aiReview, infoRequests, copy = (value) => 
       label: "Data room",
       value: selected.documentsCount || selected.documents?.length || 0,
       tone: COLORS.navy,
-      detail: copy("Documentos organizados por carpeta, acceso y trazabilidad NSD.")
+      detail: copy("Documentos organizados por carpeta, acceso y trazabilidad NEXUS.")
     },
     {
       label: "Pendientes",
@@ -299,7 +299,7 @@ function buildCommitteeMemo(selected, aiReview, infoRequests, interestStatus, in
       : "No pasar a comite hasta fortalecer expediente.";
 
   return [
-    "# Memo de comite NSD IF",
+    "# Memo de comite NEXUS",
     "",
     `- Expediente: ${selected.id}`,
     `- Proyecto: ${copy(selected.name)}`,
@@ -336,11 +336,11 @@ function buildCommitteeMemo(selected, aiReview, infoRequests, interestStatus, in
     ...(gateStatus || []).map((gate) => `- ${copy(gate.label)}: ${gate.complete ? "Completo" : "Pendiente"} - ${copy(gate.detail)}`),
     selected.contactRequest ? `- Solicitud de contacto: ${selected.contactRequest.status}` : "- Solicitud de contacto: No registrada",
     "",
-    "## Recomendacion NSD",
+    "## Recomendacion NEXUS",
     recommendation,
     "",
     "## Nota",
-    "NSD no autoriza credito ni sustituye el criterio del otorgante. Este memo organiza evidencia, riesgos y contexto para una decision institucional."
+    "NEXUS no autoriza credito ni sustituye el criterio del otorgante. Este memo organiza evidencia, riesgos y contexto para una decision institucional."
   ].join("\n");
 }
 
@@ -568,7 +568,7 @@ export default function PipelineTab() {
         status: "Revision preliminar lista",
         score: selected.averageScore,
         findings: [
-          "Analisis derivado del expediente disponible en NSD.",
+          "Analisis derivado del expediente disponible en NEXUS.",
           selected.risk === "Alto" ? "Riesgo elevado: requiere aclaraciones antes de comite." : "Expediente apto para revision ejecutiva inicial.",
           "Siguiente paso sugerido: validar soporte documental y generar memo de credito."
         ]
@@ -661,7 +661,7 @@ export default function PipelineTab() {
       return;
     }
 
-    const note = `[${new Date().toLocaleString("es-MX")}] Solicitud de contacto autorizado registrada para seguimiento NSD.`;
+    const note = `[${new Date().toLocaleString("es-MX")}] Solicitud de contacto autorizado registrada para seguimiento NEXUS.`;
 
     if (!user?.demo && selected && !String(selected.id).startsWith("demo-")) {
       try {
@@ -695,7 +695,7 @@ export default function PipelineTab() {
           {copy("Oportunidades verificadas y data rooms")}
         </h1>
         <p style={{ color: COLORS.textMuted, maxWidth: "820px", fontWeight: 300, fontSize: "0.95rem" }}>
-          {copy("Revisa expedientes preparados por NSD IF, con score financiero, cumplimiento, documentos clave y estado de negociacion.")}
+          {copy("Revisa expedientes preparados por NEXUS, con score financiero, cumplimiento, documentos clave y estado de negociacion.")}
         </p>
       </div>
 
@@ -1109,7 +1109,7 @@ export default function PipelineTab() {
                 ))}
               </div>
               <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45 }}>
-                {copy("NSD no autoriza credito. Presenta evidencia, score, alertas y contexto para que el otorgante aplique su politica interna.")}
+                {copy("NEXUS no autoriza credito. Presenta evidencia, score, alertas y contexto para que el otorgante aplique su politica interna.")}
               </p>
             </div>
 
@@ -1124,7 +1124,7 @@ export default function PipelineTab() {
                   </p>
                 </div>
                 <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.8rem", whiteSpace: "nowrap" }}>
-                  {copy("NSD IF")}
+                  {copy("NEXUS")}
                 </span>
               </div>
               <div style={{ display: "grid", gap: "0.5rem" }}>
@@ -1241,7 +1241,7 @@ export default function PipelineTab() {
             </div>
 
             <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: COLORS.bg }}>
-              <p style={{ color: COLORS.navy, fontWeight: 900, marginBottom: "0.65rem" }}>{copy("Pila de confianza NSD")}</p>
+              <p style={{ color: COLORS.navy, fontWeight: 900, marginBottom: "0.65rem" }}>{copy("Pila de confianza NEXUS")}</p>
               <div style={{ display: "grid", gap: "0.55rem" }}>
                 {trustStack.map(([label, detail]) => (
                   <div key={copy(label)} style={{ paddingLeft: "0.65rem", borderLeft: `3px solid ${COLORS.gold}` }}>
@@ -1460,7 +1460,7 @@ export default function PipelineTab() {
                 {copy("Paquete interno para decision del otorgante")}
               </p>
               <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45, marginBottom: "0.75rem" }}>
-                {copy("Resume tesis, score, riesgos, documentos clave, requerimientos abiertos y recomendacion NSD.")}
+                {copy("Resume tesis, score, riesgos, documentos clave, requerimientos abiertos y recomendacion NEXUS.")}
               </p>
               <button
                 type="button"

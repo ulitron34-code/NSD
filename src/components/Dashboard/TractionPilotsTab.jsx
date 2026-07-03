@@ -29,7 +29,7 @@ const evidenceSignals = [
 const nextExperiments = [
   ["Landing + demo", "Medir interes de entidades y solicitantes con CTA hacia demo guiada."],
   ["Piloto 30 dias", "Procesar 10 expedientes con un aliado y medir faltantes, tiempos y acciones."],
-  ["Pricing test", "Comparar fee por expediente vs. SaaS mensual + servicios NSD IF."],
+  ["Pricing test", "Comparar fee por expediente vs. SaaS mensual + servicios NEXUS."],
   ["Otorgante workflow", "Validar si data room, memo y requerimientos reducen tiempo de primera revision."],
 ];
 

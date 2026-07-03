@@ -14,14 +14,14 @@ const useOfFunds = [
 
 const milestones = [
   ["0-90 dias", "Piloto cerrado", "3 entidades, 20 expedientes, flujo solicitante-otorgante completo y data room funcional."],
-  ["90-180 dias", "MVP comercial", "Primeros ingresos por expedientes y servicios NSD IF; 2 modulos premium validados."],
+  ["90-180 dias", "MVP comercial", "Primeros ingresos por expedientes y servicios NEXUS; 2 modulos premium validados."],
   ["180-365 dias", "Traccion SaaS", "MRR inicial, repeticion por entidad, dashboard de administracion y auditoria robusta."],
   ["12-18 meses", "Expansion controlada", "Mexico consolidado, primeros casos USA y partners de integracion."],
 ];
 
 const dataRoomItems = [
   ["Pitch deck", "Pendiente final", "Narrativa, mercado, producto, modelo, equipo, ask y uso de fondos."],
-  ["Demo producto", "Listo local", "Landing, dashboard, solicitante, otorgante, NSD Admin y demo 10 min."],
+  ["Demo producto", "Listo local", "Landing, dashboard, solicitante, otorgante, NEXUS Admin y demo 10 min."],
   ["Modelo financiero", "Por preparar", "MRR, fee por expediente, servicios, CAC, margen, escenarios y runway."],
   ["Pilotos", "Por cerrar", "Cartas de interes, aliados, casos piloto y entidades objetivo."],
   ["Legal", "Base operativa", "Terminos, privacidad, consentimiento, disclaimers y revision legal pendiente."],

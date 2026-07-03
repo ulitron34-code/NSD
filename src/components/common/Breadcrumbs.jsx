@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - BREADCRUMBS COMPONENT
+// NEXUS PLATFORM - BREADCRUMBS COMPONENT
 // Navigation breadcrumbs for better UX
 // ============================================
 

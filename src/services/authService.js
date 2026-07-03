@@ -31,9 +31,9 @@ export function createDemoUsers() {
     {
       id: 'user-admin-001',
       email: 'admin@nsd.mx',
-      name: 'Admin NSD',
+      name: 'Admin NEXUS',
       role: ROLES.ADMIN,
-      company: 'NSD',
+      company: 'NEXUS',
     }
   ];
 }

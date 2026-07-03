@@ -132,7 +132,7 @@ export default function TransactionOversightTab() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <p style={{ fontSize: "0.72rem", opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.3rem" }}>
-              {L("Modulo F4 — NSD Global Compliance", "Module F4 — NSD Global Compliance")}
+              {L("Modulo F4 — NEXUS Global Compliance", "Module F4 — NEXUS Global Compliance")}
             </p>
             <h2 style={{ fontSize: "1.4rem", fontWeight: 800, margin: 0 }}>
               {L("Supervision de Transacciones", "Transaction Oversight")}

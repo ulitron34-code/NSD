@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - ERROR TRACKING SERVICE
+// NEXUS PLATFORM - ERROR TRACKING SERVICE
 // Sentry Integration for production monitoring
 // ============================================
 

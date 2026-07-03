@@ -1,5 +1,5 @@
 // ============================================
-// NSD PLATFORM - PRICING & SUBSCRIPTION SERVICE
+// NEXUS PLATFORM - PRICING & SUBSCRIPTION SERVICE
 // Stripe Integration for SaaS monetization
 // ============================================
 

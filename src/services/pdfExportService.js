@@ -291,7 +291,7 @@ export async function generateExpedientePDF(expediente, requirements, documents,
           </div>
 
           <div class="footer">
-            <p>Documento generado automáticamente por NSD Compliance Platform</p>
+            <p>Documento generado automáticamente por NEXUS Compliance Platform</p>
             <p>${new Date().toLocaleString('es-MX')}</p>
           </div>
         </body>

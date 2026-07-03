@@ -23,7 +23,7 @@ export const DOCUMENT_TYPES = {
   fiscal: "Informacion fiscal",
   garantias: "Garantias / colateral",
   proyecto: "Proyecto / narrativa ejecutiva",
-  reporte_nsd: "Reporte NSD",
+  reporte_nsd: "Reporte NEXUS",
   observaciones: "Observaciones / subsanaciones",
   otro: "Otro documento",
 };
