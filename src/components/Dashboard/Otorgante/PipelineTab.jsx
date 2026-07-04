@@ -11,6 +11,15 @@ import { useSelectedExpediente } from "../../../hooks/useSelectedExpediente";
 import { DOCUMENT_TYPES } from "../../../utils/institutional";
 import { buildInternationalReadiness } from "../../../utils/localization";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
+import { useRequisitosMinimos } from "../../../hooks/useRequisitosMinimos";
+import { pickLang } from "../../../data/requisitosMinimos";
+
+const REQUISITO_CATEGORIA_A_DOCUMENT_TYPE = {
+  documentacion: "corporativo_legal",
+  viabilidad: "proyecto",
+  financiero: "financiero",
+  impacto: "otro",
+};
 
 const riskColor = {
   Bajo: COLORS.green,
@@ -432,6 +441,7 @@ export default function PipelineTab() {
     };
   }, [user?.demo]);
 
+  const requisitosMinimos = useRequisitosMinimos(selected?.id);
   const analytics = useMemo(() => buildOtorganteAnalytics(opportunities), [opportunities]);
   const phase7Checklist = useMemo(() => buildPhase7Checklist(opportunities, copy), [opportunities, i18n.language]);
   const sectorOptions = useMemo(() => ["Todos", ...Array.from(new Set(opportunities.map((item) => item.sector).filter(Boolean)))], [opportunities]);
@@ -614,6 +624,16 @@ export default function PipelineTab() {
     } finally {
       setSavingRequest(false);
     }
+  };
+
+  const solicitarRequisitoFaltante = (item) => {
+    setRequestForm({
+      title: pickLang(item.label, i18n.language),
+      description: pickLang(item.detalle, i18n.language),
+      priority: item.critico ? "high" : "medium",
+      documentType: REQUISITO_CATEGORIA_A_DOCUMENT_TYPE[item.categoria] || "otro",
+    });
+    addNotification(copy("Formulario de requerimiento prellenado con el requisito faltante"), "success");
   };
 
   const openRequestEvidence = async (request) => {
@@ -1139,6 +1159,63 @@ export default function PipelineTab() {
                     </span>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "flex-start", marginBottom: "0.8rem" }}>
+                <div>
+                  <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.25rem" }}>
+                    {copy("Verificacion de 12 requisitos minimos")}
+                  </p>
+                  <p style={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.95rem", lineHeight: 1.35 }}>
+                    {copy("Lo que el solicitante ya declaro listo en su expediente.")}
+                  </p>
+                </div>
+                <span style={{
+                  color: requisitosMinimos.listoParaEnviar ? COLORS.green : "#C62828", fontWeight: 900, fontSize: "0.8rem", whiteSpace: "nowrap",
+                }}>
+                  {requisitosMinimos.completados}/{requisitosMinimos.total}
+                </span>
+              </div>
+              <div style={{ display: "grid", gap: "0.4rem" }}>
+                {requisitosMinimos.items.map((item) => {
+                  const verificado = item.estado === "listo";
+                  const faltaCritico = item.critico && !verificado;
+                  const statusLabel = verificado
+                    ? copy("Verificado")
+                    : faltaCritico
+                      ? copy("Falta")
+                      : copy("Incompleto");
+                  return (
+                    <div key={item.id} style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem",
+                      padding: "0.55rem 0.65rem", borderRadius: "6px",
+                      background: faltaCritico ? "rgba(198,40,40,0.05)" : COLORS.bg,
+                      border: `1px solid ${faltaCritico ? "rgba(198,40,40,0.3)" : COLORS.border}`,
+                    }}>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ margin: 0, color: COLORS.navy, fontSize: "0.78rem", fontWeight: 800 }}>{pickLang(item.label, i18n.language)}</p>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+                        <span style={{
+                          fontSize: "0.7rem", fontWeight: 900,
+                          color: verificado ? COLORS.green : faltaCritico ? "#C62828" : COLORS.amber,
+                        }}>
+                          {verificado ? "✅" : faltaCritico ? "❌" : "⚠️"} {statusLabel}
+                        </span>
+                        {!verificado && (
+                          <button
+                            onClick={() => solicitarRequisitoFaltante(item)}
+                            style={{ border: "none", borderRadius: "5px", padding: "0.3rem 0.5rem", fontSize: "0.68rem", fontWeight: 900, cursor: "pointer", background: COLORS.navy, color: "white" }}
+                          >
+                            {copy("Solicitar")}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

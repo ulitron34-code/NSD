@@ -5,12 +5,15 @@ import { softCardStyle } from "../../../utils/visualStyle";
 import { useNotification } from "../../../hooks/useNotification";
 import { useTranslation } from "react-i18next";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
+import { useRequisitosMinimos } from "../../../hooks/useRequisitosMinimos";
+import { DEMO_EXPEDIENTE_ID, pickLang } from "../../../data/requisitosMinimos";
 
 export default function MiPerfilTab() {
   const { addNotification } = useNotification();
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (value) => translateCopy(value, i18n.language);
+  const requisitos = useRequisitosMinimos(DEMO_EXPEDIENTE_ID);
   const [selectedDoc, setSelectedDoc] = useState("Acta Constitutiva");
   const [aiReview, setAiReview] = useState(null);
 
@@ -147,9 +150,24 @@ export default function MiPerfilTab() {
               <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.82rem", lineHeight: 1.45 }}>{copy(readinessGrade.detail)}</p>
             </div>
           </div>
-          <button onClick={() => addNotification(L("Paquete enviado a prevalidación NEXUS", "Package sent to NEXUS pre-validation"), "success")} style={{ width: "100%", padding: "0.75rem", border: "none", borderRadius: "6px", background: COLORS.gold, color: COLORS.navy, fontWeight: 900, cursor: "pointer" }}>
+          <button
+            disabled={!requisitos.listoParaEnviar}
+            onClick={() => addNotification(L("Paquete enviado a prevalidación NEXUS", "Package sent to NEXUS pre-validation"), "success")}
+            style={{
+              width: "100%", padding: "0.75rem", border: "none", borderRadius: "6px", fontWeight: 900,
+              background: requisitos.listoParaEnviar ? COLORS.gold : "rgba(255,255,255,0.15)",
+              color: requisitos.listoParaEnviar ? COLORS.navy : "rgba(255,255,255,0.5)",
+              cursor: requisitos.listoParaEnviar ? "pointer" : "not-allowed",
+            }}
+          >
             {L("Enviar a prevalidación NEXUS", "Send to NEXUS Pre-Validation")}
           </button>
+          {!requisitos.listoParaEnviar && (
+            <p style={{ color: "#F5B7B7", fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.6rem", marginBottom: 0 }}>
+              {L("Faltan requisitos críticos en Preparación:", "Missing critical requirements in Readiness:")}{" "}
+              {requisitos.criticosPendientes.map((item) => pickLang(item.label, i18n.language)).join(", ")}
+            </p>
+          )}
         </div>
 
         <div style={{ ...softCardStyle, padding: "1.25rem" }}>

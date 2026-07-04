@@ -1,12 +1,16 @@
 import { error, debug, info, warn } from '../../../utils/logger';
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
+import { useRequisitosMinimos } from "../../../hooks/useRequisitosMinimos";
+import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, pickLang, DEMO_EXPEDIENTE_ID, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
 
 export default function FundingReadinessTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const requisitos = useRequisitosMinimos(DEMO_EXPEDIENTE_ID);
+  const [revisionIA, setRevisionIA] = useState(null);
 
   const readinessAreas = [
     {
@@ -214,6 +218,156 @@ export default function FundingReadinessTab() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "0.9rem" }}>
+          <div>
+            <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              {L("Requisitos minimos NEXUS", "NEXUS Minimum Requirements")}
+            </p>
+            <h2 style={{ color: COLORS.navy, fontSize: "1.08rem", margin: "0.35rem 0 0" }}>
+              {L("Checklist de 12 requisitos minimos del proyecto", "Project's 12 minimum requirements checklist")}
+            </h2>
+            <p style={{ margin: "0.35rem 0 0", color: COLORS.textMuted, fontSize: "0.82rem", maxWidth: "620px", lineHeight: 1.5 }}>
+              {L(
+                "Todo proyecto debe cubrir estos 12 puntos antes de poder enviarse a prevalidacion NEXUS. Los marcados como criticos bloquean el envio si quedan pendientes.",
+                "Every project must cover these 12 points before it can be sent to NEXUS pre-validation. Items marked critical block submission while pending."
+              )}
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
+            <span style={{
+              padding: "0.5rem 0.8rem", borderRadius: "999px", fontWeight: 900, fontSize: "0.8rem",
+              background: requisitos.listoParaEnviar ? "rgba(46,125,50,0.12)" : "rgba(198,40,40,0.1)",
+              color: requisitos.listoParaEnviar ? COLORS.green : "#C62828",
+              whiteSpace: "nowrap",
+            }}>
+              {requisitos.completados}/{requisitos.total} · {requisitos.criticosPendientes.length > 0
+                ? L(`${requisitos.criticosPendientes.length} criticos pendientes`, `${requisitos.criticosPendientes.length} critical pending`)
+                : L("Sin criticos pendientes", "No critical items pending")}
+            </span>
+            <button
+              onClick={() => setRevisionIA(generarRevisionIARequisitos(requisitos.items, i18n.language))}
+              style={{ border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: "pointer", background: COLORS.navy, color: "white" }}
+            >
+              {L("Revisar con IA", "Review with AI")}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ height: "8px", background: "#E8ECF2", borderRadius: "999px", overflow: "hidden", marginBottom: "1rem" }}>
+          <div style={{ width: `${requisitos.progreso}%`, height: "100%", background: requisitos.listoParaEnviar ? COLORS.green : COLORS.gold, transition: "width 0.3s" }} />
+        </div>
+
+        {revisionIA && (
+          <div style={{ background: "rgba(201,168,76,0.08)", border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.85rem", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", marginBottom: "0.5rem" }}>
+              <strong style={{ color: COLORS.navy, fontSize: "0.84rem" }}>{L("Revisión IA del checklist", "AI review of the checklist")}</strong>
+              <span style={{ color: revisionIA.score >= 80 ? COLORS.green : COLORS.amber, fontWeight: 900 }}>{revisionIA.score}/100</span>
+            </div>
+            {revisionIA.findings.map((finding) => (
+              <p key={finding} style={{ margin: "0 0 0.25rem", color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>- {finding}</p>
+            ))}
+          </div>
+        )}
+
+        {REQUISITOS_CATEGORIAS.map((categoria) => {
+          const itemsCategoria = requisitos.items.filter((item) => item.categoria === categoria.id);
+          return (
+            <div key={categoria.id} style={{ marginBottom: "1.1rem" }}>
+              <p style={{ margin: "0 0 0.5rem", color: COLORS.navy, fontSize: "0.82rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {pickLang(categoria.label, i18n.language)}
+              </p>
+              <div style={{ display: "grid", gap: "0.55rem" }}>
+                {itemsCategoria.map((item) => {
+                  const isListo = item.estado === "listo";
+                  const isCriticoPendiente = item.critico && !isListo;
+                  return (
+                    <div key={item.id} style={{
+                      border: `1px solid ${isCriticoPendiente ? "rgba(198,40,40,0.35)" : COLORS.border}`,
+                      borderRadius: "8px", padding: "0.7rem 0.85rem",
+                      background: isCriticoPendiente ? "rgba(198,40,40,0.04)" : COLORS.bg,
+                    }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", flexWrap: "wrap" }}>
+                      <div style={{ flex: "1 1 260px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                          <strong style={{ color: COLORS.navy, fontSize: "0.86rem" }}>{pickLang(item.label, i18n.language)}</strong>
+                          {item.critico && (
+                            <span style={{ fontSize: "0.65rem", fontWeight: 900, color: "#C62828", background: "rgba(198,40,40,0.1)", borderRadius: "999px", padding: "0.1rem 0.5rem" }}>
+                              {L("CRITICO", "CRITICAL")}
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: "0.2rem 0 0", color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.4 }}>{pickLang(item.detalle, i18n.language)}</p>
+                        {item.evidenciaNombre && (
+                          <p style={{ margin: "0.3rem 0 0", color: COLORS.green, fontSize: "0.74rem", fontWeight: 700 }}>
+                            {L("Evidencia:", "Evidence:")} {item.evidenciaNombre}
+                          </p>
+                        )}
+                      </div>
+
+                      <label style={{
+                        fontSize: "0.72rem", fontWeight: 800, color: COLORS.navy, cursor: "pointer",
+                        border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.4rem 0.6rem",
+                      }}>
+                        {L("Adjuntar", "Attach")}
+                        <input
+                          type="file"
+                          style={{ display: "none" }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) requisitos.adjuntarEvidencia(item.id, file.name);
+                          }}
+                        />
+                      </label>
+
+                      <button
+                        onClick={() => requisitos.marcarEstado(item.id, isListo ? "pendiente" : "listo")}
+                        style={{
+                          border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.76rem", cursor: "pointer",
+                          background: isListo ? "rgba(46,125,50,0.12)" : COLORS.gold,
+                          color: isListo ? COLORS.green : COLORS.navy,
+                        }}
+                      >
+                        {isListo ? L("Listo", "Ready") : L("Marcar listo", "Mark ready")}
+                      </button>
+                    </div>
+
+                    {item.id === "ods" && (
+                      <div style={{ marginTop: "0.65rem", paddingTop: "0.65rem", borderTop: `1px solid ${COLORS.border}` }}>
+                        <p style={{ margin: "0 0 0.4rem", color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase" }}>
+                          {L("Selecciona los ODS aplicables (ONU)", "Select applicable SDGs (UN)")}
+                        </p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                          {UN_SDG_GOALS.map((goal) => {
+                            const selected = item.sdg.includes(goal.numero);
+                            return (
+                              <button
+                                key={goal.numero}
+                                onClick={() => requisitos.toggleSdg(item.id, goal.numero)}
+                                title={pickLang(goal, i18n.language)}
+                                style={{
+                                  border: `1px solid ${selected ? COLORS.navy : COLORS.border}`,
+                                  borderRadius: "999px", padding: "0.3rem 0.6rem", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer",
+                                  background: selected ? COLORS.navy : "white",
+                                  color: selected ? "white" : COLORS.textMuted,
+                                }}
+                              >
+                                ODS {goal.numero}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </section>
     </div>
   );
