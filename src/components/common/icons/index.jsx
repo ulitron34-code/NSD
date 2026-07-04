@@ -213,6 +213,13 @@ export const IconShield = (props) => (
   </Svg>
 );
 
+export const IconBell = (props) => (
+  <Svg {...props}>
+    <path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 2 6.5H4c0.5-1 2-2.5 2-6.5Z" />
+    <path d="M10 19.5a2 2 0 0 0 4 0" />
+  </Svg>
+);
+
 export const IconChevronsLeft = (props) => (
   <Svg {...props}>
     <path d="M13 5.5 6.5 12l6.5 6.5" />
@@ -266,6 +273,7 @@ const ICONS = {
   checklist: IconChecklist,
   network: IconNetwork,
   microscope: IconMicroscope,
+  bell: IconBell,
 };
 
 export default function Icon({ name, size = 24, color, style }) {

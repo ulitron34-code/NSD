@@ -881,7 +881,7 @@ export default function DocumentIntelligenceTab() {
 
       {/* Rules Config Panel */}
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         borderRadius: "12px",
         border: `1px solid ${COLORS.border}`,
         padding: "1.5rem",
@@ -946,21 +946,21 @@ export default function DocumentIntelligenceTab() {
       {/* KPI Cards */}
       {summary && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
-          <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "12px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "12px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
             <h4 style={{ color: COLORS.textMuted, fontSize: "0.85rem", textTransform: "uppercase", margin: "0 0 0.5rem 0" }}>{t('intel.analyzedDocs')}</h4>
             <div style={{ fontSize: "1.8rem", fontWeight: "800", color: COLORS.navy }}>
               {summary.analyzed_documents} / {summary.total_documents}
             </div>
           </div>
           
-          <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "12px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "12px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
             <h4 style={{ color: COLORS.textMuted, fontSize: "0.85rem", textTransform: "uppercase", margin: "0 0 0.5rem 0" }}>{t('intel.avgScore')}</h4>
             <div style={{ fontSize: "1.8rem", fontWeight: "800", color: COLORS.navy }}>
               {summary.average_score !== null ? `${summary.average_score} / 100` : "N/A"}
             </div>
           </div>
 
-          <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "12px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "12px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
             <h4 style={{ color: COLORS.textMuted, fontSize: "0.85rem", textTransform: "uppercase", margin: "0 0 0.5rem 0" }}>{t('intel.activeFlags')}</h4>
             <div style={{ fontSize: "1.8rem", fontWeight: "800", color: summary.red_flags_count > 0 ? "#C62828" : "#2E7D32" }}>
               {summary.red_flags_count} {t('intel.alerts')}
@@ -968,7 +968,7 @@ export default function DocumentIntelligenceTab() {
           </div>
 
           <div style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             padding: "1.5rem",
             borderRadius: "12px",
             border: `1px solid ${COLORS.border}`,
@@ -998,7 +998,7 @@ export default function DocumentIntelligenceTab() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "2rem" }}>
         
         {/* Document Table */}
-        <div style={{ background: COLORS.white, borderRadius: "12px", border: `1px solid ${COLORS.border}`, padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "12px", border: `1px solid ${COLORS.border}`, padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.2rem", color: COLORS.navy, fontWeight: "700", marginBottom: "1rem" }}>
             {t('intel.documentStatusTitle')}
           </h2>
@@ -1147,7 +1147,7 @@ export default function DocumentIntelligenceTab() {
           {/* Gráficos de Benchmarks Financieros (si aplica) */}
           {selectedDocForVerifications.document_type === 'EDOS_FINANCIEROS' && (
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               borderRadius: "8px",
               padding: "1.5rem",
               border: `1px solid ${COLORS.border}`,
@@ -1399,7 +1399,7 @@ export default function DocumentIntelligenceTab() {
 
       {/* Dossier Chatbot Component */}
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         borderRadius: "12px",
         border: `1px solid ${COLORS.border}`,
         padding: "1.5rem",
@@ -1479,7 +1479,7 @@ export default function DocumentIntelligenceTab() {
 
       {/* Billing Integration & Stripe Section */}
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         borderRadius: "12px",
         border: `1px solid ${COLORS.border}`,
         padding: "1.5rem",
@@ -1537,7 +1537,7 @@ export default function DocumentIntelligenceTab() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "2rem" }}>
         
         {/* Red Flags Panel */}
-        <div style={{ background: COLORS.white, borderRadius: "12px", border: `1px solid ${COLORS.border}`, padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "12px", border: `1px solid ${COLORS.border}`, padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <h3 style={{ fontSize: "1.1rem", color: COLORS.navy, fontWeight: "700", marginBottom: "1rem" }}>
             {t('intel.alertsPanelTitle')}
           </h3>
@@ -1564,7 +1564,7 @@ export default function DocumentIntelligenceTab() {
         </div>
 
         {/* Bitácora de ejecución de Agentes IA */}
-        <div style={{ background: COLORS.white, borderRadius: "12px", border: `1px solid ${COLORS.border}`, padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "12px", border: `1px solid ${COLORS.border}`, padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <h3 style={{ fontSize: "1.1rem", color: COLORS.navy, fontWeight: "700", marginBottom: "1rem" }}>
             {t('intel.executionLogsTitle')}
           </h3>
@@ -1623,7 +1623,7 @@ export default function DocumentIntelligenceTab() {
             onClick={() => handleSimulateCase("suspended_csf")}
             style={{
               padding: "0.6rem 1rem",
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               border: `1px solid ${COLORS.navy}`,
               borderRadius: "8px",
               cursor: "pointer",
@@ -1638,7 +1638,7 @@ export default function DocumentIntelligenceTab() {
             onClick={() => handleSimulateCase("altered_pdf")}
             style={{
               padding: "0.6rem 1rem",
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               border: `1px solid ${COLORS.navy}`,
               borderRadius: "8px",
               cursor: "pointer",
@@ -1653,7 +1653,7 @@ export default function DocumentIntelligenceTab() {
             onClick={() => handleSimulateCase("unbalanced_balance")}
             style={{
               padding: "0.6rem 1rem",
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               border: `1px solid ${COLORS.navy}`,
               borderRadius: "8px",
               cursor: "pointer",

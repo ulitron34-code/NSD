@@ -91,7 +91,7 @@ export default function ProyectosTab() {
 
       {showForm && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "2rem",
           borderRadius: "10px",
           marginBottom: "2rem",
@@ -153,7 +153,7 @@ export default function ProyectosTab() {
 
       <div className="dashboard-detail-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.35fr) minmax(300px, 0.85fr)", gap: "1.5rem", alignItems: "start" }}>
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "2rem",
           borderRadius: "10px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
@@ -211,7 +211,7 @@ export default function ProyectosTab() {
         </div>
         {selectedCase && (
           <aside style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             border: `1px solid ${COLORS.border}`,
             borderRadius: "10px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",

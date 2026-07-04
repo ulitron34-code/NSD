@@ -124,7 +124,7 @@ export default function AnalyticsTab() {
         {error && <p style={{ color: "#C62828", fontSize: "0.85rem", marginTop: "0.75rem" }}>{error}</p>}
       </div>
 
-      <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.35rem" }}>
           {L("Fuente de datos", "Data Source")}
         </p>
@@ -137,7 +137,7 @@ export default function AnalyticsTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.25fr) minmax(300px, 0.75fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "0.35rem" }}>{L("Cola de Accion Institucional", "Institutional Action Queue")}</h2>
           <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", lineHeight: 1.5, marginBottom: "1rem" }}>
             {L("Traduce el pipeline a acciones concretas: comite, requerimientos, pausa o subsanacion.", "Translate the pipeline into concrete actions: committee, requests, pause or remediation.")}
@@ -156,7 +156,7 @@ export default function AnalyticsTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "0.35rem" }}>{L("Preguntas para Comite", "Committee Questions")}</h2>
           <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", lineHeight: 1.5, marginBottom: "1rem" }}>
             {L("Lectura rapida para decidir si el pipeline merece revision interna o mas informacion.", "Quick read to decide whether the pipeline deserves internal review or more information.")}
@@ -173,7 +173,7 @@ export default function AnalyticsTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2rem" }}>
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1.5rem" }}>{L("Funnel del Pipeline", "Pipeline Funnel")}</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {analytics.funnel.map((item, index) => (
@@ -198,7 +198,7 @@ export default function AnalyticsTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1.5rem" }}>{L("Exposicion por Sector", "Exposure by Sector")}</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {analytics.sectorExposure.length === 0 ? (
@@ -218,7 +218,7 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
-      <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+      <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
         <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Metricas Financieras", "Financial Metrics")}</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
           <div style={{ padding: "1.25rem", background: COLORS.bg, borderRadius: "8px", borderTop: `3px solid ${COLORS.gold}` }}>
@@ -237,7 +237,7 @@ export default function AnalyticsTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: "1.5rem", marginTop: "1.5rem" }}>
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Mapa de Riesgo Accionable", "Actionable Risk Map")}</h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {riskRows.map((row) => (
@@ -250,7 +250,7 @@ export default function AnalyticsTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Preparacion para Comite", "Committee Readiness")}</h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {readinessRows.length ? readinessRows.map((row) => (
@@ -271,7 +271,7 @@ export default function AnalyticsTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(300px, 0.9fr)", gap: "1.5rem", marginTop: "1.5rem" }}>
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Ranking de Oportunidades", "Opportunity Ranking")}</h2>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {rankedOpportunities.map((item, index) => (
@@ -287,7 +287,7 @@ export default function AnalyticsTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{L("Senales Recurrentes", "Recurring Signals")}</h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {recurringSignals.map(([label, count, detail]) => (

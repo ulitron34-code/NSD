@@ -86,7 +86,7 @@ export default function BiometricosTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.15fr) minmax(300px, 0.85fr)", gap: "1.5rem", alignItems: "start" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.25rem", marginBottom: "1rem" }}>{L("Flujo propuesto", "Proposed workflow")}</h2>
           <div style={{ display: "grid", gap: "0.9rem" }}>
             {checks.map(([title, desc], index) => (
@@ -120,7 +120,7 @@ export default function BiometricosTab() {
         </aside>
       </div>
 
-      <div style={{ marginTop: "1.5rem", background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <div style={{ marginTop: "1.5rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
           <div>
             <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800 }}>

@@ -110,7 +110,7 @@ export default function ActivityDashboard() {
             marginBottom: "1.5rem"
           }}>
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1rem",
               borderRadius: "8px",
               border: `1px solid ${COLORS.border}`,
@@ -128,7 +128,7 @@ export default function ActivityDashboard() {
             </div>
 
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1rem",
               borderRadius: "8px",
               border: `1px solid ${COLORS.border}`,
@@ -146,7 +146,7 @@ export default function ActivityDashboard() {
             </div>
 
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1rem",
               borderRadius: "8px",
               border: `1px solid ${COLORS.border}`,
@@ -206,7 +206,7 @@ export default function ActivityDashboard() {
 
       {/* LISTA DE ACTIVIDADES */}
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         borderRadius: "10px",
         border: `1px solid ${COLORS.border}`,
         overflow: "hidden"

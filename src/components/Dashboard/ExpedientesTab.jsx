@@ -169,7 +169,7 @@ export default function ExpedientesTab() {
             key={exp.id}
             onClick={() => setSelectedExp(exp)}
             style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               border: selectedExp?.id === exp.id ? `2px solid ${COLORS.gold}` : `1px solid ${COLORS.border}`,
               borderRadius: "10px",
               padding: "1.5rem",
@@ -262,7 +262,7 @@ export default function ExpedientesTab() {
       {/* DETALLE EXPEDIENTE */}
       {selectedExp && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           border: `2px solid ${COLORS.gold}`,
           borderRadius: "10px",
           padding: "2rem",

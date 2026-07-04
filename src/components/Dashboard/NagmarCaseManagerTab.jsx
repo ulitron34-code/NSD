@@ -59,7 +59,7 @@ function VerdictBadge({ verdict }) {
 function Card({ children, style }) {
   return (
     <div style={{
-      background: COLORS.white,
+      background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
       border: `1px solid ${COLORS.border}`,
       borderRadius: "10px",
       padding: "1.25rem",

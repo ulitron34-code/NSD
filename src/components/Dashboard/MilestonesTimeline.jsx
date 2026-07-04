@@ -256,7 +256,7 @@ export default function MilestonesTimeline() {
         <>
           {/* BARRA DE PROGRESO */}
           <div style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             padding: "1.5rem",
             borderRadius: "10px",
             border: `1px solid ${COLORS.border}`,
@@ -336,7 +336,7 @@ export default function MilestonesTimeline() {
 
                     {/* Contenido del hito */}
                     <div style={{
-                      background: COLORS.white,
+                      background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
                       border: `2px solid ${milestone.color}`,
                       borderRadius: "8px",
                       padding: "1rem",
@@ -400,7 +400,7 @@ export default function MilestonesTimeline() {
             marginTop: "2rem"
           }}>
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1rem",
               borderRadius: "8px",
               border: `1px solid ${COLORS.border}`,
@@ -415,7 +415,7 @@ export default function MilestonesTimeline() {
             </div>
 
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1rem",
               borderRadius: "8px",
               border: `1px solid ${COLORS.border}`,
@@ -430,7 +430,7 @@ export default function MilestonesTimeline() {
             </div>
 
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1rem",
               borderRadius: "8px",
               border: `1px solid ${COLORS.border}`,
@@ -445,7 +445,7 @@ export default function MilestonesTimeline() {
             </div>
 
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1rem",
               borderRadius: "8px",
               border: `1px solid ${COLORS.border}`,

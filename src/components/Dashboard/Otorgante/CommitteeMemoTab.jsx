@@ -72,7 +72,7 @@ export default function CommitteeMemoTab() {
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.85rem" }}>
         {memoSections.map((section) => (
-          <article key={section.title} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+          <article key={section.title} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{copy(section.status)}</p>
             <h2 style={{ margin: "0.3rem 0 0.75rem", color: COLORS.navy, fontSize: "1.05rem" }}>{copy(section.title)}</h2>
             <ul style={{ margin: 0, paddingLeft: "1.1rem", color: COLORS.text, fontSize: "0.86rem", lineHeight: 1.55 }}>
@@ -83,7 +83,7 @@ export default function CommitteeMemoTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: "1rem" }}>
-        <article style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm, overflowX: "auto" }}>
+        <article style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm, overflowX: "auto" }}>
           <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase" }}>
             {L("Checklist de decision", "Decision checklist")}
           </p>

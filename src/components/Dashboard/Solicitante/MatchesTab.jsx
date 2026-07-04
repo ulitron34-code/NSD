@@ -71,7 +71,7 @@ export default function MatchesTab() {
         </p>
       </div>
 
-      <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.35rem" }}>
           {L("Como se calcula el match", "How the Match Is Calculated")}
         </p>
@@ -85,7 +85,7 @@ export default function MatchesTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(300px, 0.9fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.35rem" }}>
             {L("Paquete de presentacion", "Presentation Package")}
           </p>
@@ -100,7 +100,7 @@ export default function MatchesTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.35rem" }}>
             {L("Ruta de acercamiento", "Approach Route")}
           </p>
@@ -121,7 +121,7 @@ export default function MatchesTab() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
         {matches.map((m) => (
-          <div key={m.name} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm, position: "relative", overflow: "hidden" }}>
+          <div key={m.name} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.greenBg, color: COLORS.green, padding: "0.5rem 1rem", borderBottomLeftRadius: "10px", fontWeight: 700, fontSize: "0.85rem" }}>
               {m.match} {L("Match", "Match")}
             </div>

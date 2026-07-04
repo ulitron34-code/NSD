@@ -67,7 +67,7 @@ export default function InvestorPitchTab() {
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
         {demoMetrics.map(([label, value, detail]) => (
-          <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
+          <article key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.45rem" }}>{copy(label)}</p>
             <p style={{ color: COLORS.navy, fontSize: "2rem", fontWeight: 900, marginBottom: "0.45rem" }}>{value}</p>
             <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>{copy(detail)}</p>
@@ -76,7 +76,7 @@ export default function InvestorPitchTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(300px, 0.9fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.gold, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, fontSize: "0.72rem", marginBottom: "0.45rem" }}>
             {L("Demo story mode", "Demo Story Mode")}
           </p>
@@ -94,7 +94,7 @@ export default function InvestorPitchTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.gold, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, fontSize: "0.72rem", marginBottom: "0.45rem" }}>
             {copy("AI Compliance Engine")}
           </p>
@@ -111,7 +111,7 @@ export default function InvestorPitchTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Modelo de monetizacion", "Monetization Model")}</h2>
           {revenueStreams.map(([title, detail]) => (
             <div key={title} style={{ padding: "0.75rem 0", borderBottom: `1px solid ${COLORS.border}` }}>
@@ -121,7 +121,7 @@ export default function InvestorPitchTab() {
           ))}
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Ruta internacional controlada", "Controlled International Roadmap")}</h2>
           {launchRoadmap.map(([market, status, detail]) => (
             <div key={market} style={{ padding: "0.8rem", borderRadius: "8px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, marginBottom: "0.65rem" }}>
@@ -134,7 +134,7 @@ export default function InvestorPitchTab() {
           ))}
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Lo que se debe demostrar", "What the demo must prove")}</h2>
           {[
             L("Existe un dolor real: tiempos, documentos, cumplimiento y baja comparabilidad.", "There is a real pain: time, documents, compliance and low comparability."),

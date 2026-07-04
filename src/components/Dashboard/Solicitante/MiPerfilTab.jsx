@@ -1,6 +1,7 @@
 import { error, debug, info, warn } from '../../../utils/logger';
 import React, { useState } from "react";
 import { COLORS } from "../../../utils/constants";
+import { softCardStyle } from "../../../utils/visualStyle";
 import { useNotification } from "../../../hooks/useNotification";
 import { useTranslation } from "react-i18next";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
@@ -79,7 +80,7 @@ export default function MiPerfilTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ ...softCardStyle, padding: "1.5rem" }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>NEXUS Readiness Score</h2>
           <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
             <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: COLORS.greenBg, color: COLORS.green, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700 }}>
@@ -92,7 +93,7 @@ export default function MiPerfilTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, padding: "1.5rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+        <div style={{ ...softCardStyle, padding: "1.5rem" }}>
           <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>KYC / AML / Antifraude</h2>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
             <span style={{ background: COLORS.greenBg, color: COLORS.green, padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.8rem", fontWeight: 600 }}>{L("Aprobado", "Approved")}</span>
@@ -120,7 +121,7 @@ export default function MiPerfilTab() {
           </button>
         </div>
         {aiReview && (
-          <div style={{ marginTop: "1rem", background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem" }}>
+          <div style={{ ...softCardStyle, marginTop: "1rem", padding: "1rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", marginBottom: "0.65rem" }}>
               <strong style={{ color: COLORS.navy }}>{L("Resultado preliminar:", "Preliminary Result:")} {copy(aiReview.scope)}</strong>
               <span style={{ color: aiReview.score >= 80 ? COLORS.green : COLORS.amber, fontWeight: 900 }}>{aiReview.score}/100</span>
@@ -151,7 +152,7 @@ export default function MiPerfilTab() {
           </button>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ ...softCardStyle, padding: "1.25rem" }}>
           <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>
             {L("Paquete para compartir con otorgantes", "Package to Share with Funding Providers")}
           </p>
@@ -173,7 +174,7 @@ export default function MiPerfilTab() {
         {L("Expediente Documental", "Document File")}
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 0.8fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ ...softCardStyle, padding: "1.25rem" }}>
           <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>
             {L("Brechas antes de compartir", "Gaps Before Sharing")}
           </p>
@@ -188,7 +189,7 @@ export default function MiPerfilTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ ...softCardStyle, padding: "1.25rem" }}>
           <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>
             {L("Plan de subsanación", "Remediation Plan")}
           </p>
@@ -202,7 +203,7 @@ export default function MiPerfilTab() {
           </div>
         </div>
       </div>
-      <div style={{ background: COLORS.white, borderRadius: "8px", border: `1px solid ${COLORS.border}`, overflow: "hidden", boxShadow: COLORS.shadowSm }}>
+      <div style={{ ...softCardStyle, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead style={{ background: COLORS.bgSubtle, borderBottom: `1px solid ${COLORS.border}` }}>
             <tr>

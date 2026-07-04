@@ -161,7 +161,7 @@ export default function ControlCenter() {
         <>
           {/* ESTADO DE SALUD */}
           <div style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             border: `3px solid ${healthColors[getHealth()]}`,
             borderRadius: "10px",
             padding: "2rem",
@@ -187,7 +187,7 @@ export default function ControlCenter() {
           }}>
             {/* EXPEDIENTES */}
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1.5rem",
               borderRadius: "10px",
               border: `1px solid ${COLORS.border}`,
@@ -214,7 +214,7 @@ export default function ControlCenter() {
 
             {/* DOCUMENTOS */}
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1.5rem",
               borderRadius: "10px",
               border: `1px solid ${COLORS.border}`,
@@ -241,7 +241,7 @@ export default function ControlCenter() {
 
             {/* REQUERIMIENTOS */}
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1.5rem",
               borderRadius: "10px",
               border: `1px solid ${COLORS.border}`,
@@ -271,7 +271,7 @@ export default function ControlCenter() {
 
             {/* MENSAJES */}
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1.5rem",
               borderRadius: "10px",
               border: `1px solid ${COLORS.border}`,
@@ -287,7 +287,7 @@ export default function ControlCenter() {
 
             {/* ACTIVIDAD */}
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1.5rem",
               borderRadius: "10px",
               border: `1px solid ${COLORS.border}`,
@@ -303,7 +303,7 @@ export default function ControlCenter() {
 
             {/* TOTAL ACTIVIDADES */}
             <div style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               padding: "1.5rem",
               borderRadius: "10px",
               border: `1px solid ${COLORS.border}`,

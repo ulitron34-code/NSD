@@ -73,7 +73,7 @@ export default function ImplementationRoadmapTab() {
         </p>
       </section>
 
-      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm, overflowX: "auto" }}>
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
           <thead>
             <tr style={{ background: COLORS.navy, color: COLORS.white }}>
@@ -97,7 +97,7 @@ export default function ImplementationRoadmapTab() {
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "0.85rem" }}>
         {goNoGo.map(([label, detail, status]) => (
-          <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+          <article key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: "0.7rem", alignItems: "flex-start" }}>
               <h2 style={{ margin: 0, color: COLORS.navy, fontSize: "0.98rem" }}>{copy(label)}</h2>
               <span style={{

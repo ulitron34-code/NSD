@@ -158,7 +158,7 @@ export default function AnalyticsDashboard() {
           <div
             key={idx}
             style={{
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               borderRadius: '12px',
               padding: '1.25rem',
               boxShadow: COLORS.shadowSm,
@@ -196,7 +196,7 @@ export default function AnalyticsDashboard() {
       }}>
         {/* Pipeline Trend */}
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           borderRadius: '12px',
           padding: '1.5rem',
           boxShadow: COLORS.shadowSm,
@@ -213,7 +213,7 @@ export default function AnalyticsDashboard() {
                 <YAxis stroke="#64748B" fontSize={12} />
                 <Tooltip 
                   contentStyle={{ 
-                    background: COLORS.white, 
+                    background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", 
                     border: `1px solid ${COLORS.border}`,
                     borderRadius: '8px'
                   }}
@@ -241,7 +241,7 @@ export default function AnalyticsDashboard() {
 
         {/* Sector Distribution */}
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           borderRadius: '12px',
           padding: '1.5rem',
           boxShadow: COLORS.shadowSm,
@@ -307,7 +307,7 @@ export default function AnalyticsDashboard() {
       }}>
         {/* Risk Distribution */}
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           borderRadius: '12px',
           padding: '1.5rem',
           boxShadow: COLORS.shadowSm,
@@ -324,7 +324,7 @@ export default function AnalyticsDashboard() {
                 <YAxis dataKey="name" type="category" stroke="#64748B" fontSize={12} width={60} />
                 <Tooltip 
                   contentStyle={{ 
-                    background: COLORS.white, 
+                    background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", 
                     border: `1px solid ${COLORS.border}`,
                     borderRadius: '8px'
                   }}
@@ -341,7 +341,7 @@ export default function AnalyticsDashboard() {
 
         {/* Feature Usage */}
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           borderRadius: '12px',
           padding: '1.5rem',
           boxShadow: COLORS.shadowSm,
@@ -401,7 +401,7 @@ export default function AnalyticsDashboard() {
             padding: '0.75rem 1.5rem',
             borderRadius: '8px',
             border: `1px solid ${COLORS.border}`,
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             color: COLORS.navy,
             fontWeight: 600,
             cursor: 'pointer',

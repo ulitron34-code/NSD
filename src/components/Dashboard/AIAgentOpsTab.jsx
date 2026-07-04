@@ -116,14 +116,14 @@ export default function AIAgentOpsTab() {
           [L("Endpoints previstos", "Planned endpoints"), `${summary.endpoints}`, COLORS.gold],
           [L("Costo alto controlado", "Controlled high cost"), `${summary.highCost}`, COLORS.amber],
         ].map(([label, value, color]) => (
-          <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+          <article key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "0.25rem" }}>{label}</p>
             <p style={{ color, fontSize: "1.55rem", fontWeight: 900 }}>{value}</p>
           </article>
         ))}
       </section>
 
-      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
         <p style={{ color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.85rem" }}>
           {L("Mapa de agentes y contratos API", "Agent map and API contracts")}
         </p>
@@ -170,7 +170,7 @@ export default function AIAgentOpsTab() {
           ))}
         </article>
 
-        <article style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <article style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.85rem" }}>
             {L("Alineacion con fases", "Phase alignment")}
           </p>

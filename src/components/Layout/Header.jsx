@@ -83,7 +83,7 @@ export default function Header({ isLanding = false }) {
           <img
             src="/logo-nexus.png"
             alt={BRAND.logoAlt}
-            style={{ height: "50px", width: "auto", display: "block" }}
+            style={{ height: "68px", width: "auto", display: "block" }}
           />
         </div>
 

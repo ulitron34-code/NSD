@@ -73,7 +73,7 @@ export default function PitchDemoModeTab() {
   return (
     <div>
       <section style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         border: `1px solid ${COLORS.border}`,
         borderRadius: "14px",
         padding: "1.5rem",
@@ -92,7 +92,7 @@ export default function PitchDemoModeTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(260px, 0.75fr) minmax(0, 1.25fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <aside style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <aside style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, fontSize: "0.72rem", marginBottom: "0.75rem" }}>
             {L("Secuencia", "Sequence")}
           </p>
@@ -144,7 +144,7 @@ export default function PitchDemoModeTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(300px, 0.8fr)", gap: "1rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Objeciones esperadas", "Expected Objections")}</h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {objectionCards.map(([title, answer]) => (
@@ -156,7 +156,7 @@ export default function PitchDemoModeTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Checklist antes de presentar", "Pre-Presentation Checklist")}</h2>
           {[
             L("Entrar con usuario demo y selector de perfil visible.", "Enter with demo user and visible profile switcher."),

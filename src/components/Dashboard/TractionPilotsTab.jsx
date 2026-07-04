@@ -40,7 +40,7 @@ export default function TractionPilotsTab() {
 
   return (
     <div>
-      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "14px", padding: "1.6rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "14px", padding: "1.6rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <p style={{ color: COLORS.gold, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 900, fontSize: "0.75rem", marginBottom: "0.5rem" }}>
           {L("Traccion / pilotos", "Traction / Pilots")}
         </p>
@@ -54,7 +54,7 @@ export default function TractionPilotsTab() {
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
         {tractionMetrics.map(([label, value, detail]) => (
-          <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
+          <article key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(label)}</p>
             <p style={{ color: COLORS.navy, fontSize: "1.9rem", fontWeight: 900, marginBottom: "0.35rem" }}>{value}</p>
             <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</p>
@@ -63,7 +63,7 @@ export default function TractionPilotsTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(320px, 0.9fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Pipeline de pilotos", "Pilot Pipeline")}</h2>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {pilotPipeline.map(([name, stage, detail]) => (
@@ -78,7 +78,7 @@ export default function TractionPilotsTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Senales de validacion", "Validation Signals")}</h2>
           {evidenceSignals.map(([signal, detail]) => (
             <div key={signal} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: "0.75rem 0" }}>
@@ -89,7 +89,7 @@ export default function TractionPilotsTab() {
         </div>
       </section>
 
-      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "1rem" }}>
           <div>
             <p style={{ color: COLORS.gold, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.35rem" }}>

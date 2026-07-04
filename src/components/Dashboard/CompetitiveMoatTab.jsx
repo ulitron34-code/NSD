@@ -34,7 +34,7 @@ export default function CompetitiveMoatTab() {
 
   return (
     <div>
-      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "14px", padding: "1.6rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "14px", padding: "1.6rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <p style={{ color: COLORS.gold, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 900, fontSize: "0.75rem", marginBottom: "0.5rem" }}>
           {L("Competencia / Moat", "Competition / Moat")}
         </p>
@@ -46,7 +46,7 @@ export default function CompetitiveMoatTab() {
         </p>
       </section>
 
-      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm, marginBottom: "1.5rem" }}>
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm, marginBottom: "1.5rem" }}>
         <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Mapa competitivo", "Competitive Map")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
@@ -71,7 +71,7 @@ export default function CompetitiveMoatTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(300px, 0.9fr)", gap: "1rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Capas de defensa", "Moat Layers")}</h2>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {moatLayers.map(([title, detail]) => (
@@ -83,7 +83,7 @@ export default function CompetitiveMoatTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Posicionamiento para pitch", "Pitch Positioning")}</h2>
           {positioning.map(([title, detail]) => (
             <div key={title} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: "0.75rem 0" }}>

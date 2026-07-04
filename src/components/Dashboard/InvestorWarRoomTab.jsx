@@ -74,7 +74,7 @@ export default function InvestorWarRoomTab() {
           [L("Objetivo", "Goal"), L("Piloto pagado", "Paid pilot"), L("antes de escalar", "before scaling")],
           [L("Narrativa", "Narrative"), L("SaaS vertical", "Vertical SaaS"), L("compliance + financiamiento", "compliance + financing")],
         ].map(([label, value, note]) => (
-          <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+          <article key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{label}</p>
             <strong style={{ display: "block", color: COLORS.navy, fontSize: "1.45rem", marginTop: "0.25rem" }}>{value}</strong>
             <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.8rem" }}>{note}</span>
@@ -83,7 +83,7 @@ export default function InvestorWarRoomTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(300px, 0.9fr)", gap: "1rem" }}>
-        <article style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <article style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             {L("Narrativa para inversionista", "Investor narrative")}
           </p>
@@ -116,7 +116,7 @@ export default function InvestorWarRoomTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: "1rem" }}>
-        <article style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <article style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             {L("Senales de traccion", "Traction signals")}
           </p>
@@ -133,7 +133,7 @@ export default function InvestorWarRoomTab() {
           </div>
         </article>
 
-        <article style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <article style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             {L("Evidencia para cerrar antes de ronda", "Evidence to close before fundraising")}
           </p>

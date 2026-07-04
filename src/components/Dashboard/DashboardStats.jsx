@@ -31,7 +31,7 @@ export default function DashboardStats() {
       }}>
         {dashboardKpis.map((kpi) => (
           <div key={kpi.title} style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             padding: "1.5rem",
             borderRadius: "10px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
@@ -51,7 +51,7 @@ export default function DashboardStats() {
       </div>
 
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         padding: "1.5rem",
         borderRadius: "10px",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
@@ -64,7 +64,7 @@ export default function DashboardStats() {
             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
             <XAxis dataKey="month" tickFormatter={(tick) => copy(tick)} stroke={COLORS.textMuted} />
             <YAxis stroke={COLORS.textMuted} />
-            <Tooltip formatter={(value, name) => [value, copy(name)]} contentStyle={{ background: COLORS.white, border: `1px solid ${COLORS.border}` }} />
+            <Tooltip formatter={(value, name) => [value, copy(name)]} contentStyle={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}` }} />
             <Bar dataKey="completos" fill={COLORS.green} name={copy("Completos")} />
             <Bar dataKey="pendientes" fill={COLORS.amber} name={copy("Pendientes")} />
           </BarChart>
@@ -72,7 +72,7 @@ export default function DashboardStats() {
       </div>
 
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         padding: "1.5rem",
         borderRadius: "10px",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
@@ -101,7 +101,7 @@ export default function DashboardStats() {
       </div>
 
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         padding: "1.5rem",
         borderRadius: "10px",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
@@ -115,7 +115,7 @@ export default function DashboardStats() {
             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
             <XAxis dataKey="range" tickFormatter={(tick) => copy(tick)} stroke={COLORS.textMuted} />
             <YAxis stroke={COLORS.textMuted} />
-            <Tooltip formatter={(value, name) => [value, copy("Expedientes")]} contentStyle={{ background: COLORS.white, border: `1px solid ${COLORS.border}` }} />
+            <Tooltip formatter={(value, name) => [value, copy("Expedientes")]} contentStyle={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}` }} />
             <Bar dataKey="count" fill={COLORS.gold} name={copy("Expedientes")} />
           </BarChart>
         </ResponsiveContainer>

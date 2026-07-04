@@ -61,7 +61,7 @@ export default function PredeployGoNoGoTab() {
           ["Precauciones", cautionCount, "no bloqueantes"],
           ["Decision sugerida", "Go", "demo controlada"],
         ].map(([label, value, note]) => (
-          <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+          <article key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase" }}>{copy(label)}</p>
             <strong style={{ display: "block", color: COLORS.navy, fontSize: "1.7rem", marginTop: "0.25rem" }}>{value}</strong>
             <span style={{ color: COLORS.gold, fontWeight: 900, fontSize: "0.82rem" }}>{copy(note)}</span>
@@ -70,7 +70,7 @@ export default function PredeployGoNoGoTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 340px", gap: "1rem" }}>
-        <article style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm, overflowX: "auto" }}>
+        <article style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm, overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "680px" }}>
             <thead>
               <tr style={{ background: COLORS.navy, color: COLORS.white }}>

@@ -700,7 +700,7 @@ export default function PipelineTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.2fr) minmax(280px, 0.8fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1.1rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1.1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.45rem" }}>
             {copy("Modelo de colaboracion Fase 7")}
           </p>
@@ -731,14 +731,14 @@ export default function PipelineTab() {
           ["Reportes listos", analytics.offers],
           ["Ticket promedio", analytics.averageTicket ? `$${Math.round(analytics.averageTicket / 1000)}k` : "$0"],
         ].map(([label, value]) => (
-          <div key={copy(label)} style={{ background: COLORS.white, padding: "1.25rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
+          <div key={copy(label)} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.25rem", borderRadius: "8px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>{copy(label)}</p>
             <p style={{ color: COLORS.navy, fontSize: "2rem", fontWeight: 800, lineHeight: 1 }}>{value}</p>
           </div>
         ))}
       </div>
 
-      <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.35rem" }}>
           {copy("Cierre local Fase 7")}
         </p>
@@ -760,7 +760,7 @@ export default function PipelineTab() {
         </div>
       </div>
 
-      <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "0.85rem" }}>
           <div>
             <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.25rem" }}>
@@ -901,7 +901,7 @@ export default function PipelineTab() {
             </div>
           </div>
 
-          <div style={{ background: COLORS.white, borderRadius: "8px", border: `1px solid ${COLORS.border}`, overflow: "hidden", boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "8px", border: `1px solid ${COLORS.border}`, overflow: "hidden", boxShadow: COLORS.shadowSm }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead style={{ background: COLORS.bgSubtle, borderBottom: `1px solid ${COLORS.border}` }}>
                 <tr>
@@ -952,7 +952,7 @@ export default function PipelineTab() {
           </div>
         </div>
 
-        <aside style={{ background: COLORS.white, borderRadius: "10px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm, overflow: "hidden", position: "sticky", top: "96px" }}>
+        <aside style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "10px", border: `1px solid ${COLORS.border}`, boxShadow: COLORS.shadowSm, overflow: "hidden", position: "sticky", top: "96px" }}>
           <div style={{ background: COLORS.bg, padding: "1.25rem", borderBottom: `1px solid ${COLORS.border}` }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.35rem" }}>{copy("Data room")}</p>
             <h3 style={{ color: COLORS.navy, fontSize: "1.25rem" }}>{selected?.name || "Sin expediente seleccionado"}</h3>
@@ -974,7 +974,7 @@ export default function PipelineTab() {
               </div>
             </div>
 
-            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: COLORS.white }}>
+            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem", marginBottom: "0.8rem" }}>
                 <div>
                   <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.25rem" }}>
@@ -1009,7 +1009,7 @@ export default function PipelineTab() {
               </div>
             </div>
 
-            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: COLORS.white }}>
+            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "flex-start", marginBottom: "0.9rem" }}>
                 <div>
                   <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.25rem" }}>
@@ -1094,7 +1094,7 @@ export default function PipelineTab() {
               </div>
             ))}
 
-            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: COLORS.white }}>
+            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
               <p style={{ color: COLORS.navy, fontWeight: 900, marginBottom: "0.65rem" }}>{copy("Ficha de cumplimiento")}</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.55rem", marginBottom: "0.75rem" }}>
                 {[
@@ -1113,7 +1113,7 @@ export default function PipelineTab() {
               </p>
             </div>
 
-            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: COLORS.white }}>
+            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "flex-start", marginBottom: "0.8rem" }}>
                 <div>
                   <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.25rem" }}>
@@ -1151,7 +1151,7 @@ export default function PipelineTab() {
               </p>
               <div style={{ display: "grid", gap: "0.5rem" }}>
                 {termSheetReadiness.map((item) => (
-                  <div key={copy(item.label)} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "0.75rem", padding: "0.65rem", borderRadius: "7px", background: COLORS.white, border: `1px solid ${COLORS.border}` }}>
+                  <div key={copy(item.label)} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "0.75rem", padding: "0.65rem", borderRadius: "7px", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}` }}>
                     <div>
                       <p style={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.8rem", marginBottom: "0.2rem" }}>{copy(item.label)}</p>
                       <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", lineHeight: 1.35 }}>{copy(item.detail)}</p>
@@ -1214,7 +1214,7 @@ export default function PipelineTab() {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-              <button onClick={viewDocument} style={{ padding: "0.75rem", border: `1px solid ${COLORS.navy}`, borderRadius: "6px", background: COLORS.white, color: COLORS.navy, fontWeight: 800 }}>
+              <button onClick={viewDocument} style={{ padding: "0.75rem", border: `1px solid ${COLORS.navy}`, borderRadius: "6px", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", color: COLORS.navy, fontWeight: 800 }}>
                 {copy("Ver documento")}
               </button>
               <button onClick={() => runAiReview(selectedDoc)} style={{ padding: "0.75rem", border: "none", borderRadius: "6px", background: COLORS.navy, color: COLORS.white, fontWeight: 800 }}>
@@ -1226,7 +1226,7 @@ export default function PipelineTab() {
               {copy("Ejecutar revision IA del data room")}
             </button>
 
-            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: COLORS.white }}>
+            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
               <p style={{ color: COLORS.navy, fontWeight: 900, marginBottom: "0.65rem" }}>{copy("Data room institucional")}</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0.45rem" }}>
                 {dataRoomFolders.map((folder, index) => (
@@ -1452,7 +1452,7 @@ export default function PipelineTab() {
               )}
             </div>
 
-            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: COLORS.white }}>
+            <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
               <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "0.35rem" }}>
                 {copy("Memo de comite")}
               </p>

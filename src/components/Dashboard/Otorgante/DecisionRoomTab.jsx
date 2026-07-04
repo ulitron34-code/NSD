@@ -156,7 +156,7 @@ export default function DecisionRoomTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 0.8fr) minmax(0, 1.2fr)", gap: "1.25rem", alignItems: "start" }}>
-        <aside style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <aside style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
             {L("Oportunidades", "Opportunities")}
           </p>
@@ -215,7 +215,7 @@ export default function DecisionRoomTab() {
                 [L("Score compliance", "Compliance score"), `${selected.complianceScore}/100`, COLORS.navy],
                 [L("Documentos", "Documents"), selected.documentsCount || selected.documents?.length || 0, COLORS.gold],
               ].map(([label, value, color]) => (
-                <div key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+                <div key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
                   <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "0.3rem" }}>{label}</p>
                   <p style={{ color, fontSize: "1.25rem", fontWeight: 900 }}>{value}</p>
                 </div>
@@ -223,7 +223,7 @@ export default function DecisionRoomTab() {
             </section>
 
             <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 0.9fr)", gap: "1.25rem" }}>
-              <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+              <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
                 <h3 style={{ color: COLORS.navy, fontSize: "1rem", marginBottom: "0.8rem" }}>{L("Checklist de gates", "Gate checklist")}</h3>
                 <div style={{ display: "grid", gap: "0.6rem" }}>
                   {gates.map(([label, done, detail]) => (
@@ -240,7 +240,7 @@ export default function DecisionRoomTab() {
                 </div>
               </div>
 
-              <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+              <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
                 <h3 style={{ color: COLORS.navy, fontSize: "1rem", marginBottom: "0.8rem" }}>{L("Paquete para comite", "Committee package")}</h3>
                 <div style={{ display: "grid", gap: "0.55rem" }}>
                   {committeePack.map(([label, value]) => (
@@ -253,7 +253,7 @@ export default function DecisionRoomTab() {
               </div>
             </section>
 
-            <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+            <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
               <h3 style={{ color: COLORS.navy, fontSize: "1rem", marginBottom: "0.8rem" }}>{L("Documentos y brechas visibles", "Visible documents and gaps")}</h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.6rem" }}>
                 {(selected.documents || []).map((doc, index) => (
@@ -266,7 +266,7 @@ export default function DecisionRoomTab() {
             </section>
           </main>
         ) : (
-          <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", color: COLORS.textMuted }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", color: COLORS.textMuted }}>
             {L("No hay oportunidades disponibles para decision.", "No opportunities available for decision.")}
           </div>
         )}

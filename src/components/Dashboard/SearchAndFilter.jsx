@@ -139,7 +139,7 @@ export default function SearchAndFilter({
               padding: '0.75rem 1rem 0.75rem 2.75rem',
               borderRadius: '10px',
               border: `1px solid ${COLORS.border}`,
-              background: COLORS.white,
+              background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               fontSize: '0.9rem',
               outline: 'none',
               transition: 'border-color 0.2s'
@@ -171,7 +171,7 @@ export default function SearchAndFilter({
             padding: '0.75rem 1rem',
             borderRadius: '10px',
             border: `1px solid ${COLORS.border}`,
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             fontSize: '0.9rem',
             cursor: 'pointer',
             minWidth: '160px'
@@ -256,7 +256,7 @@ export default function SearchAndFilter({
       {/* Expanded Filters */}
       {showFilters && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           borderRadius: '12px',
           padding: '1.5rem',
           border: `1px solid ${COLORS.border}`,

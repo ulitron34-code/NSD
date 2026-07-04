@@ -312,7 +312,7 @@ export default function SubirProyectoTab() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(340px, 0.85fr)", gap: "1.5rem", alignItems: "start" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.2rem", marginBottom: "1rem" }}>{copy("Informacion del proyecto")}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
             {[
@@ -343,7 +343,7 @@ export default function SubirProyectoTab() {
           </label>
 
           <div style={{ marginTop: "1.5rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <button onClick={() => addNotification(copy("Proyecto guardado como borrador"), "success")} style={{ padding: "0.85rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, background: COLORS.white, color: COLORS.navy, fontWeight: 800 }}>
+            <button onClick={() => addNotification(copy("Proyecto guardado como borrador"), "success")} style={{ padding: "0.85rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", color: COLORS.navy, fontWeight: 800 }}>
               {copy("Guardar borrador")}
             </button>
             <button onClick={executeAIAgentsAnalysis} disabled={aiLoading} style={{ padding: "0.85rem", borderRadius: "6px", border: "none", background: aiLoading ? COLORS.textMuted : COLORS.navy, color: COLORS.white, fontWeight: 800, cursor: aiLoading ? "not-allowed" : "pointer" }}>
@@ -352,7 +352,7 @@ export default function SubirProyectoTab() {
           </div>
         </div>
 
-        <aside style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <aside style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.2rem", marginBottom: "1rem" }}>{copy("Data room del proyecto")}</h2>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {documents.map((doc) => (
@@ -371,7 +371,7 @@ export default function SubirProyectoTab() {
       </div>
 
       <div style={{ marginTop: "1.5rem", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(300px, 0.85fr)", gap: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800, marginBottom: "0.35rem" }}>
             {copy("Diagnostico de estructura")}
           </p>
@@ -386,7 +386,7 @@ export default function SubirProyectoTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800, marginBottom: "0.35rem" }}>
             {copy("Preguntas esperadas")}
           </p>
@@ -413,13 +413,13 @@ export default function SubirProyectoTab() {
           </div>
  
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(260px, 0.8fr)", gap: "1rem" }}>
-            <div style={{ background: COLORS.white, borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
+            <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
               <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.6rem" }}>{copy("Hallazgos")}</p>
               {analysis.findings.map((finding) => (
                 <p key={finding} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>- {copy(finding)}</p>
               ))}
             </div>
-            <div style={{ background: COLORS.white, borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
+            <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
               <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.6rem" }}>{copy("Otorgantes sugeridos")}</p>
               {analysis.matches.map((match) => (
                 <p key={match} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>- {copy(match)}</p>
@@ -429,7 +429,7 @@ export default function SubirProyectoTab() {
         </div>
       )}
 
-      <div style={{ marginTop: "1.5rem", background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <div style={{ marginTop: "1.5rem", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "1rem" }}>
           <div>
             <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800 }}>{copy("Antes de compartir con otorgantes")}</p>
@@ -559,7 +559,7 @@ export default function SubirProyectoTab() {
           </div>
         </section>
 
-        <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
+        <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.2rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.35rem" }}>
             {L("Payload previsto", "Planned payload")}
           </p>

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
 import SectionBackground from "../components/common/SectionBackground";
-import { overlays } from "../utils/visualStyle";
+import { overlays, softCardStyle } from "../utils/visualStyle";
 
 const INDUSTRIES = [
   { id: "banca",          name: "Banca y financieras" },
@@ -257,7 +257,7 @@ function SectorPage({ industry }) {
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(430px, 1fr))", gap: "1.1rem" }}>
             {content.casos.map((caso, i) => (
-              <div key={i} style={{ background: "#fff", border: "1px solid rgba(27,58,92,0.09)", borderRadius: "12px", padding: "1.4rem 1.5rem" }}>
+              <div key={i} style={{ ...softCardStyle, padding: "1.4rem 1.5rem" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "0.85rem" }}>
                   <span style={{ background: COLORS.navy, color: "#fff", borderRadius: "6px", width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.78rem", flexShrink: 0 }}>
                     {i + 1}
@@ -280,7 +280,7 @@ function SectorPage({ industry }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.25rem" }}>
 
           {/* Módulos NEXUS */}
-          <div style={{ background: "#fff", border: "1px solid rgba(27,58,92,0.09)", borderRadius: "12px", padding: "1.4rem 1.5rem" }}>
+          <div style={{ ...softCardStyle, padding: "1.4rem 1.5rem" }}>
             <p style={{ color: COLORS.gold, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
               MÓDULOS NEXUS APLICABLES
             </p>
@@ -292,7 +292,7 @@ function SectorPage({ industry }) {
           </div>
 
           {/* Regulaciones */}
-          <div style={{ background: "#fff", border: "1px solid rgba(27,58,92,0.09)", borderRadius: "12px", padding: "1.4rem 1.5rem" }}>
+          <div style={{ ...softCardStyle, padding: "1.4rem 1.5rem" }}>
             <p style={{ color: COLORS.gold, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
               MARCO REGULATORIO
             </p>
@@ -307,7 +307,7 @@ function SectorPage({ industry }) {
           </div>
 
           {/* Documentos clave */}
-          <div style={{ background: "#fff", border: "1px solid rgba(27,58,92,0.09)", borderRadius: "12px", padding: "1.4rem 1.5rem" }}>
+          <div style={{ ...softCardStyle, padding: "1.4rem 1.5rem" }}>
             <p style={{ color: COLORS.gold, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
               DOCUMENTOS CLAVE DEL CHECKLIST
             </p>

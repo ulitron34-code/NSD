@@ -53,7 +53,7 @@ export default function InvestorQATab() {
 
   return (
     <div>
-      <section style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "14px", padding: "1.6rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
+      <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "14px", padding: "1.6rem", marginBottom: "1.5rem", boxShadow: COLORS.shadowSm }}>
         <p style={{ color: COLORS.gold, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 900, fontSize: "0.75rem", marginBottom: "0.5rem" }}>
           {L("Q&A inversionista", "Investor Q&A")}
         </p>
@@ -66,7 +66,7 @@ export default function InvestorQATab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(260px, 0.7fr) minmax(0, 1.3fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <aside style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
+        <aside style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
           <p style={{ color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, fontSize: "0.72rem", marginBottom: "0.75rem" }}>
             {L("Preguntas", "Questions")}
           </p>
@@ -104,7 +104,7 @@ export default function InvestorQATab() {
           </div>
         </aside>
 
-        <article style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
+        <article style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.4rem", boxShadow: COLORS.shadowSm }}>
           {qaGroups.flatMap((group) => group.items.map((item, index) => ({ group: group.title, index, item })))
             .filter(({ group, index }) => `${group}-${index}` === openKey)
             .map(({ group, item }) => (

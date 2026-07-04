@@ -175,7 +175,7 @@ export default function MessagingTab() {
       {/* SELECTOR DE EXPEDIENTE */}
       {expedientes.length > 0 && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "1rem",
           borderRadius: "8px",
           marginBottom: "1.5rem",
@@ -211,7 +211,7 @@ export default function MessagingTab() {
         {/* ÁREA DE MENSAJES */}
         <div
           style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             borderRadius: "10px",
             border: `1px solid ${COLORS.border}`,
             overflow: "hidden",

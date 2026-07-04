@@ -256,7 +256,7 @@ export default function RequirementsTab() {
       {/* SELECTOR DE EXPEDIENTE */}
       {expedientes.length > 0 && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "1rem",
           borderRadius: "8px",
           marginBottom: "1.5rem",
@@ -299,7 +299,7 @@ export default function RequirementsTab() {
             <div
               key={item.label}
               style={{
-                background: COLORS.white,
+                background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
                 padding: "1.25rem",
                 borderRadius: "10px",
                 borderTop: `4px solid ${item.color}`,
@@ -321,7 +321,7 @@ export default function RequirementsTab() {
       {showCreateForm && isOtorgante && (
         <div
           style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             padding: "2rem",
             borderRadius: "10px",
             marginBottom: "2rem",
@@ -460,7 +460,7 @@ export default function RequirementsTab() {
 
       {/* LISTA DE REQUERIMIENTOS */}
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         borderRadius: "10px",
         overflow: "hidden",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",

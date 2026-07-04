@@ -89,7 +89,7 @@ export default function SolicitantesTab() {
       </p>
 
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         padding: "2rem",
         borderRadius: "10px",
         marginBottom: "2rem",
@@ -131,7 +131,7 @@ export default function SolicitantesTab() {
 
       {result && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "2rem",
           borderRadius: "10px",
           marginBottom: "2rem",
@@ -177,7 +177,7 @@ export default function SolicitantesTab() {
       )}
 
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         padding: "2rem",
         borderRadius: "10px",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",

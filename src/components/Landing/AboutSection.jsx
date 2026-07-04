@@ -28,7 +28,7 @@ export default function AboutSection() {
           alignItems: "center",
         }}>
           <img
-            src="/img-boardroom.jpg"
+            src="/boardroom-bg.jpg"
             alt={t("about.whoTitle")}
             style={{
               width: "100%", height: "100%", minHeight: "320px",

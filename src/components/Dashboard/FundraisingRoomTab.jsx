@@ -42,7 +42,7 @@ export default function FundraisingRoomTab() {
   return (
     <div>
       <section style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         border: `1px solid ${COLORS.border}`,
         borderRadius: "14px",
         padding: "1.6rem",
@@ -67,7 +67,7 @@ export default function FundraisingRoomTab() {
           ["Primer mercado", "Mexico", "SOFOMES, fintechs, fondos, bancos y solicitantes empresariales."],
           ["Expansion", "USA despues", "Solo con pilotos, legal y costos de integracion validados."],
         ].map(([label, value, detail]) => (
-          <article key={label} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
+          <article key={label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.15rem", boxShadow: COLORS.shadowSm }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(label)}</p>
             <p style={{ color: COLORS.navy, fontSize: "1.55rem", fontWeight: 900, marginBottom: "0.35rem" }}>{copy(value)}</p>
             <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", lineHeight: 1.45 }}>{copy(detail)}</p>
@@ -76,7 +76,7 @@ export default function FundraisingRoomTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(320px, 0.9fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Uso de fondos", "Use of Funds")}</h2>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {useOfFunds.map(([label, pct, detail]) => (
@@ -91,7 +91,7 @@ export default function FundraisingRoomTab() {
           </div>
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.18rem", marginBottom: "1rem" }}>{L("Hitos financiables", "Fundable Milestones")}</h2>
           <div style={{ display: "grid", gap: "0.65rem" }}>
             {milestones.map(([time, title, detail]) => (
@@ -106,7 +106,7 @@ export default function FundraisingRoomTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Data room de inversion", "Investor Data Room")}</h2>
           {dataRoomItems.map(([item, status, detail]) => (
             <div key={item} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: "0.75rem 0" }}>
@@ -119,7 +119,7 @@ export default function FundraisingRoomTab() {
           ))}
         </div>
 
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Riesgos y mitigacion", "Risks and Mitigation")}</h2>
           {riskPlan.map(([risk, mitigation]) => (
             <div key={risk} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.85rem", marginBottom: "0.65rem" }}>

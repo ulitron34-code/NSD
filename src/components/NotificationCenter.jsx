@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useIndexedDB } from "../hooks/useIndexedDB";
 import {
   getUnreadNotifications,
@@ -7,12 +8,35 @@ import {
   deleteNotification
 } from "../services/notificationService";
 import { COLORS } from "../utils/constants";
+import { uiText } from "../utils/runtimeCopy";
+import Icon from "./common/icons";
 
 export default function NotificationCenter({ userId }) {
+  const { i18n } = useTranslation();
+  const L = (es, en) => uiText(i18n, es, en);
   const { db } = useIndexedDB('nsd-app', 1);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showPanel, setShowPanel] = useState(false);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!showPanel) return;
+    const handleClickOutside = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        setShowPanel(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === "Escape") setShowPanel(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showPanel]);
 
   // Cargar notificaciones
   useEffect(() => {
@@ -86,19 +110,22 @@ export default function NotificationCenter({ userId }) {
   return (
     <>
       {/* BELL ICON */}
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }} ref={panelRef}>
         <button
           onClick={() => setShowPanel(!showPanel)}
+          aria-label={L("Notificaciones", "Notifications")}
           style={{
             position: 'relative',
             background: 'transparent',
             border: 'none',
-            fontSize: '1.5rem',
+            color: 'inherit',
             cursor: 'pointer',
-            padding: '0.5rem'
+            padding: '0.5rem',
+            display: 'flex',
+            alignItems: 'center'
           }}
         >
-          🔔
+          <Icon name="bell" size={22} />
           {unreadCount > 0 && (
             <span
               style={{
@@ -152,24 +179,41 @@ export default function NotificationCenter({ userId }) {
               }}
             >
               <h3 style={{ color: COLORS.navy, margin: 0, fontWeight: 700 }}>
-                Notificaciones {unreadCount > 0 && `(${unreadCount})`}
+                {L("Notificaciones", "Notifications")} {unreadCount > 0 && `(${unreadCount})`}
               </h3>
-              {unreadCount > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleReadAll}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: COLORS.gold,
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    {L("Marcar todas", "Mark all")}
+                  </button>
+                )}
                 <button
-                  onClick={handleReadAll}
+                  onClick={() => setShowPanel(false)}
+                  aria-label={L("Cerrar", "Close")}
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: COLORS.gold,
+                    color: COLORS.textMuted,
                     cursor: 'pointer',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    textDecoration: 'underline'
+                    fontSize: '1rem',
+                    padding: 0,
+                    lineHeight: 1
                   }}
                 >
-                  Marcar todas
+                  ✕
                 </button>
-              )}
+              </div>
             </div>
 
             {/* NOTIFICATIONS LIST */}
@@ -253,7 +297,7 @@ export default function NotificationCenter({ userId }) {
                           margin: 0
                         }}
                       >
-                        {new Date(notif.createdAt).toLocaleString('es-MX')}
+                        {new Date(notif.createdAt).toLocaleString(i18n.language === "en" ? "en-US" : "es-MX")}
                       </p>
                       {!notif.read && (
                         <button
@@ -268,7 +312,7 @@ export default function NotificationCenter({ userId }) {
                             textDecoration: 'underline'
                           }}
                         >
-                          Marcar
+                          {L("Marcar", "Mark")}
                         </button>
                       )}
                     </div>
@@ -282,7 +326,7 @@ export default function NotificationCenter({ userId }) {
                     color: COLORS.textMuted
                   }}
                 >
-                  <p>No tienes notificaciones</p>
+                  <p>{L("No tienes notificaciones", "You have no notifications")}</p>
                 </div>
               )}
             </div>

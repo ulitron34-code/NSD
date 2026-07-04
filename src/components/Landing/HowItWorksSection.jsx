@@ -53,6 +53,17 @@ export default function HowItWorksSection() {
 
   return (
     <section style={{ padding: "6rem 2rem", background: "#0F1F2E", position: "relative", overflow: "hidden" }}>
+      {/* Background photo */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "url(/three-steps-bg.jpg)",
+        backgroundSize: "cover", backgroundPosition: "center",
+        opacity: 0.32,
+      }} />
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(180deg, rgba(15,31,46,0.55) 0%, rgba(15,31,46,0.92) 100%)",
+      }} />
       {/* Background glow */}
       <div style={{
         position: "absolute", top: "50%", left: "50%",

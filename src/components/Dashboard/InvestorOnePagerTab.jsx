@@ -51,7 +51,7 @@ export default function InvestorOnePagerTab() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.15fr) minmax(300px, 0.85fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
           <h2 style={{ color: COLORS.navy, fontSize: "1.2rem", marginBottom: "1rem" }}>{L("Memo ejecutivo", "Executive Memo")}</h2>
           <div style={{ display: "grid", gap: "0.7rem" }}>
             {memoBlocks.map(([title, detail]) => (
@@ -64,7 +64,7 @@ export default function InvestorOnePagerTab() {
         </div>
 
         <aside style={{ display: "grid", gap: "1rem" }}>
-          <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
             <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Datos rapidos", "Quick Facts")}</h2>
             {quickFacts.map(([label, value]) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", padding: "0.65rem 0", borderBottom: `1px solid ${COLORS.border}` }}>
@@ -74,7 +74,7 @@ export default function InvestorOnePagerTab() {
             ))}
           </div>
 
-          <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem", boxShadow: COLORS.shadowSm }}>
             <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "0.75rem" }}>{L("Frase de 20 segundos", "20-second pitch")}</h2>
             <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", lineHeight: 1.65 }}>
               {L("NEXUS ayuda a empresas y proyectos a preparar expedientes financieros con IA, data room y trazabilidad, para que bancos, SOFOMES, fintechs y fondos revisen oportunidades con menos friccion y mejor evidencia.", "NEXUS helps companies and projects prepare financing files with AI, data room and traceability, so banks, lenders, fintechs and funds can review opportunities with less friction and better evidence.")}

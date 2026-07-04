@@ -238,7 +238,7 @@ export default function CumplimientoTab() {
                 top: "100%",
                 right: 0,
                 marginTop: "0.5rem",
-                background: COLORS.white,
+                background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
                 border: `1px solid ${COLORS.border}`,
                 borderRadius: "6px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
@@ -306,7 +306,7 @@ export default function CumplimientoTab() {
           { label: L("Documentos aprobados", "Approved Documents"), value: `${approvedCount}/${documents.length}`, color: COLORS.navy },
           { label: L("Riesgos altos", "High Risks"), value: criticalCount, color: "#C62828" },
         ].map((item) => (
-          <div key={item.label} style={{ background: COLORS.white, padding: "1.25rem", borderRadius: "10px", borderTop: `4px solid ${item.color}`, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...(item.highlight && { borderWidth: "3px" }) }}>
+          <div key={item.label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.25rem", borderRadius: "10px", borderTop: `4px solid ${item.color}`, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...(item.highlight && { borderWidth: "3px" }) }}>
             <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{item.label}</p>
             <p style={{ color: item.color, fontSize: "1.9rem", fontWeight: 800, marginTop: "0.4rem" }}>{item.value}</p>
           </div>
@@ -314,7 +314,7 @@ export default function CumplimientoTab() {
       </div>
 
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         padding: "2rem",
         borderRadius: "10px",
         marginBottom: "2rem",
@@ -332,7 +332,7 @@ export default function CumplimientoTab() {
       {/* DESGLOSE DE PUNTUACIÓN */}
       {score && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "2rem",
           borderRadius: "10px",
           marginBottom: "2rem",
@@ -369,7 +369,7 @@ export default function CumplimientoTab() {
                 </div>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.9rem", margin: "0.25rem 0" }}>{copy(item.detail)}</p>
                 <div style={{
-                  background: COLORS.white,
+                  background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
                   height: "6px",
                   borderRadius: "3px",
                   overflow: "hidden",
@@ -421,7 +421,7 @@ export default function CumplimientoTab() {
 
       {/* UPLOAD ZONE */}
       <div style={{
-        background: COLORS.white,
+        background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         padding: "2rem",
         borderRadius: "10px",
         marginBottom: "2rem",
@@ -446,7 +446,7 @@ export default function CumplimientoTab() {
 
       <div className="dashboard-detail-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.45fr) minmax(320px, 0.9fr)", gap: "1.5rem", alignItems: "start" }}>
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "2rem",
           borderRadius: "10px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
@@ -546,7 +546,7 @@ export default function CumplimientoTab() {
 
         {selectedDoc && (
           <aside style={{
-            background: COLORS.white,
+            background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             borderRadius: "10px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             border: `1px solid ${COLORS.border}`,
@@ -650,7 +650,7 @@ export default function CumplimientoTab() {
       {/* HISTORIAL DE AUDITORÍA */}
       {showLogs && logs.length > 0 && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "2rem",
           borderRadius: "10px",
           marginTop: "2rem",
@@ -686,7 +686,7 @@ export default function CumplimientoTab() {
 
       {showLogs && logs.length === 0 && (
         <div style={{
-          background: COLORS.white,
+          background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           padding: "2rem",
           borderRadius: "10px",
           marginTop: "2rem",

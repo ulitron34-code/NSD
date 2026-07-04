@@ -180,7 +180,7 @@ export default function TransactionOversightTab() {
       {view === "screen" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
           {/* Formulario */}
-          <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.5rem", boxShadow: COLORS.shadowSm }}>
             <h3 style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "1.2rem", fontSize: "0.95rem" }}>
               {L("Datos de la Operacion", "Transaction Details")}
             </h3>
@@ -294,7 +294,7 @@ export default function TransactionOversightTab() {
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 {/* Veredicto */}
                 <div style={{
-                  background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px",
+                  background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px",
                   padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
@@ -310,7 +310,7 @@ export default function TransactionOversightTab() {
 
                 {/* Alertas */}
                 {result.alerts?.length > 0 && (
-                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
+                  <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
                     <h3 style={{ color: COLORS.navy, fontWeight: 800, fontSize: "0.9rem", marginBottom: "0.75rem" }}>
                       {L("Alertas generadas", "Generated alerts")} ({result.alerts.length})
                     </h3>
@@ -332,7 +332,7 @@ export default function TransactionOversightTab() {
 
                 {/* Screening sanciones */}
                 {result.sanctionsResult && (
-                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
+                  <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
                     <h3 style={{ color: COLORS.navy, fontWeight: 800, fontSize: "0.9rem", marginBottom: "0.5rem" }}>
                       {L("Screening de Sanciones", "Sanctions Screening")}
                     </h3>
@@ -360,7 +360,7 @@ export default function TransactionOversightTab() {
 
       {/* ── VISTA: Historial ─────────────────────────────────── */}
       {view === "history" && (
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
           <h3 style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "1rem", fontSize: "0.95rem" }}>
             {L("Historial de alertas de esta sesion", "Session alert history")}
           </h3>
@@ -398,7 +398,7 @@ export default function TransactionOversightTab() {
       {/* ── VISTA: Reglas ────────────────────────────────────── */}
       {view === "rules" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
-          <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
             <h3 style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "1rem", fontSize: "0.95rem" }}>
               {L("Reglas activas", "Active rules")}
             </h3>
@@ -415,7 +415,7 @@ export default function TransactionOversightTab() {
             </div>
           </div>
 
-          <div style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
+          <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1.25rem 1.5rem", boxShadow: COLORS.shadowSm }}>
             <h3 style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "1rem", fontSize: "0.95rem" }}>
               {L("Umbrales de monto por moneda", "Amount thresholds by currency")}
             </h3>

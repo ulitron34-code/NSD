@@ -50,11 +50,12 @@ export default function Hero() {
         position: "absolute", inset: 0,
         backgroundImage: "url(/hero-bg.jpg)",
         backgroundSize: "cover", backgroundPosition: "center",
+        filter: "brightness(1.2)",
         zIndex: 0,
       }} />
       <div style={{
         position: "absolute", inset: 0,
-        background: "linear-gradient(135deg, rgba(15,31,46,0.86) 0%, rgba(27,58,92,0.68) 55%, rgba(42,82,122,0.5) 100%)",
+        background: "linear-gradient(135deg, rgba(15,31,46,0.6) 0%, rgba(27,58,92,0.42) 55%, rgba(42,82,122,0.3) 100%)",
         zIndex: 1,
       }} />
       <div style={{
@@ -72,7 +73,7 @@ export default function Hero() {
 
       <div style={{ maxWidth: "1100px", margin: "0 auto", position: "relative", zIndex: 3 }}>
         <div style={{
-          background: "rgba(249,247,242,0.74)",
+          background: "rgba(249,247,242,0.58)",
           borderRadius: "20px",
           padding: "3rem 3.5rem",
           boxShadow: COLORS.shadowLg,
