@@ -4,6 +4,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { logAuditEvent } from '../utils/audit.js';
 import { runAIReviewCascaded } from '../services/aiEngine.js';
+import { evaluateReadinessDocument } from '../agents/readinessRubricAgent.js';
 
 const router = express.Router();
 const MAX_DOCUMENT_BYTES = Number(process.env.MAX_DOCUMENT_BYTES || 25 * 1024 * 1024);
@@ -481,7 +482,7 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
 
     const { data: document, error: documentError } = await supabaseAdmin
       .from('documents')
-      .select('id, order_id, filename, storage_path, uploaded_at')
+      .select('id, order_id, filename, storage_path, uploaded_at, document_type')
       .eq('id', req.params.documentId)
       .eq('order_id', req.params.orderId)
       .single();
@@ -538,7 +539,21 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           }
         }
 
-        const reviewPayload = await runAIReviewCascaded(document, extractedText);
+        let reviewPayload;
+        if (String(document.document_type || '').startsWith('READY_')) {
+          const { data: order } = await supabaseAdmin
+            .from('service_orders')
+            .select('id, metadata')
+            .eq('id', req.params.orderId)
+            .single();
+          reviewPayload = await evaluateReadinessDocument({
+            documentTypeCode: document.document_type,
+            extractedText,
+            order
+          });
+        } else {
+          reviewPayload = await runAIReviewCascaded(document, extractedText);
+        }
 
         // 4. Actualizar el registro en base de datos con los resultados finales de la IA
         try {

@@ -31,5 +31,21 @@ services:
         sync: false
       - key: NVIDIA_API_KEY
         sync: false
+      - key: SAT_API_URL
+        sync: false
+      - key: SAT_API_KEY
+        sync: false
+      - key: BURO_API_URL
+        sync: false
+      - key: BURO_API_KEY
+        sync: false
+      - key: INEGI_API_TOKEN
+        sync: false
+      - key: BANXICO_API_TOKEN
+        sync: false
+      - key: CNBV_PADRON_API_URL
+        sync: false
+      - key: CNBV_PADRON_API_KEY
+        sync: false
       - key: SENTRY_DSN
         sync: false
