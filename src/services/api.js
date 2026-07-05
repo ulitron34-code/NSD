@@ -233,6 +233,11 @@ export const intelAPI = {
   chat: (expedienteId, message) => api.post(`/intel/expediente/${expedienteId}/chat`, { message })
 };
 
+export const requisitosMinimosAPI = {
+  review: (items, language) =>
+    api.post('/requisitos-minimos/review', { items, language })
+};
+
 export const nagmarAPI = {
   screen: (name, country) =>
     api.post('/nagmar/screen', { name, country }),

@@ -146,3 +146,83 @@ export async function runAIReviewCascaded(document, extractedText) {
     warnings: !anthropic || !deepseek ? ["Advertencia: Llaves IA no configuradas, usando fallback simulado."] : []
   };
 }
+
+/**
+ * Heurística por reglas para el checklist de 12 Requisitos Mínimos — mismo cálculo que
+ * generarRevisionIARequisitos() en el frontend (src/data/requisitosMinimos.js), portado
+ * aquí como fallback cuando Claude no está configurado o falla la llamada.
+ */
+function reviewReadinessChecklistHeuristic(items, language) {
+  const isEn = String(language || "es").toLowerCase().startsWith("en");
+  const pendientes = items.filter((item) => item.estado !== "listo");
+  const criticos = pendientes.filter((item) => item.critico);
+  const score = Math.round(((items.length - pendientes.length) / (items.length || 1)) * 100);
+
+  const findings = [];
+  findings.push(
+    criticos.length > 0
+      ? (isEn
+          ? `Blocking: ${criticos.length} critical requirement(s) missing — ${criticos.map((i) => i.label?.en || i.label).join(", ")}.`
+          : `Bloqueante: faltan ${criticos.length} requisito(s) crítico(s) — ${criticos.map((i) => i.label?.es || i.label).join(", ")}.`)
+      : (isEn ? "No critical requirements are blocking submission." : "No hay requisitos críticos bloqueando el envío.")
+  );
+
+  const porCategoria = {};
+  pendientes.forEach((item) => {
+    porCategoria[item.categoria] = (porCategoria[item.categoria] || 0) + 1;
+  });
+  Object.entries(porCategoria).forEach(([categoria, count]) => {
+    findings.push(
+      isEn
+        ? `${count} item(s) pending in category "${categoria}".`
+        : `${count} elemento(s) pendiente(s) en la categoría "${categoria}".`
+    );
+  });
+
+  if (pendientes.length === 0) {
+    findings.push(isEn ? "All 12 minimum requirements are complete." : "Los 12 requisitos mínimos están completos.");
+  }
+
+  return { score, findings };
+}
+
+/**
+ * Revisa el estado del checklist de 12 Requisitos Mínimos con Claude real.
+ * Cae a la heurística por reglas si Anthropic no está configurado o la llamada falla.
+ */
+export async function reviewReadinessChecklist(items, language) {
+  const heuristic = () => ({
+    ...reviewReadinessChecklistHeuristic(items, language),
+    warnings: ["Advertencia: ANTHROPIC_API_KEY no configurada, usando revisión heurística por reglas."]
+  });
+
+  if (!anthropic) {
+    console.warn("Claude no configurado. Revisión del checklist en modo heurístico.");
+    return heuristic();
+  }
+
+  try {
+    const itemsResumen = items.map((item) => ({
+      label: item.label?.es || item.label,
+      categoria: item.categoria,
+      critico: !!item.critico,
+      estado: item.estado,
+      evidencia: item.evidenciaNombre || null,
+      ods: item.sdg && item.sdg.length ? item.sdg : undefined
+    }));
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: AI_PROMPTS.READINESS_CHECKLIST_REVIEWER_SYSTEM,
+      messages: [
+        { role: "user", content: `Idioma de respuesta: ${language || "es"}\nChecklist de 12 Requisitos Mínimos:\n${JSON.stringify(itemsResumen, null, 2)}` }
+      ]
+    });
+    const parsed = JSON.parse(response.content[0].text);
+    return { score: parsed.score, findings: parsed.findings, warnings: [] };
+  } catch (error) {
+    console.error("Error revisando checklist con Claude:", error);
+    return heuristic();
+  }
+}

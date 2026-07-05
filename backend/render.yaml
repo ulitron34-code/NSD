@@ -29,5 +29,7 @@ services:
         sync: false
       - key: DEEPSEEK_API_KEY
         sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
       - key: SENTRY_DSN
         sync: false

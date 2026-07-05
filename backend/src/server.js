@@ -36,6 +36,7 @@ import transactionRoutes from './routes/transactionOversight.js';
 import f6Routes from './routes/f6Regulatory.js';
 import whatsappRoutes from './routes/whatsapp.js';
 import nsdApplicantRoutes from './routes/nsdApplicant.js';
+import requisitosMinimosRoutes from './routes/requisitosMinimos.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { primeRegulatoryLists } from './services/regulatoryGateway.js';
@@ -112,6 +113,7 @@ app.use('/api', transactionRoutes);
 app.use('/api', f6Routes);
 app.use('/api', whatsappRoutes);
 app.use('/api', nsdApplicantRoutes);
+app.use('/api', requisitosMinimosRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

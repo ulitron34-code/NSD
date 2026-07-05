@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
 import { useRequisitosMinimos } from "../../../hooks/useRequisitosMinimos";
+import { requisitosMinimosAPI } from "../../../services/api";
 import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, pickLang, DEMO_EXPEDIENTE_ID, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
 
 export default function FundingReadinessTab() {
@@ -11,6 +12,20 @@ export default function FundingReadinessTab() {
   const L = (es, en) => uiText(i18n, es, en);
   const requisitos = useRequisitosMinimos(DEMO_EXPEDIENTE_ID);
   const [revisionIA, setRevisionIA] = useState(null);
+  const [cargandoIA, setCargandoIA] = useState(false);
+
+  const handleRevisarIA = async () => {
+    setCargandoIA(true);
+    try {
+      const { data } = await requisitosMinimosAPI.review(requisitos.items, i18n.language);
+      setRevisionIA(data);
+    } catch (err) {
+      warn("No se pudo contactar la revisión IA del backend, usando heurística local", err);
+      setRevisionIA(generarRevisionIARequisitos(requisitos.items, i18n.language));
+    } finally {
+      setCargandoIA(false);
+    }
+  };
 
   const readinessAreas = [
     {
@@ -248,10 +263,11 @@ export default function FundingReadinessTab() {
                 : L("Sin criticos pendientes", "No critical items pending")}
             </span>
             <button
-              onClick={() => setRevisionIA(generarRevisionIARequisitos(requisitos.items, i18n.language))}
-              style={{ border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: "pointer", background: COLORS.navy, color: "white" }}
+              onClick={handleRevisarIA}
+              disabled={cargandoIA}
+              style={{ border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: cargandoIA ? "wait" : "pointer", background: COLORS.navy, color: "white", opacity: cargandoIA ? 0.7 : 1 }}
             >
-              {L("Revisar con IA", "Review with AI")}
+              {cargandoIA ? L("Analizando…", "Analyzing…") : L("Revisar con IA", "Review with AI")}
             </button>
           </div>
         </div>
