@@ -106,12 +106,13 @@ export const paymentsAPI = {
 export const documentsAPI = {
   getSignedUploadUrl: (orderId, filename) =>
     api.post('/signed-upload-url', { orderId, filename }),
-  upload: (orderId, file) =>
+  upload: (orderId, file, documentType) =>
     api.post(`/documents/${orderId}/upload`, file, {
       headers: {
         'Content-Type': 'application/octet-stream',
         'X-Filename': file.name,
-        'X-Content-Type': file.type || 'application/octet-stream'
+        'X-Content-Type': file.type || 'application/octet-stream',
+        ...(documentType ? { 'X-Document-Type': documentType } : {})
       }
     }),
   list: (orderId) =>
@@ -236,6 +237,11 @@ export const intelAPI = {
 export const requisitosMinimosAPI = {
   review: (items, language) =>
     api.post('/requisitos-minimos/review', { items, language })
+};
+
+export const readinessChecklistAPI = {
+  get: (orderId) =>
+    api.get(`/orders/${orderId}/readiness-checklist`)
 };
 
 export const nagmarAPI = {

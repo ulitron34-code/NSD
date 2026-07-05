@@ -11,7 +11,7 @@ import { useSelectedExpediente } from "../../../hooks/useSelectedExpediente";
 import { DOCUMENT_TYPES } from "../../../utils/institutional";
 import { buildInternationalReadiness } from "../../../utils/localization";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
-import { useRequisitosMinimos } from "../../../hooks/useRequisitosMinimos";
+import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
 import { pickLang } from "../../../data/requisitosMinimos";
 
 const REQUISITO_CATEGORIA_A_DOCUMENT_TYPE = {
@@ -441,7 +441,8 @@ export default function PipelineTab() {
     };
   }, [user?.demo]);
 
-  const requisitosMinimos = useRequisitosMinimos(selected?.id);
+  const requisitosMinimosEsDemo = Boolean(user?.demo) || String(selected?.id || '').startsWith("demo-");
+  const requisitosMinimos = useReadinessChecklist(selected?.id, requisitosMinimosEsDemo);
   const analytics = useMemo(() => buildOtorganteAnalytics(opportunities), [opportunities]);
   const phase7Checklist = useMemo(() => buildPhase7Checklist(opportunities, copy), [opportunities, i18n.language]);
   const sectorOptions = useMemo(() => ["Todos", ...Array.from(new Set(opportunities.map((item) => item.sector).filter(Boolean)))], [opportunities]);

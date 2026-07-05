@@ -18,6 +18,25 @@ const allowedMimeTypes = new Set([
   'image/jpeg'
 ]);
 
+// Códigos del checklist de 12 Requisitos Mínimos (ver
+// sql_migrations_pendientes/2026-07-04_readiness_document_types.sql). Solo
+// estos códigos pueden venir del header X-Document-Type; cualquier otro
+// valor se ignora y se conserva la inferencia automática por nombre.
+const READINESS_DOCUMENT_TYPES = new Set([
+  'READY_DOC_CORPORATIVA',
+  'READY_DOC_KYC',
+  'READY_MARCO_RIESGOS',
+  'READY_ESTUDIO_VIABILIDAD',
+  'READY_ESTUDIO_MERCADO',
+  'READY_PLAN_NEGOCIOS',
+  'READY_MODELO_FINANCIERO',
+  'READY_VIABILIDAD_FINANCIERA',
+  'READY_TRANSPARENCIA_DOCUMENTAL',
+  'READY_ODS',
+  'READY_ESG',
+  'READY_ESIA'
+]);
+
 function inferDocumentType(filename = '') {
   const normalized = String(filename)
     .normalize('NFD')
@@ -258,6 +277,7 @@ router.post(
     const { orderId } = req.params;
     const originalFilename = req.headers['x-filename'];
     const contentType = req.headers['x-content-type'] || 'application/octet-stream';
+    const requestedDocumentType = req.headers['x-document-type'];
 
     try {
       if (!req.body?.length) {
@@ -279,7 +299,9 @@ router.post(
       const safeName = sanitizeFilename(String(originalFilename));
       const storagePath = `${orderId}/${Date.now()}-${safeName}`;
       const fileHash = crypto.createHash('sha256').update(req.body).digest('hex');
-      const documentType = inferDocumentType(String(originalFilename));
+      const documentType = READINESS_DOCUMENT_TYPES.has(requestedDocumentType)
+        ? requestedDocumentType
+        : inferDocumentType(String(originalFilename));
       const versionNumber = await getNextDocumentVersion(orderId, documentType, String(originalFilename));
 
       const { error: uploadError } = await supabaseAdmin.storage

@@ -1,18 +1,60 @@
 import { error, debug, info, warn } from '../../../utils/logger';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
-import { useRequisitosMinimos } from "../../../hooks/useRequisitosMinimos";
-import { requisitosMinimosAPI } from "../../../services/api";
-import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, pickLang, DEMO_EXPEDIENTE_ID, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
+import { useAuth } from "../../../hooks/useAuth";
+import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
+import { requisitosMinimosAPI, ordersAPI } from "../../../services/api";
+import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, pickLang, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
 
 export default function FundingReadinessTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
-  const requisitos = useRequisitosMinimos(DEMO_EXPEDIENTE_ID);
+  const { user } = useAuth();
+  const isDemo = Boolean(user?.demo);
+
+  const [orderId, setOrderId] = useState(null);
+  const [ordersChecked, setOrdersChecked] = useState(false);
+  const [uploadingItemId, setUploadingItemId] = useState(null);
+
+  useEffect(() => {
+    if (isDemo) {
+      setOrdersChecked(true);
+      return;
+    }
+    let active = true;
+    ordersAPI.list()
+      .then(({ data }) => {
+        if (!active) return;
+        const list = (data || []).slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        if (list.length > 0) setOrderId(list[0].id);
+      })
+      .catch((err) => warn("SVC", "No se pudieron cargar los expedientes reales", err))
+      .finally(() => { if (active) setOrdersChecked(true); });
+    return () => { active = false; };
+  }, [isDemo]);
+
+  const requisitos = useReadinessChecklist(orderId, isDemo);
+  const usaCargaReal = !isDemo && Boolean(orderId);
+
   const [revisionIA, setRevisionIA] = useState(null);
   const [cargandoIA, setCargandoIA] = useState(false);
+
+  const handleAdjuntar = async (itemId, file) => {
+    if (!usaCargaReal) {
+      requisitos.adjuntarEvidencia(itemId, file.name);
+      return;
+    }
+    setUploadingItemId(itemId);
+    try {
+      await requisitos.uploadEvidence(itemId, file);
+    } catch (err) {
+      error("SVC", "Error subiendo evidencia real del checklist", err);
+    } finally {
+      setUploadingItemId(null);
+    }
+  };
 
   const handleRevisarIA = async () => {
     setCargandoIA(true);
@@ -250,6 +292,14 @@ export default function FundingReadinessTab() {
                 "Every project must cover these 12 points before it can be sent to NEXUS pre-validation. Items marked critical block submission while pending."
               )}
             </p>
+            {!isDemo && ordersChecked && !orderId && (
+              <p style={{ margin: "0.5rem 0 0", color: COLORS.amber, fontSize: "0.78rem", fontWeight: 700, maxWidth: "620px" }}>
+                {L(
+                  "No encontramos un expediente real todavia — crea uno para adjuntar documentos y obtener revision IA sobre archivos reales. Mientras tanto se muestra el checklist de ejemplo.",
+                  "We couldn't find a real file yet — create one to attach documents and get AI review on real files. Meanwhile the example checklist is shown."
+                )}
+              </p>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
             <span style={{
@@ -321,33 +371,59 @@ export default function FundingReadinessTab() {
                             {L("Evidencia:", "Evidence:")} {item.evidenciaNombre}
                           </p>
                         )}
+                        {usaCargaReal && item.enRevision && (
+                          <p style={{ margin: "0.3rem 0 0", color: COLORS.amber, fontSize: "0.74rem", fontWeight: 700 }}>
+                            {L("En revision IA…", "AI review in progress…")}
+                          </p>
+                        )}
+                        {usaCargaReal && item.reviewScore != null && !item.enRevision && (
+                          <p style={{ margin: "0.3rem 0 0", color: isListo ? COLORS.green : "#C62828", fontSize: "0.74rem", fontWeight: 700 }}>
+                            {L("Score IA:", "AI score:")} {item.reviewScore}/100
+                            {item.reviewFindings?.[0] ? ` — ${item.reviewFindings[0]}` : ""}
+                          </p>
+                        )}
                       </div>
 
                       <label style={{
-                        fontSize: "0.72rem", fontWeight: 800, color: COLORS.navy, cursor: "pointer",
+                        fontSize: "0.72rem", fontWeight: 800, color: COLORS.navy, cursor: uploadingItemId === item.id ? "wait" : "pointer",
                         border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.4rem 0.6rem",
+                        opacity: uploadingItemId === item.id ? 0.6 : 1,
                       }}>
-                        {L("Adjuntar", "Attach")}
+                        {uploadingItemId === item.id ? L("Subiendo…", "Uploading…") : L("Adjuntar", "Attach")}
                         <input
                           type="file"
+                          disabled={uploadingItemId === item.id}
                           style={{ display: "none" }}
                           onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) requisitos.adjuntarEvidencia(item.id, file.name);
+                            if (file) handleAdjuntar(item.id, file);
+                            e.target.value = "";
                           }}
                         />
                       </label>
 
-                      <button
-                        onClick={() => requisitos.marcarEstado(item.id, isListo ? "pendiente" : "listo")}
-                        style={{
-                          border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.76rem", cursor: "pointer",
-                          background: isListo ? "rgba(46,125,50,0.12)" : COLORS.gold,
+                      {!usaCargaReal && (
+                        <button
+                          onClick={() => requisitos.marcarEstado(item.id, isListo ? "pendiente" : "listo")}
+                          style={{
+                            border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.76rem", cursor: "pointer",
+                            background: isListo ? "rgba(46,125,50,0.12)" : COLORS.gold,
+                            color: isListo ? COLORS.green : COLORS.navy,
+                          }}
+                        >
+                          {isListo ? L("Listo", "Ready") : L("Marcar listo", "Mark ready")}
+                        </button>
+                      )}
+
+                      {usaCargaReal && (
+                        <span style={{
+                          borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.76rem",
+                          background: isListo ? "rgba(46,125,50,0.12)" : "rgba(201,168,76,0.14)",
                           color: isListo ? COLORS.green : COLORS.navy,
-                        }}
-                      >
-                        {isListo ? L("Listo", "Ready") : L("Marcar listo", "Mark ready")}
-                      </button>
+                        }}>
+                          {isListo ? L("Listo", "Ready") : L("Pendiente", "Pending")}
+                        </span>
+                      )}
                     </div>
 
                     {item.id === "ods" && (
