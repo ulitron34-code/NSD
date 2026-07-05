@@ -208,7 +208,12 @@ export async function reviewReadinessChecklist(items, language) {
       critico: !!item.critico,
       estado: item.estado,
       evidencia: item.evidenciaNombre || null,
-      ods: item.sdg && item.sdg.length ? item.sdg : undefined
+      ods: item.sdg && item.sdg.length ? item.sdg : undefined,
+      // Cuando el item ya tiene un documento real subido y revisado
+      // (ver readinessChecklistService.js), estos campos traen el resultado
+      // real de esa revisión — sin esto, Claude solo veía el check manual.
+      revisionRealScore: item.reviewScore ?? undefined,
+      revisionRealHallazgos: item.reviewFindings && item.reviewFindings.length ? item.reviewFindings : undefined
     }));
 
     const response = await anthropic.messages.create({

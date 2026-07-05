@@ -79,9 +79,15 @@ Responde ÚNICAMENTE un JSON válido con esta forma exacta:
   "summary": "string",
   "findings": ["string"],
   "missing_items": ["string"],
-  "red_flags": ["string"]
+  "red_flags": ["string"],
+  "extracted_fields": {
+    "monto_solicitado": "string o null si no aplica/no se menciona",
+    "razon_social": "string o null si no aplica/no se menciona",
+    "fecha_documento": "string o null si no aplica/no se menciona"
+  }
 }
-Status: green si score >= 80, yellow si 60-79, red si < 60.`;
+Status: green si score >= 80, yellow si 60-79, red si < 60.
+"extracted_fields" es para comparar este documento contra los otros del mismo expediente — usa null si el documento no menciona ese dato, no inventes un valor.`;
 
   const response = await anthropic.messages.create({
     model: MODEL,
@@ -91,13 +97,20 @@ Status: green si score >= 80, yellow si 60-79, red si < 60.`;
   });
 
   const parsed = JSON.parse(response.content[0].text);
+  const extractedFields = Object.entries(parsed.extracted_fields || {})
+    .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '')
+    .map(([key, value]) => ({ key, value }));
+
   return {
     status: parsed.status,
     score: parsed.score,
     summary: parsed.summary,
     findings: parsed.findings || [],
     missing_items: parsed.missing_items || [],
-    extracted_data: (parsed.red_flags || []).map((flag) => ({ key: 'Bandera roja', value: flag })),
+    extracted_data: [
+      ...extractedFields,
+      ...(parsed.red_flags || []).map((flag) => ({ key: 'Bandera roja', value: flag }))
+    ],
     warnings: []
   };
 }
@@ -151,7 +164,8 @@ async function evaluateKyc(order) {
     extracted_data: [
       { key: 'RFC', value: result.rfc },
       { key: 'Score Buró', value: result.checks?.credit_score?.score ?? 'N/D' },
-      { key: 'Riesgo global', value: result.global_risk?.global_risk || 'N/D' }
+      { key: 'Riesgo global', value: result.global_risk?.global_risk || 'N/D' },
+      ...(result.name ? [{ key: 'razon_social', value: result.name }] : [])
     ],
     warnings: result.mock_warning ? [result.mock_warning] : []
   };

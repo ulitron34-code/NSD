@@ -177,15 +177,18 @@ export const auditAPI = {
     api.get(`/audit-logs/${orderId}/export.csv`, { responseType: 'blob' })
 };
 
+// Las rutas /ai-agents/* nunca existieron en el backend (confirmado por
+// grep) — estas 4 funciones apuntan ahora a los endpoints reales que ya
+// hacen lo mismo bajo otro nombre, en vez de a rutas inexistentes.
 export const aiAgentsAPI = {
-  forensicAnalyze: (orderId, payload = {}) =>
-    api.post(`/ai-agents/forensic/${orderId}/analyze`, payload),
-  documentTriage: (orderId, payload = {}) =>
-    api.post(`/ai-agents/documents/${orderId}/triage`, payload),
-  riskMemo: (orderId, payload = {}) =>
-    api.post(`/ai-agents/risk/${orderId}/memo`, payload),
+  forensicAnalyze: (orderId) =>
+    api.get(`/orders/${orderId}/scoring/risk-score`),
+  documentTriage: (orderId) =>
+    api.get(`/intel/expediente/${orderId}/summary`),
+  riskMemo: (orderId) =>
+    api.get(`/orders/${orderId}/scoring/institutional-memo`),
   orchestrationStatus: (orderId) =>
-    api.get(`/ai-agents/orchestration/${orderId}`)
+    api.get(`/orders/${orderId}/scoring`)
 };
 
 export const checklistAPI = {
@@ -241,7 +244,11 @@ export const requisitosMinimosAPI = {
 
 export const readinessChecklistAPI = {
   get: (orderId) =>
-    api.get(`/orders/${orderId}/readiness-checklist`)
+    api.get(`/orders/${orderId}/readiness-checklist`),
+  downloadMemo: (orderId) =>
+    api.get(`/orders/${orderId}/readiness-checklist/memo.md`, { responseType: 'blob' }),
+  crossCheck: (orderId) =>
+    api.post(`/orders/${orderId}/readiness-checklist/cross-check`)
 };
 
 export const nagmarAPI = {

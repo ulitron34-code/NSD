@@ -5,7 +5,7 @@ import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
 import { useAuth } from "../../../hooks/useAuth";
 import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
-import { requisitosMinimosAPI, ordersAPI } from "../../../services/api";
+import { requisitosMinimosAPI, readinessChecklistAPI, ordersAPI } from "../../../services/api";
 import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, pickLang, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
 
 export default function FundingReadinessTab() {
@@ -40,6 +40,40 @@ export default function FundingReadinessTab() {
 
   const [revisionIA, setRevisionIA] = useState(null);
   const [cargandoIA, setCargandoIA] = useState(false);
+  const [descargandoReporte, setDescargandoReporte] = useState(false);
+  const [verificandoConsistencia, setVerificandoConsistencia] = useState(false);
+  const [inconsistencias, setInconsistencias] = useState(null);
+
+  const handleDescargarReporte = async () => {
+    setDescargandoReporte(true);
+    try {
+      const response = await readinessChecklistAPI.downloadMemo(orderId);
+      const url = URL.createObjectURL(new Blob([response.data], { type: "text/markdown" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "reporte-readiness.md";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      error("SVC", "Error descargando el reporte de readiness", err);
+    } finally {
+      setDescargandoReporte(false);
+    }
+  };
+
+  const handleVerificarConsistencia = async () => {
+    setVerificandoConsistencia(true);
+    try {
+      const { data } = await readinessChecklistAPI.crossCheck(orderId);
+      setInconsistencias(data.inconsistencies || []);
+    } catch (err) {
+      error("SVC", "Error verificando consistencia entre documentos", err);
+    } finally {
+      setVerificandoConsistencia(false);
+    }
+  };
 
   const handleAdjuntar = async (itemId, file) => {
     if (!usaCargaReal) {
@@ -312,15 +346,51 @@ export default function FundingReadinessTab() {
                 ? L(`${requisitos.criticosPendientes.length} criticos pendientes`, `${requisitos.criticosPendientes.length} critical pending`)
                 : L("Sin criticos pendientes", "No critical items pending")}
             </span>
-            <button
-              onClick={handleRevisarIA}
-              disabled={cargandoIA}
-              style={{ border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: cargandoIA ? "wait" : "pointer", background: COLORS.navy, color: "white", opacity: cargandoIA ? 0.7 : 1 }}
-            >
-              {cargandoIA ? L("Analizando…", "Analyzing…") : L("Revisar con IA", "Review with AI")}
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+              {usaCargaReal && (
+                <button
+                  onClick={handleVerificarConsistencia}
+                  disabled={verificandoConsistencia}
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: verificandoConsistencia ? "wait" : "pointer", background: "white", color: COLORS.navy, opacity: verificandoConsistencia ? 0.7 : 1 }}
+                >
+                  {verificandoConsistencia ? L("Verificando…", "Checking…") : L("Verificar consistencia", "Check consistency")}
+                </button>
+              )}
+              {usaCargaReal && (
+                <button
+                  onClick={handleDescargarReporte}
+                  disabled={descargandoReporte}
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: descargandoReporte ? "wait" : "pointer", background: "white", color: COLORS.navy, opacity: descargandoReporte ? 0.7 : 1 }}
+                >
+                  {descargandoReporte ? L("Descargando…", "Downloading…") : L("Descargar reporte", "Download report")}
+                </button>
+              )}
+              <button
+                onClick={handleRevisarIA}
+                disabled={cargandoIA}
+                style={{ border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: cargandoIA ? "wait" : "pointer", background: COLORS.navy, color: "white", opacity: cargandoIA ? 0.7 : 1 }}
+              >
+                {cargandoIA ? L("Analizando…", "Analyzing…") : L("Revisar con IA", "Review with AI")}
+              </button>
+            </div>
           </div>
         </div>
+
+        {inconsistencias && (
+          <div style={{ background: inconsistencias.length ? "rgba(198,40,40,0.06)" : "rgba(46,125,50,0.08)", border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.85rem", marginBottom: "1rem" }}>
+            <strong style={{ color: COLORS.navy, fontSize: "0.84rem", display: "block", marginBottom: "0.4rem" }}>
+              {L("Consistencia entre documentos", "Cross-document consistency")}
+            </strong>
+            {inconsistencias.length === 0 && (
+              <p style={{ margin: 0, color: COLORS.green, fontSize: "0.8rem" }}>
+                {L("Sin inconsistencias detectadas entre los documentos cargados.", "No inconsistencies detected between the uploaded documents.")}
+              </p>
+            )}
+            {inconsistencias.map((item, idx) => (
+              <p key={idx} style={{ margin: "0 0 0.25rem", color: "#C62828", fontSize: "0.8rem", lineHeight: 1.45 }}>- {item.message}</p>
+            ))}
+          </div>
+        )}
 
         <div style={{ height: "8px", background: "#E8ECF2", borderRadius: "999px", overflow: "hidden", marginBottom: "1rem" }}>
           <div style={{ width: `${requisitos.progreso}%`, height: "100%", background: requisitos.listoParaEnviar ? COLORS.green : COLORS.gold, transition: "width 0.3s" }} />

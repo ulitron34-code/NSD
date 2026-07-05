@@ -4,10 +4,8 @@ import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { useNotification } from "../../../hooks/useNotification";
 import { useAuth } from "../../../hooks/useAuth";
-import { ordersAPI, aiAgentsAPI } from "../../../services/api";
+import { ordersAPI, aiAgentsAPI, documentsAPI } from "../../../services/api";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
-import { createDocument } from "../../../services/documentService";
-import { getExpedientesForUser } from "../../../services/expedienteService";
 
 // Estados demo seguros para presentación startup
 const DEMO_PROJECT = {
@@ -25,11 +23,13 @@ export default function SubirProyectoTab() {
 
   const { addNotification } = useNotification();
   const { user } = useAuth();
+  const isDemo = Boolean(user?.demo);
 
-  // FASE 5: Estados para expedientes y documentos
-  const [expedientes, setExpedientes] = useState([]);
-  const [selectedExpediente, setSelectedExpediente] = useState(null);
-  const [uploadedDocs, setUploadedDocs] = useState([]);
+  // Expediente real (Supabase) en vez del IndexedDB local que usaba este tab
+  // antes — mismo patrón que FundingReadinessTab.jsx.
+  const [orderId, setOrderId] = useState(null);
+  const [ordersChecked, setOrdersChecked] = useState(false);
+  const [uploadingDocName, setUploadingDocName] = useState(null);
 
   const [analysis, setAnalysis] = useState(null);
   const [project, setProject] = useState(DEMO_PROJECT);
@@ -42,29 +42,24 @@ export default function SubirProyectoTab() {
   const [triageResult, setTriageResult] = useState(null);
   const [riskMemoResult, setRiskMemoResult] = useState(null);
 
-  // FASE 5: Cargar expedientes del usuario
   useEffect(() => {
-    if (!user) return;
+    if (isDemo) {
+      setOrdersChecked(true);
+      return;
+    }
+    let active = true;
+    ordersAPI.list()
+      .then(({ data }) => {
+        if (!active) return;
+        const list = (data || []).slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        if (list.length > 0) setOrderId(list[0].id);
+      })
+      .catch((err) => error("SVC", "No se pudieron cargar los expedientes reales", err))
+      .finally(() => { if (active) setOrdersChecked(true); });
+    return () => { active = false; };
+  }, [isDemo]);
 
-    const loadExpedientes = async () => {
-      try {
-        const exps = await getExpedientesForUser(user.id);
-        setExpedientes(exps);
-        // Auto-seleccionar el primero
-        if (exps.length > 0 && !selectedExpediente) {
-          setSelectedExpediente(exps[0]);
-        }
-      } catch (err) {
-        error("SVC", 'Error loading expedientes:', err);
-      }
-    };
-
-    loadExpedientes();
-
-    // Auto-refresh cada 10 segundos
-    const interval = setInterval(loadExpedientes, 10000);
-    return () => clearInterval(interval);
-  }, [user, selectedExpediente]);
+  const usaCargaReal = !isDemo && Boolean(orderId);
 
   React.useEffect(() => {
     ordersAPI.requirements()
@@ -171,34 +166,28 @@ export default function SubirProyectoTab() {
     setProject((current) => ({ ...current, [field]: value }));
   };
 
-  // FASE 5: Conectado al documentService
-  const uploadDocument = async (docName) => {
-    if (!user || !selectedExpediente) {
-      addNotification("Selecciona un expediente primero", "error");
+  const uploadDocument = async (docName, file) => {
+    if (!usaCargaReal) {
+      addNotification(copy("Crea o selecciona un expediente real para subir documentos."), "error");
       return;
     }
 
+    setUploadingDocName(docName);
     try {
-      const doc = await createDocument({
-        userId: user.id,
-        expedienteId: selectedExpediente.id,
-        fileName: docName + ".pdf",
-        documentType: "general",
-        description: `${docName} subido desde Subir Proyecto`
-      });
-
-      setUploadedDocs([...uploadedDocs, doc.id]);
-      addNotification(`${docName} subido al expediente ${selectedExpediente.id}`, "success");
+      await documentsAPI.upload(orderId, file);
+      addNotification(`${docName} subido al expediente`, "success");
     } catch (err) {
       error("SVC", 'Error uploading document:', err);
       addNotification(`Error al subir ${docName}`, "error");
+    } finally {
+      setUploadingDocName(null);
     }
   };
 
   // Función para ejecutar análisis con AI Agents
   const executeAIAgentsAnalysis = async () => {
-    if (!selectedExpediente) {
-      addNotification(copy("Selecciona un expediente primero"), "warning");
+    if (!usaCargaReal) {
+      addNotification(copy("Selecciona un expediente real primero"), "warning");
       return;
     }
 
@@ -207,19 +196,16 @@ export default function SubirProyectoTab() {
 
     try {
       // Ejecutar triage de documentos
-      const triageResponse = await aiAgentsAPI.documentTriage(selectedExpediente.id, aiAgentPacket.payload);
+      const triageResponse = await aiAgentsAPI.documentTriage(orderId);
       setTriageResult(triageResponse.data);
       debug("AI", "Triage completado:", triageResponse.data);
 
       // Ejecutar análisis forense
-      const forensicResponse = await aiAgentsAPI.forensicAnalyze(selectedExpediente.id, {
-        ...aiAgentPacket.payload,
-        focusAreas: ["kyb", "financial_consistency", "document_integrity"]
-      });
+      const forensicResponse = await aiAgentsAPI.forensicAnalyze(orderId);
       debug("AI", "Análisis forense completado:", forensicResponse.data);
 
       // Generar memo de riesgo
-      const memoResponse = await aiAgentsAPI.riskMemo(selectedExpediente.id, aiAgentPacket.payload);
+      const memoResponse = await aiAgentsAPI.riskMemo(orderId);
       setRiskMemoResult(memoResponse.data);
       debug("AI", "Memo de riesgo completado:", memoResponse.data);
 
@@ -285,10 +271,10 @@ export default function SubirProyectoTab() {
 
   // Función para obtener estado de orquestación
   const checkOrchestrationStatus = async () => {
-    if (!selectedExpediente) return;
-    
+    if (!usaCargaReal) return;
+
     try {
-      const status = await aiAgentsAPI.orchestrationStatus(selectedExpediente.id);
+      const status = await aiAgentsAPI.orchestrationStatus(orderId);
       debug("AI", "Estado de orquestación:", status.data);
       return status.data;
     } catch (err) {
@@ -361,9 +347,25 @@ export default function SubirProyectoTab() {
                   <p style={{ color: COLORS.navy, fontWeight: 800, fontSize: "0.9rem" }}>{copy(doc.name)}</p>
                   <p style={{ color: doc.status === "Pendiente" ? COLORS.amber : COLORS.green, fontSize: "0.78rem", fontWeight: 700 }}>{copy(doc.status)}</p>
                 </div>
-                <button onClick={() => uploadDocument(doc.name)} style={{ padding: "0.45rem 0.75rem", borderRadius: "5px", border: "none", background: doc.status === "Pendiente" ? COLORS.gold : COLORS.navy, color: doc.status === "Pendiente" ? COLORS.navy : COLORS.white, fontWeight: 800 }}>
-                  {copy("Subir")}
-                </button>
+                {usaCargaReal ? (
+                  <label style={{ padding: "0.45rem 0.75rem", borderRadius: "5px", border: "none", background: doc.status === "Pendiente" ? COLORS.gold : COLORS.navy, color: doc.status === "Pendiente" ? COLORS.navy : COLORS.white, fontWeight: 800, cursor: uploadingDocName === doc.name ? "wait" : "pointer" }}>
+                    {uploadingDocName === doc.name ? copy("Subiendo…") : copy("Subir")}
+                    <input
+                      type="file"
+                      disabled={uploadingDocName === doc.name}
+                      style={{ display: "none" }}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) uploadDocument(doc.name, file);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <button onClick={() => uploadDocument(doc.name)} style={{ padding: "0.45rem 0.75rem", borderRadius: "5px", border: "none", background: doc.status === "Pendiente" ? COLORS.gold : COLORS.navy, color: doc.status === "Pendiente" ? COLORS.navy : COLORS.white, fontWeight: 800 }}>
+                    {copy("Subir")}
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -549,11 +551,11 @@ export default function SubirProyectoTab() {
           
           <div style={{ display: "grid", gap: "0.55rem" }}>
             <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.75rem" }}>
-              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.endpoint.replace(':orderId', selectedExpediente?.id || ':orderId')}</strong>
+              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.endpoint.replace(':orderId', orderId || ':orderId')}</strong>
               <span style={{ color: aiLoading ? COLORS.amber : COLORS.gold, fontSize: "0.72rem", fontWeight: 900 }}>{aiAgentPacket.status}</span>
             </div>
             <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "0.75rem" }}>
-              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.memoEndpoint.replace(':orderId', selectedExpediente?.id || ':orderId')}</strong>
+              <strong style={{ display: "block", color: COLORS.white, fontSize: "0.78rem", marginBottom: "0.2rem" }}>POST {aiAgentPacket.memoEndpoint.replace(':orderId', orderId || ':orderId')}</strong>
               <span style={{ color: "rgba(255,255,255,0.72)", fontSize: "0.72rem", fontWeight: 800 }}>{L("Memo de riesgo y liberacion data room", "Risk memo and data room release")}</span>
             </div>
           </div>

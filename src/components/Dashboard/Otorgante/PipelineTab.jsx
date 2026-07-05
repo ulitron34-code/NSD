@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotification } from "../../../hooks/useNotification";
 import { COLORS } from "../../../utils/constants";
-import { informationRequestsAPI, ordersAPI, otorganteAPI, scoringAPI } from "../../../services/api";
+import { informationRequestsAPI, ordersAPI, otorganteAPI, scoringAPI, readinessChecklistAPI } from "../../../services/api";
 import { demoServiceOrders } from "../../../data/demoServiceOrders";
 import { buildOtorganteAnalytics, buildOtorgantePipeline, buildOtorgantePipelineFromEntries } from "../../../data/otorgantePipeline";
 import { useAuth } from "../../../hooks/useAuth";
@@ -443,6 +443,27 @@ export default function PipelineTab() {
 
   const requisitosMinimosEsDemo = Boolean(user?.demo) || String(selected?.id || '').startsWith("demo-");
   const requisitosMinimos = useReadinessChecklist(selected?.id, requisitosMinimosEsDemo);
+  const [descargandoReporteReadiness, setDescargandoReporteReadiness] = useState(false);
+
+  const handleDescargarReporteReadiness = async () => {
+    if (requisitosMinimosEsDemo || !selected?.id) return;
+    setDescargandoReporteReadiness(true);
+    try {
+      const response = await readinessChecklistAPI.downloadMemo(selected.id);
+      const url = URL.createObjectURL(new Blob([response.data], { type: "text/markdown" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "reporte-readiness.md";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      error("SVC", "Error descargando el reporte de readiness", err);
+    } finally {
+      setDescargandoReporteReadiness(false);
+    }
+  };
   const analytics = useMemo(() => buildOtorganteAnalytics(opportunities), [opportunities]);
   const phase7Checklist = useMemo(() => buildPhase7Checklist(opportunities, copy), [opportunities, i18n.language]);
   const sectorOptions = useMemo(() => ["Todos", ...Array.from(new Set(opportunities.map((item) => item.sector).filter(Boolean)))], [opportunities]);
@@ -1173,11 +1194,22 @@ export default function PipelineTab() {
                     {copy("Lo que el solicitante ya declaro listo en su expediente.")}
                   </p>
                 </div>
-                <span style={{
-                  color: requisitosMinimos.listoParaEnviar ? COLORS.green : "#C62828", fontWeight: 900, fontSize: "0.8rem", whiteSpace: "nowrap",
-                }}>
-                  {requisitosMinimos.completados}/{requisitosMinimos.total}
-                </span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.4rem" }}>
+                  <span style={{
+                    color: requisitosMinimos.listoParaEnviar ? COLORS.green : "#C62828", fontWeight: 900, fontSize: "0.8rem", whiteSpace: "nowrap",
+                  }}>
+                    {requisitosMinimos.completados}/{requisitosMinimos.total}
+                  </span>
+                  {!requisitosMinimosEsDemo && (
+                    <button
+                      onClick={handleDescargarReporteReadiness}
+                      disabled={descargandoReporteReadiness}
+                      style={{ border: `1px solid ${COLORS.border}`, borderRadius: "5px", padding: "0.3rem 0.55rem", fontSize: "0.68rem", fontWeight: 900, cursor: descargandoReporteReadiness ? "wait" : "pointer", background: "white", color: COLORS.navy, whiteSpace: "nowrap" }}
+                    >
+                      {descargandoReporteReadiness ? copy("Descargando…") : copy("Descargar reporte")}
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ display: "grid", gap: "0.4rem" }}>
                 {requisitosMinimos.items.map((item) => {
@@ -1197,6 +1229,17 @@ export default function PipelineTab() {
                     }}>
                       <div style={{ minWidth: 0 }}>
                         <p style={{ margin: 0, color: COLORS.navy, fontSize: "0.78rem", fontWeight: 800 }}>{pickLang(item.label, i18n.language)}</p>
+                        {item.enRevision && (
+                          <p style={{ margin: "0.15rem 0 0", color: COLORS.amber, fontSize: "0.68rem", fontWeight: 700 }}>
+                            {copy("En revision IA…")}
+                          </p>
+                        )}
+                        {item.reviewScore != null && !item.enRevision && (
+                          <p style={{ margin: "0.15rem 0 0", color: verificado ? COLORS.green : "#C62828", fontSize: "0.68rem", fontWeight: 700 }}>
+                            {copy("Score IA:")} {item.reviewScore}/100
+                            {item.reviewFindings?.[0] ? ` — ${item.reviewFindings[0]}` : ""}
+                          </p>
+                        )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
                         <span style={{
