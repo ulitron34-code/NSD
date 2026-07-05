@@ -1,82 +1,176 @@
-import { error, debug, info, warn } from '../../utils/logger';
+import { error } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotification } from "../../hooks/useNotification";
-import { useIndexedDB } from "../../hooks/useIndexedDB";
 import { useAuth } from "../../hooks/useAuth";
 import {
   getExpedientesForUser,
   createDemoExpediente,
-  updateExpediente,
-  getExpediente
+  updateExpediente as updateExpedienteDemo,
+  getExpediente as getExpedienteDemo
 } from "../../services/expedienteService";
 import { getDocumentsByExpediente } from "../../services/documentService";
 import { getRequirementsByExpediente } from "../../services/requirementServiceV2";
 import { getConversationForUser } from "../../services/messagingServiceV2";
+import { ordersAPI, otorganteAPI, documentsAPI, informationRequestsAPI, messagingAPI } from "../../services/api";
 import { generateExpedientePDF } from "../../services/pdfExportService";
 import { searchExpedientes } from "../../services/searchService";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
 
+// Un expediente real puede aparecer como dueño (Solicitante, via ordersAPI)
+// o como otorgante autorizado (via otorganteAPI.pipeline() + data_room_shares
+// aceptado) — el backend no tiene el concepto simetrico "mi expediente" que
+// si tenia el IndexedDB falso, asi que se piden ambas fuentes y se etiqueta
+// cada resultado con su rol real.
+function mapOwnedOrder(order) {
+  const metadata = order.metadata || {};
+  return {
+    id: order.id,
+    title: order.project_name || metadata.projectName || order.case_number || 'Expediente',
+    status: order.stage === 'cerrado' ? 'cerrado' : 'activo',
+    amount: Number(order.requested_amount || order.amount || 0),
+    sector: metadata.sector || '—',
+    solicitanteName: metadata.companyName || '—',
+    otorganteName: '—',
+    role: 'owner',
+    createdAt: order.created_at,
+    documentsCount: null,
+    requirementsCount: null,
+    messagesCount: null
+  };
+}
+
+function mapSharedItem(item) {
+  const order = item.order || {};
+  const metadata = order.metadata || {};
+  return {
+    id: order.id,
+    title: order.project_name || metadata.projectName || order.case_number || 'Expediente',
+    status: order.stage === 'cerrado' ? 'cerrado' : 'activo',
+    amount: Number(order.requested_amount || order.amount || 0),
+    sector: metadata.sector || '—',
+    solicitanteName: metadata.companyName || '—',
+    otorganteName: item.share?.recipientName || '—',
+    role: 'funder',
+    createdAt: order.created_at,
+    documentsCount: item.documentsCount ?? null,
+    requirementsCount: null,
+    messagesCount: null
+  };
+}
+
 export default function ExpedientesTab() {
   const { addNotification } = useNotification();
-  const { db } = useIndexedDB('nsd-app', 1);
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const isDemo = Boolean(user?.demo);
 
   const [expedientes, setExpedientes] = useState([]);
   const [filteredExpedientes, setFilteredExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedExp, setSelectedExp] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [exportingId, setExportingId] = useState(null);
 
   // Cargar expedientes
   useEffect(() => {
     if (!user) return;
+    let active = true;
 
-    const loadExpedientes = async () => {
+    const loadDemo = async () => {
       try {
         let exps = await getExpedientesForUser(user.id);
-
         if (exps.length === 0) {
           const demoExp = await createDemoExpediente();
           exps = [demoExp];
           addNotification(L('Expediente demo creado', 'Demo compliance file created'), 'info');
         }
-
-        setExpedientes(exps);
-        setLoading(false);
+        if (active) setExpedientes(exps);
       } catch (err) {
-        error("SVC", 'Error loading expedientes:', err);
-        setLoading(false);
+        error("SVC", 'Error loading demo expedientes:', err);
+      } finally {
+        if (active) setLoading(false);
       }
     };
 
-    loadExpedientes();
-  }, [user, db]);
+    const loadReal = async () => {
+      try {
+        const [ownedResult, sharedResult] = await Promise.allSettled([
+          ordersAPI.list(),
+          otorganteAPI.pipeline()
+        ]);
+        const owned = ownedResult.status === 'fulfilled' ? (ownedResult.value.data || []) : [];
+        const shared = sharedResult.status === 'fulfilled' ? (sharedResult.value.data || []) : [];
+        if (active) setExpedientes([...owned.map(mapOwnedOrder), ...shared.map(mapSharedItem)]);
+      } catch (err) {
+        error("SVC", 'Error loading real expedientes:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    if (isDemo) loadDemo(); else loadReal();
+    return () => { active = false; };
+  }, [user, isDemo]);
 
   // Filtrar expedientes por búsqueda
   useEffect(() => {
+    let active = true;
     if (searchQuery.trim() === "") {
       setFilteredExpedientes(expedientes);
     } else {
-      const filtered = searchExpedientes(expedientes, searchQuery);
-      setFilteredExpedientes(filtered);
+      searchExpedientes(expedientes, searchQuery).then((filtered) => {
+        if (active) setFilteredExpedientes(filtered);
+      });
     }
+    return () => { active = false; };
   }, [expedientes, searchQuery]);
 
-  const handleExportPDF = async (expId) => {
-    try {
-      setExportingId(expId);
-      const exp = await getExpediente(expId);
-      const docs = await getDocumentsByExpediente(expId);
-      const reqs = await getRequirementsByExpediente(expId);
-      const msgs = await getConversationForUser(user.id, expId) || [];
+  const handleSelectExpediente = async (exp) => {
+    setSelectedExp(exp);
+    if (isDemo) return;
 
-      await generateExpedientePDF(exp, reqs, docs, msgs);
+    try {
+      const [docsResult, reqsResult, msgsResult] = await Promise.allSettled([
+        documentsAPI.list(exp.id),
+        informationRequestsAPI.list(exp.id),
+        messagingAPI.list(exp.id)
+      ]);
+      setSelectedExp((prev) => (prev?.id !== exp.id ? prev : {
+        ...prev,
+        documentsCount: docsResult.status === 'fulfilled' ? (docsResult.value.data || []).length : prev.documentsCount,
+        requirementsCount: reqsResult.status === 'fulfilled' ? (reqsResult.value.data || []).length : prev.requirementsCount,
+        messagesCount: msgsResult.status === 'fulfilled' ? (msgsResult.value.data || []).length : prev.messagesCount
+      }));
+    } catch (err) {
+      error("SVC", 'Error cargando detalle del expediente real:', err);
+    }
+  };
+
+  const handleExportPDF = async (exp) => {
+    try {
+      setExportingId(exp.id);
+
+      if (isDemo) {
+        const fullExp = await getExpedienteDemo(exp.id);
+        const docs = await getDocumentsByExpediente(exp.id);
+        const reqs = await getRequirementsByExpediente(exp.id);
+        const msgs = await getConversationForUser(user.id, exp.id) || [];
+        await generateExpedientePDF(fullExp, reqs, docs, msgs);
+      } else {
+        const [docsResult, reqsResult, msgsResult] = await Promise.allSettled([
+          documentsAPI.list(exp.id),
+          informationRequestsAPI.list(exp.id),
+          messagingAPI.list(exp.id)
+        ]);
+        const docs = docsResult.status === 'fulfilled' ? (docsResult.value.data || []) : [];
+        const reqs = reqsResult.status === 'fulfilled' ? (reqsResult.value.data || []) : [];
+        const msgs = msgsResult.status === 'fulfilled' ? (msgsResult.value.data || []) : [];
+        await generateExpedientePDF(exp, reqs, docs, msgs);
+      }
+
       addNotification(L(`📥 Expediente ${exp.id} descargado`, `📥 Compliance file ${exp.id} downloaded`), 'success');
     } catch (err) {
       error("SVC", 'Error exportando PDF:', err);
@@ -86,11 +180,22 @@ export default function ExpedientesTab() {
     }
   };
 
-  const handleUpdateStatus = async (expId, newStatus) => {
+  const handleUpdateStatus = async (exp, newStatus) => {
     try {
-      const updated = await updateExpediente(expId, { status: newStatus });
-      setExpedientes(expedientes.map(e => e.id === expId ? updated : e));
-      setSelectedExp(updated);
+      if (isDemo) {
+        const updated = await updateExpedienteDemo(exp.id, { status: newStatus });
+        setExpedientes(expedientes.map(e => e.id === exp.id ? updated : e));
+        setSelectedExp(updated);
+      } else {
+        if (exp.role !== 'owner') {
+          addNotification(L('Solo el solicitante dueño del expediente puede cambiar su estado.', 'Only the applicant who owns the file can change its status.'), 'error');
+          return;
+        }
+        await ordersAPI.updateInstitutional(exp.id, { stage: newStatus === 'cerrado' ? 'cerrado' : 'captura' });
+        const updated = { ...exp, status: newStatus };
+        setExpedientes(expedientes.map(e => e.id === exp.id ? updated : e));
+        setSelectedExp(updated);
+      }
       addNotification(`${L('Expediente actualizado a:', 'Compliance file updated to:')} ${newStatus}`, 'success');
     } catch (err) {
       error("SVC", 'Error updating expediente:', err);
@@ -99,9 +204,21 @@ export default function ExpedientesTab() {
   };
 
   const getMiRol = (expediente) => {
-    if (expediente.solicitanteId === user?.id) return L('Solicitante', 'Applicant');
-    if (expediente.otorganteId === user?.id) return L('Otorgante', 'Funding Provider');
-    return L('Desconocido', 'Unknown');
+    if (isDemo) {
+      if (expediente.solicitanteId === user?.id) return L('Solicitante', 'Applicant');
+      if (expediente.otorganteId === user?.id) return L('Otorgante', 'Funding Provider');
+      return L('Desconocido', 'Unknown');
+    }
+    return expediente.role === 'owner' ? L('Solicitante', 'Applicant') : L('Otorgante', 'Funding Provider');
+  };
+
+  // Modo demo trae arreglos completos (documents/requirements/messages);
+  // modo real trae solo el conteo (documentsCount/...), cargado bajo demanda
+  // en handleSelectExpediente para no hacer N+1 llamadas en la lista.
+  const formatCount = (exp, arrayField, countField) => {
+    if (Array.isArray(exp[arrayField])) return exp[arrayField].length;
+    if (exp[countField] != null) return exp[countField];
+    return '—';
   };
 
   const getStatusColor = (status) => {
@@ -167,7 +284,7 @@ export default function ExpedientesTab() {
         {filteredExpedientes.map((exp) => (
           <div
             key={exp.id}
-            onClick={() => setSelectedExp(exp)}
+            onClick={() => handleSelectExpediente(exp)}
             style={{
               background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
               border: selectedExp?.id === exp.id ? `2px solid ${COLORS.gold}` : `1px solid ${COLORS.border}`,
@@ -235,19 +352,19 @@ export default function ExpedientesTab() {
               <div style={{ textAlign: "center" }}>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.7rem", margin: "0 0 0.25rem 0" }}>Docs</p>
                 <p style={{ color: COLORS.navy, fontWeight: 800, fontSize: "1.1rem", margin: 0 }}>
-                  {exp.documents?.length || 0}
+                  {formatCount(exp, 'documents', 'documentsCount')}
                 </p>
               </div>
               <div style={{ textAlign: "center" }}>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.7rem", margin: "0 0 0.25rem 0" }}>Reqs</p>
                 <p style={{ color: COLORS.navy, fontWeight: 800, fontSize: "1.1rem", margin: 0 }}>
-                  {exp.requirements?.length || 0}
+                  {formatCount(exp, 'requirements', 'requirementsCount')}
                 </p>
               </div>
               <div style={{ textAlign: "center" }}>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.7rem", margin: "0 0 0.25rem 0" }}>Msgs</p>
                 <p style={{ color: COLORS.navy, fontWeight: 800, fontSize: "1.1rem", margin: 0 }}>
-                  {exp.messages?.length || 0}
+                  {formatCount(exp, 'messages', 'messagesCount')}
                 </p>
               </div>
             </div>
@@ -277,27 +394,29 @@ export default function ExpedientesTab() {
                 ID: {selectedExp.id}
               </p>
             </div>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              {['activo', 'pausado', 'cerrado'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => handleUpdateStatus(selectedExp.id, status)}
-                  style={{
-                    padding: "0.5rem 1rem",
-                    background: selectedExp.status === status ? COLORS.gold : COLORS.bg,
-                    color: selectedExp.status === status ? COLORS.navy : COLORS.text,
-                    border: `1px solid ${COLORS.border}`,
-                    borderRadius: "6px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    fontSize: "0.85rem",
-                    textTransform: "capitalize"
-                  }}
-                >
-                  {L(status, status)}
-                </button>
-              ))}
-            </div>
+            {(isDemo || selectedExp.role === 'owner') && (
+              <div style={{ display: "flex", gap: "0.75rem" }}>
+                {(isDemo ? ['activo', 'pausado', 'cerrado'] : ['activo', 'cerrado']).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => handleUpdateStatus(selectedExp, status)}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      background: selectedExp.status === status ? COLORS.gold : COLORS.bg,
+                      color: selectedExp.status === status ? COLORS.navy : COLORS.text,
+                      border: `1px solid ${COLORS.border}`,
+                      borderRadius: "6px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                      textTransform: "capitalize"
+                    }}
+                  >
+                    {L(status, status)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{
@@ -349,9 +468,9 @@ export default function ExpedientesTab() {
             marginTop: "1.5rem"
           }}>
             {[
-              [`📄 ${L("Documentos", "Documents")}`, selectedExp.documents?.length || 0, L("Archivos cargados", "Uploaded files")],
-              [`📋 ${L("Requerimientos", "Requirements")}`, selectedExp.requirements?.length || 0, L("Solicitudes pendientes", "Pending requests")],
-              [`💬 ${L("Mensajes", "Messages")}`, selectedExp.messages?.length || 0, L("Comunicaciones", "Communications")]
+              [`📄 ${L("Documentos", "Documents")}`, formatCount(selectedExp, 'documents', 'documentsCount'), L("Archivos cargados", "Uploaded files")],
+              [`📋 ${L("Requerimientos", "Requirements")}`, formatCount(selectedExp, 'requirements', 'requirementsCount'), L("Solicitudes pendientes", "Pending requests")],
+              [`💬 ${L("Mensajes", "Messages")}`, formatCount(selectedExp, 'messages', 'messagesCount'), L("Comunicaciones", "Communications")]
             ].map(([icon, count, label]) => (
               <div key={label} style={{
                 background: COLORS.bg,
@@ -375,7 +494,7 @@ export default function ExpedientesTab() {
 
           {/* BOTÓN DE DESCARGAR PDF */}
           <button
-            onClick={() => handleExportPDF(selectedExp.id)}
+            onClick={() => handleExportPDF(selectedExp)}
             disabled={exportingId === selectedExp.id}
             style={{
               width: "100%",

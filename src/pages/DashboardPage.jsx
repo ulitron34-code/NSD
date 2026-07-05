@@ -25,6 +25,8 @@ const CumplimientoTab = lazy(() => import("../components/Dashboard/CumplimientoT
 const RequirementsTab = lazy(() => import("../components/Dashboard/RequirementsTab"));
 const MessagingTab = lazy(() => import("../components/Dashboard/MessagingTab"));
 const ExpedientesTab = lazy(() => import("../components/Dashboard/ExpedientesTab"));
+const MilestonesTimeline = lazy(() => import("../components/Dashboard/MilestonesTimeline"));
+const ControlCenter = lazy(() => import("../components/Dashboard/ControlCenter"));
 const PipelineTab = lazy(() => import("../components/Dashboard/Otorgante/PipelineTab"));
 const AnalyticsTab = lazy(() => import("../components/Dashboard/Otorgante/AnalyticsTab"));
 const DecisionRoomTab = lazy(() => import("../components/Dashboard/Otorgante/DecisionRoomTab"));
@@ -167,6 +169,8 @@ export default function DashboardPage() {
         { id: "matches", label: L("Instituciones Compatibles", "Compatible Institutions"), icon: "FI" },
         { id: "mis_proyectos", label: L("Servicios", "Services"), icon: "NEXUS" },
         { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
+        { id: "timeline", label: L("Linea de Tiempo", "Timeline"), icon: "TML" },
+        { id: "actividad", label: L("Panel de Actividad", "Activity Panel"), icon: "ACT" },
       ];
     }
     if (userMode === "otorgante") {
@@ -431,6 +435,8 @@ export default function DashboardPage() {
   const renderContent = () => {
     // Tabs compartidos
     if (activeTab === "expedientes") return <ExpedientesTab />;
+    if (activeTab === "timeline") return <MilestonesTimeline />;
+    if (activeTab === "actividad") return <ControlCenter />;
     if (activeTab === "data_room_index") return <DataRoomIndexTab />;
     if (activeTab === "scoring_ae") return <ScoringAETab />;
     if (activeTab === "biometricos") return <BiometricosTab />;

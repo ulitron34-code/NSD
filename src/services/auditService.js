@@ -4,8 +4,6 @@ import { error, debug, info, warn } from '../utils/logger';
 // Registra TODA la actividad del sistema
 // ============================================
 
-import { debug } from '../utils/logger';
-
 export function logActivity(activity) {
   return new Promise((resolve, reject) => {
     try {

@@ -1,8 +1,9 @@
-import { error, debug, info, warn } from '../../utils/logger';
+import { error, debug } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotification } from "../../hooks/useNotification";
 import { useAuth } from "../../hooks/useAuth";
+import { useMyOrders } from "../../hooks/useMyOrders";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
 import {
@@ -10,16 +11,31 @@ import {
   getConversationForUser,
   markMessageAsRead,
   markConversationAsRead,
-  getUnreadMessages,
-  getAllConversations
+  getUnreadMessages
 } from "../../services/messagingServiceV2";
 import { getExpedientesForUser } from "../../services/expedienteService";
+import { messagingAPI } from "../../services/api";
+
+// Normaliza filas reales de `messages` (backend) al mismo shape minimo que
+// usa el render, para no bifurcar todo el JSX entre demo/real.
+function normalizeRealMessage(row, userId) {
+  return {
+    id: row.id,
+    fromUserId: row.sender_user_id,
+    fromUserName: row.sender_email || "—",
+    subject: null,
+    body: row.body,
+    createdAt: row.created_at,
+    read: Boolean(row.read_at) || row.sender_user_id === userId
+  };
+}
 
 export default function MessagingTab() {
   const { addNotification } = useNotification();
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
+  const { orders: realOrders, orderId: defaultRealOrderId, isDemo } = useMyOrders();
 
   const [expedientes, setExpedientes] = useState([]);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
@@ -32,23 +48,35 @@ export default function MessagingTab() {
     body: "",
   });
 
+  // Cargar la lista de expedientes disponibles para elegir conversación.
   useEffect(() => {
     if (!user) return;
 
-    const loadExpedientes = async () => {
-      try {
-        const exps = await getExpedientesForUser(user.id);
-        setExpedientes(exps);
-        if (exps.length > 0 && !selectedExpediente) {
-          setSelectedExpediente(exps[0]);
+    if (isDemo) {
+      const loadExpedientes = async () => {
+        try {
+          const exps = await getExpedientesForUser(user.id);
+          setExpedientes(exps);
+          if (exps.length > 0 && !selectedExpediente) {
+            setSelectedExpediente(exps[0]);
+          }
+        } catch (err) {
+          error("SVC", "Error loading expedientes:", err);
         }
-      } catch (err) {
-        error("SVC", "Error loading expedientes:", err);
-      }
-    };
+      };
+      loadExpedientes();
+      return;
+    }
 
-    loadExpedientes();
-  }, [user]);
+    const mapped = realOrders.map((order) => ({
+      id: order.id,
+      title: order.project_name || order.metadata?.projectName || order.case_number || 'Expediente'
+    }));
+    setExpedientes(mapped);
+    if (mapped.length > 0 && !selectedExpediente) {
+      setSelectedExpediente(mapped[0]);
+    }
+  }, [user, isDemo, realOrders]);
 
   useEffect(() => {
     if (!selectedExpediente || !user) {
@@ -56,7 +84,7 @@ export default function MessagingTab() {
       return;
     }
 
-    const loadConversation = async () => {
+    const loadConversationDemo = async () => {
       try {
         setLoading(true);
         const msgs = await getConversationForUser(user.id, selectedExpediente.id);
@@ -69,19 +97,33 @@ export default function MessagingTab() {
         inThisExp.forEach(msg => {
           markMessageAsRead(msg.id).catch(err => debug("SVC", "Mark read error:", err));
         });
-
-        setLoading(false);
       } catch (err) {
         error("SVC", "Error loading conversation:", err);
+      } finally {
         setLoading(false);
       }
     };
 
+    const loadConversationReal = async () => {
+      try {
+        setLoading(true);
+        const { data } = await messagingAPI.list(selectedExpediente.id);
+        const normalized = (data || []).map((row) => normalizeRealMessage(row, user.id));
+        setMessages(normalized);
+        setUnreadCount(normalized.filter((m) => !m.read).length);
+      } catch (err) {
+        error("SVC", "Error loading real conversation:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const loadConversation = isDemo ? loadConversationDemo : loadConversationReal;
     loadConversation();
 
     const interval = setInterval(loadConversation, 5000);
     return () => clearInterval(interval);
-  }, [selectedExpediente, user]);
+  }, [selectedExpediente, user, isDemo]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -97,25 +139,31 @@ export default function MessagingTab() {
     }
 
     try {
-      const isOtorgante = selectedExpediente.otorganteId === user.id;
-      const toUserId = isOtorgante ? selectedExpediente.solicitanteId : selectedExpediente.otorganteId;
-      const toUserName = isOtorgante ? selectedExpediente.solicitanteName : selectedExpediente.otorganteName;
+      if (isDemo) {
+        const isOtorgante = selectedExpediente.otorganteId === user.id;
+        const toUserId = isOtorgante ? selectedExpediente.solicitanteId : selectedExpediente.otorganteId;
+        const toUserName = isOtorgante ? selectedExpediente.solicitanteName : selectedExpediente.otorganteName;
 
-      await sendMessage({
-        fromUserId: user.id,
-        fromUserType: isOtorgante ? "otorgante" : "solicitante",
-        fromUserName: user.email,
-        toUserId: toUserId,
-        toUserType: isOtorgante ? "solicitante" : "otorgante",
-        toUserName: toUserName,
-        expedienteId: selectedExpediente.id,
-        subject: formData.subject || L("Sin asunto", "No Subject"),
-        body: formData.body,
-        priority: "normal"
-      });
+        await sendMessage({
+          fromUserId: user.id,
+          fromUserType: isOtorgante ? "otorgante" : "solicitante",
+          fromUserName: user.email,
+          toUserId: toUserId,
+          toUserType: isOtorgante ? "solicitante" : "otorgante",
+          toUserName: toUserName,
+          expedienteId: selectedExpediente.id,
+          subject: formData.subject || L("Sin asunto", "No Subject"),
+          body: formData.body,
+          priority: "normal"
+        });
 
-      const msgs = await getConversationForUser(user.id, selectedExpediente.id);
-      setMessages(msgs);
+        const msgs = await getConversationForUser(user.id, selectedExpediente.id);
+        setMessages(msgs);
+      } else {
+        await messagingAPI.send(selectedExpediente.id, formData.body);
+        const { data } = await messagingAPI.list(selectedExpediente.id);
+        setMessages((data || []).map((row) => normalizeRealMessage(row, user.id)));
+      }
 
       setFormData({ subject: "", body: "" });
       addNotification(L("✅ Mensaje enviado. Destinatario notificado", "✅ Message sent. Recipient notified"), "success");
@@ -129,17 +177,23 @@ export default function MessagingTab() {
     if (!selectedExpediente) return;
 
     try {
-      await markConversationAsRead(user.id, selectedExpediente.id);
+      if (isDemo) {
+        await markConversationAsRead(user.id, selectedExpediente.id);
+        const msgs = await getConversationForUser(user.id, selectedExpediente.id);
+        setMessages(msgs);
+      } else {
+        await messagingAPI.markRead(selectedExpediente.id);
+        const { data } = await messagingAPI.list(selectedExpediente.id);
+        setMessages((data || []).map((row) => normalizeRealMessage(row, user.id)));
+      }
       setUnreadCount(0);
-      const msgs = await getConversationForUser(user.id, selectedExpediente.id);
-      setMessages(msgs);
       addNotification(L("Marcado como leído", "Marked as read"), "success");
     } catch (err) {
       error("SVC", "Error:", err);
     }
   };
 
-  const isOtorgante = selectedExpediente?.otorganteId === user?.id;
+  const isOtorgante = isDemo ? selectedExpediente?.otorganteId === user?.id : false;
 
   return (
     <div>
@@ -301,18 +355,20 @@ export default function MessagingTab() {
               gap: "0.75rem",
             }}
           >
-            <input
-              type="text"
-              placeholder={L("Asunto (opcional)", "Subject (optional)")}
-              value={formData.subject}
-              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              style={{
-                padding: "0.75rem",
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: "6px",
-                fontSize: "0.9rem",
-              }}
-            />
+            {isDemo && (
+              <input
+                type="text"
+                placeholder={L("Asunto (opcional)", "Subject (optional)")}
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                style={{
+                  padding: "0.75rem",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "6px",
+                  fontSize: "0.9rem",
+                }}
+              />
+            )}
             <textarea
               placeholder={L("Escribe tu mensaje...", "Type your message...")}
               value={formData.body}

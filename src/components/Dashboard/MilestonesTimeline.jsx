@@ -1,15 +1,32 @@
-import { error, debug, info, warn } from '../../utils/logger';
+import { error } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useMyOrders } from "../../hooks/useMyOrders";
 import { COLORS } from "../../utils/constants";
 import { getExpedientesForUser, getExpediente } from "../../services/expedienteService";
 import { getDocumentsByExpediente } from "../../services/documentService";
 import { getRequirementsByExpediente } from "../../services/requirementServiceV2";
+import { ordersAPI, documentsAPI, informationRequestsAPI } from "../../services/api";
 
 // FASE 6+: Milestones Timeline - Visualización progresiva del expediente
+// Antes 100% IndexedDB falso (nunca llegaba al backend) y código huérfano
+// (no estaba conectado a ningún menú) — ahora lee ordersAPI/documentsAPI/
+// informationRequestsAPI reales cuando el usuario no está en modo demo.
+
+function mapRealOrderToExpediente(order) {
+  const metadata = order.metadata || {};
+  return {
+    id: order.id,
+    title: order.project_name || metadata.projectName || order.case_number || 'Expediente',
+    amount: Number(order.requested_amount || order.amount || 0),
+    status: order.stage === 'cerrado' ? 'cerrado' : 'activo',
+    createdAt: order.created_at
+  };
+}
 
 export default function MilestonesTimeline() {
   const { user } = useAuth();
+  const { orders: realOrders, isDemo } = useMyOrders();
   const [expediente, setExpediente] = useState(null);
   const [milestones, setMilestones] = useState([]);
   const [selectedExpedienteId, setSelectedExpedienteId] = useState(null);
@@ -19,30 +36,58 @@ export default function MilestonesTimeline() {
   // Cargar expedientes al montar
   useEffect(() => {
     if (!user) return;
-    const loadExpedientes = async () => {
-      try {
-        const exps = await getExpedientesForUser(user.id);
-        setExpedientes(exps);
-        if (exps.length > 0) {
-          setSelectedExpedienteId(exps[0].id);
+
+    if (isDemo) {
+      const loadExpedientes = async () => {
+        try {
+          const exps = await getExpedientesForUser(user.id);
+          setExpedientes(exps);
+          if (exps.length > 0) setSelectedExpedienteId(exps[0].id);
+        } catch (err) {
+          error("SVC", "Error cargando expedientes:", err);
         }
-      } catch (err) {
-        error("SVC", "Error cargando expedientes:", err);
-      }
-    };
-    loadExpedientes();
-  }, [user]);
+      };
+      loadExpedientes();
+      return;
+    }
+
+    const mapped = realOrders.map(mapRealOrderToExpediente);
+    setExpedientes(mapped);
+    if (mapped.length > 0) setSelectedExpedienteId(mapped[0].id);
+  }, [user, isDemo, realOrders]);
 
   // Cargar expediente detallado y calcular hitos
   useEffect(() => {
     if (!user || !selectedExpedienteId) return;
 
+    const loadMilestonesDemo = async () => {
+      const exp = await getExpediente(selectedExpedienteId);
+      const docs = await getDocumentsByExpediente(selectedExpedienteId);
+      const reqs = await getRequirementsByExpediente(selectedExpedienteId);
+      return { exp, docs, reqs };
+    };
+
+    const loadMilestonesReal = async () => {
+      const [{ data: order }, docsResp, reqsResp] = await Promise.all([
+        ordersAPI.getById(selectedExpedienteId),
+        documentsAPI.list(selectedExpedienteId).catch(() => ({ data: [] })),
+        informationRequestsAPI.list(selectedExpedienteId).catch(() => ({ data: [] }))
+      ]);
+
+      const exp = mapRealOrderToExpediente(order);
+      const docs = (docsResp?.data || []).map((d) => ({ fileName: d.filename, uploadedAt: d.uploaded_at }));
+      const reqs = (reqsResp?.data || []).map((r) => ({
+        title: r.title,
+        createdAt: r.created_at,
+        status: r.status === 'open' ? 'pending' : r.status === 'resolved' ? 'approved' : r.status === 'waived' ? 'rejected' : 'provided'
+      }));
+      return { exp, docs, reqs };
+    };
+
     const loadMilestones = async () => {
       try {
         setLoading(true);
-        const exp = await getExpediente(selectedExpedienteId);
-        const docs = await getDocumentsByExpediente(selectedExpedienteId);
-        const reqs = await getRequirementsByExpediente(selectedExpedienteId);
+        const { exp, docs, reqs } = isDemo ? await loadMilestonesDemo() : await loadMilestonesReal();
 
         setExpediente(exp);
 
@@ -199,7 +244,7 @@ export default function MilestonesTimeline() {
     };
 
     loadMilestones();
-  }, [user, selectedExpedienteId]);
+  }, [user, selectedExpedienteId, isDemo]);
 
   const totalProgress = milestones.length > 0
     ? Math.round(

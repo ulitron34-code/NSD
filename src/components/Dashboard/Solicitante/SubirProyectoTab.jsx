@@ -1,9 +1,9 @@
-import { error, debug, info, warn } from '../../../utils/logger';
-import React, { useState, useEffect } from "react";
+import { error, debug } from '../../../utils/logger';
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { useNotification } from "../../../hooks/useNotification";
-import { useAuth } from "../../../hooks/useAuth";
+import { useMyOrders } from "../../../hooks/useMyOrders";
 import { ordersAPI, aiAgentsAPI, documentsAPI } from "../../../services/api";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
 
@@ -22,13 +22,9 @@ export default function SubirProyectoTab() {
   const L = (es, en) => uiText(i18n, es, en);
 
   const { addNotification } = useNotification();
-  const { user } = useAuth();
-  const isDemo = Boolean(user?.demo);
-
   // Expediente real (Supabase) en vez del IndexedDB local que usaba este tab
-  // antes — mismo patrón que FundingReadinessTab.jsx.
-  const [orderId, setOrderId] = useState(null);
-  const [ordersChecked, setOrdersChecked] = useState(false);
+  // antes — mismo patrón que FundingReadinessTab.jsx, extraído a un hook.
+  const { orderId, isDemo } = useMyOrders();
   const [uploadingDocName, setUploadingDocName] = useState(null);
 
   const [analysis, setAnalysis] = useState(null);
@@ -41,23 +37,6 @@ export default function SubirProyectoTab() {
   const [aiError, setAiError] = useState(null);
   const [triageResult, setTriageResult] = useState(null);
   const [riskMemoResult, setRiskMemoResult] = useState(null);
-
-  useEffect(() => {
-    if (isDemo) {
-      setOrdersChecked(true);
-      return;
-    }
-    let active = true;
-    ordersAPI.list()
-      .then(({ data }) => {
-        if (!active) return;
-        const list = (data || []).slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-        if (list.length > 0) setOrderId(list[0].id);
-      })
-      .catch((err) => error("SVC", "No se pudieron cargar los expedientes reales", err))
-      .finally(() => { if (active) setOrdersChecked(true); });
-    return () => { active = false; };
-  }, [isDemo]);
 
   const usaCargaReal = !isDemo && Boolean(orderId);
 

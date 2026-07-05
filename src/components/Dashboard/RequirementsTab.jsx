@@ -1,4 +1,4 @@
-import { error, debug, info, warn } from '../../utils/logger';
+import { error } from '../../utils/logger';
 import React, { useState, useEffect } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { useAuth } from "../../hooks/useAuth";
@@ -13,8 +13,35 @@ import {
   getRequirementStats
 } from "../../services/requirementServiceV2";
 import { getExpedientesForUser } from "../../services/expedienteService";
+import { otorganteAPI, informationRequestsAPI } from "../../services/api";
 
-// FASE 5: RequirementsTab completamente conectado a requirementServiceV2
+// Esta pestaña solo se monta hoy dentro del bloque Otorgante de
+// DashboardPage.jsx (activeTab === "requirements"), asi que el modo real
+// solo implementa el flujo Otorgante: crear/aprobar/rechazar requerimientos
+// reales via informationRequestsAPI, resolviendo sus ordenes autorizadas via
+// otorganteAPI.pipeline() (no ordersAPI, el otorgante no es dueno de la orden).
+const BACKEND_TO_UI_STATUS = { open: 'pending', in_progress: 'provided', resolved: 'approved', waived: 'rejected' };
+const UI_TO_BACKEND_PRIORITY = { low: 'low', normal: 'medium', high: 'high' };
+
+function mapRealRequirement(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    priority: Object.entries(UI_TO_BACKEND_PRIORITY).find(([, v]) => v === row.priority)?.[0] || 'normal',
+    status: BACKEND_TO_UI_STATUS[row.status] || 'pending',
+    dueDate: row.due_date
+  };
+}
+
+function computeStatsFromList(requirements) {
+  return {
+    total: requirements.length,
+    approved: requirements.filter((r) => r.status === 'approved').length,
+    pending: requirements.filter((r) => r.status === 'pending').length,
+    provided: requirements.filter((r) => r.status === 'provided').length
+  };
+}
 
 const statusConfig = {
   pending: { label: "Pendiente", color: "#FFA500", bg: "#FFF3CD" },
@@ -33,6 +60,7 @@ const priorityConfig = {
 export default function RequirementsTab() {
   const { addNotification } = useNotification();
   const { user } = useAuth();
+  const isDemo = Boolean(user?.demo);
 
   // FASE 5: Estados para expedientes y requerimientos
   const [expedientes, setExpedientes] = useState([]);
@@ -52,25 +80,38 @@ export default function RequirementsTab() {
     dueDate: "",
   });
 
-  // FASE 5: Cargar expedientes del usuario
+  // Cargar expedientes: demo via IndexedDB, real via otorganteAPI.pipeline()
+  // (ordenes con data_room_shares aceptado — el otorgante no es dueno).
   useEffect(() => {
     if (!user) return;
 
-    const loadExpedientes = async () => {
-      try {
-        const exps = await getExpedientesForUser(user.id);
-        setExpedientes(exps);
-        // Auto-seleccionar el primero
-        if (exps.length > 0 && !selectedExpediente) {
-          setSelectedExpediente(exps[0]);
+    if (isDemo) {
+      const loadExpedientes = async () => {
+        try {
+          const exps = await getExpedientesForUser(user.id);
+          setExpedientes(exps);
+          if (exps.length > 0 && !selectedExpediente) {
+            setSelectedExpediente(exps[0]);
+          }
+        } catch (err) {
+          error("SVC", "Error loading expedientes:", err);
         }
-      } catch (err) {
-        error("SVC", "Error loading expedientes:", err);
-      }
-    };
+      };
+      loadExpedientes();
+      return;
+    }
 
-    loadExpedientes();
-  }, [user]);
+    otorganteAPI.pipeline()
+      .then(({ data }) => {
+        const mapped = (data || []).map((item) => ({
+          id: item.order?.id,
+          title: item.order?.project_name || item.order?.metadata?.projectName || item.order?.case_number || 'Expediente'
+        }));
+        setExpedientes(mapped);
+        if (mapped.length > 0 && !selectedExpediente) setSelectedExpediente(mapped[0]);
+      })
+      .catch((err) => error("SVC", "Error loading real expedientes:", err));
+  }, [user, isDemo]);
 
   // FASE 5: Cargar requerimientos del expediente seleccionado
   useEffect(() => {
@@ -79,25 +120,30 @@ export default function RequirementsTab() {
       return;
     }
 
+    const loadRequirementsDemo = async () => {
+      let reqs = [];
+      if (selectedExpediente.otorganteId === user.id) {
+        reqs = await getRequirementsByExpediente(selectedExpediente.id);
+      } else {
+        reqs = await getRequirementsForUser(user.id);
+        reqs = reqs.filter(r => r.expedienteId === selectedExpediente.id);
+      }
+      return reqs;
+    };
+
+    const loadRequirementsReal = async () => {
+      const { data } = await informationRequestsAPI.list(selectedExpediente.id);
+      return (data || []).map(mapRealRequirement);
+    };
+
     const loadRequirements = async () => {
       try {
         setLoading(true);
-
-        let reqs = [];
-
-        // Si el usuario es OTORGANTE, ver todos los reqs del expediente
-        if (selectedExpediente.otorganteId === user.id) {
-          reqs = await getRequirementsByExpediente(selectedExpediente.id);
-        } else {
-          // Si es SOLICITANTE, ver solo los dirigidos a él
-          reqs = await getRequirementsForUser(user.id);
-          reqs = reqs.filter(r => r.expedienteId === selectedExpediente.id);
-        }
+        const reqs = isDemo ? await loadRequirementsDemo() : await loadRequirementsReal();
 
         setRequirements(reqs);
 
-        // Calcular stats
-        const s = await getRequirementStats(selectedExpediente.id);
+        const s = isDemo ? await getRequirementStats(selectedExpediente.id) : computeStatsFromList(reqs);
         setStats(s);
         setLoading(false);
       } catch (err) {
@@ -111,7 +157,7 @@ export default function RequirementsTab() {
     // FASE 5: Auto-refresh cada 5 segundos
     const interval = setInterval(loadRequirements, 5000);
     return () => clearInterval(interval);
-  }, [selectedExpediente, user]);
+  }, [selectedExpediente, user, isDemo]);
 
   // FASE 5: Crear requerimiento (OTORGANTE)
   const handleCreateRequirement = async (e) => {
@@ -128,23 +174,35 @@ export default function RequirementsTab() {
     }
 
     try {
-      const newReq = await createRequirement({
-        createdBy: user.id,
-        createdByRole: "otorgante",
-        targetUserId: selectedExpediente.solicitanteId,
-        expedienteId: selectedExpediente.id,
-        title: formData.title,
-        description: formData.description,
-        documentType: formData.documentType,
-        priority: formData.priority,
-        dueDate: formData.dueDate || null
-      });
-
-      // Recargar lista (notificación automática en createRequirement)
-      const reqs = await getRequirementsByExpediente(selectedExpediente.id);
-      setRequirements(reqs);
-      const s = await getRequirementStats(selectedExpediente.id);
-      setStats(s);
+      if (isDemo) {
+        await createRequirement({
+          createdBy: user.id,
+          createdByRole: "otorgante",
+          targetUserId: selectedExpediente.solicitanteId,
+          expedienteId: selectedExpediente.id,
+          title: formData.title,
+          description: formData.description,
+          documentType: formData.documentType,
+          priority: formData.priority,
+          dueDate: formData.dueDate || null
+        });
+        const reqs = await getRequirementsByExpediente(selectedExpediente.id);
+        setRequirements(reqs);
+        setStats(await getRequirementStats(selectedExpediente.id));
+      } else {
+        await informationRequestsAPI.create({
+          orderId: selectedExpediente.id,
+          title: formData.title,
+          description: formData.description,
+          documentType: formData.documentType,
+          priority: UI_TO_BACKEND_PRIORITY[formData.priority] || 'medium',
+          dueDate: formData.dueDate || null
+        });
+        const { data } = await informationRequestsAPI.list(selectedExpediente.id);
+        const reqs = (data || []).map(mapRealRequirement);
+        setRequirements(reqs);
+        setStats(computeStatsFromList(reqs));
+      }
 
       setFormData({ title: "", description: "", documentType: "", priority: "normal", dueDate: "" });
       setShowCreateForm(false);
@@ -155,7 +213,8 @@ export default function RequirementsTab() {
     }
   };
 
-  // FASE 5: Responder requerimiento (SOLICITANTE)
+  // FASE 5: Responder requerimiento (SOLICITANTE — solo modo demo, esta
+  // pestaña real solo se monta hoy del lado Otorgante).
   const handleRespondToRequirement = async (requirementId, documentId) => {
     try {
       await respondToRequirement(requirementId, documentId);
@@ -177,13 +236,18 @@ export default function RequirementsTab() {
   // FASE 5: Aprobar (OTORGANTE)
   const handleApprove = async (reqId) => {
     try {
-      await approveRequirementResponse(reqId, user.id);
-
-      // Recargar
-      const reqs = await getRequirementsByExpediente(selectedExpediente.id);
-      setRequirements(reqs);
-      const s = await getRequirementStats(selectedExpediente.id);
-      setStats(s);
+      if (isDemo) {
+        await approveRequirementResponse(reqId, user.id);
+        const reqs = await getRequirementsByExpediente(selectedExpediente.id);
+        setRequirements(reqs);
+        setStats(await getRequirementStats(selectedExpediente.id));
+      } else {
+        await informationRequestsAPI.update(reqId, { status: 'resolved', resolvedAt: new Date().toISOString() });
+        const { data } = await informationRequestsAPI.list(selectedExpediente.id);
+        const reqs = (data || []).map(mapRealRequirement);
+        setRequirements(reqs);
+        setStats(computeStatsFromList(reqs));
+      }
       setSelectedReq(null);
 
       addNotification("✅ Aprobado. Solicitante notificado", "success");
@@ -199,13 +263,18 @@ export default function RequirementsTab() {
     if (!reason) return;
 
     try {
-      await rejectRequirementResponse(reqId, reason, user.id);
-
-      // Recargar
-      const reqs = await getRequirementsByExpediente(selectedExpediente.id);
-      setRequirements(reqs);
-      const s = await getRequirementStats(selectedExpediente.id);
-      setStats(s);
+      if (isDemo) {
+        await rejectRequirementResponse(reqId, reason, user.id);
+        const reqs = await getRequirementsByExpediente(selectedExpediente.id);
+        setRequirements(reqs);
+        setStats(await getRequirementStats(selectedExpediente.id));
+      } else {
+        await informationRequestsAPI.update(reqId, { status: 'waived', response: reason });
+        const { data } = await informationRequestsAPI.list(selectedExpediente.id);
+        const reqs = (data || []).map(mapRealRequirement);
+        setRequirements(reqs);
+        setStats(computeStatsFromList(reqs));
+      }
       setSelectedReq(null);
 
       addNotification("❌ Rechazado. Solicitante notificado con razón", "success");
@@ -215,7 +284,7 @@ export default function RequirementsTab() {
     }
   };
 
-  const isOtorgante = selectedExpediente?.otorganteId === user?.id;
+  const isOtorgante = isDemo ? selectedExpediente?.otorganteId === user?.id : true;
   const isOverdue = (dueDate) => {
     if (!dueDate) return false;
     return new Date(dueDate) < new Date();

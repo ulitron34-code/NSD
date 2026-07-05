@@ -251,6 +251,22 @@ export const readinessChecklistAPI = {
     api.post(`/orders/${orderId}/readiness-checklist/cross-check`)
 };
 
+export const messagingAPI = {
+  list: (orderId) =>
+    api.get(`/orders/${orderId}/messages`),
+  send: (orderId, body) =>
+    api.post(`/orders/${orderId}/messages`, { body }),
+  markRead: (orderId) =>
+    api.patch(`/orders/${orderId}/messages/read`),
+  unreadCount: () =>
+    api.get('/messages/unread-count')
+};
+
+export const activitySummaryAPI = {
+  get: () =>
+    api.get('/me/activity-summary')
+};
+
 export const nagmarAPI = {
   screen: (name, country) =>
     api.post('/nagmar/screen', { name, country }),

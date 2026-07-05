@@ -22,13 +22,13 @@ export const NSD_ROLES = {
 
 export const ROLE_PERMISSIONS = {
   administrador: ['*'],
-  solicitante: ['case:own:read', 'case:own:create', 'case:own:update', 'document:own:upload', 'document:own:read', 'document:own:update', 'review:own:read', 'score:own:read', 'report:own:create', 'audit:own:read', 'data_room:own:read', 'data_room:own:share', 'payment:own:create', 'payment:own:confirm', 'regulatory:own:validate', 'information_request:own:read', 'information_request:own:update', 'contact_request:own:decide'],
+  solicitante: ['case:own:read', 'case:own:create', 'case:own:update', 'document:own:upload', 'document:own:read', 'document:own:update', 'review:own:read', 'score:own:read', 'report:own:create', 'audit:own:read', 'data_room:own:read', 'data_room:own:share', 'payment:own:create', 'payment:own:confirm', 'regulatory:own:validate', 'information_request:own:read', 'information_request:own:update', 'contact_request:own:decide', 'message:own:read', 'message:own:create'],
   agente_interno: ['case:assigned:read', 'case:assigned:update', 'document:assigned:review', 'regulatory:assigned:validate', 'information_request:assigned:read', 'contact_request:assigned:read', 'audit:case:read'],
   analista: ['case:assigned:read', 'score:read', 'score:update', 'report:create', 'regulatory:assigned:validate', 'information_request:assigned:read', 'audit:case:read'],
   compliance_officer: ['case:assigned:read', 'compliance:review', 'case:status:update', 'regulatory:assigned:validate', 'contact_request:assigned:decide', 'audit:case:read'],
   auditor_interno: ['audit:read', 'case:read', 'report:read'],
-  otorgante: ['data_room:authorized:read', 'funder:interest:create', 'funder:contact:create', 'information_request:create', 'information_request:own:read', 'information_request:own:update'],
-  inversionista: ['data_room:authorized:read', 'funder:interest:create', 'funder:contact:create', 'information_request:create', 'information_request:own:read', 'information_request:own:update']
+  otorgante: ['data_room:authorized:read', 'funder:interest:create', 'funder:contact:create', 'information_request:create', 'information_request:own:read', 'information_request:own:update', 'message:own:read', 'message:own:create'],
+  inversionista: ['data_room:authorized:read', 'funder:interest:create', 'funder:contact:create', 'information_request:create', 'information_request:own:read', 'information_request:own:update', 'message:own:read', 'message:own:create']
 };
 
 function normalizeRole(role = 'solicitante') {

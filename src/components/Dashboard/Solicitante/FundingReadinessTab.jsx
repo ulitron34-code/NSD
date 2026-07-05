@@ -1,39 +1,19 @@
-import { error, debug, info, warn } from '../../../utils/logger';
-import React, { useEffect, useState } from "react";
+import { error, warn } from '../../../utils/logger';
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
-import { useAuth } from "../../../hooks/useAuth";
+import { useMyOrders } from "../../../hooks/useMyOrders";
 import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
-import { requisitosMinimosAPI, readinessChecklistAPI, ordersAPI } from "../../../services/api";
+import { requisitosMinimosAPI, readinessChecklistAPI } from "../../../services/api";
 import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, pickLang, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
 
 export default function FundingReadinessTab() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
-  const { user } = useAuth();
-  const isDemo = Boolean(user?.demo);
-
-  const [orderId, setOrderId] = useState(null);
-  const [ordersChecked, setOrdersChecked] = useState(false);
+  const { orderId, isDemo, loading: ordersLoading } = useMyOrders();
+  const ordersChecked = !ordersLoading;
   const [uploadingItemId, setUploadingItemId] = useState(null);
-
-  useEffect(() => {
-    if (isDemo) {
-      setOrdersChecked(true);
-      return;
-    }
-    let active = true;
-    ordersAPI.list()
-      .then(({ data }) => {
-        if (!active) return;
-        const list = (data || []).slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-        if (list.length > 0) setOrderId(list[0].id);
-      })
-      .catch((err) => warn("SVC", "No se pudieron cargar los expedientes reales", err))
-      .finally(() => { if (active) setOrdersChecked(true); });
-    return () => { active = false; };
-  }, [isDemo]);
 
   const requisitos = useReadinessChecklist(orderId, isDemo);
   const usaCargaReal = !isDemo && Boolean(orderId);
