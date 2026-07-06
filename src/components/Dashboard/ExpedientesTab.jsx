@@ -15,8 +15,11 @@ import { getConversationForUser } from "../../services/messagingServiceV2";
 import { ordersAPI, otorganteAPI, documentsAPI, informationRequestsAPI, messagingAPI } from "../../services/api";
 import { generateExpedientePDF } from "../../services/pdfExportService";
 import { searchExpedientes } from "../../services/searchService";
+import { getOrderReadinessSignal } from "../../utils/readinessSignal";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
+import MessagingTab from "./MessagingTab";
+import MilestonesTimeline from "./MilestonesTimeline";
 
 // Un expediente real puede aparecer como dueño (Solicitante, via ordersAPI)
 // o como otorgante autorizado (via otorganteAPI.pipeline() + data_room_shares
@@ -37,7 +40,10 @@ function mapOwnedOrder(order) {
     createdAt: order.created_at,
     documentsCount: null,
     requirementsCount: null,
-    messagesCount: null
+    messagesCount: null,
+    readinessGrade: order.readiness_grade || metadata.readinessGrade || "pendiente",
+    complianceStatus: order.compliance_status || metadata.complianceStatus || "pendiente",
+    canShareWithFunders: Boolean(order.can_share_with_funders || metadata.canShareWithFunders)
   };
 }
 
@@ -73,6 +79,9 @@ export default function ExpedientesTab() {
   const [selectedExp, setSelectedExp] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [exportingId, setExportingId] = useState(null);
+  const [readinessFilter, setReadinessFilter] = useState("all");
+  const [showMensajeria, setShowMensajeria] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   // Cargar expedientes
   useEffect(() => {
@@ -230,6 +239,27 @@ export default function ExpedientesTab() {
     }
   };
 
+  const readinessVisibleExpedientes = readinessFilter === "all"
+    ? filteredExpedientes
+    : filteredExpedientes.filter((exp) => getOrderReadinessSignal(exp).key === readinessFilter);
+
+  const totalAmount = expedientes.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const activeCount = expedientes.filter((exp) => exp.status === 'activo').length;
+  const closedCount = expedientes.filter((exp) => exp.status === 'cerrado').length;
+  const readinessCounts = expedientes.reduce((acc, exp) => {
+    const key = getOrderReadinessSignal(exp).key;
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const readinessFilters = [
+    { value: "all", label: L("Todos los semaforos", "All Signals"), count: expedientes.length },
+    { value: "green", label: L("Verdes", "Green"), count: readinessCounts.green || 0 },
+    { value: "amber", label: L("Subsanables", "Remediable"), count: readinessCounts.amber || 0 },
+    { value: "red", label: L("Bloqueados", "Blocked"), count: readinessCounts.red || 0 },
+    { value: "pending", label: L("En captura", "In Capture"), count: readinessCounts.pending || 0 },
+  ];
+
   if (loading) return <p>{L("Cargando expedientes...", "Loading compliance files...")}</p>;
 
   return (
@@ -243,6 +273,43 @@ export default function ExpedientesTab() {
             {L("Órdenes vinculadas entre Solicitante y Otorgante. Tienes acceso a", "Orders linked between Applicant and Funding Provider. You have access to")} {expedientes.length} {L("expediente(s).", "compliance file(s).")}
           </p>
         </div>
+      </div>
+
+      {/* STATS */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+        {[
+          { label: L("Expedientes totales", "Total Compliance Files"), value: expedientes.length, color: COLORS.navy },
+          { label: L("Activos", "Active"), value: activeCount, color: COLORS.amber },
+          { label: L("Cerrados", "Closed"), value: closedCount, color: COLORS.green },
+          { label: L("Monto total", "Total Amount"), value: `$${totalAmount.toLocaleString()}`, color: COLORS.gold },
+        ].map((card) => (
+          <div key={card.label} style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "1.1rem", borderRadius: "10px", borderTop: `3px solid ${card.color}`, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+            <p style={{ color: COLORS.textMuted, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{card.label}</p>
+            <p style={{ color: card.color, fontSize: "1.6rem", fontWeight: 800, marginTop: "0.3rem" }}>{card.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* FILTRO POR SEMAFORO DE READINESS */}
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
+        {readinessFilters.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setReadinessFilter(f.value)}
+            style={{
+              padding: "0.5rem 0.9rem",
+              borderRadius: "999px",
+              border: `1px solid ${readinessFilter === f.value ? COLORS.gold : COLORS.border}`,
+              background: readinessFilter === f.value ? COLORS.gold : "transparent",
+              color: readinessFilter === f.value ? COLORS.navy : COLORS.textMuted,
+              fontWeight: 700,
+              fontSize: "0.82rem",
+              cursor: "pointer",
+            }}
+          >
+            {f.label} ({f.count})
+          </button>
+        ))}
       </div>
 
       {/* BUSCADOR */}
@@ -264,7 +331,7 @@ export default function ExpedientesTab() {
         />
         {searchQuery && (
           <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", margin: "0.5rem 0 0 0" }}>
-            📊 {filteredExpedientes.length} {L("resultado(s)", "result(s)")}
+            📊 {readinessVisibleExpedientes.length} {L("resultado(s)", "result(s)")}
           </p>
         )}
       </div>
@@ -276,12 +343,12 @@ export default function ExpedientesTab() {
         gap: "1.5rem",
         marginBottom: "2rem"
       }}>
-        {filteredExpedientes.length === 0 && (
+        {readinessVisibleExpedientes.length === 0 && (
           <p style={{ color: COLORS.textMuted, gridColumn: "1 / -1", textAlign: "center", padding: "2rem" }}>
             {L("No hay expedientes que coincidan con la búsqueda", "No compliance files match your search")}
           </p>
         )}
-        {filteredExpedientes.map((exp) => (
+        {readinessVisibleExpedientes.map((exp) => (
           <div
             key={exp.id}
             onClick={() => handleSelectExpediente(exp)}
@@ -542,6 +609,40 @@ export default function ExpedientesTab() {
           </div>
         </div>
       )}
+
+      {/* MENSAJERIA Y LINEA DE TIEMPO — antes pestañas propias, ahora paneles
+          plegables aqui para reducir el numero de tabs de primer nivel. */}
+      <div style={{ marginTop: "1.5rem", display: "grid", gap: "1rem" }}>
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "10px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", overflow: "hidden" }}>
+          <button
+            onClick={() => setShowMensajeria(!showMensajeria)}
+            style={{ width: "100%", padding: "1.25rem 1.5rem", background: "transparent", border: "none", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+          >
+            <h2 style={{ color: COLORS.navy, margin: 0, fontSize: "1.1rem" }}>💬 {L("Mensajeria", "Messaging")}</h2>
+            <span style={{ color: COLORS.gold, fontWeight: 700 }}>{showMensajeria ? L("Ocultar", "Hide") : L("Ver", "View")}</span>
+          </button>
+          {showMensajeria && (
+            <div style={{ padding: "0 1.5rem 1.5rem" }}>
+              <MessagingTab />
+            </div>
+          )}
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "10px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", overflow: "hidden" }}>
+          <button
+            onClick={() => setShowTimeline(!showTimeline)}
+            style={{ width: "100%", padding: "1.25rem 1.5rem", background: "transparent", border: "none", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+          >
+            <h2 style={{ color: COLORS.navy, margin: 0, fontSize: "1.1rem" }}>🕒 {L("Linea de tiempo", "Timeline")}</h2>
+            <span style={{ color: COLORS.gold, fontWeight: 700 }}>{showTimeline ? L("Ocultar", "Hide") : L("Ver", "View")}</span>
+          </button>
+          {showTimeline && (
+            <div style={{ padding: "0 1.5rem 1.5rem" }}>
+              <MilestonesTimeline />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

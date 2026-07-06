@@ -4,10 +4,11 @@ import Icon from "../common/icons";
 
 const GROUPS_BY_ROLE = {
   solicitante: [
-    { id: "prep", title: (L) => L("Preparacion", "Preparation"), tabIds: ["perfil", "readiness"] },
-    { id: "proyecto", title: (L) => L("Tu Proyecto", "Your Project"), tabIds: ["subir_proyecto", "data_room_index", "document_intel", "scoring_ae"] },
-    { id: "resultado", title: (L) => L("Resultado y Contacto", "Result and Contact"), tabIds: ["matches", "mensajeria", "cumplimiento"] },
-    { id: "otros", title: (L) => L("Otros", "Other"), tabIds: ["expedientes", "mis_proyectos", "biometricos"] },
+    { id: "preparacion", title: (L) => L("Preparacion", "Preparation"), tabIds: ["perfil", "readiness", "subir_proyecto", "data_room_index"] },
+    { id: "revision", title: (L) => L("Revision y Cumplimiento", "Review and Compliance"), tabIds: ["document_intel", "scoring_ae", "cumplimiento"] },
+    { id: "expedientes_grupo", title: (L) => L("Mis Expedientes", "My Files"), tabIds: ["expedientes"] },
+    { id: "instituciones", title: (L) => L("Instituciones Compatibles", "Compatible Institutions"), tabIds: ["matches"] },
+    { id: "actividad_grupo", title: (L) => L("Panel de Actividad", "Activity Panel"), tabIds: ["actividad"] },
   ],
   otorgante: [
     { id: "resumen", title: (L) => L("Resumen", "Overview"), tabIds: ["command", "expedientes"] },

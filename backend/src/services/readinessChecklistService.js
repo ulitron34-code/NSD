@@ -5,6 +5,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 // etiquetas bilingües y detalles siguen viviendo únicamente en el frontend.
 export const READINESS_ITEMS = [
   { id: 'doc_corporativa', code: 'READY_DOC_CORPORATIVA', critico: false },
+  { id: 'identificacion_oficial', code: 'READY_IDENTIFICACION_OFICIAL', critico: true },
   { id: 'doc_kyc', code: 'READY_DOC_KYC', critico: false },
   { id: 'marco_riesgos', code: 'READY_MARCO_RIESGOS', critico: true },
   { id: 'estudio_viabilidad', code: 'READY_ESTUDIO_VIABILIDAD', critico: false },

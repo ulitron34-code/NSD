@@ -732,7 +732,8 @@ export async function getExpedienteSummary(expedienteId) {
       analyzed_documents: 0,
       average_score: null,
       red_flags_count: 0,
-      traffic_light: 'white'
+      traffic_light: 'white',
+      documents: []
     };
   }
 
@@ -757,8 +758,8 @@ export async function getExpedienteSummary(expedienteId) {
   if (verError) throw verError;
 
   const analyzedCount = scores ? scores.length : 0;
-  const avgScore = analyzedCount > 0 
-    ? Math.round(scores.reduce((acc, s) => acc + s.composite_score, 0) / analyzedCount) 
+  const avgScore = analyzedCount > 0
+    ? Math.round(scores.reduce((acc, s) => acc + s.composite_score, 0) / analyzedCount)
     : null;
 
   let finalTrafficLight = 'green';
@@ -770,12 +771,33 @@ export async function getExpedienteSummary(expedienteId) {
     finalTrafficLight = 'white';
   }
 
+  // Desglose por documento individual, reusando los mismos scores/verificaciones
+  // ya consultados arriba (sin round-trips adicionales por documento).
+  const scoreByDocumentId = new Map((scores || []).map((s) => [s.document_id, s]));
+  const redFlagCountByDocumentId = new Map();
+  for (const v of verifications || []) {
+    redFlagCountByDocumentId.set(v.document_id, (redFlagCountByDocumentId.get(v.document_id) || 0) + 1);
+  }
+  const documentBreakdown = documents.map((doc) => {
+    const score = scoreByDocumentId.get(doc.id);
+    return {
+      document_id: doc.id,
+      name: doc.filename,
+      document_type: doc.document_type,
+      review_status: doc.review_status,
+      score: score ? score.composite_score : null,
+      traffic_light: score ? score.traffic_light : 'white',
+      red_flags: redFlagCountByDocumentId.get(doc.id) || 0
+    };
+  });
+
   return {
     total_documents: documents.length,
     analyzed_documents: analyzedCount,
     average_score: avgScore,
     red_flags_count: verifications ? verifications.length : 0,
-    traffic_light: finalTrafficLight
+    traffic_light: finalTrafficLight,
+    documents: documentBreakdown
   };
 }
 

@@ -19,10 +19,17 @@ export const REQUISITOS_MINIMOS = [
     critico: false,
   },
   {
+    id: "identificacion_oficial",
+    categoria: "documentacion",
+    label: { es: "Identificación Oficial (INE/Pasaporte)", en: "Official ID (National ID/Passport)" },
+    detalle: { es: "INE vigente (frente y reverso) o pasaporte del representante legal.", en: "Valid national ID (front and back) or passport of the legal representative." },
+    critico: true,
+  },
+  {
     id: "doc_kyc",
     categoria: "documentacion",
     label: { es: "Documentación KYC y de Cumplimiento", en: "KYC and Compliance Documentation" },
-    detalle: { es: "Identificación válida, beneficiario controlador, CURP/RFC.", en: "Valid ID, ultimate beneficial owner, national tax IDs." },
+    detalle: { es: "Beneficiario controlador, CURP/RFC, comprobante de domicilio.", en: "Ultimate beneficial owner, national tax IDs, proof of address." },
     critico: false,
   },
   {
@@ -154,7 +161,7 @@ export function generarRevisionIARequisitos(items, language) {
   });
 
   if (pendientes.length === 0) {
-    findings.push(isEn ? "All 12 minimum requirements are complete." : "Los 12 requisitos mínimos están completos.");
+    findings.push(isEn ? "All 13 minimum requirements are complete." : "Los 13 requisitos mínimos están completos.");
   }
 
   return { score, findings };

@@ -216,6 +216,21 @@ export const complianceAPI = {
     api.patch(`/orders/${orderId}/compliance-schedule`, schedule)
 };
 
+export const screeningAPI = {
+  check: (name) =>
+    api.post('/screening/check', { name }),
+  status: () =>
+    api.get('/screening/status'),
+  checkFull: (name, country) =>
+    api.post('/screening/check-full', { name, country }),
+  statusFull: () =>
+    api.get('/screening/status-full'),
+  sat69b: (rfc, razonSocial) =>
+    api.post('/screening/sat69b', { rfc, razonSocial }),
+  sat69bStatus: () =>
+    api.get('/screening/sat69b/status')
+};
+
 export const intelAPI = {
   getDocumentTypes: () => api.get('/intel/reference/document-types'),
   getValidationRules: (type) => api.get('/intel/reference/validation-rules', { params: type ? { type } : {} }),

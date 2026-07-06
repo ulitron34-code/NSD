@@ -139,6 +139,26 @@ export const READINESS_RUBRICS = {
     banderasRojas: []
   },
 
+  identificacion_oficial: {
+    label: 'Identificación Oficial (INE/Pasaporte)',
+    validacionesMinimas: [
+      'Tipo de documento (INE o pasaporte)', 'Nombre completo legible', 'CURP o numero de documento legible',
+      'Fecha de vigencia no vencida', 'Fotografia presente', 'Frente y reverso (si es INE)',
+      'Coincidencia de nombre con el resto del expediente'
+    ],
+    criterios: [
+      { nombre: 'Documento vigente', peso: 30 },
+      { nombre: 'Legibilidad de datos clave', peso: 25 },
+      { nombre: 'Frente y reverso completos (INE)', peso: 20 },
+      { nombre: 'Coincidencia de nombre con el expediente', peso: 15 },
+      { nombre: 'Sin indicios de alteracion', peso: 10 }
+    ],
+    banderasRojas: [
+      'Documento vencido', 'Nombre no coincide con el resto del expediente', 'Falta el reverso de la INE',
+      'Fotografia o datos no legibles', 'Indicios de edicion o alteracion digital'
+    ]
+  },
+
   doc_kyc: {
     label: 'Documentación KYC y de Cumplimiento',
     validacionesMinimas: [

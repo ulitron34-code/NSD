@@ -92,7 +92,7 @@ export default function SubirProyectoTab() {
     [L("Diagnostico IA", "AI Diagnosis"), analysis ? L("Listo", "Ready") : L("Pendiente", "Pending"), analysis ? L("Score y hallazgos generados.", "Score and findings generated.") : L("Ejecuta analisis IA del proyecto.", "Run AI analysis of the project.")],
     [L("Matriz documental", "Document Matrix"), currentMatrix ? L("Activa", "Active") : L("Cargando", "Loading"), currentMatrix ? L(`${currentMatrix.requirements.length} requisito(s) detectados.`, `${currentMatrix.requirements.length} requirement(s) detected.`) : L("Esperando matriz por sector.", "Waiting for sector matrix.")],
     [L("Data room", "Data Room"), documents.length > 1 ? L("Preparado", "Prepared") : L("Inicial", "Initial"), L("Documentos organizados para revision institucional.", "Documents organized for institutional review.")],
-    [L("Otorgantes", "Funding Providers"), analysis ? L("Sugeridos", "Suggested") : L("Pendiente", "Pending"), analysis ? L(`${analysis.matches.length} perfil(es) compatibles.`, `${analysis.matches.length} compatible profile(s).`) : L("Se calculan despues del analisis.", "Calculated after analysis.")],
+    [L("Documentos con IA", "Documents with AI"), analysis ? L("Analizados", "Analyzed") : L("Pendiente", "Pending"), analysis ? L(`${analysis.documentBreakdown.length} documento(s) analizados por IA.`, `${analysis.documentBreakdown.length} document(s) analyzed by AI.`) : L("Se calculan despues del analisis.", "Calculated after analysis.")],
   ];
 
   const aiAgentPacket = React.useMemo(() => {
@@ -190,64 +190,39 @@ export default function SubirProyectoTab() {
       setRiskMemoResult(memoResponse.data);
       debug("AI", "Memo de riesgo completado:", memoResponse.data);
 
-      // Generar resultado de análisis consolidado
+      // Generar resultado de análisis consolidado a partir de datos reales
+      // por documento (getExpedienteSummary ya no solo agrega, tambien
+      // desglosa cada documento con su propio score/red_flags/traffic_light).
       const triageData = triageResponse.data;
+      const documentBreakdown = triageData.documents || [];
+      const docsConHallazgos = documentBreakdown.filter((d) => d.red_flags > 0 || d.traffic_light === "red");
+
       setAnalysis({
-        score: triageData.readiness_score || 75,
-        readiness: triageData.document_gaps?.length > 0 
-          ? copy("Con faltantes - Revisar documentación")
-          : copy("Apto para revisión institucional"),
-        matches: triageData.funder_recommendations || [
-          copy("SOFOM de crecimiento"),
-          copy("Fondo de deuda privada"),
-        ],
-        findings: triageData.document_gaps || [
-          copy("Documentación base verificada"),
-          copy("Revisar requisitos específicos del sector"),
-        ],
+        score: triageData.average_score ?? null,
+        readiness: triageData.traffic_light === "red"
+          ? copy("Con hallazgos criticos - Revisar documentacion")
+          : triageData.traffic_light === "yellow"
+            ? copy("Con observaciones - Revisar documentacion")
+            : triageData.analyzed_documents > 0
+              ? copy("Apto para revision institucional")
+              : copy("Aun no hay documentos analizados"),
+        documentBreakdown,
+        findings: docsConHallazgos.length > 0
+          ? docsConHallazgos.map((d) => copy(`${d.name}: ${d.red_flags} hallazgo(s), semaforo ${d.traffic_light}`))
+          : documentBreakdown.length > 0
+            ? [copy("Sin hallazgos criticos en los documentos analizados.")]
+            : [copy("Sube documentos en Preparacion para que el analisis IA tenga contenido que evaluar.")],
       });
 
       addNotification(copy("Análisis de agentes IA completado"), "success");
     } catch (err) {
       debug("AI", "Error en análisis IA:", err);
-      
-      // En modo demo, mostrar resultado simulado
-      setAnalysis({
-        score: 78,
-        readiness: copy("Análisis completado en modo demo"),
-        matches: [
-          copy("SOFOM de crecimiento"),
-          copy("Fondo de deuda privada"),
-          copy("Fintech de crédito empresarial"),
-        ],
-        findings: [
-          copy("Pipeline de agentes IA configurado y listo"),
-          copy("Pendiente: conectar con API real del backend"),
-          copy("KYC/KYB requiere validación de beneficiario controlador"),
-        ],
-      });
-      
-      setAiError(copy("Modo demo - Conectar con API real para análisis completo"));
-      addNotification(copy("Análisis en modo demo (backend no disponible)"), "info");
+      setAnalysis(null);
+      setAiError(copy("No se pudo completar el análisis IA. Intenta de nuevo en unos momentos."));
+      addNotification(copy("Error al ejecutar el análisis IA"), "error");
     } finally {
       setAiLoading(false);
     }
-  };
-
-  // Función legacy para análisis local (sin API)
-  const analyzeProject = () => {
-    setAnalysis({
-      score: 86,
-      readiness: copy("Apto para revisión preliminar"),
-      matches: [copy("SOFOM de crecimiento"), copy("Fondo de deuda privada"), copy("Fintech de crédito empresarial")],
-      findings: [
-        copy("El uso de fondos es claro y compatible con productos de deuda empresarial."),
-        copy("Falta completar pitch deck para mejorar presentación ante fondos."),
-        copy("KYC/KYB requiere validación final de beneficiario controlador."),
-        copy("Modelo financiero consistente; se recomienda agregar escenario conservador."),
-      ],
-    });
-    addNotification(copy("Proyecto analizado localmente"), "success");
   };
 
   // Función para obtener estado de orquestación
@@ -392,9 +367,9 @@ export default function SubirProyectoTab() {
               <p style={{ color: COLORS.gold, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800 }}>{copy("Resultado IA")}</p>
               <h2 style={{ color: COLORS.navy, fontSize: "1.25rem" }}>{copy(analysis.readiness)}</h2>
             </div>
-            <span style={{ color: COLORS.green, fontSize: "2rem", fontWeight: 900 }}>{analysis.score}/100</span>
+            <span style={{ color: COLORS.green, fontSize: "2rem", fontWeight: 900 }}>{analysis.score != null ? `${analysis.score}/100` : L("Sin score aun", "No score yet")}</span>
           </div>
- 
+
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(260px, 0.8fr)", gap: "1rem" }}>
             <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
               <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.6rem" }}>{copy("Hallazgos")}</p>
@@ -403,10 +378,14 @@ export default function SubirProyectoTab() {
               ))}
             </div>
             <div style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", borderRadius: "8px", padding: "1rem", border: `1px solid ${COLORS.border}` }}>
-              <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.6rem" }}>{copy("Otorgantes sugeridos")}</p>
-              {analysis.matches.map((match) => (
-                <p key={match} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>- {copy(match)}</p>
-              ))}
+              <p style={{ color: COLORS.navy, fontWeight: 800, marginBottom: "0.6rem" }}>{copy("Documentos analizados")}</p>
+              {analysis.documentBreakdown.length > 0 ? analysis.documentBreakdown.map((doc) => (
+                <p key={doc.document_id} style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55, marginBottom: "0.35rem" }}>
+                  - {doc.name}: {doc.score != null ? `${doc.score}/100` : L("sin score", "no score")} ({doc.traffic_light})
+                </p>
+              )) : (
+                <p style={{ color: COLORS.textMuted, fontSize: "0.88rem", lineHeight: 1.55 }}>{copy("Aun no hay documentos para analizar.")}</p>
+              )}
             </div>
           </div>
         </div>

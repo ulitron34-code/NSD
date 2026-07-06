@@ -23,7 +23,6 @@ const MatchesTab = lazy(() => import("../components/Dashboard/Solicitante/Matche
 const SubirProyectoTab = lazy(() => import("../components/Dashboard/Solicitante/SubirProyectoTab"));
 const CumplimientoTab = lazy(() => import("../components/Dashboard/CumplimientoTab"));
 const RequirementsTab = lazy(() => import("../components/Dashboard/RequirementsTab"));
-const MessagingTab = lazy(() => import("../components/Dashboard/MessagingTab"));
 const ExpedientesTab = lazy(() => import("../components/Dashboard/ExpedientesTab"));
 const MilestonesTimeline = lazy(() => import("../components/Dashboard/MilestonesTimeline"));
 const ControlCenter = lazy(() => import("../components/Dashboard/ControlCenter"));
@@ -157,7 +156,7 @@ export default function DashboardPage() {
   const getTabs = () => {
     if (userMode === "solicitante") {
       return [
-        { id: "expedientes", label: L("Mis Expedientes", "My Files"), icon: "EXP" },
+        { id: "actividad", label: L("Panel de Actividad", "Activity Panel"), icon: "ACT" },
         { id: "perfil", label: L("Mi Perfil Financiero", "My Financial Profile"), icon: "PF" },
         { id: "readiness", label: L("Preparacion", "Readiness"), icon: "RDY" },
         { id: "subir_proyecto", label: L("Subir proyecto / IA", "Upload Project / AI"), icon: "UP" },
@@ -165,12 +164,8 @@ export default function DashboardPage() {
         { id: "document_intel", label: L("Inteligencia Doc.", "Document Intelligence"), icon: "IDI" },
         { id: "scoring_ae", label: L("Scoring A-E", "A-E Scoring"), icon: "AE" },
         { id: "cumplimiento", label: L("Cumplimiento", "Compliance"), icon: "CUM" },
-        { id: "mensajeria", label: L("Mensajeria", "Messaging"), icon: "MSG" },
         { id: "matches", label: L("Instituciones Compatibles", "Compatible Institutions"), icon: "FI" },
-        { id: "mis_proyectos", label: L("Servicios", "Services"), icon: "NEXUS" },
-        { id: "biometricos", label: L("Biometricos", "Biometrics"), icon: "BIO" },
-        { id: "timeline", label: L("Linea de Tiempo", "Timeline"), icon: "TML" },
-        { id: "actividad", label: L("Panel de Actividad", "Activity Panel"), icon: "ACT" },
+        { id: "expedientes", label: L("Mis Expedientes", "My Files"), icon: "EXP" },
       ];
     }
     if (userMode === "otorgante") {
@@ -446,10 +441,8 @@ export default function DashboardPage() {
     if (userMode === "solicitante") {
       if (activeTab === "readiness") return <FundingReadinessTab />;
       if (activeTab === "subir_proyecto") return <SubirProyectoTab />;
-      if (activeTab === "cumplimiento") return <CumplimientoTab />;
-      if (activeTab === "mensajeria") return <MessagingTab />;
+      if (activeTab === "cumplimiento") return <CumplimientoTab onGoToPreparacion={() => setActiveTab("readiness")} />;
       if (activeTab === "matches") return <MatchesTab />;
-      if (activeTab === "mis_proyectos") return <ServiceOrdersPage />;
       return <MiPerfilTab />;
     }
 

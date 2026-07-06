@@ -1188,7 +1188,7 @@ export default function PipelineTab() {
               <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "flex-start", marginBottom: "0.8rem" }}>
                 <div>
                   <p style={{ color: COLORS.textMuted, fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.25rem" }}>
-                    {copy("Verificacion de 12 requisitos minimos")}
+                    {copy("Verificacion de 13 requisitos minimos")}
                   </p>
                   <p style={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.95rem", lineHeight: 1.35 }}>
                     {copy("Lo que el solicitante ya declaro listo en su expediente.")}

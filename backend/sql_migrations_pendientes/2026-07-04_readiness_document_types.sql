@@ -19,6 +19,7 @@ INSERT INTO document_type_catalog
   (code, category, name_es, name_en, requires_ocr, requires_parsing, requires_face_match, typical_format, expiration_months, is_pii, regulatory_framework)
 VALUES
 ('READY_DOC_CORPORATIVA',          'legal',      'Documentación Corporativa',                    'Corporate Documentation',            true, true, false, 'pdf', null, false, 'GENERAL'),
+('READY_IDENTIFICACION_OFICIAL',   'identificacion', 'Identificación Oficial (INE/Pasaporte)',  'Official ID (National ID/Passport)', true, true, true,  'pdf', 120,  true,  'KYC'),
 ('READY_DOC_KYC',                  'compliance', 'Documentación KYC y de Cumplimiento',          'KYC and Compliance Documentation',   true, true, false, 'pdf', null, true,  'KYC'),
 ('READY_MARCO_RIESGOS',            'proyecto',   'Marco de Gestión de Riesgos',                  'Risk Management Framework',          true, true, false, 'pdf', null, false, 'GENERAL'),
 ('READY_ESTUDIO_VIABILIDAD',       'proyecto',   'Estudio de Viabilidad',                        'Feasibility Study',                  true, true, false, 'pdf', null, false, 'GENERAL'),

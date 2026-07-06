@@ -298,7 +298,7 @@ export default function FundingReadinessTab() {
               {L("Requisitos minimos NEXUS", "NEXUS Minimum Requirements")}
             </p>
             <h2 style={{ color: COLORS.navy, fontSize: "1.08rem", margin: "0.35rem 0 0" }}>
-              {L("Checklist de 12 requisitos minimos del proyecto", "Project's 12 minimum requirements checklist")}
+              {L("Checklist de 13 requisitos minimos del proyecto", "Project's 13 minimum requirements checklist")}
             </h2>
             <p style={{ margin: "0.35rem 0 0", color: COLORS.textMuted, fontSize: "0.82rem", maxWidth: "620px", lineHeight: 1.5 }}>
               {L(

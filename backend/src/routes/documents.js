@@ -19,12 +19,13 @@ const allowedMimeTypes = new Set([
   'image/jpeg'
 ]);
 
-// Códigos del checklist de 12 Requisitos Mínimos (ver
+// Códigos del checklist de 13 Requisitos Mínimos (ver
 // sql_migrations_pendientes/2026-07-04_readiness_document_types.sql). Solo
 // estos códigos pueden venir del header X-Document-Type; cualquier otro
 // valor se ignora y se conserva la inferencia automática por nombre.
 const READINESS_DOCUMENT_TYPES = new Set([
   'READY_DOC_CORPORATIVA',
+  'READY_IDENTIFICACION_OFICIAL',
   'READY_DOC_KYC',
   'READY_MARCO_RIESGOS',
   'READY_ESTUDIO_VIABILIDAD',

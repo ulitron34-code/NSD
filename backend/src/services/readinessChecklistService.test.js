@@ -29,9 +29,9 @@ describe('getReadinessChecklist', () => {
     state.reviews = [];
   });
 
-  it('marca los 12 items como pendiente cuando no hay documentos subidos', async () => {
+  it('marca los 13 items como pendiente cuando no hay documentos subidos', async () => {
     const result = await getReadinessChecklist('order-1');
-    expect(result.items).toHaveLength(12);
+    expect(result.items).toHaveLength(13);
     expect(result.items.every((i) => i.estado === 'pendiente')).toBe(true);
   });
 
