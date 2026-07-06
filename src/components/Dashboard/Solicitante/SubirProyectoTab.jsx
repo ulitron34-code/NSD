@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { useNotification } from "../../../hooks/useNotification";
 import { useMyOrders } from "../../../hooks/useMyOrders";
+import { useAuth } from "../../../hooks/useAuth";
 import { ordersAPI, aiAgentsAPI, documentsAPI } from "../../../services/api";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
 
@@ -22,6 +23,7 @@ export default function SubirProyectoTab() {
   const L = (es, en) => uiText(i18n, es, en);
 
   const { addNotification } = useNotification();
+  const { user } = useAuth();
   // Expediente real (Supabase) en vez del IndexedDB local que usaba este tab
   // antes — mismo patrón que FundingReadinessTab.jsx, extraído a un hook.
   const { orderId, isDemo } = useMyOrders();
