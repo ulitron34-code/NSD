@@ -5,6 +5,7 @@ import { useNotification } from "../../hooks/useNotification";
 import { COLORS } from "../../utils/constants";
 import { ordersAPI } from "../../services/api";
 import { translateCopy, uiText } from "../../utils/runtimeCopy";
+import { SUPPORTED_COUNTRIES } from "../../data/requisitosMinimos";
 
 export default function ServiceRequestModal({ service, onClose, onSubmit }) {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function ServiceRequestModal({ service, onClose, onSubmit }) {
     projectName: "",
     description: "",
     sector: "",
+    country: "MX",
     investmentRequired: "",
     hasDocuments: "no",
     email: "",
@@ -228,6 +230,36 @@ export default function ServiceRequestModal({ service, onClose, onSubmit }) {
               <option>Fintech</option>
               <option>{L("Salud", "Healthcare")}</option>
               <option>{L("Otro", "Other")}</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{
+              display: "block",
+              color: COLORS.navy,
+              fontWeight: 600,
+              marginBottom: "0.5rem",
+              fontSize: "0.9rem",
+            }}>
+              {L("Pais del proyecto", "Project country")}
+            </label>
+            <select
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "0.75rem 1rem",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "6px",
+                fontSize: "1rem",
+              }}
+            >
+              {SUPPORTED_COUNTRIES.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {L(country.es, country.en)}
+                </option>
+              ))}
             </select>
           </div>
 

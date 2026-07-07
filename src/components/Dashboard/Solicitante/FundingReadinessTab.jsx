@@ -6,7 +6,7 @@ import { uiText } from "../../../utils/runtimeCopy";
 import { useMyOrders } from "../../../hooks/useMyOrders";
 import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
 import { requisitosMinimosAPI, readinessChecklistAPI } from "../../../services/api";
-import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, pickLang, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
+import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, SUPPORTED_COUNTRIES, pickLang, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
 
 export default function FundingReadinessTab() {
   const { i18n } = useTranslation();
@@ -20,18 +20,21 @@ export default function FundingReadinessTab() {
 
   const [revisionIA, setRevisionIA] = useState(null);
   const [cargandoIA, setCargandoIA] = useState(false);
-  const [descargandoReporte, setDescargandoReporte] = useState(false);
+  const [descargandoReporte, setDescargandoReporte] = useState(null);
   const [verificandoConsistencia, setVerificandoConsistencia] = useState(false);
   const [inconsistencias, setInconsistencias] = useState(null);
 
-  const handleDescargarReporte = async () => {
-    setDescargandoReporte(true);
+  const handleDescargarReporte = async (formato = "md") => {
+    setDescargandoReporte(formato);
     try {
-      const response = await readinessChecklistAPI.downloadMemo(orderId);
-      const url = URL.createObjectURL(new Blob([response.data], { type: "text/markdown" }));
+      const response = formato === "pdf"
+        ? await readinessChecklistAPI.downloadMemoPdf(orderId)
+        : await readinessChecklistAPI.downloadMemo(orderId);
+      const mime = formato === "pdf" ? "application/pdf" : "text/markdown";
+      const url = URL.createObjectURL(new Blob([response.data], { type: mime }));
       const link = document.createElement("a");
       link.href = url;
-      link.download = "reporte-readiness.md";
+      link.download = `reporte-readiness.${formato}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -39,7 +42,7 @@ export default function FundingReadinessTab() {
     } catch (err) {
       error("SVC", "Error descargando el reporte de readiness", err);
     } finally {
-      setDescargandoReporte(false);
+      setDescargandoReporte(null);
     }
   };
 
@@ -316,6 +319,20 @@ export default function FundingReadinessTab() {
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
+            {requisitos.country && (
+              <span style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                {L("Pais: ", "Country: ")}
+                {(() => {
+                  const info = SUPPORTED_COUNTRIES.find((c) => c.code === requisitos.country);
+                  return info ? L(info.es, info.en) : requisitos.country;
+                })()}
+              </span>
+            )}
+            {requisitos.globalScore && (
+              <span style={{ color: COLORS.navy, fontSize: "0.72rem", fontWeight: 900, whiteSpace: "nowrap" }}>
+                {L("Score global: ", "Global score: ")}{requisitos.globalScore.score}/100
+              </span>
+            )}
             <span style={{
               padding: "0.5rem 0.8rem", borderRadius: "999px", fontWeight: 900, fontSize: "0.8rem",
               background: requisitos.listoParaEnviar ? "rgba(46,125,50,0.12)" : "rgba(198,40,40,0.1)",
@@ -338,11 +355,20 @@ export default function FundingReadinessTab() {
               )}
               {usaCargaReal && (
                 <button
-                  onClick={handleDescargarReporte}
-                  disabled={descargandoReporte}
+                  onClick={() => handleDescargarReporte("md")}
+                  disabled={Boolean(descargandoReporte)}
                   style={{ border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: descargandoReporte ? "wait" : "pointer", background: "white", color: COLORS.navy, opacity: descargandoReporte ? 0.7 : 1 }}
                 >
-                  {descargandoReporte ? L("Descargando…", "Downloading…") : L("Descargar reporte", "Download report")}
+                  {descargandoReporte === "md" ? L("Descargando…", "Downloading…") : L("Descargar reporte", "Download report")}
+                </button>
+              )}
+              {usaCargaReal && (
+                <button
+                  onClick={() => handleDescargarReporte("pdf")}
+                  disabled={Boolean(descargandoReporte)}
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: descargandoReporte ? "wait" : "pointer", background: "white", color: COLORS.navy, opacity: descargandoReporte ? 0.7 : 1 }}
+                >
+                  {descargandoReporte === "pdf" ? L("Descargando…", "Downloading…") : L("Descargar PDF", "Download PDF")}
                 </button>
               )}
               <button

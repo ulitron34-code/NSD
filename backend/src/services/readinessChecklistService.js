@@ -1,4 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
+import { getOrderCountry } from './documentIntelligenceService.js';
+import { computeWeightedGlobalScore } from '../config/readinessRubrics.js';
+import { getLatestNotesByOrder } from './documentReviewNotesService.js';
 
 // Espejo de REQUISITOS_MINIMOS (frontend/src/data/requisitosMinimos.js) — solo
 // lo necesario para cruzar contra documents/document_reviews reales. Las
@@ -23,6 +26,10 @@ const REVIEW_PASS_SCORE = 60;
 
 export async function getReadinessChecklist(orderId) {
   const codes = READINESS_ITEMS.map((item) => item.code);
+  const [country, latestNoteByDocumentId] = await Promise.all([
+    getOrderCountry(orderId),
+    getLatestNotesByOrder(orderId)
+  ]);
 
   const { data: documents, error: docsError } = await supabaseAdmin
     .from('documents')
@@ -44,7 +51,7 @@ export async function getReadinessChecklist(orderId) {
   if (documentIds.length > 0) {
     const { data: reviews, error: reviewsError } = await supabaseAdmin
       .from('document_reviews')
-      .select('document_id, status, score, findings, created_at')
+      .select('document_id, status, score, summary, findings, extracted_data, created_at')
       .in('document_id', documentIds)
       .order('created_at', { ascending: false });
 
@@ -60,6 +67,9 @@ export async function getReadinessChecklist(orderId) {
     const review = doc ? latestReviewByDocId[doc.id] || null : null;
     const reviewCompleted = Boolean(review) && review.status !== 'processing';
     const estado = reviewCompleted && Number(review.score) >= REVIEW_PASS_SCORE ? 'listo' : 'pendiente';
+    const extractedData = review?.extracted_data || [];
+    const extractedValue = (key) => extractedData.find((entry) => entry?.key === key)?.value ?? null;
+    const humanNote = doc ? latestNoteByDocumentId[doc.id] || null : null;
 
     return {
       id: item.id,
@@ -70,9 +80,13 @@ export async function getReadinessChecklist(orderId) {
       enRevision: Boolean(doc) && !reviewCompleted,
       reviewStatus: review?.status || null,
       reviewScore: review ? Number(review.score) : null,
-      reviewFindings: review?.findings || []
+      reviewSummary: review?.summary || null,
+      reviewFindings: review?.findings || [],
+      recommendation: extractedValue('recomendacion'),
+      structureScore: extractedValue('structure_score') != null ? Number(extractedValue('structure_score')) : null,
+      humanReview: humanNote ? { decision: humanNote.decision, comment: humanNote.comment, reviewedAt: humanNote.created_at } : null
     };
   });
 
-  return { items };
+  return { items, country, globalScore: computeWeightedGlobalScore(items) };
 }

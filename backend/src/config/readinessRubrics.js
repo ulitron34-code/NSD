@@ -231,6 +231,16 @@ export const READINESS_RUBRICS = {
       { nombre: 'Gobernanza y seguimiento', peso: 10 },
       { nombre: 'Anti-greenwashing', peso: 5 }
     ],
+    // Marcos externos reales (sección 6 del plan) contra los que debe
+    // contrastarse el documento -- nombrados explícitamente para que la
+    // evaluación verifique alineación concreta, no ESG genérico.
+    marcosReferencia: [
+      'Taxonomía Sostenible de México (SHCP)',
+      'IFC Performance Standards (PS1-PS8)',
+      'Equator Principles',
+      'GRI Standards (temas universales de reporte)',
+      'SASB Standards (materialidad sectorial)'
+    ],
     banderasRojas: []
   },
 
@@ -247,6 +257,7 @@ export const READINESS_RUBRICS = {
       { nombre: 'Evidencia de relación causal', peso: 25 },
       { nombre: 'Método de seguimiento', peso: 15 }
     ],
+    marcosReferencia: ['ODS ONU — 17 Objetivos de Desarrollo Sostenible'],
     banderasRojas: ['ODS declarado sin evidencia ni indicador medible']
   },
 
@@ -266,10 +277,154 @@ export const READINESS_RUBRICS = {
       { nombre: 'Mitigantes', peso: 15 },
       { nombre: 'Monitoreo', peso: 5 }
     ],
+    marcosReferencia: [
+      'IFC Performance Standards (PS1-PS8)',
+      'Equator Principles',
+      'World Bank Environmental and Social Framework (ESF)'
+    ],
     banderasRojas: []
   }
 };
 
-export function getRubric(itemId) {
-  return READINESS_RUBRICS[itemId] || null;
+// Perfil documental mínimo por país, usado solo para adaptar los 3 items que
+// en su rúbrica base nombran documentos/autoridades específicos de México
+// (doc_corporativa, identificacion_oficial, doc_kyc). El resto de las 13
+// rúbricas es genérico (plan de negocios, modelo financiero, ESG, etc.) y no
+// requiere adaptación por país. Nombres tomados de la misma nomenclatura ya
+// usada en la migración 2026-06-22_document_type_catalog_multipais.sql.
+const COUNTRY_PROFILES = {
+  MX: { idDoc: 'INE (credencial para votar) o pasaporte', taxId: 'RFC', taxAuthority: 'SAT', corporateDoc: 'Acta constitutiva' },
+  CO: { idDoc: 'Cédula de Ciudadanía o pasaporte', taxId: 'NIT/RUT', taxAuthority: 'DIAN', corporateDoc: 'Certificado de Existencia y Representación Legal' },
+  EC: { idDoc: 'Cédula de Identidad o pasaporte', taxId: 'RUC', taxAuthority: 'SRI', corporateDoc: 'Escritura de constitución' },
+  AR: { idDoc: 'DNI o pasaporte', taxId: 'CUIT', taxAuthority: 'AFIP', corporateDoc: 'Estatuto social' },
+  PE: { idDoc: 'DNI (RENIEC) o pasaporte', taxId: 'RUC', taxAuthority: 'SUNAT', corporateDoc: 'Partida registral (SUNARP)' },
+  CL: { idDoc: 'Cédula de Identidad / RUN o pasaporte', taxId: 'RUT', taxAuthority: 'SII', corporateDoc: 'Escritura de constitución' },
+  BO: { idDoc: 'Cédula de Identidad', taxId: 'NIT', taxAuthority: 'SIN', corporateDoc: 'Matrícula de Comercio (SEPREC)' },
+  PY: { idDoc: 'Cédula de Identidad', taxId: 'RUC', taxAuthority: 'SET', corporateDoc: 'Escritura de constitución' },
+  UY: { idDoc: 'Cédula de Identidad', taxId: 'RUT', taxAuthority: 'DGI', corporateDoc: 'Escritura de constitución' },
+  US: { idDoc: "Driver's License / State ID / Passport", taxId: 'EIN', taxAuthority: 'IRS', corporateDoc: 'Articles of Incorporation' },
+  CA: { idDoc: "Driver's License / Passport", taxId: 'Business Number', taxAuthority: 'CRA', corporateDoc: 'Articles of Incorporation' }
+};
+
+const COUNTRY_COUPLED_ITEMS = new Set(['doc_corporativa', 'identificacion_oficial', 'doc_kyc']);
+
+function getCountryProfile(country) {
+  return COUNTRY_PROFILES[country] || COUNTRY_PROFILES.MX;
+}
+
+function localizeRubric(itemId, rubric, country) {
+  const profile = getCountryProfile(country);
+  const isMx = !country || country === 'MX';
+
+  if (itemId === 'doc_corporativa') {
+    return {
+      ...rubric,
+      documentosEsperados: [
+        profile.corporateDoc, profile.taxId, `Constancia fiscal vigente (${profile.taxAuthority})`,
+        'Comprobante de domicilio', 'Identificación representante legal', 'Poderes del representante',
+        'Estructura accionaria', 'Beneficiario controlador'
+      ]
+    };
+  }
+
+  if (itemId === 'identificacion_oficial') {
+    return {
+      ...rubric,
+      label: `Identificación Oficial (${profile.idDoc})`,
+      validacionesMinimas: [
+        `Tipo de documento (${profile.idDoc})`, 'Nombre completo legible', `${profile.taxId} o número de documento legible`,
+        'Fecha de vigencia no vencida', 'Fotografía presente', 'Frente y reverso si aplica',
+        'Coincidencia de nombre con el resto del expediente'
+      ],
+      criterios: rubric.criterios.map((c) => ({
+        ...c,
+        nombre: isMx ? c.nombre : c.nombre.replace(/\s*\(INE\)/i, '')
+      })),
+      banderasRojas: isMx ? rubric.banderasRojas : rubric.banderasRojas
+        .filter((b) => !/reverso de la INE/i.test(b))
+        .concat('Falta el reverso del documento (si el tipo de documento lo requiere)')
+    };
+  }
+
+  if (itemId === 'doc_kyc') {
+    return {
+      ...rubric,
+      validacionesMinimas: [
+        'Identificación de empresa', 'Identificación de representantes legales', 'Identificación de accionistas',
+        'Beneficiarios controladores', 'Screening PEP', 'Screening OFAC/SDN/Consolidated',
+        isMx
+          ? 'Validación SAT 69/69-B/69-B Bis'
+          : `Validación de cumplimiento fiscal ante ${profile.taxAuthority} (verificación manual — sin integración automatizada fuera de México todavía)`,
+        'Riesgo PLD/FT'
+      ]
+    };
+  }
+
+  return rubric;
+}
+
+export function getRubric(itemId, country = 'MX') {
+  const rubric = READINESS_RUBRICS[itemId];
+  if (!rubric) return null;
+  if (!COUNTRY_COUPLED_ITEMS.has(itemId)) return rubric;
+  return localizeRubric(itemId, rubric, country);
+}
+
+export function isAutomatedKycCountry(country) {
+  return !country || country === 'MX';
+}
+
+// Pesos por módulo para el score global (sección 11.3 del plan). El plan
+// original define 12 módulos con KYC/KYB en 12%; como identificacion_oficial
+// se separó de doc_kyc en una sesión posterior, ese 12% se reparte 4/8 entre
+// ambos para no alterar el total (suma = 100).
+export const READINESS_MODULE_WEIGHTS = {
+  plan_negocios: 10,
+  estudio_viabilidad: 10,
+  estudio_mercado: 10,
+  marco_riesgos: 8,
+  modelo_financiero: 15,
+  doc_corporativa: 10,
+  identificacion_oficial: 4,
+  doc_kyc: 8,
+  viabilidad_financiera: 10,
+  transparencia_documental: 5,
+  esg: 4,
+  ods: 3,
+  esia: 3
+};
+
+// Clasificación final del expediente (sección 11.4 del plan).
+const READINESS_LEVELS = [
+  { max: 39, grade: 'no_presentable', label: 'No presentable', action: 'Rehacer expediente base.' },
+  { max: 59, grade: 'diagnostico', label: 'Presentable solo para diagnóstico', action: 'Corregir antes de enviarlo a otorgantes.' },
+  { max: 74, grade: 'preliminarmente_viable', label: 'Preliminarmente viable', action: 'Puede iniciar revisión, pero con observaciones.' },
+  { max: 84, grade: 'listo_con_observaciones', label: 'Listo con observaciones', action: 'Apto para revisión financiera inicial.' },
+  { max: 94, grade: 'listo_para_otorgante', label: 'Listo para otorgante', action: 'Expediente sólido para revisión formal.' },
+  { max: 100, grade: 'institucional', label: 'Expediente institucional', action: 'Nivel robusto para banca, fondos o multilaterales.' }
+];
+
+export function classifyReadinessLevel(score) {
+  const clamped = Math.max(0, Math.min(100, Math.round(score)));
+  return READINESS_LEVELS.find((level) => clamped <= level.max) || READINESS_LEVELS[READINESS_LEVELS.length - 1];
+}
+
+// Score global ponderado (sección 11.3). Items sin documento evaluado cuentan
+// como 0 -- un expediente con módulos vacíos no debe promediar solo lo que sí
+// se subió, o un expediente con 2 de 13 documentos "perfectos" mostraría un
+// score global engañosamente alto.
+export function computeWeightedGlobalScore(items) {
+  let weightedSum = 0;
+  let totalWeight = 0;
+
+  for (const item of items || []) {
+    const weight = READINESS_MODULE_WEIGHTS[item.id];
+    if (!weight) continue;
+    totalWeight += weight;
+    weightedSum += weight * (item.reviewScore != null ? Number(item.reviewScore) : 0);
+  }
+
+  const score = totalWeight ? Math.round(weightedSum / totalWeight) : 0;
+  const level = classifyReadinessLevel(score);
+  return { score, ...level };
 }

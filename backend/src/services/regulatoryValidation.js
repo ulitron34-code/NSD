@@ -4,7 +4,22 @@ import { isConfigured as chConfigured } from './companiesHouseService.js';
 import { isEmiratesIdConfigured, isTradeLicenseConfigured } from './aeRegulatoryService.js';
 
 const configured = (name) => Boolean(process.env[name]?.trim());
-const KNOWN_COUNTRIES = ['MX', 'US', 'AE', 'UK', 'CA'];
+const KNOWN_COUNTRIES = ['MX', 'US', 'AE', 'UK', 'CA', 'CO', 'EC', 'AR', 'PE', 'CL', 'BO', 'PY', 'UY'];
+
+// Formato del identificador fiscal por pais (solo formato -- no valida contra
+// una autoridad real, igual que ya hace el bloque de MX/US/AE con RFC/EIN/
+// Emirates ID). Sin buro de credito ni blacklist fiscal local todavia (esos
+// requieren contrato comercial, igual que BURO_API_URL para Mexico).
+const TAX_ID_FORMATS = {
+  CO: { label: 'NIT/RUT Colombia', pattern: /^\d{9,10}-?\d?$/ },
+  EC: { label: 'RUC Ecuador', pattern: /^\d{13}$/ },
+  AR: { label: 'CUIT Argentina', pattern: /^\d{2}-?\d{8}-?\d{1}$/ },
+  PE: { label: 'RUC Peru', pattern: /^\d{11}$/ },
+  CL: { label: 'RUT Chile', pattern: /^\d{7,8}-[\dkK]$/ },
+  BO: { label: 'NIT Bolivia', pattern: /^\d{7,13}$/ },
+  PY: { label: 'RUC Paraguay', pattern: /^\d{6,8}-\d$/ },
+  UY: { label: 'RUT Uruguay', pattern: /^\d{12}$/ }
+};
 
 function normalizeCountry(country = 'MX') {
   const value = String(country).trim().toUpperCase();
@@ -13,6 +28,7 @@ function normalizeCountry(country = 'MX') {
   if (['AE', 'UAE', 'DUBAI'].includes(value)) return 'AE';
   if (['UK', 'GB', 'UNITED_KINGDOM'].includes(value)) return 'UK';
   if (['CA', 'CANADA', 'CANADÁ'].includes(value)) return 'CA';
+  if (TAX_ID_FORMATS[value]) return value;
   return value || 'MX';
 }
 
@@ -178,6 +194,23 @@ export function validateRegulatoryProfile({ country = 'MX', applicant = {}, orde
         ? 'Beneficiario final declarado conforme a FINTRAC'
         : 'FINTRAC requiere identificacion del 25%+ de propiedad o control efectivo',
       severity: (applicant.ubo || order?.metadata?.ubo) ? 'info' : 'medium'
+    });
+  }
+
+  if (TAX_ID_FORMATS[normalizedCountry]) {
+    const { label, pattern } = TAX_ID_FORMATS[normalizedCountry];
+    addCheck(checks, formatCheck({
+      provider: 'format',
+      label,
+      value: applicant.taxId || order?.metadata?.taxId,
+      pattern
+    }));
+    addCheck(checks, {
+      provider: 'buro_local',
+      label: `Buró de crédito / autoridad fiscal local (${normalizedCountry})`,
+      status: 'skipped',
+      detail: `Sin integración automatizada de buró de crédito ni blacklist fiscal para ${normalizedCountry} todavía — requiere contrato comercial con el proveedor local, igual que Buró de Crédito en México.`,
+      severity: 'low'
     });
   }
 

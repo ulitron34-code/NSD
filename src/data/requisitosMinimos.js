@@ -106,6 +106,82 @@ export const REQUISITOS_MINIMOS = [
 
 export const DEMO_EXPEDIENTE_ID = "demo-order-001";
 
+// Países soportados por la clasificación multi-país de Document Intelligence
+// (backend/src/services/documentIntelligenceService.js) — reusados aquí para
+// que el checklist de Readiness muestre el mismo conjunto de países.
+export const SUPPORTED_COUNTRIES = [
+  { code: "MX", es: "México", en: "Mexico" },
+  { code: "CO", es: "Colombia", en: "Colombia" },
+  { code: "EC", es: "Ecuador", en: "Ecuador" },
+  { code: "AR", es: "Argentina", en: "Argentina" },
+  { code: "PE", es: "Perú", en: "Peru" },
+  { code: "CL", es: "Chile", en: "Chile" },
+  { code: "BO", es: "Bolivia", en: "Bolivia" },
+  { code: "PY", es: "Paraguay", en: "Paraguay" },
+  { code: "UY", es: "Uruguay", en: "Uruguay" },
+  { code: "US", es: "Estados Unidos", en: "United States" },
+  { code: "CA", es: "Canadá", en: "Canada" },
+];
+
+// Perfil documental mínimo por país — espejo de COUNTRY_PROFILES en
+// backend/src/config/readinessRubrics.js, solo para los 3 items cuyo texto
+// base nombra documentos/autoridades específicos de México.
+const COUNTRY_IDENTITY_PROFILES = {
+  CO: { idDoc: { es: "Cédula de Ciudadanía o pasaporte", en: "Cédula de Ciudadanía or passport" }, taxId: "NIT/RUT" },
+  EC: { idDoc: { es: "Cédula de Identidad o pasaporte", en: "Cédula de Identidad or passport" }, taxId: "RUC" },
+  AR: { idDoc: { es: "DNI o pasaporte", en: "DNI or passport" }, taxId: "CUIT" },
+  PE: { idDoc: { es: "DNI (RENIEC) o pasaporte", en: "DNI (RENIEC) or passport" }, taxId: "RUC" },
+  CL: { idDoc: { es: "Cédula de Identidad / RUN o pasaporte", en: "National ID / RUN or passport" }, taxId: "RUT" },
+  BO: { idDoc: { es: "Cédula de Identidad", en: "National ID" }, taxId: "NIT" },
+  PY: { idDoc: { es: "Cédula de Identidad", en: "National ID" }, taxId: "RUC" },
+  UY: { idDoc: { es: "Cédula de Identidad", en: "National ID" }, taxId: "RUT" },
+  US: { idDoc: { es: "Driver's License / Pasaporte", en: "Driver's License / Passport" }, taxId: "EIN" },
+  CA: { idDoc: { es: "Driver's License / Pasaporte", en: "Driver's License / Passport" }, taxId: "Business Number" },
+};
+
+const COUNTRY_COUPLED_ITEM_IDS = new Set(["doc_corporativa", "identificacion_oficial", "doc_kyc"]);
+
+// Adapta label/detalle de los 3 items acoplados a México cuando el expediente
+// declara otro país soportado. Para MX o países sin perfil aún, regresa el
+// item tal cual (sin cambios de comportamiento).
+export function localizeRequisito(item, country) {
+  const profile = COUNTRY_COUPLED_ITEM_IDS.has(item.id) && country ? COUNTRY_IDENTITY_PROFILES[country] : null;
+  if (!profile) return item;
+
+  if (item.id === "identificacion_oficial") {
+    return {
+      ...item,
+      label: { es: `Identificación Oficial (${profile.idDoc.es})`, en: `Official ID (${profile.idDoc.en})` },
+      detalle: {
+        es: `${profile.idDoc.es} vigente del representante legal.`,
+        en: `Valid ${profile.idDoc.en} of the legal representative.`,
+      },
+    };
+  }
+
+  if (item.id === "doc_corporativa") {
+    return {
+      ...item,
+      detalle: {
+        es: `Acta/escritura de constitución, ${profile.taxId}, poder notarial.`,
+        en: `Incorporation deed, ${profile.taxId}, notarial power.`,
+      },
+    };
+  }
+
+  if (item.id === "doc_kyc") {
+    return {
+      ...item,
+      detalle: {
+        es: `Beneficiario controlador, ${profile.taxId}, comprobante de domicilio.`,
+        en: `Ultimate beneficial owner, ${profile.taxId}, proof of address.`,
+      },
+    };
+  }
+
+  return item;
+}
+
 // Los 17 Objetivos de Desarrollo Sostenible (ONU) — referencia oficial y estable,
 // usada para que el requisito "ods" sea una selección concreta y no un checkbox vago.
 export const UN_SDG_GOALS = [

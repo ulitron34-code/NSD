@@ -132,4 +132,28 @@ describe('validateRegulatoryProfile', () => {
     });
     expect(screenCargoAgainstPepCatalog).toHaveBeenCalledWith('Senadora', { relationship: 'madre' });
   });
+
+  it.each([
+    ['CO', '900123456-7'],
+    ['EC', '1791251237001'],
+    ['AR', '20-12345678-9'],
+    ['PE', '20123456789'],
+    ['CL', '76543210-K'],
+    ['BO', '1023456789'],
+    ['PY', '80012345-6'],
+    ['UY', '210012340012']
+  ])('valida formato de ID fiscal para %s y marca screening real de OFAC/PEP (no ya como pais no soportado)', (country, taxId) => {
+    const result = validateRegulatoryProfile({ country, applicant: { taxId, companyName: 'Empresa Test' } });
+
+    expect(result.checks.find((c) => c.provider === 'format').status).toBe('pass');
+    expect(result.checks.find((c) => c.provider === 'ofac')).toBeDefined();
+    expect(result.checks.find((c) => c.provider === 'pep')).toBeDefined();
+    expect(result.checks.find((c) => c.provider === 'nsd')).toBeUndefined();
+    expect(result.checks.find((c) => c.provider === 'buro_local').status).toBe('skipped');
+  });
+
+  it('marca formato invalido cuando el ID fiscal no cumple el patron del pais', () => {
+    const result = validateRegulatoryProfile({ country: 'CO', applicant: { taxId: 'no-es-un-nit' } });
+    expect(result.checks.find((c) => c.provider === 'format').status).toBe('fail');
+  });
 });

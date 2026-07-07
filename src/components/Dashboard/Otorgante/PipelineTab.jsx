@@ -10,6 +10,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { useSelectedExpediente } from "../../../hooks/useSelectedExpediente";
 import { DOCUMENT_TYPES } from "../../../utils/institutional";
 import { buildInternationalReadiness } from "../../../utils/localization";
+import DocumentReviewNotesPanel from "../../Shared/DocumentReviewNotesPanel";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
 import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
 import { pickLang } from "../../../data/requisitosMinimos";
@@ -443,17 +444,26 @@ export default function PipelineTab() {
 
   const requisitosMinimosEsDemo = Boolean(user?.demo) || String(selected?.id || '').startsWith("demo-");
   const requisitosMinimos = useReadinessChecklist(selected?.id, requisitosMinimosEsDemo);
-  const [descargandoReporteReadiness, setDescargandoReporteReadiness] = useState(false);
+  const [descargandoReporteReadiness, setDescargandoReporteReadiness] = useState(null);
+  const [itemRevisionAbierta, setItemRevisionAbierta] = useState(null);
 
-  const handleDescargarReporteReadiness = async () => {
+  const REPORTE_DOWNLOADERS = {
+    "ejecutivo-md": { fn: readinessChecklistAPI.downloadMemo, mime: "text/markdown", filename: "reporte-readiness.md" },
+    "ejecutivo-pdf": { fn: readinessChecklistAPI.downloadMemoPdf, mime: "application/pdf", filename: "reporte-readiness.pdf" },
+    "tecnico-md": { fn: readinessChecklistAPI.downloadTechnicalMemo, mime: "text/markdown", filename: "reporte-tecnico.md" },
+    "tecnico-pdf": { fn: readinessChecklistAPI.downloadTechnicalMemoPdf, mime: "application/pdf", filename: "reporte-tecnico.pdf" }
+  };
+
+  const handleDescargarReporteReadiness = async (variante = "ejecutivo-md") => {
     if (requisitosMinimosEsDemo || !selected?.id) return;
-    setDescargandoReporteReadiness(true);
+    setDescargandoReporteReadiness(variante);
     try {
-      const response = await readinessChecklistAPI.downloadMemo(selected.id);
-      const url = URL.createObjectURL(new Blob([response.data], { type: "text/markdown" }));
+      const { fn, mime, filename } = REPORTE_DOWNLOADERS[variante];
+      const response = await fn(selected.id);
+      const url = URL.createObjectURL(new Blob([response.data], { type: mime }));
       const link = document.createElement("a");
       link.href = url;
-      link.download = "reporte-readiness.md";
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -461,7 +471,7 @@ export default function PipelineTab() {
     } catch (err) {
       error("SVC", "Error descargando el reporte de readiness", err);
     } finally {
-      setDescargandoReporteReadiness(false);
+      setDescargandoReporteReadiness(null);
     }
   };
   const analytics = useMemo(() => buildOtorganteAnalytics(opportunities), [opportunities]);
@@ -1199,15 +1209,32 @@ export default function PipelineTab() {
                     color: requisitosMinimos.listoParaEnviar ? COLORS.green : "#C62828", fontWeight: 900, fontSize: "0.8rem", whiteSpace: "nowrap",
                   }}>
                     {requisitosMinimos.completados}/{requisitosMinimos.total}
+                    {requisitosMinimos.globalScore && ` · ${requisitosMinimos.globalScore.score}/100`}
                   </span>
                   {!requisitosMinimosEsDemo && (
-                    <button
-                      onClick={handleDescargarReporteReadiness}
-                      disabled={descargandoReporteReadiness}
-                      style={{ border: `1px solid ${COLORS.border}`, borderRadius: "5px", padding: "0.3rem 0.55rem", fontSize: "0.68rem", fontWeight: 900, cursor: descargandoReporteReadiness ? "wait" : "pointer", background: "white", color: COLORS.navy, whiteSpace: "nowrap" }}
-                    >
-                      {descargandoReporteReadiness ? copy("Descargando…") : copy("Descargar reporte")}
-                    </button>
+                    <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      <button
+                        onClick={() => handleDescargarReporteReadiness("tecnico-md")}
+                        disabled={Boolean(descargandoReporteReadiness)}
+                        style={{ border: `1px solid ${COLORS.border}`, borderRadius: "5px", padding: "0.3rem 0.55rem", fontSize: "0.68rem", fontWeight: 900, cursor: descargandoReporteReadiness ? "wait" : "pointer", background: "white", color: COLORS.navy, whiteSpace: "nowrap" }}
+                      >
+                        {descargandoReporteReadiness === "tecnico-md" ? copy("Descargando…") : copy("Reporte técnico")}
+                      </button>
+                      <button
+                        onClick={() => handleDescargarReporteReadiness("tecnico-pdf")}
+                        disabled={Boolean(descargandoReporteReadiness)}
+                        style={{ border: `1px solid ${COLORS.border}`, borderRadius: "5px", padding: "0.3rem 0.55rem", fontSize: "0.68rem", fontWeight: 900, cursor: descargandoReporteReadiness ? "wait" : "pointer", background: "white", color: COLORS.navy, whiteSpace: "nowrap" }}
+                      >
+                        {descargandoReporteReadiness === "tecnico-pdf" ? copy("Descargando…") : copy("PDF técnico")}
+                      </button>
+                      <button
+                        onClick={() => handleDescargarReporteReadiness("ejecutivo-md")}
+                        disabled={Boolean(descargandoReporteReadiness)}
+                        style={{ border: `1px solid ${COLORS.border}`, borderRadius: "5px", padding: "0.3rem 0.55rem", fontSize: "0.68rem", fontWeight: 900, cursor: descargandoReporteReadiness ? "wait" : "pointer", background: "white", color: COLORS.navy, whiteSpace: "nowrap" }}
+                      >
+                        {descargandoReporteReadiness === "ejecutivo-md" ? copy("Descargando…") : copy("Reporte ejecutivo")}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1221,42 +1248,60 @@ export default function PipelineTab() {
                       ? copy("Falta")
                       : copy("Incompleto");
                   return (
-                    <div key={item.id} style={{
-                      display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem",
-                      padding: "0.55rem 0.65rem", borderRadius: "6px",
-                      background: faltaCritico ? "rgba(198,40,40,0.05)" : COLORS.bg,
-                      border: `1px solid ${faltaCritico ? "rgba(198,40,40,0.3)" : COLORS.border}`,
-                    }}>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, color: COLORS.navy, fontSize: "0.78rem", fontWeight: 800 }}>{pickLang(item.label, i18n.language)}</p>
-                        {item.enRevision && (
-                          <p style={{ margin: "0.15rem 0 0", color: COLORS.amber, fontSize: "0.68rem", fontWeight: 700 }}>
-                            {copy("En revision IA…")}
-                          </p>
-                        )}
-                        {item.reviewScore != null && !item.enRevision && (
-                          <p style={{ margin: "0.15rem 0 0", color: verificado ? COLORS.green : "#C62828", fontSize: "0.68rem", fontWeight: 700 }}>
-                            {copy("Score IA:")} {item.reviewScore}/100
-                            {item.reviewFindings?.[0] ? ` — ${item.reviewFindings[0]}` : ""}
-                          </p>
-                        )}
+                    <div key={item.id}>
+                      <div style={{
+                        display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem",
+                        padding: "0.55rem 0.65rem", borderRadius: "6px",
+                        background: faltaCritico ? "rgba(198,40,40,0.05)" : COLORS.bg,
+                        border: `1px solid ${faltaCritico ? "rgba(198,40,40,0.3)" : COLORS.border}`,
+                      }}>
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ margin: 0, color: COLORS.navy, fontSize: "0.78rem", fontWeight: 800 }}>{pickLang(item.label, i18n.language)}</p>
+                          {item.enRevision && (
+                            <p style={{ margin: "0.15rem 0 0", color: COLORS.amber, fontSize: "0.68rem", fontWeight: 700 }}>
+                              {copy("En revision IA…")}
+                            </p>
+                          )}
+                          {item.reviewScore != null && !item.enRevision && (
+                            <p style={{ margin: "0.15rem 0 0", color: verificado ? COLORS.green : "#C62828", fontSize: "0.68rem", fontWeight: 700 }}>
+                              {copy("Score IA:")} {item.reviewScore}/100
+                              {item.reviewFindings?.[0] ? ` — ${item.reviewFindings[0]}` : ""}
+                            </p>
+                          )}
+                          {item.humanReview && (
+                            <p style={{ margin: "0.15rem 0 0", color: COLORS.textMuted, fontSize: "0.66rem", fontWeight: 700 }}>
+                              {copy("Revisión humana:")} {item.humanReview.decision}
+                            </p>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+                          <span style={{
+                            fontSize: "0.7rem", fontWeight: 900,
+                            color: verificado ? COLORS.green : faltaCritico ? "#C62828" : COLORS.amber,
+                          }}>
+                            {verificado ? "✅" : faltaCritico ? "❌" : "⚠️"} {statusLabel}
+                          </span>
+                          {!verificado && (
+                            <button
+                              onClick={() => solicitarRequisitoFaltante(item)}
+                              style={{ border: "none", borderRadius: "5px", padding: "0.3rem 0.5rem", fontSize: "0.68rem", fontWeight: 900, cursor: "pointer", background: COLORS.navy, color: "white" }}
+                            >
+                              {copy("Solicitar")}
+                            </button>
+                          )}
+                          {item.documentoId && !requisitosMinimosEsDemo && (
+                            <button
+                              onClick={() => setItemRevisionAbierta(itemRevisionAbierta === item.id ? null : item.id)}
+                              style={{ border: `1px solid ${COLORS.border}`, borderRadius: "5px", padding: "0.3rem 0.5rem", fontSize: "0.68rem", fontWeight: 900, cursor: "pointer", background: "white", color: COLORS.navy }}
+                            >
+                              {itemRevisionAbierta === item.id ? copy("Cerrar") : copy("Revisión")}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
-                        <span style={{
-                          fontSize: "0.7rem", fontWeight: 900,
-                          color: verificado ? COLORS.green : faltaCritico ? "#C62828" : COLORS.amber,
-                        }}>
-                          {verificado ? "✅" : faltaCritico ? "❌" : "⚠️"} {statusLabel}
-                        </span>
-                        {!verificado && (
-                          <button
-                            onClick={() => solicitarRequisitoFaltante(item)}
-                            style={{ border: "none", borderRadius: "5px", padding: "0.3rem 0.5rem", fontSize: "0.68rem", fontWeight: 900, cursor: "pointer", background: COLORS.navy, color: "white" }}
-                          >
-                            {copy("Solicitar")}
-                          </button>
-                        )}
-                      </div>
+                      {itemRevisionAbierta === item.id && item.documentoId && (
+                        <DocumentReviewNotesPanel orderId={selected.id} documentId={item.documentoId} />
+                      )}
                     </div>
                   );
                 })}

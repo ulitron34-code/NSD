@@ -2,7 +2,7 @@ import { error as logError, warn } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { readinessChecklistAPI, documentsAPI } from "../services/api";
 import { useRequisitosMinimos } from "./useRequisitosMinimos";
-import { REQUISITOS_MINIMOS, DEMO_EXPEDIENTE_ID } from "../data/requisitosMinimos";
+import { REQUISITOS_MINIMOS, DEMO_EXPEDIENTE_ID, localizeRequisito } from "../data/requisitosMinimos";
 
 const READY_CODE_BY_ITEM_ID = Object.fromEntries(
   REQUISITOS_MINIMOS.map((item) => [item.id, `READY_${item.id.toUpperCase()}`])
@@ -23,6 +23,8 @@ function deriveAggregates(items) {
 
 function useRealReadinessChecklist(orderId) {
   const [remoteItems, setRemoteItems] = useState(null);
+  const [country, setCountry] = useState("MX");
+  const [globalScore, setGlobalScore] = useState(null);
   const [sdgByItem, setSdgByItem] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +36,8 @@ function useRealReadinessChecklist(orderId) {
     try {
       const { data } = await readinessChecklistAPI.get(orderId);
       setRemoteItems(data.items);
+      setCountry(data.country || "MX");
+      setGlobalScore(data.globalScore || null);
     } catch (err) {
       logError("SVC", "No se pudo cargar el checklist real de readiness", err);
     } finally {
@@ -46,7 +50,8 @@ function useRealReadinessChecklist(orderId) {
   }, [fetchChecklist]);
 
   const items = useMemo(() => {
-    return REQUISITOS_MINIMOS.map((def) => {
+    return REQUISITOS_MINIMOS.map((baseDef) => {
+      const def = localizeRequisito(baseDef, country);
       const remote = (remoteItems || []).find((r) => r.id === def.id) || {};
       return {
         ...def,
@@ -57,10 +62,13 @@ function useRealReadinessChecklist(orderId) {
         reviewStatus: remote.reviewStatus || null,
         reviewScore: remote.reviewScore ?? null,
         reviewFindings: remote.reviewFindings || [],
+        recommendation: remote.recommendation || null,
+        structureScore: remote.structureScore ?? null,
+        humanReview: remote.humanReview || null,
         sdg: sdgByItem[def.id] || []
       };
     });
-  }, [remoteItems, sdgByItem]);
+  }, [remoteItems, sdgByItem, country]);
 
   const uploadEvidence = useCallback(async (itemId, file) => {
     const documentType = READY_CODE_BY_ITEM_ID[itemId];
@@ -88,6 +96,8 @@ function useRealReadinessChecklist(orderId) {
   return {
     items,
     loading,
+    country,
+    globalScore,
     ...deriveAggregates(items),
     uploadEvidence,
     toggleSdg,
@@ -105,6 +115,7 @@ export function useReadinessChecklist(orderId, isDemo) {
     return {
       ...demoFallback,
       loading: false,
+      country: "MX",
       uploadEvidence: async () => {
         warn("SVC", "uploadEvidence no esta disponible en modo demo");
       }

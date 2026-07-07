@@ -262,8 +262,21 @@ export const readinessChecklistAPI = {
     api.get(`/orders/${orderId}/readiness-checklist`),
   downloadMemo: (orderId) =>
     api.get(`/orders/${orderId}/readiness-checklist/memo.md`, { responseType: 'blob' }),
+  downloadMemoPdf: (orderId) =>
+    api.get(`/orders/${orderId}/readiness-checklist/memo.pdf`, { responseType: 'blob' }),
+  downloadTechnicalMemo: (orderId) =>
+    api.get(`/orders/${orderId}/readiness-checklist/technical-memo.md`, { responseType: 'blob' }),
+  downloadTechnicalMemoPdf: (orderId) =>
+    api.get(`/orders/${orderId}/readiness-checklist/technical-memo.pdf`, { responseType: 'blob' }),
   crossCheck: (orderId) =>
     api.post(`/orders/${orderId}/readiness-checklist/cross-check`)
+};
+
+export const reviewNotesAPI = {
+  list: (orderId, documentId) =>
+    api.get(`/orders/${orderId}/documents/${documentId}/review-notes`),
+  add: (orderId, documentId, decision, comment) =>
+    api.post(`/orders/${orderId}/documents/${documentId}/review-notes`, { decision, comment })
 };
 
 export const messagingAPI = {
