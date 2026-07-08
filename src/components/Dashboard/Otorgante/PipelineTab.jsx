@@ -1205,6 +1205,11 @@ export default function PipelineTab() {
                   </p>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.4rem" }}>
+                  {requisitosMinimos.lifecycle && (
+                    <span title={requisitosMinimos.lifecycle.reason} style={{ padding: "0.3rem 0.65rem", borderRadius: "999px", background: "rgba(10,35,66,0.08)", color: COLORS.navy, fontSize: "0.68rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+                      {requisitosMinimos.lifecycle.label}
+                    </span>
+                  )}
                   <span style={{
                     color: requisitosMinimos.listoParaEnviar ? COLORS.green : "#C62828", fontWeight: 900, fontSize: "0.8rem", whiteSpace: "nowrap",
                   }}>

@@ -5,6 +5,7 @@ import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { logAuditEvent } from '../utils/audit.js';
 import { runAIReviewCascaded } from '../services/aiEngine.js';
 import { evaluateReadinessDocument } from '../agents/readinessRubricAgent.js';
+import { runReadinessCrossReferences } from '../agents/readinessCrossRefAgent.js';
 
 const router = express.Router();
 const MAX_DOCUMENT_BYTES = Number(process.env.MAX_DOCUMENT_BYTES || 25 * 1024 * 1024);
@@ -581,6 +582,20 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
               score: reviewPayload.score
             }
           });
+
+          // Auditoria cruzada automatica (seccion 8.2 del plan: el diagrama la
+          // encadena justo despues de la evaluacion por agentes, no como paso
+          // manual). Antes solo corria si el usuario apretaba "Verificar
+          // consistencia" -- ahora se dispara sola cada vez que termina de
+          // revisarse un documento READY_*, sin bloquear la respuesta HTTP ya
+          // enviada. Errores aqui no deben tumbar la revision que ya se guardo.
+          if (String(document.document_type || '').startsWith('READY_')) {
+            try {
+              await runReadinessCrossReferences(req.params.orderId);
+            } catch (crossRefError) {
+              console.error("Error en auditoria cruzada automatica:", crossRefError);
+            }
+          }
         } catch (updateError) {
           console.error("Error al actualizar la revision en segundo plano:", updateError);
         }

@@ -44,7 +44,11 @@ export const ordersAPI = {
   updateBeneficiaryOwners: (orderId, owners) =>
     api.patch(`/orders/${orderId}/beneficiary-owners`, { owners }),
   getBeneficiaryOwnersScreening: (orderId) =>
-    api.get(`/orders/${orderId}/beneficiary-owners/screening`)
+    api.get(`/orders/${orderId}/beneficiary-owners/screening`),
+  archive: (orderId) =>
+    api.post(`/orders/${orderId}/archive`),
+  unarchive: (orderId) =>
+    api.post(`/orders/${orderId}/unarchive`)
 };
 
 export const scoringAPI = {
@@ -175,6 +179,30 @@ export const auditAPI = {
     api.get(`/audit-logs/${orderId}/export.md`, { responseType: 'blob' }),
   exportCsv: (orderId) =>
     api.get(`/audit-logs/${orderId}/export.csv`, { responseType: 'blob' })
+};
+
+// Rol Administrador (sección 8.1 del plan): gestión de usuarios/roles,
+// catálogo de fuentes, rúbricas (solo lectura) y bitácora global. Todas
+// gateadas server-side por requireAdmin — si quien las llama no es
+// profile_type='administrador' real, el backend responde 403 sin importar
+// qué modo de UI tenga seleccionado.
+export const adminAPI = {
+  listUsers: (params = {}) =>
+    api.get('/admin/users', { params }),
+  updateUserRole: (userId, profileType) =>
+    api.patch(`/admin/users/${userId}/role`, { profileType }),
+  listReferenceSources: (params = {}) =>
+    api.get('/admin/reference-sources', { params }),
+  createReferenceSource: (payload) =>
+    api.post('/admin/reference-sources', payload),
+  updateReferenceSource: (id, payload) =>
+    api.put(`/admin/reference-sources/${id}`, payload),
+  deactivateReferenceSource: (id) =>
+    api.delete(`/admin/reference-sources/${id}`),
+  listAuditLogs: (params = {}) =>
+    api.get('/admin/audit-logs', { params }),
+  getRubrics: () =>
+    api.get('/admin/rubrics')
 };
 
 // Las rutas /ai-agents/* nunca existieron en el backend (confirmado por

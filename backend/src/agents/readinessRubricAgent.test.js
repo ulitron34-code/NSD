@@ -61,11 +61,29 @@ describe('evaluateReadinessDocument', () => {
     const result = await evaluateReadinessDocument({
       documentTypeCode: 'READY_DOC_KYC',
       extractedText: '',
-      order: { metadata: { rfc: 'ABC123456XYZ', companyName: 'Empresa Test SA de CV' } }
+      order: {
+        metadata: {
+          rfc: 'ABC123456XYZ',
+          companyName: 'Empresa Test SA de CV',
+          beneficiaryOwners: [{ fullName: 'Juan Pérez', ownershipPercentage: 100 }]
+        }
+      }
     });
 
     expect(result.status).toBe('yellow');
     expect(result.warnings.some((w) => w.includes('ANTHROPIC_API_KEY'))).toBe(true);
+  });
+
+  it('doc_kyc sin ningun beneficiario controlador declarado agrega bandera roja y topa el score', async () => {
+    const result = await evaluateReadinessDocument({
+      documentTypeCode: 'READY_DOC_KYC',
+      extractedText: '',
+      order: { metadata: { country: 'CO', companyName: 'Empresa Sin UBO' } }
+    });
+
+    expect(result.findings.some((f) => f.includes('beneficiario controlador'))).toBe(true);
+    expect(result.extracted_data.some((e) => e.key === 'beneficiario_controlador_identificado' && e.value === false)).toBe(true);
+    expect(result.score).toBeLessThanOrEqual(40);
   });
 
   it('doc_kyc para un pais distinto de Mexico no pide RFC y corre screening real de OFAC/PEP', async () => {

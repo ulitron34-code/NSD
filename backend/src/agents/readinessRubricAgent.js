@@ -4,6 +4,7 @@
 // screening ya existente (nsdApplicantAgent.js: SAT + Buró + OFAC/sanciones + PEP
 // real). Para estudio_mercado enriquece el prompt con datos reales de INEGI/Banxico.
 import Anthropic from '@anthropic-ai/sdk';
+import { supabaseAdmin } from '../config/supabase.js';
 import { getRubric, isAutomatedKycCountry, READINESS_RUBRICS } from '../config/readinessRubrics.js';
 import { runApplicantScreen } from './nsdApplicantAgent.js';
 import { getBusinessDensity } from '../services/inegiService.js';
@@ -12,6 +13,9 @@ import { extractFinancialWithAI } from './agentFinancial.js';
 import { getCrossReferences } from '../services/documentIntelligenceService.js';
 import { validateRegulatoryProfile } from '../services/regulatoryValidation.js';
 import { searchLegalEntity } from '../services/gleifService.js';
+import { screenRfcAgainstSat69b } from '../services/satBlacklistScreening.js';
+import { findDatesInText } from './agentValidator.js';
+import { screenBeneficiaryOwners, normalizeBeneficiaryOwnerList } from '../services/beneficiaryOwners.js';
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
@@ -363,7 +367,15 @@ async function evaluateRegulatoryKyc(order, country) {
 // Ese agente (nsdApplicantAgent.js) esta acoplado al RFC/Buro de Credito de
 // Mexico -- para otros paises se usa evaluateRegulatoryKyc() (screening real
 // de OFAC/PEP/formato, sin buro de credito local).
+// doc_kyc no pasa por enrichResult() (retorna directo desde
+// evaluateReadinessDocument), asi que el chequeo de beneficiario controlador
+// se aplica aqui explicitamente para las 3 rutas posibles (MX, no-MX, error).
 async function evaluateKyc(order) {
+  const result = await evaluateKycCore(order);
+  return enrichWithBeneficiaryOwners(result, order);
+}
+
+async function evaluateKycCore(order) {
   const country = order?.metadata?.country || 'MX';
 
   if (!isAutomatedKycCountry(country)) {
@@ -417,7 +429,7 @@ async function evaluateKyc(order) {
     ? `Atender: ${result.flags[0].message}`
     : 'Sin acciones pendientes detectadas en el screening KYC/KYB.';
 
-  return {
+  const kycResult = {
     status,
     score,
     summary: result.agent_summary || 'Screening KYC/KYB completado.',
@@ -433,6 +445,43 @@ async function evaluateKyc(order) {
     ],
     warnings: result.mock_warning ? [result.mock_warning] : []
   };
+
+  return enrichKycWithSat69b(kycResult, rfc, name);
+}
+
+// Bandera roja critica (seccion 12.1 del plan: "Coincidencia en SAT 69-B como
+// definitivo sin justificacion o regularizacion"). satBlacklistScreening.js ya
+// existe y funciona (usado hoy solo en el screening manual de CumplimientoTab.jsx,
+// /api/screening/sat69b) pero nunca corria dentro del checklist de Readiness --
+// evaluateKyc() dependia 100% de que nsdApplicantAgent.js lo mencionara
+// espontaneamente, cosa que nunca hace porque ese agente no tiene esa tool.
+async function enrichKycWithSat69b(result, rfc, name) {
+  try {
+    const screening = screenRfcAgainstSat69b(rfc, name);
+    if (screening.status !== 'hit') {
+      return { ...result, extracted_data: [...result.extracted_data, { key: 'sat_69b', value: screening.status }] };
+    }
+
+    const esDefinitivo = screening.matches.some((m) => /definitivo/i.test(m.situacion || ''));
+    const score = Math.min(result.score, esDefinitivo ? 15 : 45);
+
+    return {
+      ...result,
+      score,
+      status: statusForScore(score),
+      findings: [
+        ...result.findings,
+        `Bandera roja${esDefinitivo ? ' crítica' : ''}: ${screening.detail}`
+      ],
+      extracted_data: [
+        ...result.extracted_data,
+        { key: 'sat_69b', value: esDefinitivo ? 'definitivo' : 'hit_no_definitivo' }
+      ]
+    };
+  } catch (err) {
+    console.warn('[readinessRubricAgent] Error en screening SAT 69-B:', err.message);
+    return result;
+  }
 }
 
 // Revisión de consistencia financiera real (no solo la opinión libre de
@@ -556,8 +605,101 @@ function enrichEsiaWithSemarnatRule(result, order) {
   };
 }
 
-async function enrichResult(itemId, result, { extractedText, order }) {
+// Bandera amarilla "Documentos con fechas vencidas" (seccion 12.2 del plan):
+// usa expiration_months de document_type_catalog (columna ya poblada por
+// 2026-07-04_readiness_document_types.sql, hoy solo con valor real en
+// READY_IDENTIFICACION_OFICIAL) + findDatesInText, la misma extraccion de
+// fechas que ya usa y prueba agentValidator.js en el pipeline viejo de
+// Document Intelligence -- no se duplica la logica, se reusa exportada.
+async function enrichWithExpirationCheck(documentTypeCode, result, extractedText) {
+  try {
+    const { data } = await supabaseAdmin
+      .from('document_type_catalog')
+      .select('expiration_months')
+      .eq('code', documentTypeCode)
+      .maybeSingle();
+
+    const expirationMonths = data?.expiration_months;
+    if (!expirationMonths) return result;
+
+    const dates = findDatesInText(extractedText);
+    if (!dates.length) return result;
+
+    const mostRecent = new Date(Math.max(...dates.map((d) => d.getTime())));
+    const ageDays = (Date.now() - mostRecent.getTime()) / (1000 * 60 * 60 * 24);
+    const maxAllowedDays = expirationMonths * 30;
+    if (ageDays <= maxAllowedDays) return result;
+
+    const score = Math.min(result.score, 65);
+    return {
+      ...result,
+      score,
+      status: statusForScore(score),
+      findings: [
+        ...result.findings,
+        `Bandera amarilla: documento vencido — fecha detectada ${mostRecent.toLocaleDateString('es-MX')}, antigüedad ${Math.round(ageDays)} días (vigencia máxima ${expirationMonths} meses).`
+      ],
+      extracted_data: [...result.extracted_data, { key: 'documento_vencido', value: true }]
+    };
+  } catch (err) {
+    console.warn('[readinessRubricAgent] Error verificando vigencia documental:', err.message);
+    return result;
+  }
+}
+
+// Bandera roja critica "Beneficiario controlador no identificado" (seccion
+// 12.1 del plan): screenBeneficiaryOwners() ya existia y funciona (OFAC+PEP
+// real sobre cada UBO declarado en service_orders.metadata.beneficiaryOwners)
+// pero nunca se conectaba a la evaluacion del checklist -- ademas, una lista
+// vacia nunca generaba ningun hallazgo, aunque "nadie declarado" es
+// exactamente el caso que el plan pide señalar.
+function enrichWithBeneficiaryOwners(result, order) {
+  const owners = normalizeBeneficiaryOwnerList(order?.metadata?.beneficiaryOwners);
+
+  if (!owners.length) {
+    const score = Math.min(result.score, 40);
+    return {
+      ...result,
+      score,
+      status: statusForScore(score),
+      findings: [...result.findings, 'Bandera roja: no se identificó ningún beneficiario controlador (UBO) para este expediente.'],
+      extracted_data: [...result.extracted_data, { key: 'beneficiario_controlador_identificado', value: false }]
+    };
+  }
+
+  const screening = screenBeneficiaryOwners(owners);
+  const hits = screening.filter((o) => o.status === 'review_required');
+  if (!hits.length) {
+    return {
+      ...result,
+      extracted_data: [
+        ...result.extracted_data,
+        { key: 'beneficiario_controlador_identificado', value: true },
+        { key: 'beneficiarios_revisados', value: owners.length }
+      ]
+    };
+  }
+
+  const score = Math.min(result.score, 20);
+  return {
+    ...result,
+    score,
+    status: statusForScore(score),
+    findings: [
+      ...result.findings,
+      `Bandera roja crítica: ${hits.length} beneficiario(s) controlador(es) con coincidencia OFAC/PEP sin aclarar (${hits.map((h) => h.fullName).join(', ')}).`
+    ],
+    extracted_data: [
+      ...result.extracted_data,
+      { key: 'beneficiario_controlador_identificado', value: true },
+      { key: 'beneficiarios_con_hallazgo', value: hits.length }
+    ]
+  };
+}
+
+async function enrichResult(itemId, documentTypeCode, result, { extractedText, order }) {
   let enriched = enrichWithTypeMatchCheck(itemId, result, extractedText);
+  enriched = await enrichWithExpirationCheck(documentTypeCode, enriched, extractedText);
   if (FINANCIAL_ITEM_IDS.has(itemId)) {
     enriched = await enrichFinancialConsistency(enriched, extractedText);
   }
@@ -566,6 +708,9 @@ async function enrichResult(itemId, result, { extractedText, order }) {
   }
   if (itemId === 'esia') {
     enriched = enrichEsiaWithSemarnatRule(enriched, order);
+  }
+  if (itemId === 'doc_corporativa') {
+    enriched = enrichWithBeneficiaryOwners(enriched, order);
   }
   return enriched;
 }
@@ -581,7 +726,7 @@ export async function evaluateReadinessDocument({ documentTypeCode, extractedTex
 
   if (!anthropic) {
     const fallback = heuristicFallback(rubric, extractedText);
-    return enrichResult(itemId, fallback, { extractedText, order });
+    return enrichResult(itemId, documentTypeCode, fallback, { extractedText, order });
   }
 
   let extraContext = '';
@@ -600,10 +745,10 @@ Indicadores macro (Banxico SIE): tipo de cambio FIX ${macro.exchangeRateFix?.val
 
   try {
     const result = await evaluateWithClaude(rubric, extractedText, extraContext);
-    return enrichResult(itemId, result, { extractedText, order });
+    return enrichResult(itemId, documentTypeCode, result, { extractedText, order });
   } catch (err) {
     console.error('[readinessRubricAgent] Error evaluando con Claude:', err);
     const fallback = heuristicFallback(rubric, extractedText);
-    return enrichResult(itemId, fallback, { extractedText, order });
+    return enrichResult(itemId, documentTypeCode, fallback, { extractedText, order });
   }
 }

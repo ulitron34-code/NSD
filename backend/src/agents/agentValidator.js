@@ -63,7 +63,7 @@ const EEFF_CODES_INTERNACIONALES = [
 ];
 
 // Extraer fecha del texto e intentar parsearla
-function findDatesInText(text) {
+export function findDatesInText(text) {
   const dates = [];
   // Formatos: DD/MM/AAAA, AAAA-MM-DD
   const regexSlash = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g;

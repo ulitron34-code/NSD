@@ -319,6 +319,11 @@ export default function FundingReadinessTab() {
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
+            {requisitos.lifecycle && (
+              <span title={requisitos.lifecycle.reason} style={{ padding: "0.3rem 0.65rem", borderRadius: "999px", background: "rgba(10,35,66,0.08)", color: COLORS.navy, fontSize: "0.7rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+                {requisitos.lifecycle.label}
+              </span>
+            )}
             {requisitos.country && (
               <span style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                 {L("Pais: ", "Country: ")}

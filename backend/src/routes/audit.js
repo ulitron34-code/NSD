@@ -1,6 +1,14 @@
 import express from 'express';
 import { supabaseAdmin } from '../config/supabase.js';
-import { authMiddleware, requirePermission } from '../middleware/auth.js';
+import { authMiddleware, requireAnyPermission, isInternalReviewerRole } from '../middleware/auth.js';
+
+// El dueno del expediente ve su propia bitacora (audit:own:read). Los roles
+// internos (analista/agente_interno/compliance_officer/auditor_interno/
+// administrador) pueden ver la de cualquier expediente -- el rol Auditor
+// (seccion 8.1 del plan: "revisar bitacora... trazabilidad") no tenia ningun
+// permiso que calzara con estas rutas ni pasaba assertOrderOwner porque nunca
+// es dueno del expediente.
+const AUDIT_ACCESS_PERMISSIONS = ['audit:own:read', 'audit:read', 'audit:case:read', 'case:read'];
 
 const router = express.Router();
 
@@ -37,13 +45,17 @@ function csvCell(value) {
   return `"${stringValue.replace(/"/g, '""')}"`;
 }
 
-async function assertOrderOwner(orderId, userId) {
-  const { data, error } = await supabaseAdmin
+async function assertOrderOwner(orderId, userId, userRole) {
+  let query = supabaseAdmin
     .from('service_orders')
     .select('id, case_number, project_name, metadata')
-    .eq('id', orderId)
-    .eq('user_id', userId)
-    .single();
+    .eq('id', orderId);
+
+  if (!isInternalReviewerRole(userRole)) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data, error } = await query.single();
 
   if (error || !data) {
     throw new Error('Expediente no encontrado o sin permisos');
@@ -145,9 +157,9 @@ function buildAuditCsv(logs = []) {
   return [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\n');
 }
 
-router.get('/audit-logs/:orderId', authMiddleware, requirePermission('audit:own:read'), async (req, res) => {
+router.get('/audit-logs/:orderId', authMiddleware, requireAnyPermission(AUDIT_ACCESS_PERMISSIONS), async (req, res) => {
   try {
-    await assertOrderOwner(req.params.orderId, req.userId);
+    await assertOrderOwner(req.params.orderId, req.userId, req.userRole);
     const data = await loadAuditLogs(req.params.orderId, 50);
 
     res.json(data);
@@ -156,9 +168,9 @@ router.get('/audit-logs/:orderId', authMiddleware, requirePermission('audit:own:
   }
 });
 
-router.get('/audit-logs/:orderId/summary', authMiddleware, requirePermission('audit:own:read'), async (req, res) => {
+router.get('/audit-logs/:orderId/summary', authMiddleware, requireAnyPermission(AUDIT_ACCESS_PERMISSIONS), async (req, res) => {
   try {
-    await assertOrderOwner(req.params.orderId, req.userId);
+    await assertOrderOwner(req.params.orderId, req.userId, req.userRole);
     const logs = await loadAuditLogs(req.params.orderId, 250);
     const summary = summarizeLogs(logs);
 
@@ -171,9 +183,9 @@ router.get('/audit-logs/:orderId/summary', authMiddleware, requirePermission('au
   }
 });
 
-router.get('/audit-logs/:orderId/export.md', authMiddleware, requirePermission('audit:own:read'), async (req, res) => {
+router.get('/audit-logs/:orderId/export.md', authMiddleware, requireAnyPermission(AUDIT_ACCESS_PERMISSIONS), async (req, res) => {
   try {
-    const order = await assertOrderOwner(req.params.orderId, req.userId);
+    const order = await assertOrderOwner(req.params.orderId, req.userId, req.userRole);
     const logs = await loadAuditLogs(req.params.orderId, 1000);
     const summary = summarizeLogs(logs);
     const auditPackage = buildAuditMarkdown({ order, logs, summary });
@@ -187,9 +199,9 @@ router.get('/audit-logs/:orderId/export.md', authMiddleware, requirePermission('
   }
 });
 
-router.get('/audit-logs/:orderId/export.csv', authMiddleware, requirePermission('audit:own:read'), async (req, res) => {
+router.get('/audit-logs/:orderId/export.csv', authMiddleware, requireAnyPermission(AUDIT_ACCESS_PERMISSIONS), async (req, res) => {
   try {
-    const order = await assertOrderOwner(req.params.orderId, req.userId);
+    const order = await assertOrderOwner(req.params.orderId, req.userId, req.userRole);
     const logs = await loadAuditLogs(req.params.orderId, 1000);
     const filename = `${sanitizeFilename(order.case_number || order.id)}-auditoria.csv`;
 

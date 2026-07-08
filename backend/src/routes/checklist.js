@@ -1,6 +1,6 @@
 import express from 'express';
 import { supabaseAdmin } from '../config/supabase.js';
-import { authMiddleware, requirePermission } from '../middleware/auth.js';
+import { authMiddleware, requirePermission, requireAdmin } from '../middleware/auth.js';
 import { generateChecklist, crossCheckWithUploads } from '../services/dynamicChecklistService.js';
 
 const router = express.Router();
@@ -41,10 +41,12 @@ router.get('/orders/:orderId/checklist', authMiddleware, requirePermission('case
 
 // POST /orders/:orderId/checklist/trigger-alert
 // Endpoint de admin/testing para disparar el cron manualmente.
-router.post('/orders/trigger-compliance-alerts', authMiddleware, async (req, res) => {
-  if (req.userRole !== 'admin') {
-    return res.status(403).json({ error: 'Solo administradores' });
-  }
+// Antes comparaba req.userRole contra el string 'admin', pero
+// normalizeRole() en middleware/auth.js siempre lo normaliza a
+// 'administrador' -- esa comparación nunca era verdadera para ningún usuario
+// real. Se reemplaza por requireAdmin, el mismo guard ya definido en
+// auth.js pero que hasta ahora ningún router usaba.
+router.post('/orders/trigger-compliance-alerts', authMiddleware, requireAdmin, async (req, res) => {
   try {
     const { runComplianceAlertJob } = await import('../services/complianceAlertCron.js');
     await runComplianceAlertJob();

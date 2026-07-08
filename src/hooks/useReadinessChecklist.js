@@ -25,6 +25,7 @@ function useRealReadinessChecklist(orderId) {
   const [remoteItems, setRemoteItems] = useState(null);
   const [country, setCountry] = useState("MX");
   const [globalScore, setGlobalScore] = useState(null);
+  const [lifecycle, setLifecycle] = useState(null);
   const [sdgByItem, setSdgByItem] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -38,6 +39,7 @@ function useRealReadinessChecklist(orderId) {
       setRemoteItems(data.items);
       setCountry(data.country || "MX");
       setGlobalScore(data.globalScore || null);
+      setLifecycle(data.lifecycle || null);
     } catch (err) {
       logError("SVC", "No se pudo cargar el checklist real de readiness", err);
     } finally {
@@ -98,6 +100,7 @@ function useRealReadinessChecklist(orderId) {
     loading,
     country,
     globalScore,
+    lifecycle,
     ...deriveAggregates(items),
     uploadEvidence,
     toggleSdg,

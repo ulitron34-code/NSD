@@ -36,6 +36,17 @@ function normalizeRole(role = 'solicitante') {
   return ROLE_ALIASES[normalized] || normalized;
 }
 
+// Roles internos que pueden revisar cualquier expediente (no solo el propio)
+// para fines de auditoria/cumplimiento -- no hay un sistema de "casos
+// asignados" construido todavia, asi que estos roles comparten el mismo
+// alcance amplio. Compartido entre readinessChecklist.js y audit.js para que
+// ambos apliquen el mismo criterio de acceso.
+export const INTERNAL_REVIEWER_ROLES = new Set(['analista', 'administrador', 'agente_interno', 'compliance_officer', 'auditor_interno']);
+
+export function isInternalReviewerRole(role) {
+  return INTERNAL_REVIEWER_ROLES.has(normalizeRole(role));
+}
+
 function hasPermission(role, permission) {
   const permissions = ROLE_PERMISSIONS[normalizeRole(role)] || [];
   return permissions.includes('*') || permissions.includes(permission);

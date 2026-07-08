@@ -2,6 +2,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { getOrderCountry } from './documentIntelligenceService.js';
 import { computeWeightedGlobalScore } from '../config/readinessRubrics.js';
 import { getLatestNotesByOrder } from './documentReviewNotesService.js';
+import { computeReadinessLifecycle } from './readinessLifecycleService.js';
 
 // Espejo de REQUISITOS_MINIMOS (frontend/src/data/requisitosMinimos.js) — solo
 // lo necesario para cruzar contra documents/document_reviews reales. Las
@@ -26,9 +27,10 @@ const REVIEW_PASS_SCORE = 60;
 
 export async function getReadinessChecklist(orderId) {
   const codes = READINESS_ITEMS.map((item) => item.code);
-  const [country, latestNoteByDocumentId] = await Promise.all([
+  const [country, latestNoteByDocumentId, { data: orderMetadataRow }] = await Promise.all([
     getOrderCountry(orderId),
-    getLatestNotesByOrder(orderId)
+    getLatestNotesByOrder(orderId),
+    supabaseAdmin.from('service_orders').select('metadata').eq('id', orderId).maybeSingle()
   ]);
 
   const { data: documents, error: docsError } = await supabaseAdmin
@@ -88,5 +90,14 @@ export async function getReadinessChecklist(orderId) {
     };
   });
 
-  return { items, country, globalScore: computeWeightedGlobalScore(items) };
+  const lifecycle = computeReadinessLifecycle({
+    items: READINESS_ITEMS,
+    documents: documents || [],
+    latestByCode,
+    latestReviewByDocId,
+    latestNoteByDocumentId,
+    archivedAt: orderMetadataRow?.metadata?.archivedAt || null
+  });
+
+  return { items, country, globalScore: computeWeightedGlobalScore(items), lifecycle };
 }

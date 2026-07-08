@@ -49,6 +49,9 @@ const InvestorOnePagerTab = lazy(() => import("../components/Dashboard/InvestorO
 const PilotPlaybookTab = lazy(() => import("../components/Dashboard/PilotPlaybookTab"));
 const DueDiligenceRoomTab = lazy(() => import("../components/Dashboard/DueDiligenceRoomTab"));
 const ImplementationRoadmapTab = lazy(() => import("../components/Dashboard/ImplementationRoadmapTab"));
+const AdminUsersTab = lazy(() => import("../components/Dashboard/Admin/AdminUsersTab"));
+const AdminReferenceSourcesTab = lazy(() => import("../components/Dashboard/Admin/AdminReferenceSourcesTab"));
+const AdminRubricsTab = lazy(() => import("../components/Dashboard/Admin/AdminRubricsTab"));
 const ServiceOrdersPage = lazy(() => import("../pages/ServiceOrdersPage"));
 const CommissionsPage = lazy(() => import("../pages/CommissionsPage"));
 const DocumentIntelligenceTab = lazy(() => import("../components/Dashboard/DocumentIntelligenceTab"));
@@ -203,6 +206,9 @@ export default function DashboardPage() {
       { id: "governance", label: L("Gobernanza", "Governance"), icon: "GOV" },
       { id: "predeploy", label: L("Go/No-Go", "Go/No-Go"), icon: "GO" },
       { id: "admin_proyectos", label: L("Gestion de servicios", "Service Management"), icon: "GS" },
+      { id: "admin_usuarios", label: L("Usuarios y permisos", "Users and permissions"), icon: "USR" },
+      { id: "admin_fuentes", label: L("Fuentes de referencia", "Reference sources"), icon: "SRC" },
+      { id: "admin_rubricas", label: L("Rúbricas", "Rubrics"), icon: "RUB" },
       { id: "data_room_index", label: L("Indice Data Room", "Data Room Index"), icon: "IDX" },
       { id: "traceability", label: L("Auditoria", "Audit"), icon: "AUD" },
       { id: "document_intel", label: L("Inteligencia Doc.", "Document Intelligence"), icon: "IDI" },
@@ -472,6 +478,9 @@ export default function DashboardPage() {
     if (activeTab === "governance") return <GovernanceDisclosureTab />;
     if (activeTab === "predeploy") return <PredeployGoNoGoTab />;
     if (activeTab === "traceability") return <TraceabilityLogTab />;
+    if (activeTab === "admin_usuarios") return <AdminUsersTab />;
+    if (activeTab === "admin_fuentes") return <AdminReferenceSourcesTab />;
+    if (activeTab === "admin_rubricas") return <AdminRubricsTab />;
     if (activeTab === "admin_comisiones") return <CommissionsPage />;
     if (activeTab === "transaction_oversight") return <TransactionOversightTab />;
     return <ServiceOrdersPage />;

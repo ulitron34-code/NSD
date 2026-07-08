@@ -116,7 +116,7 @@ export const READINESS_RUBRICS = {
     banderasRojas: [
       'Crecimiento agresivo sin explicación', 'Costos fijos subestimados', 'CAPEX ausente',
       'No hay flujo de efectivo', 'No hay servicio de deuda', 'DSCR insuficiente',
-      'Uso de recursos no coincide con monto solicitado'
+      'Uso de recursos no coincide con monto solicitado', 'Pasivos ocultos o no explicados'
     ]
   },
 
@@ -136,7 +136,7 @@ export const READINESS_RUBRICS = {
       { nombre: 'Vigencia documental', peso: 10 },
       { nombre: 'Permisos sectoriales', peso: 10 }
     ],
-    banderasRojas: []
+    banderasRojas: ['Litigios relevantes no declarados']
   },
 
   identificacion_oficial: {

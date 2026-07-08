@@ -1,7 +1,7 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { supabaseAdmin } from '../config/supabase.js';
-import { authMiddleware, requirePermission } from '../middleware/auth.js';
+import { authMiddleware, requirePermission, requireAnyPermission, isInternalReviewerRole } from '../middleware/auth.js';
 import { buildExecutiveReport, scoreExpedient } from '../services/scoringEngine.js';
 import { REQUIREMENTS_MATRIX } from '../config/requirementsMatrix.js';
 import { logAuditEvent } from '../utils/audit.js';
@@ -341,6 +341,93 @@ router.get('/orders/:orderId/beneficiary-owners/screening', authMiddleware, requ
       requiresReview: screening.filter((o) => o.status === 'review_required').length,
       owners: screening
     });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ARCHIVAR / DESARCHIVAR EXPEDIENTE (seccion 9 del plan: estado "Archivado"
+// del ciclo de vida). Guardado en metadata.archivedAt en vez de una columna
+// nueva -- mismo patron que beneficiaryOwners arriba, sin migracion de
+// esquema. El dueno del expediente o cualquier rol interno (analista,
+// agente_interno, compliance_officer, auditor_interno, administrador) puede
+// archivarlo; el dueno no puede desarchivar por su cuenta un expediente
+// archivado por un rol interno seria confuso, asi que ambas acciones usan el
+// mismo criterio de acceso.
+async function assertArchiveAccess(orderId, req) {
+  if (isInternalReviewerRole(req.userRole)) {
+    const { data } = await supabaseAdmin.from('service_orders').select('*').eq('id', orderId).single();
+    return data;
+  }
+  const { data } = await supabaseAdmin
+    .from('service_orders')
+    .select('*')
+    .eq('id', orderId)
+    .eq('user_id', req.userId)
+    .single();
+  return data;
+}
+
+router.post('/orders/:orderId/archive', authMiddleware, requireAnyPermission(['case:own:update', 'case:assigned:update', 'compliance:review', 'case:status:update']), async (req, res) => {
+  try {
+    const currentOrder = await assertArchiveAccess(req.params.orderId, req);
+    if (!currentOrder) throw new Error('Expediente no encontrado o sin permisos');
+
+    const nextMetadata = { ...(currentOrder.metadata || {}), archivedAt: new Date().toISOString(), archivedBy: req.userId };
+    const { data, error } = await supabaseAdmin
+      .from('service_orders')
+      .update({ metadata: nextMetadata })
+      .eq('id', req.params.orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await logAuditEvent({
+      userId: req.userId,
+      action: 'case_archived',
+      entityType: 'service_order',
+      entityId: req.params.orderId,
+      orderId: req.params.orderId,
+      req,
+      metadata: {}
+    });
+
+    res.json(data);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.post('/orders/:orderId/unarchive', authMiddleware, requireAnyPermission(['case:own:update', 'case:assigned:update', 'compliance:review', 'case:status:update']), async (req, res) => {
+  try {
+    const currentOrder = await assertArchiveAccess(req.params.orderId, req);
+    if (!currentOrder) throw new Error('Expediente no encontrado o sin permisos');
+
+    const nextMetadata = { ...(currentOrder.metadata || {}) };
+    delete nextMetadata.archivedAt;
+    delete nextMetadata.archivedBy;
+
+    const { data, error } = await supabaseAdmin
+      .from('service_orders')
+      .update({ metadata: nextMetadata })
+      .eq('id', req.params.orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await logAuditEvent({
+      userId: req.userId,
+      action: 'case_unarchived',
+      entityType: 'service_order',
+      entityId: req.params.orderId,
+      orderId: req.params.orderId,
+      req,
+      metadata: {}
+    });
+
+    res.json(data);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

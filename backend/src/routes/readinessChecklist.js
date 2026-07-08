@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware, requireAnyPermission, requirePermission } from '../middleware/auth.js';
+import { authMiddleware, requireAnyPermission, requirePermission, isInternalReviewerRole } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getReadinessChecklist } from '../services/readinessChecklistService.js';
 import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf } from '../services/readinessMemoService.js';
@@ -13,7 +13,15 @@ const router = express.Router();
 // El expediente es visible para su dueño (solicitante) o para un otorgante
 // con acceso autorizado vía data_room_shares — mismo criterio que ya usa
 // GET /otorgante/pipeline en otorgante.js.
+// El expediente tambien es visible para cualquier rol interno (analista,
+// agente_interno, compliance_officer, auditor_interno, administrador) -- ver
+// isInternalReviewerRole en middleware/auth.js. Antes solo el dueno y un
+// otorgante autorizado via data_room_shares pasaban este check; el auditor y
+// el resto de roles internos quedaban bloqueados aqui aunque el gate de
+// permisos de cada ruta ya los dejara pasar.
 async function assertReadinessAccess(orderId, req) {
+  if (isInternalReviewerRole(req.userRole)) return true;
+
   const { data: order } = await supabaseAdmin
     .from('service_orders')
     .select('id, user_id')
@@ -34,28 +42,23 @@ async function assertReadinessAccess(orderId, req) {
   return Boolean(shares && shares.length > 0);
 }
 
-// El workflow humano de revision (seccion 7 del plan) es para roles internos
-// (analista/agente_interno/compliance_officer/auditor/admin) -- no hay un
-// sistema de "casos asignados" construido todavia, asi que por ahora
-// cualquier rol interno puede revisar cualquier expediente (mismo alcance
-// real que ya tienen esos roles sobre score:read/case:assigned:read en
-// middleware/auth.js). El dueño del expediente tambien puede LEER las notas
-// (transparencia de por que se aprobo/rechazo), nunca escribirlas.
-const INTERNAL_REVIEWER_ROLES = new Set(['analista', 'administrador', 'agente_interno', 'compliance_officer', 'auditor_interno']);
-
-function isInternalReviewerRole(role) {
-  return INTERNAL_REVIEWER_ROLES.has(String(role || '').toLowerCase());
-}
-
-async function assertReviewNotesReadAccess(orderId, req) {
-  if (isInternalReviewerRole(req.userRole)) return true;
-  return assertReadinessAccess(orderId, req);
-}
+// Union de los permisos que ya tienen el dueno del expediente (case:own:read),
+// un otorgante autorizado (data_room:authorized:read) y los 5 roles internos
+// de isInternalReviewerRole (case:assigned:read, audit:case:read, score:read,
+// audit:read, case:read, report:read en ROLE_PERMISSIONS de auth.js). Antes
+// de esto, ni auditor_interno ni analista/agente_interno/compliance_officer
+// tenian ninguno de los dos permisos originales y quedaban bloqueados en el
+// middleware antes de llegar a assertReadinessAccess.
+const READINESS_ACCESS_PERMISSIONS = [
+  'case:own:read', 'data_room:authorized:read',
+  'case:assigned:read', 'audit:case:read', 'score:read',
+  'audit:read', 'case:read', 'report:read'
+];
 
 router.get(
   '/orders/:orderId/readiness-checklist',
   authMiddleware,
-  requireAnyPermission(['case:own:read', 'data_room:authorized:read']),
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
   async (req, res) => {
     try {
       const hasAccess = await assertReadinessAccess(req.params.orderId, req);
@@ -74,7 +77,7 @@ router.get(
 router.get(
   '/orders/:orderId/readiness-checklist/memo.md',
   authMiddleware,
-  requireAnyPermission(['case:own:read', 'data_room:authorized:read']),
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
   async (req, res) => {
     try {
       const hasAccess = await assertReadinessAccess(req.params.orderId, req);
@@ -115,7 +118,7 @@ router.get(
 router.get(
   '/orders/:orderId/readiness-checklist/memo.pdf',
   authMiddleware,
-  requireAnyPermission(['case:own:read', 'data_room:authorized:read']),
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
   async (req, res) => {
     try {
       const hasAccess = await assertReadinessAccess(req.params.orderId, req);
@@ -160,7 +163,7 @@ async function getStoredInconsistencies(orderId) {
 router.get(
   '/orders/:orderId/readiness-checklist/technical-memo.md',
   authMiddleware,
-  requireAnyPermission(['case:own:read', 'data_room:authorized:read']),
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
   async (req, res) => {
     try {
       const hasAccess = await assertReadinessAccess(req.params.orderId, req);
@@ -204,7 +207,7 @@ router.get(
 router.get(
   '/orders/:orderId/readiness-checklist/technical-memo.pdf',
   authMiddleware,
-  requireAnyPermission(['case:own:read', 'data_room:authorized:read']),
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
   async (req, res) => {
     try {
       const hasAccess = await assertReadinessAccess(req.params.orderId, req);
@@ -247,7 +250,7 @@ router.get(
 router.post(
   '/orders/:orderId/readiness-checklist/cross-check',
   authMiddleware,
-  requireAnyPermission(['case:own:read', 'data_room:authorized:read']),
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
   async (req, res) => {
     try {
       const hasAccess = await assertReadinessAccess(req.params.orderId, req);
@@ -269,10 +272,10 @@ router.post(
 router.get(
   '/orders/:orderId/documents/:documentId/review-notes',
   authMiddleware,
-  requireAnyPermission(['case:own:read', 'data_room:authorized:read', 'score:read', 'case:assigned:read', 'audit:case:read']),
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
   async (req, res) => {
     try {
-      const hasAccess = await assertReviewNotesReadAccess(req.params.orderId, req);
+      const hasAccess = await assertReadinessAccess(req.params.orderId, req);
       if (!hasAccess) {
         return res.status(404).json({ error: 'Expediente no encontrado o sin permisos' });
       }
