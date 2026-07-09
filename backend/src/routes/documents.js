@@ -6,6 +6,7 @@ import { logAuditEvent } from '../utils/audit.js';
 import { runAIReviewCascaded } from '../services/aiEngine.js';
 import { evaluateReadinessDocument } from '../agents/readinessRubricAgent.js';
 import { runReadinessCrossReferences } from '../agents/readinessCrossRefAgent.js';
+import { classifyOcrQuality } from '../services/ocrQualityService.js';
 
 const router = express.Router();
 const MAX_DOCUMENT_BYTES = Number(process.env.MAX_DOCUMENT_BYTES || 25 * 1024 * 1024);
@@ -37,7 +38,8 @@ const READINESS_DOCUMENT_TYPES = new Set([
   'READY_TRANSPARENCIA_DOCUMENTAL',
   'READY_ODS',
   'READY_ESG',
-  'READY_ESIA'
+  'READY_ESIA',
+  'READY_PERMISOS_SECTORIALES'
 ]);
 
 function inferDocumentType(filename = '') {
@@ -511,6 +513,9 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
     (async () => {
       try {
         let extractedText = '';
+        let fileSizeBytes = 0;
+        let pdfExtractionError = null;
+        let isPdfDocument = false;
         const { data: fileData, error: downloadError } = await supabaseAdmin.storage
           .from('documents')
           .download(document.storage_path);
@@ -519,17 +524,19 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           console.error("Error al descargar archivo de storage para auditoria:", downloadError);
         } else if (fileData) {
           try {
-            const isPdf = String(document.filename || '').toLowerCase().endsWith('.pdf');
+            isPdfDocument = String(document.filename || '').toLowerCase().endsWith('.pdf');
             const arrayBuffer = await fileData.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
+            fileSizeBytes = buffer.length;
 
-            if (isPdf) {
+            if (isPdfDocument) {
               try {
                 const pdfParse = (await import('pdf-parse')).default;
                 const parsed = await pdfParse(buffer);
                 extractedText = parsed.text || '';
               } catch (pdfErr) {
                 console.error("Error al procesar PDF con pdf-parse:", pdfErr);
+                pdfExtractionError = pdfErr;
                 extractedText = `[Error parsing PDF content: ${pdfErr.message}]`;
               }
             } else {
@@ -555,6 +562,35 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           });
         } else {
           reviewPayload = await runAIReviewCascaded(document, extractedText);
+        }
+
+        // Estados y reglas de calidad OCR (secciones 20.2/20.3 del plan): solo
+        // aplica a PDFs (la heurística de "poco texto + archivo pesado" no
+        // tiene sentido para TXT/CSV, que se decodifican directo sin OCR).
+        // Se agrega como hallazgo/advertencia adicional al resultado del
+        // agente, sin pisar su score ni requerir una columna nueva en `documents`.
+        if (isPdfDocument) {
+          const ocrQuality = classifyOcrQuality({
+            extractedText,
+            fileSizeBytes,
+            extractionError: pdfExtractionError
+          });
+          if (ocrQuality.status !== 'completed') {
+            reviewPayload = {
+              ...reviewPayload,
+              findings: [...(reviewPayload.findings || []), `Calidad OCR (${ocrQuality.status}): ${ocrQuality.note}`],
+              extracted_data: [
+                ...(reviewPayload.extracted_data || []),
+                { key: 'ocr_status', value: ocrQuality.status },
+                { key: 'ocr_note', value: ocrQuality.note }
+              ]
+            };
+          } else {
+            reviewPayload = {
+              ...reviewPayload,
+              extracted_data: [...(reviewPayload.extracted_data || []), { key: 'ocr_status', value: ocrQuality.status }]
+            };
+          }
         }
 
         // 4. Actualizar el registro en base de datos con los resultados finales de la IA

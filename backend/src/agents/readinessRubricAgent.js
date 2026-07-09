@@ -3,7 +3,6 @@
 // en vez de 12 archivos casi idénticos. Para doc_kyc reusa el agente de
 // screening ya existente (nsdApplicantAgent.js: SAT + Buró + OFAC/sanciones + PEP
 // real). Para estudio_mercado enriquece el prompt con datos reales de INEGI/Banxico.
-import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getRubric, isAutomatedKycCountry, READINESS_RUBRICS } from '../config/readinessRubrics.js';
 import { runApplicantScreen } from './nsdApplicantAgent.js';
@@ -16,10 +15,7 @@ import { searchLegalEntity } from '../services/gleifService.js';
 import { screenRfcAgainstSat69b } from '../services/satBlacklistScreening.js';
 import { findDatesInText } from './agentValidator.js';
 import { screenBeneficiaryOwners, normalizeBeneficiaryOwnerList } from '../services/beneficiaryOwners.js';
-
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
-const MODEL = 'claude-sonnet-4-6';
+import { generateJsonWithFallback, hasAnyJsonProvider } from '../services/aiJsonProvider.js';
 
 // Bitacora auditable (seccion 28 del plan): version del prompt/rubrica usados
 // por cada evaluacion, guardada dentro de extracted_data (sin migracion de
@@ -42,6 +38,15 @@ Reglas obligatorias:
 8. No castigues redacción simple si el contenido es sólido.
 9. Usa tono profesional, objetivo y sin sesgo.
 10. Devuelve salida en JSON válido conforme al schema solicitado.`;
+
+// System prompt del agente estructural (sección 10.4 del plan: "opinión sin
+// sesgo") -- reglas adicionales para que Claude no premie redacción elegante,
+// diseño visual o palabras de moda sin evidencia real.
+const STRUCTURE_SYSTEM_PROMPT = `${BASE_SYSTEM_PROMPT}
+
+Reglas adicionales para esta revisión estructural (evalúas forma, no el fondo del contenido):
+11. No califiques mejor por redacción elegante sin evidencia, diseño visual atractivo, longitud excesiva, lenguaje corporativo, promesas de crecimiento sin sustento, ni por palabras de moda ("disruptivo", "escalable", "blockchain", "IA", "impacto") usadas sin datos.
+12. Califica por estructura, evidencia, consistencia interna y utilidad para que un tercero financiero lo revise, no por estética o entusiasmo del solicitante.`;
 
 function itemIdFromCode(documentTypeCode) {
   return String(documentTypeCode || '').replace(/^READY_/, '').toLowerCase();
@@ -79,6 +84,61 @@ function computeStructureReview(rubric, extractedText) {
   }
 
   return { structureScore: Math.round((found / expected.length) * 100), missingStructuralSections };
+}
+
+// Agente estructural real (sección 10/15.2 del plan): a diferencia de
+// computeStructureReview() (conteo de palabras clave), esta función SÍ le pide
+// a Claude que juzgue la estructura -- devuelve weak_sections/strengths/
+// confidence que la heurística no puede producir. Corre en paralelo a la
+// evaluación de contenido (mismo texto extraído, una sola pasada de lectura).
+// Si Claude no está configurado o la llamada falla, evaluateWithClaude() cae
+// de vuelta a computeStructureReview(); nunca se deja el documento sin señal
+// estructural.
+async function evaluateStructureWithClaude(rubric, extractedText, order) {
+  const estructura = rubric?.estructuraEsperada || rubric?.documentosEsperados || rubric?.validacionesMinimas
+    || rubric?.evaluacionesMinimas || rubric?.revisionesMinimas || rubric?.revisionMinima || rubric?.reglas || [];
+
+  const userContent = `Analiza la estructura del documento cargado.
+Evalúa si el documento está organizado de forma profesional para revisión financiera.
+No evalúes únicamente el estilo visual. Evalúa orden, secciones, claridad, completitud, anexos, evidencia, consistencia interna y utilidad para un otorgante de financiamiento.
+
+Documento esperado: ${rubric?.label || 'documento'}
+País: ${order?.metadata?.country || 'MX'}
+Sector: ${order?.metadata?.sector || 'No especificado'}
+Tipo de financiamiento: ${order?.metadata?.financingType || 'No especificado'}
+Secciones/elementos mínimos esperados:
+${estructura.map((s) => `- ${s}`).join('\n')}
+
+Texto extraído del documento:
+${String(extractedText || '(sin texto extraído)').slice(0, 12000)}
+
+Responde ÚNICAMENTE un JSON válido con esta forma exacta:
+{
+  "structure_score": 0,
+  "missing_sections": ["string"],
+  "weak_sections": [{"section": "string", "issue": "string"}],
+  "strengths": ["string"],
+  "red_flags": ["string"],
+  "recommendation": "string",
+  "confidence": 0.0
+}
+"confidence" (0.0 a 1.0): qué tan seguro estás de este juicio estructural dado el texto disponible -- baja si el texto está incompleto, truncado o es ilegible.`;
+
+  const providerResult = await generateJsonWithFallback(STRUCTURE_SYSTEM_PROMPT, userContent, { maxTokens: 900 });
+  const parsed = JSON.parse(providerResult.text);
+  return {
+    structureScore: parsed.structure_score ?? null,
+    missingSections: parsed.missing_sections || [],
+    weakSections: parsed.weak_sections || [],
+    strengths: parsed.strengths || [],
+    redFlags: parsed.red_flags || [],
+    recommendation: parsed.recommendation || null,
+    confidence: parsed.confidence ?? null,
+    provider: providerResult.provider,
+    model: providerResult.model,
+    usage: providerResult.usage,
+    costUsd: providerResult.costUsd
+  };
 }
 
 // Comparación contra fuentes oficiales y marcos de referencia (sección 2.1
@@ -172,13 +232,48 @@ function buildFallbackRecommendation(missingItems, redFlags) {
 // Bitácora auditable (sección 28): qué agente/modelo/versión de prompt y
 // rúbrica produjo esta evaluación, empacado en extracted_data para no
 // depender de una migración de esquema nueva en document_reviews.
-function auditEntries({ agentName, modelName, rubricVersion = RUBRIC_VERSION, promptVersion = PROMPT_VERSION }) {
+function auditEntries({ agentName, modelName, provider, rubricVersion = RUBRIC_VERSION, promptVersion = PROMPT_VERSION }) {
   return [
     { key: 'agent_name', value: agentName },
     { key: 'model_name', value: modelName },
+    ...(provider ? [{ key: 'ai_provider', value: provider }] : []),
     { key: 'prompt_version', value: promptVersion },
     { key: 'rubric_version', value: rubricVersion }
   ];
+}
+
+// human_review_required (sección 16 del plan, campo del schema general de
+// evaluación): true cuando el score es rojo, hay banderas rojas, o la
+// confianza reportada por Claude es baja -- señal explícita de que un
+// analista/auditor humano debe revisar esta evaluación antes de confiar en
+// ella a ciegas, en vez de dejarlo implícito solo en el color del score.
+function requiresHumanReview({ score, confidence, redFlags }) {
+  if (score != null && score < 60) return true;
+  if (redFlags?.length) return true;
+  if (confidence != null && confidence < 0.6) return true;
+  return false;
+}
+
+// Los pasos de enriquecimiento posteriores (vigencia, consistencia financiera,
+// riesgo por cruces documentales, beneficiario controlador) solo pueden bajar
+// el score (Math.min), nunca subirlo -- por eso human_review_required se
+// recalcula aqui, al final de toda la cadena, para no dejarlo en "false"
+// desactualizado si un enriquecimiento tumbo el score despues de que
+// evaluateWithClaude()/heuristicFallback() ya lo habian marcado como listo.
+function finalizeHumanReviewRequired(result) {
+  const alreadyRequired = result.extracted_data.some((e) => e.key === 'human_review_required' && e.value === true);
+  if (alreadyRequired) return result;
+
+  const required = requiresHumanReview({ score: result.score, confidence: null, redFlags: [] });
+  if (!required) return result;
+
+  return {
+    ...result,
+    extracted_data: [
+      ...result.extracted_data.filter((e) => e.key !== 'human_review_required'),
+      { key: 'human_review_required', value: true }
+    ]
+  };
 }
 
 function heuristicFallback(rubric, extractedText) {
@@ -192,9 +287,9 @@ function heuristicFallback(rubric, extractedText) {
   return {
     status: score >= 60 ? 'yellow' : 'red',
     score,
-    summary: `Revisión heurística de "${rubric?.label || 'documento'}" — Claude no está configurado, no se evaluó contenido real.`,
+    summary: `Revisión heurística de "${rubric?.label || 'documento'}" — ningún proveedor de IA está configurado, no se evaluó contenido real.`,
     findings: hasText
-      ? ['Documento cargado; requiere revisión con IA real (falta ANTHROPIC_API_KEY) o revisión manual.']
+      ? ['Documento cargado; requiere revisión con IA real (falta ANTHROPIC_API_KEY/OPENAI_API_KEY/DEEPSEEK_API_KEY/NVIDIA_API_KEY) o revisión manual.']
       : ['No se pudo extraer texto del documento; requiere revisión manual.'],
     missing_items: [
       ...missingItems,
@@ -205,9 +300,10 @@ function heuristicFallback(rubric, extractedText) {
       ...(structureScore != null ? [{ key: 'structure_score', value: structureScore }] : []),
       ...(mentionedFrameworks.length ? [{ key: 'marcos_mencionados', value: mentionedFrameworks.join(', ') }] : []),
       { key: 'recomendacion', value: buildFallbackRecommendation(missingItems, []) },
+      { key: 'human_review_required', value: true },
       ...auditEntries({ agentName: 'readinessRubricAgent', modelName: 'heuristic-fallback' })
     ],
-    warnings: ['Advertencia: ANTHROPIC_API_KEY no configurada, usando revisión heurística por reglas.']
+    warnings: ['Advertencia: ningún proveedor de IA configurado (ANTHROPIC_API_KEY/OPENAI_API_KEY/DEEPSEEK_API_KEY/NVIDIA_API_KEY), usando revisión heurística por reglas.']
   };
 }
 
@@ -234,7 +330,7 @@ ${marcos.map((m) => `- ${m}`).join('\n')}
 Si el documento no menciona ni se alinea con ninguno de estos marcos, dilo explícitamente en "missing_items" (ej. "No se referencia ningún marco reconocido de sostenibilidad/impacto").` : ''}`;
 }
 
-async function evaluateWithClaude(rubric, extractedText, extraContext) {
+async function evaluateWithClaude(rubric, extractedText, extraContext, order) {
   const userContent = `${buildRubricPromptSection(rubric)}
 ${extraContext ? `\nContexto adicional verificado (fuentes externas reales):\n${extraContext}\n` : ''}
 Texto extraído del documento:
@@ -249,45 +345,85 @@ Responde ÚNICAMENTE un JSON válido con esta forma exacta:
   "missing_items": ["string"],
   "red_flags": ["string"],
   "recommendation": "string — la accion mas importante y concreta que el solicitante debe tomar para mejorar este documento",
+  "confidence": 0.0,
   "extracted_fields": {
     "monto_solicitado": "string o null si no aplica/no se menciona",
     "razon_social": "string o null si no aplica/no se menciona",
-    "fecha_documento": "string o null si no aplica/no se menciona"
+    "fecha_documento": "string o null si no aplica/no se menciona",
+    "rfc": "string o null si no aplica/no se menciona",
+    "representante_legal": "string o null si no aplica/no se menciona",
+    "capex": "string o null si no aplica/no se menciona",
+    "deuda_total": "string o null si no aplica/no se menciona"
   }
 }
 Status: green si score >= 80, yellow si 60-79, red si < 60.
-"extracted_fields" es para comparar este documento contra los otros del mismo expediente — usa null si el documento no menciona ese dato, no inventes un valor.`;
+"confidence" (0.0 a 1.0): qué tan seguro estás de esta evaluación dado el texto disponible — baja si el texto está incompleto, es ilegible o el documento es ambiguo, no la infles solo porque el score fue alto.
+"extracted_fields" es para comparar este documento contra los otros del mismo expediente — usa null si el documento no menciona ese dato, no inventes un valor. Usa solo datos atómicos (RFC, nombres, montos, fechas), no resumas texto narrativo aquí.`;
 
-  const response = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 1400,
-    system: BASE_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userContent }]
-  });
+  const [contentResult, structureReview] = await Promise.all([
+    generateJsonWithFallback(BASE_SYSTEM_PROMPT, userContent, { maxTokens: 1400 }),
+    evaluateStructureWithClaude(rubric, extractedText, order).catch((err) => {
+      console.warn('[readinessRubricAgent] Error en revisión estructural con Claude, se usa heurística de respaldo:', err.message);
+      return null;
+    })
+  ]);
 
-  const parsed = JSON.parse(response.content[0].text);
+  const parsed = JSON.parse(contentResult.text);
   const extractedFields = Object.entries(parsed.extracted_fields || {})
     .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '')
     .map(([key, value]) => ({ key, value }));
-  const { structureScore, missingStructuralSections } = computeStructureReview(rubric, extractedText);
   const { mentionedFrameworks } = checkFrameworkMentions(rubric, extractedText);
   const recommendation = parsed.recommendation || buildFallbackRecommendation(parsed.missing_items, parsed.red_flags);
+
+  // Estructura (sección 10/15.2): usa el juicio real de Claude cuando está
+  // disponible; si la llamada estructural falló, cae al conteo de palabras
+  // clave (computeStructureReview) -- nunca se queda sin señal estructural.
+  const heuristicStructure = computeStructureReview(rubric, extractedText);
+  const structureScore = structureReview?.structureScore ?? heuristicStructure.structureScore;
+  const missingStructuralSections = structureReview
+    ? structureReview.missingSections
+    : heuristicStructure.missingStructuralSections;
+
+  const allRedFlags = [...(parsed.red_flags || []), ...(structureReview?.redFlags || [])];
+  const confidence = parsed.confidence != null ? Number(parsed.confidence) : null;
+  const humanReviewRequired = requiresHumanReview({ score: parsed.score, confidence, redFlags: allRedFlags });
+
+  // Costo/tokens por evaluación (sección 21.3/30 del plan): suma la llamada de
+  // contenido + la estructural (dos llamadas reales por documento) para dar
+  // una cifra honesta de "costo IA por expediente", no solo de la llamada
+  // principal.
+  const usageEntries = [contentResult.usage, structureReview?.usage].some(Boolean)
+    ? [
+        { key: 'tokens_entrada', value: (contentResult.usage?.inputTokens || 0) + (structureReview?.usage?.inputTokens || 0) },
+        { key: 'tokens_salida', value: (contentResult.usage?.outputTokens || 0) + (structureReview?.usage?.outputTokens || 0) }
+      ]
+    : [];
+  const totalCostUsd = (contentResult.costUsd || 0) + (structureReview?.costUsd || 0);
 
   return {
     status: parsed.status,
     score: parsed.score,
     summary: parsed.summary,
-    findings: parsed.findings || [],
+    findings: [
+      ...(parsed.findings || []),
+      ...(structureReview?.weakSections || []).map((w) => `Estructura débil: ${w.section} — ${w.issue}`),
+      ...(structureReview?.redFlags || []).map((f) => `Bandera roja estructural: ${f}`)
+    ],
     missing_items: [...(parsed.missing_items || []), ...missingStructuralSections.map((s) => `Estructura: ${s}`)],
     extracted_data: [
       ...extractedFields,
       ...(parsed.red_flags || []).map((flag) => ({ key: 'Bandera roja', value: flag })),
       ...(structureScore != null ? [{ key: 'structure_score', value: structureScore }] : []),
+      ...(structureReview?.strengths?.length ? [{ key: 'fortalezas_estructura', value: structureReview.strengths.join('; ') }] : []),
       ...(mentionedFrameworks.length ? [{ key: 'marcos_mencionados', value: mentionedFrameworks.join(', ') }] : []),
       { key: 'recomendacion', value: recommendation },
-      ...auditEntries({ agentName: 'readinessRubricAgent', modelName: MODEL })
+      ...(confidence != null ? [{ key: 'confidence', value: confidence }] : []),
+      { key: 'human_review_required', value: humanReviewRequired },
+      ...usageEntries,
+      ...(totalCostUsd > 0 ? [{ key: 'costo_estimado_usd', value: totalCostUsd }] : []),
+      ...auditEntries({ agentName: 'readinessRubricAgent', modelName: contentResult.model, provider: contentResult.provider })
     ],
-    warnings: []
+    warnings: structureReview ? [] : ['Advertencia: la revisión estructural con IA no estuvo disponible, se usó heurística de palabras clave como respaldo.']
   };
 }
 
@@ -355,6 +491,9 @@ async function evaluateRegulatoryKyc(order, country) {
     extracted_data: [
       { key: 'recomendacion', value: recommendation },
       ...gleifExtractedData,
+      // human_review_required se calcula al final en evaluateKyc() (ver
+      // comentario ahi), no aqui -- cualquier valor puesto en este punto
+      // se filtraria y recalcularia de todos modos.
       ...auditEntries({ agentName: 'readinessRubricAgent', modelName: 'validateRegulatoryProfile+GLEIF' })
     ],
     warnings: regulatoryResult.checks.some((c) => c.provider === 'nsd')
@@ -372,7 +511,8 @@ async function evaluateRegulatoryKyc(order, country) {
 // se aplica aqui explicitamente para las 3 rutas posibles (MX, no-MX, error).
 async function evaluateKyc(order) {
   const result = await evaluateKycCore(order);
-  return enrichWithBeneficiaryOwners(result, order);
+  const enriched = enrichWithBeneficiaryOwners(result, order);
+  return finalizeHumanReviewRequired(enriched);
 }
 
 async function evaluateKycCore(order) {
@@ -441,7 +581,7 @@ async function evaluateKycCore(order) {
       { key: 'Riesgo global', value: result.global_risk?.global_risk || 'N/D' },
       ...(result.name ? [{ key: 'razon_social', value: result.name }] : []),
       { key: 'recomendacion', value: recommendation },
-      ...auditEntries({ agentName: 'nsdApplicantAgent', modelName: MODEL })
+      ...auditEntries({ agentName: 'nsdApplicantAgent', modelName: 'claude-sonnet-4-6', provider: 'anthropic' })
     ],
     warnings: result.mock_warning ? [result.mock_warning] : []
   };
@@ -712,7 +852,7 @@ async function enrichResult(itemId, documentTypeCode, result, { extractedText, o
   if (itemId === 'doc_corporativa') {
     enriched = enrichWithBeneficiaryOwners(enriched, order);
   }
-  return enriched;
+  return finalizeHumanReviewRequired(enriched);
 }
 
 export async function evaluateReadinessDocument({ documentTypeCode, extractedText, order }) {
@@ -724,7 +864,7 @@ export async function evaluateReadinessDocument({ documentTypeCode, extractedTex
     return evaluateKyc(order);
   }
 
-  if (!anthropic) {
+  if (!hasAnyJsonProvider()) {
     const fallback = heuristicFallback(rubric, extractedText);
     return enrichResult(itemId, documentTypeCode, fallback, { extractedText, order });
   }
@@ -744,7 +884,7 @@ Indicadores macro (Banxico SIE): tipo de cambio FIX ${macro.exchangeRateFix?.val
   }
 
   try {
-    const result = await evaluateWithClaude(rubric, extractedText, extraContext);
+    const result = await evaluateWithClaude(rubric, extractedText, extraContext, order);
     return enrichResult(itemId, documentTypeCode, result, { extractedText, order });
   } catch (err) {
     console.error('[readinessRubricAgent] Error evaluando con Claude:', err);

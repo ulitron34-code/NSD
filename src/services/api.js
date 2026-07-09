@@ -202,7 +202,9 @@ export const adminAPI = {
   listAuditLogs: (params = {}) =>
     api.get('/admin/audit-logs', { params }),
   getRubrics: () =>
-    api.get('/admin/rubrics')
+    api.get('/admin/rubrics'),
+  listHumanReviewQueue: (params = {}) =>
+    api.get('/admin/human-review-queue', { params })
 };
 
 // Las rutas /ai-agents/* nunca existieron en el backend (confirmado por
@@ -297,7 +299,11 @@ export const readinessChecklistAPI = {
   downloadTechnicalMemoPdf: (orderId) =>
     api.get(`/orders/${orderId}/readiness-checklist/technical-memo.pdf`, { responseType: 'blob' }),
   crossCheck: (orderId) =>
-    api.post(`/orders/${orderId}/readiness-checklist/cross-check`)
+    api.post(`/orders/${orderId}/readiness-checklist/cross-check`),
+  // Solo para roles internos (analista/auditor/administrador) — el backend
+  // responde 403 para solicitante/otorgante.
+  downloadAuditReport: (orderId) =>
+    api.get(`/orders/${orderId}/readiness-checklist/audit-report.md`, { responseType: 'blob' })
 };
 
 export const reviewNotesAPI = {

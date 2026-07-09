@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware, requireAdmin, NSD_ROLES } from '../middleware/auth.js';
 import { logAuditEvent } from '../utils/audit.js';
 import { READINESS_RUBRICS, READINESS_MODULE_WEIGHTS } from '../config/readinessRubrics.js';
+import { getHumanReviewQueue } from '../services/humanReviewQueueService.js';
 
 const router = express.Router();
 const ASSIGNABLE_ROLES = new Set(Object.values(NSD_ROLES));
@@ -99,6 +100,20 @@ router.get('/admin/rubrics', authMiddleware, requireAdmin, async (req, res) => {
     readOnly: true,
     note: 'Las rúbricas y los pesos están definidos en código (backend/src/config/readinessRubrics.js), no en una tabla editable. Este endpoint es de solo lectura; para modificarlas hay que editar ese archivo y desplegar.'
   });
+});
+
+// Cola de "revisión humana pendiente" (sección 21.3 del plan). Antes solo se
+// veía documento por documento dentro del checklist de cada expediente; esta
+// es la primera vista agregada a través de todos los expedientes.
+router.get('/admin/human-review-queue', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const offset = Math.max(Number(req.query.offset) || 0, 0);
+    const result = await getHumanReviewQueue({ limit, offset });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 export default router;

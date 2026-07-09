@@ -2,7 +2,7 @@ import express from 'express';
 import { authMiddleware, requireAnyPermission, requirePermission, isInternalReviewerRole } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getReadinessChecklist } from '../services/readinessChecklistService.js';
-import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf } from '../services/readinessMemoService.js';
+import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf, buildReadinessAuditReport } from '../services/readinessMemoService.js';
 import { runReadinessCrossReferences } from '../agents/readinessCrossRefAgent.js';
 import { getCrossReferences } from '../services/documentIntelligenceService.js';
 import { addReviewNote, getReviewNotes } from '../services/documentReviewNotesService.js';
@@ -241,6 +241,58 @@ router.get(
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(report.buffer);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// Reporte interno de auditoría (sección 22.3 del plan): a diferencia del
+// ejecutivo/técnico (visibles para dueño del expediente/otorgante autorizado),
+// este es exclusivo de roles internos -- documenta bitácora de IA (agente,
+// modelo, proveedor, versión, costo), no debe llegar al solicitante ni al
+// otorgante.
+router.get(
+  '/orders/:orderId/readiness-checklist/audit-report.md',
+  authMiddleware,
+  (req, res, next) => {
+    if (!isInternalReviewerRole(req.userRole)) {
+      return res.status(403).json({ error: 'Reporte interno de auditoría: solo para roles internos (analista/auditor/administrador).' });
+    }
+    next();
+  },
+  async (req, res) => {
+    try {
+      const { data: order } = await supabaseAdmin
+        .from('service_orders')
+        .select('id, case_number, project_name, metadata')
+        .eq('id', req.params.orderId)
+        .single();
+
+      if (!order) {
+        return res.status(404).json({ error: 'Expediente no encontrado' });
+      }
+
+      const [checklistResult, inconsistencies] = await Promise.all([
+        getReadinessChecklist(req.params.orderId),
+        getStoredInconsistencies(req.params.orderId)
+      ]);
+      const report = buildReadinessAuditReport(checklistResult, order, inconsistencies);
+      const filename = `${report.caseNumber}-reporte-auditoria-interna.md`.replace(/[^a-zA-Z0-9._-]/g, '-');
+
+      await logAuditEvent({
+        userId: req.userId,
+        action: 'readiness_audit_report_downloaded',
+        entityType: 'service_order',
+        entityId: req.params.orderId,
+        orderId: req.params.orderId,
+        req,
+        metadata: { totalCostUsd: report.totalCostUsd }
+      });
+
+      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(report.memo.content);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

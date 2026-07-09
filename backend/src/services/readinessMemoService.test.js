@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf } from './readinessMemoService.js';
+import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf, buildReadinessAuditReport } from './readinessMemoService.js';
 
 function buildChecklist(overrides = {}) {
   const items = [
@@ -110,5 +110,36 @@ describe('buildReadinessTechnicalMemoPdf', () => {
     expect(Buffer.isBuffer(result.buffer)).toBe(true);
     expect(result.buffer.subarray(0, 5).toString('latin1')).toBe('%PDF-');
     expect(result.caseNumber).toBe('NSD-TEST05');
+  });
+});
+
+describe('buildReadinessAuditReport', () => {
+  it('incluye bitácora de agente/modelo/proveedor/costo por documento evaluado', () => {
+    const checklist = {
+      country: 'MX',
+      totalCostUsd: 0.0123,
+      items: [
+        {
+          id: 'plan_negocios', critico: false, estado: 'listo', reviewScore: 82, reviewFindings: [],
+          agentName: 'readinessRubricAgent', modelName: 'claude-sonnet-4-6', aiProvider: 'anthropic',
+          promptVersion: 'v1', rubricVersion: '2026-07-06', costUsd: 0.0123, confidence: 0.85,
+          humanReviewRequired: false, reviewedAt: '2026-07-08T10:00:00Z', sourcesReferenced: null, humanReview: null
+        }
+      ]
+    };
+
+    const result = buildReadinessAuditReport(checklist, { case_number: 'NSD-TEST06' }, []);
+
+    expect(result.memo.content).toContain('readinessRubricAgent');
+    expect(result.memo.content).toContain('anthropic/claude-sonnet-4-6');
+    expect(result.memo.content).toContain('2026-07-06');
+    expect(result.memo.content).toContain('0.012300');
+    expect(result.memo.content).toContain('$0.0123 USD');
+  });
+
+  it('avisa cuando ningún documento tiene evaluación de IA registrada', () => {
+    const checklist = { country: 'MX', totalCostUsd: 0, items: [{ id: 'plan_negocios', critico: false, estado: 'pendiente', reviewFindings: [] }] };
+    const result = buildReadinessAuditReport(checklist, {}, []);
+    expect(result.memo.content).toContain('Ningún documento tiene evaluación de IA registrada');
   });
 });

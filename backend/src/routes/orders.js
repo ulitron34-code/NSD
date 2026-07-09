@@ -77,6 +77,7 @@ function buildCaseMetadata(metadata = {}, serviceType) {
     projectName,
     description: metadata.description || null,
     sector: metadata.sector || null,
+    financingType: metadata.financingType || null,
     investmentRequired: metadata.investmentRequired || metadata.requestedAmount || null,
     requestedAmount: metadata.requestedAmount || metadata.investmentRequired || null,
     fundingPurpose: metadata.fundingPurpose || metadata.useOfFunds || null,

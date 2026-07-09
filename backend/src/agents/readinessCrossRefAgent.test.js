@@ -63,6 +63,22 @@ describe('runReadinessCrossReferences', () => {
     expect(savedRows.last[0].status).toBe('fail');
   });
 
+  it('detecta inconsistencia de RFC entre documentos (campo agregado en la seccion 15.3 del plan)', async () => {
+    state.documents = [
+      { id: 'doc-1', filename: 'doc_corporativa.pdf', document_type: 'READY_DOC_CORPORATIVA' },
+      { id: 'doc-2', filename: 'plan_negocios.pdf', document_type: 'READY_PLAN_NEGOCIOS' }
+    ];
+    state.reviews = [
+      { document_id: 'doc-1', extracted_data: [{ key: 'rfc', value: 'CAZ010101AAA' }], created_at: '2026-07-05T10:00:00Z' },
+      { document_id: 'doc-2', extracted_data: [{ key: 'rfc', value: 'CAZ010101BBB' }], created_at: '2026-07-05T11:00:00Z' }
+    ];
+
+    const result = await runReadinessCrossReferences('order-1');
+
+    expect(result.inconsistencies).toHaveLength(1);
+    expect(result.inconsistencies[0].field).toBe('rfc');
+  });
+
   it('no marca inconsistencia cuando los valores coinciden salvo formato', async () => {
     state.documents = [
       { id: 'doc-1', filename: 'plan_negocios.pdf', document_type: 'READY_PLAN_NEGOCIOS' },

@@ -4,6 +4,13 @@
 // por backend/src/agents/readinessRubricAgent.js para armar el prompt de Claude
 // y, si Claude no está configurado, para el fallback heurístico.
 
+function normalizeForMatch(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
+
 export const READINESS_RUBRICS = {
   plan_negocios: {
     label: 'Plan de negocios',
@@ -283,6 +290,22 @@ export const READINESS_RUBRICS = {
       'World Bank Environmental and Social Framework (ESF)'
     ],
     banderasRojas: []
+  },
+
+  // Checklist dinámico por sector (sección 19.1 del plan): item condicional
+  // que solo aparece cuando el sector declarado del expediente coincide con
+  // uno de los 8 sectores de la tabla 19.1. `documentosEsperados` se rellena
+  // por sector vía localizeSectorRubric() -- no es un catálogo fijo, cambia
+  // según SECTOR_SPECIFIC_DOCUMENTS.
+  permisos_sectoriales: {
+    label: 'Permisos y documentación sectorial específica',
+    documentosEsperados: [],
+    criterios: [
+      { nombre: 'Documentación sectorial completa', peso: 40 },
+      { nombre: 'Permisos y licencias vigentes', peso: 35 },
+      { nombre: 'Coherencia con el resto del expediente', peso: 25 }
+    ],
+    banderasRojas: ['Falta un permiso o documento sectorial obligatorio para el sector declarado']
   }
 };
 
@@ -363,7 +386,63 @@ function localizeRubric(itemId, rubric, country) {
   return rubric;
 }
 
-export function getRubric(itemId, country = 'MX') {
+// Reglas por sector (sección 19.1 del plan): documentos adicionales sugeridos
+// según el sector declarado del expediente. Las llaves son keywords
+// normalizados (sin acentos, minúsculas) que se buscan como substring dentro
+// de order.metadata.sector -- mismo patrón que SEMARNAT_MIA_SECTOR_KEYWORDS
+// en readinessRubricAgent.js, no una lista cerrada de valores exactos.
+const SECTOR_SPECIFIC_DOCUMENTS = {
+  inmobiliario: ['Uso de suelo', 'Título de propiedad', 'Licencia de construcción', 'Avalúo', 'Presupuesto de obra', 'Permisos municipales', 'MIA si aplica'],
+  energia: ['Permisos regulatorios', 'Interconexión', 'Estudios técnicos', 'Contratos PPA si existen', 'Impacto ambiental'],
+  agroindustrial: ['Tenencia de tierra', 'Permisos de agua', 'Cadena de suministro', 'Sanidad', 'Impacto ambiental'],
+  turismo: ['Permisos de operación', 'Uso de suelo', 'Impacto ambiental', 'Análisis de ocupación', 'Mercado turístico'],
+  manufactura: ['Capacidad instalada', 'Maquinaria', 'Proveedores', 'Permisos', 'Certificaciones', 'Seguridad industrial'],
+  fintech: ['Cumplimiento regulatorio', 'PLD', 'Privacidad', 'Ciberseguridad', 'Términos y condiciones', 'Licencias si aplica'],
+  salud: ['COFEPRIS/regulador sanitario local', 'Permisos sanitarios', 'Calidad', 'Trazabilidad', 'Responsables sanitarios'],
+  exportacion: ['Contratos de exportación', 'Órdenes de compra', 'Logística', 'Aduanas', 'Referencia Bancomext/entidad equivalente', 'Riesgos cambiarios']
+};
+
+// Alias hacia las llaves reales de SECTOR_SPECIFIC_DOCUMENTS -- cubre
+// nombres de sector que ya existen en el selector del frontend
+// (ServiceRequestModal.jsx: "Agrícola", "Salud"/farmacéutico, "Fintech") pero
+// no coinciden textualmente con la nomenclatura de la sección 19.1 del plan.
+const SECTOR_KEY_ALIASES = {
+  agricola: 'agroindustrial',
+  agropecuario: 'agroindustrial',
+  farmaceutico: 'salud',
+  'servicios financieros': 'fintech'
+};
+
+function matchSectorKey(sector) {
+  const normalized = normalizeForMatch(sector || '');
+  if (!normalized) return null;
+  const direct = Object.keys(SECTOR_SPECIFIC_DOCUMENTS).find((key) => normalized.includes(key));
+  if (direct) return direct;
+  const aliasKey = Object.keys(SECTOR_KEY_ALIASES).find((alias) => normalized.includes(alias));
+  return aliasKey ? SECTOR_KEY_ALIASES[aliasKey] : null;
+}
+
+// sectorHasSpecificDocuments() la usa readinessChecklistService.js para
+// decidir si el item condicional "permisos_sectoriales" debe aparecer en el
+// checklist de este expediente -- no todos los proyectos deben pedir lo
+// mismo (regla explícita de la sección 19 del plan).
+export function sectorHasSpecificDocuments(sector) {
+  return matchSectorKey(sector) !== null;
+}
+
+export function getRubric(itemId, country = 'MX', sector = null) {
+  if (itemId === 'permisos_sectoriales') {
+    const sectorKey = matchSectorKey(sector);
+    const documentos = sectorKey ? SECTOR_SPECIFIC_DOCUMENTS[sectorKey] : [];
+    return {
+      ...READINESS_RUBRICS.permisos_sectoriales,
+      label: sectorKey
+        ? `Permisos y documentación sectorial específica (${sector})`
+        : READINESS_RUBRICS.permisos_sectoriales.label,
+      documentosEsperados: documentos
+    };
+  }
+
   const rubric = READINESS_RUBRICS[itemId];
   if (!rubric) return null;
   if (!COUNTRY_COUPLED_ITEMS.has(itemId)) return rubric;
@@ -409,16 +488,95 @@ export function classifyReadinessLevel(score) {
   return READINESS_LEVELS.find((level) => clamped <= level.max) || READINESS_LEVELS[READINESS_LEVELS.length - 1];
 }
 
+// Boost de ESG/ambiental por sector sensible (nota de la sección 11.3 del
+// plan: "Para proyectos de infraestructura, energía, inmobiliarios, turismo,
+// agroindustria o proyectos con impacto ambiental, ESG/ambiental debe
+// aumentar de peso"). Mismo patrón de keywords que
+// SEMARNAT_MIA_SECTOR_KEYWORDS en readinessRubricAgent.js.
+const SECTOR_ESG_BOOST_KEYWORDS = ['infraestructura', 'energia', 'inmobiliario', 'turismo', 'agroindustrial', 'agroindustria', 'ambiental'];
+
+function isEsgSensitiveSector(sector) {
+  const normalized = normalizeForMatch(sector || '');
+  return normalized ? SECTOR_ESG_BOOST_KEYWORDS.some((k) => normalized.includes(k)) : false;
+}
+
+// Énfasis documental por tipo de financiamiento (sección 19.2 del plan,
+// tabla "Reglas por tipo de financiamiento"). Multiplicadores sobre el peso
+// base, no reemplazos -- se renormalizan a 100 en getModuleWeights() para no
+// tener que mantener 6 tablas completas escritas a mano.
+const FINANCING_TYPE_EMPHASIS = {
+  credito_pyme: { modelo_financiero: 1.3, doc_corporativa: 1.2, doc_kyc: 1.2, viabilidad_financiera: 1.3 },
+  project_finance: { marco_riesgos: 1.6, modelo_financiero: 1.4, doc_corporativa: 1.3 },
+  private_credit: { doc_corporativa: 1.4, transparencia_documental: 1.6, modelo_financiero: 1.3 },
+  equity: { estudio_mercado: 1.5, plan_negocios: 1.5, doc_corporativa: 1.2 },
+  financiamiento_esg: { esg: 2.2, ods: 1.8, esia: 1.8 },
+  banca_desarrollo: { esg: 1.6, estudio_mercado: 1.4, esia: 1.4 }
+};
+
+function normalizeFinancingType(financingType) {
+  const key = normalizeForMatch(financingType || '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  return FINANCING_TYPE_EMPHASIS[key] ? key : null;
+}
+
+// Reparte proporcionalmente para que la suma vuelva a ser exactamente 100 --
+// necesario porque los multiplicadores de arriba no dan una suma redonda por
+// construcción. El remanente de redondeo se ajusta en el módulo de mayor peso
+// (el error de +/-1 ahí es imperceptible, evita fracciones de peso confusas).
+function normalizeWeights(rawWeights) {
+  const sum = Object.values(rawWeights).reduce((a, b) => a + b, 0);
+  if (!sum) return rawWeights;
+
+  const rounded = Object.fromEntries(
+    Object.entries(rawWeights).map(([id, value]) => [id, Math.round((value / sum) * 100)])
+  );
+  const roundedSum = Object.values(rounded).reduce((a, b) => a + b, 0);
+  const diff = 100 - roundedSum;
+
+  if (diff !== 0) {
+    const [biggestId] = Object.entries(rounded).sort((a, b) => b[1] - a[1])[0];
+    rounded[biggestId] += diff;
+  }
+
+  return rounded;
+}
+
+// Pesos por módulo efectivos para este expediente (secciones 11.3/19.2 del
+// plan): parte de READINESS_MODULE_WEIGHTS y aplica boost ESG por sector +
+// énfasis por tipo de financiamiento, agregando el peso de
+// "permisos_sectoriales" cuando aplica. Sin sector/financingType, regresa
+// exactamente READINESS_MODULE_WEIGHTS (mismo comportamiento que antes de
+// esta función existir -- no hay regresión para el caso sin datos).
+export function getModuleWeights(sector = null, financingType = null) {
+  const financingKey = normalizeFinancingType(financingType);
+  const emphasis = financingKey ? FINANCING_TYPE_EMPHASIS[financingKey] : {};
+  const esgBoost = isEsgSensitiveSector(sector);
+  const includeSectorItem = sectorHasSpecificDocuments(sector);
+
+  const raw = { ...READINESS_MODULE_WEIGHTS };
+  if (includeSectorItem) raw.permisos_sectoriales = 5;
+
+  const withMultipliers = Object.fromEntries(
+    Object.entries(raw).map(([id, base]) => {
+      let multiplier = emphasis[id] || 1;
+      if (esgBoost && (id === 'esg' || id === 'esia')) multiplier *= 1.5;
+      return [id, base * multiplier];
+    })
+  );
+
+  return normalizeWeights(withMultipliers);
+}
+
 // Score global ponderado (sección 11.3). Items sin documento evaluado cuentan
 // como 0 -- un expediente con módulos vacíos no debe promediar solo lo que sí
 // se subió, o un expediente con 2 de 13 documentos "perfectos" mostraría un
 // score global engañosamente alto.
-export function computeWeightedGlobalScore(items) {
+export function computeWeightedGlobalScore(items, sector = null, financingType = null) {
+  const weights = getModuleWeights(sector, financingType);
   let weightedSum = 0;
   let totalWeight = 0;
 
   for (const item of items || []) {
-    const weight = READINESS_MODULE_WEIGHTS[item.id];
+    const weight = weights[item.id];
     if (!weight) continue;
     totalWeight += weight;
     weightedSum += weight * (item.reviewScore != null ? Number(item.reviewScore) : 0);

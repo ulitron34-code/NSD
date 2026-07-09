@@ -333,6 +333,11 @@ export default function FundingReadinessTab() {
                 })()}
               </span>
             )}
+            {requisitos.financingType && (
+              <span style={{ color: COLORS.textMuted, fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                {L("Financiamiento: ", "Financing: ")}{requisitos.financingType}
+              </span>
+            )}
             {requisitos.globalScore && (
               <span style={{ color: COLORS.navy, fontSize: "0.72rem", fontWeight: 900, whiteSpace: "nowrap" }}>
                 {L("Score global: ", "Global score: ")}{requisitos.globalScore.score}/100
@@ -461,6 +466,17 @@ export default function FundingReadinessTab() {
                           <p style={{ margin: "0.3rem 0 0", color: isListo ? COLORS.green : "#C62828", fontSize: "0.74rem", fontWeight: 700 }}>
                             {L("Score IA:", "AI score:")} {item.reviewScore}/100
                             {item.reviewFindings?.[0] ? ` — ${item.reviewFindings[0]}` : ""}
+                          </p>
+                        )}
+                        {usaCargaReal && item.humanReviewRequired && !item.enRevision && (
+                          <p style={{ margin: "0.2rem 0 0", color: COLORS.amber, fontSize: "0.7rem", fontWeight: 700 }}>
+                            {L("Requiere revisión humana", "Requires human review")}
+                          </p>
+                        )}
+                        {usaCargaReal && item.ocrStatus && item.ocrStatus !== "completed" && !item.enRevision && (
+                          <p style={{ margin: "0.2rem 0 0", color: "#C62828", fontSize: "0.7rem", fontWeight: 700 }}>
+                            {L("Calidad OCR:", "OCR quality:")} {item.ocrStatus}
+                            {item.ocrNote ? ` — ${item.ocrNote}` : ""}
                           </p>
                         )}
                       </div>

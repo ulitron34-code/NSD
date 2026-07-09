@@ -1273,6 +1273,11 @@ export default function PipelineTab() {
                               {item.reviewFindings?.[0] ? ` — ${item.reviewFindings[0]}` : ""}
                             </p>
                           )}
+                          {item.humanReviewRequired && !item.humanReview && (
+                            <p style={{ margin: "0.15rem 0 0", color: COLORS.amber, fontSize: "0.66rem", fontWeight: 700 }}>
+                              {copy("Requiere revisión humana")}
+                            </p>
+                          )}
                           {item.humanReview && (
                             <p style={{ margin: "0.15rem 0 0", color: COLORS.textMuted, fontSize: "0.66rem", fontWeight: 700 }}>
                               {copy("Revisión humana:")} {item.humanReview.decision}

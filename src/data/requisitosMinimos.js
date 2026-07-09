@@ -104,6 +104,22 @@ export const REQUISITOS_MINIMOS = [
   },
 ];
 
+// Item condicional por sector (sección 19.1 del plan) — espejo de
+// SECTOR_ITEM en backend/src/services/readinessChecklistService.js. Solo se
+// muestra si el backend realmente lo incluyó en la respuesta (según el sector
+// declarado del expediente); no vive en REQUISITOS_MINIMOS porque no debe
+// aparecer para todos los proyectos.
+export const SECTOR_SPECIFIC_ITEM = {
+  id: "permisos_sectoriales",
+  categoria: "documentacion",
+  label: { es: "Permisos y Documentación Sectorial", en: "Sector-Specific Permits and Documentation" },
+  detalle: {
+    es: "Documentos adicionales requeridos según el sector del proyecto (permisos, licencias, certificaciones específicas).",
+    en: "Additional documents required based on the project's sector (permits, licenses, sector-specific certifications).",
+  },
+  critico: false,
+};
+
 export const DEMO_EXPEDIENTE_ID = "demo-order-001";
 
 // Países soportados por la clasificación multi-país de Document Intelligence

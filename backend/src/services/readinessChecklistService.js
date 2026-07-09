@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { getOrderCountry } from './documentIntelligenceService.js';
-import { computeWeightedGlobalScore } from '../config/readinessRubrics.js';
+import { computeWeightedGlobalScore, sectorHasSpecificDocuments } from '../config/readinessRubrics.js';
 import { getLatestNotesByOrder } from './documentReviewNotesService.js';
 import { computeReadinessLifecycle } from './readinessLifecycleService.js';
 
@@ -23,15 +23,29 @@ export const READINESS_ITEMS = [
   { id: 'esia', code: 'READY_ESIA', critico: false }
 ];
 
+// Item condicional por sector (sección 19.1 del plan): solo se agrega al
+// checklist cuando sectorHasSpecificDocuments(sector) es verdadero -- no
+// todos los proyectos deben pedir lo mismo. Ver getRequisitosMinimosForSector()
+// en requisitosMinimos.js para el espejo del frontend.
+const SECTOR_ITEM = { id: 'permisos_sectoriales', code: 'READY_PERMISOS_SECTORIALES', critico: false };
+
+function getEffectiveItems(sector) {
+  return sectorHasSpecificDocuments(sector) ? [...READINESS_ITEMS, SECTOR_ITEM] : READINESS_ITEMS;
+}
+
 const REVIEW_PASS_SCORE = 60;
 
 export async function getReadinessChecklist(orderId) {
-  const codes = READINESS_ITEMS.map((item) => item.code);
   const [country, latestNoteByDocumentId, { data: orderMetadataRow }] = await Promise.all([
     getOrderCountry(orderId),
     getLatestNotesByOrder(orderId),
     supabaseAdmin.from('service_orders').select('metadata').eq('id', orderId).maybeSingle()
   ]);
+
+  const sector = orderMetadataRow?.metadata?.sector || null;
+  const financingType = orderMetadataRow?.metadata?.financingType || null;
+  const effectiveItems = getEffectiveItems(sector);
+  const codes = effectiveItems.map((item) => item.code);
 
   const { data: documents, error: docsError } = await supabaseAdmin
     .from('documents')
@@ -64,7 +78,7 @@ export async function getReadinessChecklist(orderId) {
     }
   }
 
-  const items = READINESS_ITEMS.map((item) => {
+  const items = effectiveItems.map((item) => {
     const doc = latestByCode[item.code] || null;
     const review = doc ? latestReviewByDocId[doc.id] || null : null;
     const reviewCompleted = Boolean(review) && review.status !== 'processing';
@@ -86,12 +100,30 @@ export async function getReadinessChecklist(orderId) {
       reviewFindings: review?.findings || [],
       recommendation: extractedValue('recomendacion'),
       structureScore: extractedValue('structure_score') != null ? Number(extractedValue('structure_score')) : null,
-      humanReview: humanNote ? { decision: humanNote.decision, comment: humanNote.comment, reviewedAt: humanNote.created_at } : null
+      structureStrengths: extractedValue('fortalezas_estructura'),
+      confidence: extractedValue('confidence') != null ? Number(extractedValue('confidence')) : null,
+      humanReviewRequired: extractedValue('human_review_required') === true,
+      humanReview: humanNote ? { decision: humanNote.decision, comment: humanNote.comment, reviewedAt: humanNote.created_at } : null,
+      // Bitácora auditable (sección 28) + costo por evaluación (sección
+      // 21.3/30): mismos datos que ya guarda auditEntries() en extracted_data,
+      // expuestos aquí para el reporte interno de auditoría y la cola de
+      // revisión humana del panel Admin.
+      agentName: extractedValue('agent_name'),
+      modelName: extractedValue('model_name'),
+      aiProvider: extractedValue('ai_provider'),
+      promptVersion: extractedValue('prompt_version'),
+      rubricVersion: extractedValue('rubric_version'),
+      sourcesReferenced: extractedValue('marcos_mencionados'),
+      costUsd: extractedValue('costo_estimado_usd') != null ? Number(extractedValue('costo_estimado_usd')) : null,
+      reviewedAt: review?.created_at || null,
+      // Estados/reglas de calidad OCR (secciones 20.2/20.3 del plan).
+      ocrStatus: extractedValue('ocr_status'),
+      ocrNote: extractedValue('ocr_note')
     };
   });
 
   const lifecycle = computeReadinessLifecycle({
-    items: READINESS_ITEMS,
+    items: effectiveItems,
     documents: documents || [],
     latestByCode,
     latestReviewByDocId,
@@ -99,5 +131,15 @@ export async function getReadinessChecklist(orderId) {
     archivedAt: orderMetadataRow?.metadata?.archivedAt || null
   });
 
-  return { items, country, globalScore: computeWeightedGlobalScore(items), lifecycle };
+  const totalCostUsd = items.reduce((sum, item) => sum + (item.costUsd || 0), 0);
+
+  return {
+    items,
+    country,
+    sector,
+    financingType,
+    globalScore: computeWeightedGlobalScore(items, sector, financingType),
+    lifecycle,
+    totalCostUsd
+  };
 }

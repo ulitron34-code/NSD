@@ -18,6 +18,7 @@ export default function ServiceRequestModal({ service, onClose, onSubmit }) {
     projectName: "",
     description: "",
     sector: "",
+    financingType: "",
     country: "MX",
     investmentRequired: "",
     hasDocuments: "no",
@@ -229,8 +230,55 @@ export default function ServiceRequestModal({ service, onClose, onSubmit }) {
               <option>{L("Energia", "Energy")}</option>
               <option>Fintech</option>
               <option>{L("Salud", "Healthcare")}</option>
+              <option>{L("Turismo", "Tourism")}</option>
+              <option>{L("Manufactura", "Manufacturing")}</option>
+              <option>{L("Exportacion", "Export")}</option>
               <option>{L("Otro", "Other")}</option>
             </select>
+            <p style={{ margin: "0.35rem 0 0", color: COLORS.textMuted, fontSize: "0.75rem" }}>
+              {L(
+                "Algunos sectores (inmobiliario, energía, agrícola, turismo, manufactura, fintech, salud, exportación) agregan un requisito adicional de permisos/documentación sectorial al checklist.",
+                "Some sectors (real estate, energy, agriculture, tourism, manufacturing, fintech, healthcare, export) add an extra sector-specific permits/documentation item to the checklist."
+              )}
+            </p>
+          </div>
+
+          <div>
+            <label style={{
+              display: "block",
+              color: COLORS.navy,
+              fontWeight: 600,
+              marginBottom: "0.5rem",
+              fontSize: "0.9rem",
+            }}>
+              {L("Tipo de financiamiento", "Financing type")}
+            </label>
+            <select
+              name="financingType"
+              value={formData.financingType}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "0.75rem 1rem",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "6px",
+                fontSize: "1rem",
+              }}
+            >
+              <option value="">{L("No especificado", "Not specified")}</option>
+              <option value="Crédito PyME">{L("Crédito PyME", "SME Credit")}</option>
+              <option value="Project Finance">Project Finance</option>
+              <option value="Private Credit">Private Credit</option>
+              <option value="Equity">{L("Equity / inversión", "Equity / investment")}</option>
+              <option value="Financiamiento ESG">{L("Financiamiento ESG", "ESG Financing")}</option>
+              <option value="Banca de desarrollo">{L("Banca de desarrollo", "Development banking")}</option>
+            </select>
+            <p style={{ margin: "0.35rem 0 0", color: COLORS.textMuted, fontSize: "0.75rem" }}>
+              {L(
+                "Ajusta el peso de algunos módulos del checklist según el énfasis típico de este tipo de financiamiento (sección 19.2).",
+                "Adjusts the weight of some checklist modules based on this financing type's typical emphasis (section 19.2)."
+              )}
+            </p>
           </div>
 
           <div>

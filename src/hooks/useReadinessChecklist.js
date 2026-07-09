@@ -2,10 +2,10 @@ import { error as logError, warn } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { readinessChecklistAPI, documentsAPI } from "../services/api";
 import { useRequisitosMinimos } from "./useRequisitosMinimos";
-import { REQUISITOS_MINIMOS, DEMO_EXPEDIENTE_ID, localizeRequisito } from "../data/requisitosMinimos";
+import { REQUISITOS_MINIMOS, SECTOR_SPECIFIC_ITEM, DEMO_EXPEDIENTE_ID, localizeRequisito } from "../data/requisitosMinimos";
 
 const READY_CODE_BY_ITEM_ID = Object.fromEntries(
-  REQUISITOS_MINIMOS.map((item) => [item.id, `READY_${item.id.toUpperCase()}`])
+  [...REQUISITOS_MINIMOS, SECTOR_SPECIFIC_ITEM].map((item) => [item.id, `READY_${item.id.toUpperCase()}`])
 );
 
 function deriveAggregates(items) {
@@ -24,6 +24,8 @@ function deriveAggregates(items) {
 function useRealReadinessChecklist(orderId) {
   const [remoteItems, setRemoteItems] = useState(null);
   const [country, setCountry] = useState("MX");
+  const [sector, setSector] = useState(null);
+  const [financingType, setFinancingType] = useState(null);
   const [globalScore, setGlobalScore] = useState(null);
   const [lifecycle, setLifecycle] = useState(null);
   const [sdgByItem, setSdgByItem] = useState({});
@@ -38,6 +40,8 @@ function useRealReadinessChecklist(orderId) {
       const { data } = await readinessChecklistAPI.get(orderId);
       setRemoteItems(data.items);
       setCountry(data.country || "MX");
+      setSector(data.sector || null);
+      setFinancingType(data.financingType || null);
       setGlobalScore(data.globalScore || null);
       setLifecycle(data.lifecycle || null);
     } catch (err) {
@@ -52,7 +56,13 @@ function useRealReadinessChecklist(orderId) {
   }, [fetchChecklist]);
 
   const items = useMemo(() => {
-    return REQUISITOS_MINIMOS.map((baseDef) => {
+    // permisos_sectoriales (sección 19.1 del plan) solo se muestra si el
+    // backend realmente lo incluyó en la respuesta -- es el que decide según
+    // el sector declarado del expediente, el frontend no duplica esa regla.
+    const incluyeSectorial = (remoteItems || []).some((r) => r.id === SECTOR_SPECIFIC_ITEM.id);
+    const definiciones = incluyeSectorial ? [...REQUISITOS_MINIMOS, SECTOR_SPECIFIC_ITEM] : REQUISITOS_MINIMOS;
+
+    return definiciones.map((baseDef) => {
       const def = localizeRequisito(baseDef, country);
       const remote = (remoteItems || []).find((r) => r.id === def.id) || {};
       return {
@@ -66,7 +76,10 @@ function useRealReadinessChecklist(orderId) {
         reviewFindings: remote.reviewFindings || [],
         recommendation: remote.recommendation || null,
         structureScore: remote.structureScore ?? null,
+        humanReviewRequired: Boolean(remote.humanReviewRequired),
         humanReview: remote.humanReview || null,
+        ocrStatus: remote.ocrStatus || null,
+        ocrNote: remote.ocrNote || null,
         sdg: sdgByItem[def.id] || []
       };
     });
@@ -99,6 +112,8 @@ function useRealReadinessChecklist(orderId) {
     items,
     loading,
     country,
+    sector,
+    financingType,
     globalScore,
     lifecycle,
     ...deriveAggregates(items),
