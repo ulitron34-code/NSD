@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf, buildReadinessAuditReport } from './readinessMemoService.js';
+import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf, buildReadinessAuditReport, buildAnonymizedReadinessSummary } from './readinessMemoService.js';
 
 function buildChecklist(overrides = {}) {
   const items = [
@@ -141,5 +141,56 @@ describe('buildReadinessAuditReport', () => {
     const checklist = { country: 'MX', totalCostUsd: 0, items: [{ id: 'plan_negocios', critico: false, estado: 'pendiente', reviewFindings: [] }] };
     const result = buildReadinessAuditReport(checklist, {}, []);
     expect(result.memo.content).toContain('Ningún documento tiene evaluación de IA registrada');
+  });
+});
+
+describe('buildAnonymizedReadinessSummary', () => {
+  it('nunca incluye texto libre (summary/findings/recommendation) que pueda citar datos del documento fuente', () => {
+    const checklist = {
+      country: 'MX',
+      items: [
+        {
+          id: 'doc_corporativa', critico: false, estado: 'listo', reviewScore: 85,
+          reviewSummary: 'Razón social Acme Manufactura SA de CV, RFC ACM950101ABC.',
+          recommendation: 'Actualizar poder de Juan Pérez.',
+          reviewFindings: ['Bandera roja: coincidencia OFAC/PEP sin aclarar']
+        }
+      ]
+    };
+
+    const result = buildAnonymizedReadinessSummary(checklist);
+
+    expect(result.memo.content).not.toContain('Acme Manufactura');
+    expect(result.memo.content).not.toContain('ACM950101ABC');
+    expect(result.memo.content).not.toContain('Juan Pérez');
+    // El hallazgo original no aparece como texto libre, solo su categoría agregada.
+    expect(result.memo.content).not.toContain('coincidencia OFAC/PEP sin aclarar');
+    expect(result.memo.content).toContain('Screening OFAC/PEP: 1');
+  });
+
+  it('no incluye número de expediente ni nombre de proyecto (no recibe `order`)', () => {
+    const checklist = { country: 'MX', items: [{ id: 'plan_negocios', critico: false, estado: 'listo', reviewScore: 90, reviewFindings: [] }] };
+    const result = buildAnonymizedReadinessSummary(checklist);
+    expect(result.memo.content).not.toMatch(/NSD-/);
+  });
+
+  it('incluye score por módulo y conteo de revisión humana requerida', () => {
+    const checklist = {
+      country: 'MX',
+      items: [
+        { id: 'plan_negocios', critico: false, estado: 'listo', reviewScore: 90, humanReviewRequired: false, reviewFindings: [] },
+        { id: 'marco_riesgos', critico: true, estado: 'pendiente', reviewScore: 40, humanReviewRequired: true, reviewFindings: [] }
+      ]
+    };
+    const result = buildAnonymizedReadinessSummary(checklist);
+    expect(result.memo.content).toContain('Documentos que requieren revisión humana: 1/2');
+    expect(result.memo.content).toContain('| Plan de negocios |');
+    expect(result.globalScore.score).toBeGreaterThanOrEqual(0);
+  });
+
+  it('regresa "ninguna bandera roja" cuando no hay findings de bandera roja', () => {
+    const checklist = { country: 'MX', items: [{ id: 'plan_negocios', critico: false, estado: 'listo', reviewScore: 90, reviewFindings: ['Todo en orden'] }] };
+    const result = buildAnonymizedReadinessSummary(checklist);
+    expect(result.memo.content).toContain('Ninguna bandera roja registrada.');
   });
 });

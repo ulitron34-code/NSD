@@ -9,6 +9,22 @@
 // fallan o ninguno está configurado, el llamador debe caer a su propia
 // heurística -- este módulo nunca inventa una evaluación ni reintenta contra
 // el mismo proveedor que ya falló.
+//
+// POLÍTICA DE DATOS SENSIBLES (sección 29.1 del plan: "No enviar datos
+// sensibles a proveedores IA sin política definida") -- estado real, sin
+// inventar cumplimiento: el texto completo extraído de cada documento
+// (identificaciones, RFC, estados financieros, beneficiarios controladores)
+// SÍ se envía tal cual a estos proveedores vía su API -- es funcionalmente
+// necesario para que el agente extraiga RFC/montos/nombres y haga el
+// screening KYC que el producto promete (redactarlo con regex antes de
+// enviarlo rompería esa función y podría además dejar pasar PII no
+// detectada, dando una falsa sensación de protección). Esto NO se resuelve
+// con código: es una decisión de producto/legal pendiente del dueño del
+// negocio -- verificar y documentar el acuerdo de tratamiento de datos
+// vigente con cada proveedor (Anthropic/OpenAI/DeepSeek/NVIDIA) antes de
+// procesar documentos reales de clientes en producción. Mientras esa
+// verificación no se haga, tratar cualquier documento de prueba como si
+// fuera a quedar expuesto al proveedor de IA correspondiente.
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 

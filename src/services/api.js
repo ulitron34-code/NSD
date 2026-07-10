@@ -204,7 +204,18 @@ export const adminAPI = {
   getRubrics: () =>
     api.get('/admin/rubrics'),
   listHumanReviewQueue: (params = {}) =>
-    api.get('/admin/human-review-queue', { params })
+    api.get('/admin/human-review-queue', { params }),
+  getReadinessMetrics: () =>
+    api.get('/admin/readiness-metrics')
+};
+
+// Plantillas descargables (sección 31 del plan) — contenido genérico, no
+// atado a ningún expediente, solo requiere sesión iniciada.
+export const readinessTemplatesAPI = {
+  list: () =>
+    api.get('/readiness-templates'),
+  download: (code) =>
+    api.get(`/readiness-templates/${code}`, { responseType: 'blob' })
 };
 
 // Las rutas /ai-agents/* nunca existieron en el backend (confirmado por
@@ -303,7 +314,11 @@ export const readinessChecklistAPI = {
   // Solo para roles internos (analista/auditor/administrador) — el backend
   // responde 403 para solicitante/otorgante.
   downloadAuditReport: (orderId) =>
-    api.get(`/orders/${orderId}/readiness-checklist/audit-report.md`, { responseType: 'blob' })
+    api.get(`/orders/${orderId}/readiness-checklist/audit-report.md`, { responseType: 'blob' }),
+  // Modo de anonimización para revisión externa (sección 29.1 del plan) —
+  // sin nombre de proyecto/expediente ni texto libre generado por IA.
+  downloadAnonymizedSummary: (orderId) =>
+    api.get(`/orders/${orderId}/readiness-checklist/anonymized-summary.md`, { responseType: 'blob' })
 };
 
 export const reviewNotesAPI = {

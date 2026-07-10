@@ -4,6 +4,7 @@ import { authMiddleware, requireAdmin, NSD_ROLES } from '../middleware/auth.js';
 import { logAuditEvent } from '../utils/audit.js';
 import { READINESS_RUBRICS, READINESS_MODULE_WEIGHTS } from '../config/readinessRubrics.js';
 import { getHumanReviewQueue } from '../services/humanReviewQueueService.js';
+import { getReadinessMetrics } from '../services/readinessMetricsService.js';
 
 const router = express.Router();
 const ASSIGNABLE_ROLES = new Set(Object.values(NSD_ROLES));
@@ -111,6 +112,20 @@ router.get('/admin/human-review-queue', authMiddleware, requireAdmin, async (req
     const offset = Math.max(Number(req.query.offset) || 0, 0);
     const result = await getHumanReviewQueue({ limit, offset });
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Dashboard de métricas del módulo (sección 30 del plan: "Dashboard admin ->
+// Costos por evaluación, Tasa de error OCR..."). Primera vista agregada a
+// través de TODOS los expedientes -- antes solo existían métricas por
+// expediente individual (totalCostUsd) o listas sin agregar (cola de
+// revisión humana).
+router.get('/admin/readiness-metrics', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const metrics = await getReadinessMetrics();
+    res.json(metrics);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

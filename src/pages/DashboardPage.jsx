@@ -53,6 +53,7 @@ const AdminUsersTab = lazy(() => import("../components/Dashboard/Admin/AdminUser
 const AdminReferenceSourcesTab = lazy(() => import("../components/Dashboard/Admin/AdminReferenceSourcesTab"));
 const AdminRubricsTab = lazy(() => import("../components/Dashboard/Admin/AdminRubricsTab"));
 const AdminHumanReviewTab = lazy(() => import("../components/Dashboard/Admin/AdminHumanReviewTab"));
+const AdminMetricsTab = lazy(() => import("../components/Dashboard/Admin/AdminMetricsTab"));
 const ServiceOrdersPage = lazy(() => import("../pages/ServiceOrdersPage"));
 const CommissionsPage = lazy(() => import("../pages/CommissionsPage"));
 const DocumentIntelligenceTab = lazy(() => import("../components/Dashboard/DocumentIntelligenceTab"));
@@ -211,6 +212,7 @@ export default function DashboardPage() {
       { id: "admin_fuentes", label: L("Fuentes de referencia", "Reference sources"), icon: "SRC" },
       { id: "admin_rubricas", label: L("Rúbricas", "Rubrics"), icon: "RUB" },
       { id: "admin_revision_humana", label: L("Revisión humana pendiente", "Pending human review"), icon: "REV" },
+      { id: "admin_metricas", label: L("Métricas Readiness", "Readiness metrics"), icon: "MET" },
       { id: "data_room_index", label: L("Indice Data Room", "Data Room Index"), icon: "IDX" },
       { id: "traceability", label: L("Auditoria", "Audit"), icon: "AUD" },
       { id: "document_intel", label: L("Inteligencia Doc.", "Document Intelligence"), icon: "IDI" },
@@ -484,6 +486,7 @@ export default function DashboardPage() {
     if (activeTab === "admin_fuentes") return <AdminReferenceSourcesTab />;
     if (activeTab === "admin_rubricas") return <AdminRubricsTab />;
     if (activeTab === "admin_revision_humana") return <AdminHumanReviewTab />;
+    if (activeTab === "admin_metricas") return <AdminMetricsTab />;
     if (activeTab === "admin_comisiones") return <CommissionsPage />;
     if (activeTab === "transaction_oversight") return <TransactionOversightTab />;
     return <ServiceOrdersPage />;

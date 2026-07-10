@@ -2,7 +2,7 @@ import express from 'express';
 import { authMiddleware, requireAnyPermission, requirePermission, isInternalReviewerRole } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getReadinessChecklist } from '../services/readinessChecklistService.js';
-import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf, buildReadinessAuditReport } from '../services/readinessMemoService.js';
+import { buildReadinessMemo, buildReadinessMemoPdf, buildReadinessTechnicalMemo, buildReadinessTechnicalMemoPdf, buildReadinessAuditReport, buildAnonymizedReadinessSummary } from '../services/readinessMemoService.js';
 import { runReadinessCrossReferences } from '../agents/readinessCrossRefAgent.js';
 import { getCrossReferences } from '../services/documentIntelligenceService.js';
 import { addReviewNote, getReviewNotes } from '../services/documentReviewNotesService.js';
@@ -149,6 +149,45 @@ router.get(
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(report.buffer);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// Modo de anonimización para revisión externa (sección 29.1 del plan). Mismo
+// criterio de acceso que memo.md/technical-memo.md -- dueño, otorgante
+// autorizado o rol interno -- porque igual requiere ver el expediente para
+// generar el resumen; lo que cambia es que el CONTENIDO nunca incluye
+// nombre/RFC/texto libre, así que es seguro reenviarlo a terceros que el
+// dueño/otorgante decida (comité, otro otorgante, etc.) sin exponer PII.
+router.get(
+  '/orders/:orderId/readiness-checklist/anonymized-summary.md',
+  authMiddleware,
+  requireAnyPermission(READINESS_ACCESS_PERMISSIONS),
+  async (req, res) => {
+    try {
+      const hasAccess = await assertReadinessAccess(req.params.orderId, req);
+      if (!hasAccess) {
+        return res.status(404).json({ error: 'Expediente no encontrado o sin permisos' });
+      }
+
+      const checklistResult = await getReadinessChecklist(req.params.orderId);
+      const report = buildAnonymizedReadinessSummary(checklistResult);
+
+      await logAuditEvent({
+        userId: req.userId,
+        action: 'readiness_anonymized_summary_downloaded',
+        entityType: 'service_order',
+        entityId: req.params.orderId,
+        orderId: req.params.orderId,
+        req,
+        metadata: { globalScore: report.globalScore.score }
+      });
+
+      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename="resumen-anonimizado-readiness.md"');
+      res.send(report.memo.content);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

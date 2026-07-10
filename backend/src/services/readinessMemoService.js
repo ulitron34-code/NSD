@@ -6,9 +6,11 @@
 // de progreso/críticos pendientes.
 import PDFDocument from 'pdfkit';
 import { getRubric, getModuleWeights, computeWeightedGlobalScore } from '../config/readinessRubrics.js';
+import { categorizeRedFlag, isRedFlagFinding } from '../utils/redFlagCategories.js';
 
 const SCOPE_NOTE = 'Este reporte refleja el estado del checklist de 12 Requisitos Mínimos y, cuando hay documento real cargado, el resultado de un agente de IA especializado por rúbrica. No constituye aprobación crediticia, opinión legal/fiscal/financiera ni dictamen vinculante de una entidad otorgante.';
 const TECHNICAL_SCOPE_NOTE = 'Este reporte técnico refleja el estado documental y las evaluaciones de IA disponibles al momento de su generación. Es una herramienta de apoyo a due diligence, no un dictamen legal, fiscal, financiero ni una aprobación de crédito. La decisión final corresponde al analista/comité del otorgante.';
+const ANONYMIZED_SCOPE_NOTE = 'Versión anonimizada para revisión externa (sección 29.1 del plan): omite deliberadamente nombre del proyecto/empresa, número de expediente y cualquier texto libre generado por IA (resúmenes, hallazgos, recomendaciones) que pudiera citar datos identificables extraídos de los documentos originales. Solo conserva puntajes, pesos y conteos agregados de banderas rojas por categoría.';
 
 function itemLabel(itemId, country) {
   return getRubric(itemId, country)?.label || itemId;
@@ -380,6 +382,75 @@ export function buildReadinessAuditReport(checklistResult, order = {}, inconsist
     totalCostUsd: data.totalCostUsd,
     memo: {
       title: `Reporte Interno de Auditoría ${data.caseNumber}`,
+      format: 'markdown',
+      content: lines.join('\n')
+    }
+  };
+}
+
+// Modo de anonimización para revisión externa (sección 29.1 del plan). A
+// diferencia de memo.md/technical-memo.md, deliberadamente NO reusa
+// assembleReadinessReport() -- ese helper arrastra caseNumber, projectName y
+// texto libre (summary/findings/recommendation) generado por IA, que puede
+// citar literalmente nombres, RFC o montos leídos del documento fuente.
+// Intentar "redactar" ese texto libre con regex sería frágil y podría dejar
+// pasar PII; en vez de eso este reporte se construye SOLO con campos
+// estructurados/numéricos (score, peso, conteos), nunca con prosa generada.
+export function buildAnonymizedReadinessSummary(checklistResult) {
+  const items = checklistResult.items || [];
+  const country = checklistResult.country || 'MX';
+  const sector = checklistResult.sector || null;
+  const financingType = checklistResult.financingType || null;
+  const moduleWeights = getModuleWeights(sector, financingType);
+  const globalScore = checklistResult.globalScore || computeWeightedGlobalScore(items, sector, financingType);
+
+  const redFlagCounts = {};
+  let humanReviewCount = 0;
+  for (const item of items) {
+    if (item.humanReviewRequired) humanReviewCount += 1;
+    for (const finding of item.reviewFindings || []) {
+      if (!isRedFlagFinding(finding)) continue;
+      const label = categorizeRedFlag(finding);
+      redFlagCounts[label] = (redFlagCounts[label] || 0) + 1;
+    }
+  }
+  const redFlagLines = Object.entries(redFlagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, count]) => `- ${label}: ${count}`);
+
+  const moduleLines = items.map((item) => {
+    const label = itemLabel(item.id, country);
+    const weight = moduleWeights[item.id] ?? null;
+    const score = item.reviewScore != null ? `${item.reviewScore}/100` : 'Sin evaluar';
+    return `| ${label} | ${weight != null ? `${weight}%` : 'n/d'} | ${score} | ${item.critico ? 'Sí' : 'No'} |`;
+  });
+
+  const lines = [
+    '# Resumen Anonimizado — Checklist de 12 Requisitos Mínimos',
+    '',
+    '## 1. Resumen ejecutivo (sin datos identificables)',
+    `- Score global ponderado: ${globalScore.score}/100 — ${globalScore.label}`,
+    `- País: ${country}${sector ? ` — Sector: ${sector}` : ''}`,
+    `- Documentos que requieren revisión humana: ${humanReviewCount}/${items.length}`,
+    '',
+    '## 2. Score por módulo',
+    '| Módulo | Peso | Score | Crítico |',
+    '|---|---:|---:|---|',
+    ...moduleLines,
+    '',
+    '## 3. Banderas rojas por categoría (conteo, sin texto original)',
+    ...(redFlagLines.length ? redFlagLines : ['- Ninguna bandera roja registrada.']),
+    '',
+    '## 4. Nota de alcance',
+    ANONYMIZED_SCOPE_NOTE,
+    '',
+    `Generado: ${new Date().toLocaleString('es-MX')}`
+  ];
+
+  return {
+    globalScore,
+    memo: {
+      title: 'Resumen Anonimizado — Readiness',
       format: 'markdown',
       content: lines.join('\n')
     }

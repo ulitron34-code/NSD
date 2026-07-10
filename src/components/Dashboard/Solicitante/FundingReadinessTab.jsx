@@ -5,6 +5,7 @@ import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
 import { useMyOrders } from "../../../hooks/useMyOrders";
 import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
+import ReadinessTemplatesPanel from "./ReadinessTemplatesPanel";
 import { requisitosMinimosAPI, readinessChecklistAPI } from "../../../services/api";
 import { REQUISITOS_CATEGORIAS, UN_SDG_GOALS, SUPPORTED_COUNTRIES, pickLang, generarRevisionIARequisitos } from "../../../data/requisitosMinimos";
 
@@ -29,12 +30,14 @@ export default function FundingReadinessTab() {
     try {
       const response = formato === "pdf"
         ? await readinessChecklistAPI.downloadMemoPdf(orderId)
+        : formato === "anon"
+        ? await readinessChecklistAPI.downloadAnonymizedSummary(orderId)
         : await readinessChecklistAPI.downloadMemo(orderId);
       const mime = formato === "pdf" ? "application/pdf" : "text/markdown";
       const url = URL.createObjectURL(new Blob([response.data], { type: mime }));
       const link = document.createElement("a");
       link.href = url;
-      link.download = `reporte-readiness.${formato}`;
+      link.download = formato === "anon" ? "resumen-anonimizado-readiness.md" : `reporte-readiness.${formato}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -294,6 +297,8 @@ export default function FundingReadinessTab() {
         </div>
       </section>
 
+      {usaCargaReal && <ReadinessTemplatesPanel />}
+
       <section style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", border: `1px solid ${COLORS.border}`, borderRadius: "10px", padding: "1rem", boxShadow: COLORS.shadowSm }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "0.9rem" }}>
           <div>
@@ -379,6 +384,19 @@ export default function FundingReadinessTab() {
                   style={{ border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: descargandoReporte ? "wait" : "pointer", background: "white", color: COLORS.navy, opacity: descargandoReporte ? 0.7 : 1 }}
                 >
                   {descargandoReporte === "pdf" ? L("Descargando…", "Downloading…") : L("Descargar PDF", "Download PDF")}
+                </button>
+              )}
+              {usaCargaReal && (
+                <button
+                  onClick={() => handleDescargarReporte("anon")}
+                  disabled={Boolean(descargandoReporte)}
+                  title={L(
+                    "Sin nombre de proyecto, número de expediente ni texto libre generado por IA — solo puntajes y conteos.",
+                    "No project name, case number or AI-generated free text — only scores and counts."
+                  )}
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.45rem 0.75rem", fontWeight: 900, fontSize: "0.75rem", cursor: descargandoReporte ? "wait" : "pointer", background: "white", color: COLORS.navy, opacity: descargandoReporte ? 0.7 : 1 }}
+                >
+                  {descargandoReporte === "anon" ? L("Descargando…", "Downloading…") : L("Resumen anonimizado", "Anonymized summary")}
                 </button>
               )}
               <button
