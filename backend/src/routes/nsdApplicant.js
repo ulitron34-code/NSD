@@ -5,7 +5,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { runApplicantScreen } from '../agents/nsdApplicantAgent.js';
 import { isConfigured as satConfigured } from '../services/satValidationService.js';
-import { isConfigured as buroConfigured } from '../services/bureauCreditService.js';
+import { isProviderConfigured as buroConfigured } from '../services/creditProviders/creditProviderGateway.js';
 
 const router = Router();
 

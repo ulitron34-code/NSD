@@ -60,6 +60,7 @@ function emptyMetrics() {
     avgMissingDocuments: null,
     avgEvaluationSeconds: null,
     avgEvaluationNote: 'Sin expedientes con documentos del checklist todavía.',
+    avgEvaluationSample: 0,
     avgCostUsdPerOrder: null,
     illegibleDocumentRate: null,
     illegibleDocumentSample: 0,
@@ -72,7 +73,7 @@ function emptyMetrics() {
   };
 }
 
-const EVALUATION_TIME_NOTE = 'No disponible: document_reviews solo guarda la marca de tiempo de INICIO de la evaluación (created_at, escrita al insertar el registro con status "processing"); no se persiste una marca de finalización separada. Calcularlo sin inventar el dato requeriría agregar una columna nueva.';
+const NO_COMPLETED_REVIEWS_NOTE = 'Sin evaluaciones completadas todavía con marca de finalización (completed_at) -- se agregó la columna el 13 jul, así que solo cuentan revisiones nuevas a partir de esa fecha.';
 
 export async function getReadinessMetrics() {
   const { data: documents, error: docsError } = await supabaseAdmin
@@ -88,7 +89,7 @@ export async function getReadinessMetrics() {
   const [{ data: reviews, error: reviewsError }, { data: orders }, { data: crossRefs }, { data: downloadLogs }] = await Promise.all([
     supabaseAdmin
       .from('document_reviews')
-      .select('document_id, score, findings, extracted_data, created_at')
+      .select('document_id, score, findings, extracted_data, created_at, completed_at')
       .in('document_id', documentIds)
       .order('created_at', { ascending: false }),
     supabaseAdmin
@@ -166,10 +167,20 @@ export async function getReadinessMetrics() {
 
   let withOcrStatus = 0;
   let illegible = 0;
+  let sumEvaluationSeconds = 0;
+  let evaluationSample = 0;
   const redFlagCounts = {};
   for (const doc of documents) {
     const review = latestReviewByDoc[doc.id];
     if (!review) continue;
+
+    if (review.completed_at && review.created_at) {
+      const seconds = (new Date(review.completed_at) - new Date(review.created_at)) / 1000;
+      if (Number.isFinite(seconds) && seconds >= 0) {
+        sumEvaluationSeconds += seconds;
+        evaluationSample += 1;
+      }
+    }
 
     const ocrStatus = extractedValue(review.extracted_data, 'ocr_status');
     if (ocrStatus) {
@@ -210,8 +221,9 @@ export async function getReadinessMetrics() {
     totalOrders,
     avgGlobalScore: totalOrders ? Math.round(sumGlobalScore / totalOrders) : null,
     avgMissingDocuments: totalOrders ? Number((sumMissing / totalOrders).toFixed(2)) : null,
-    avgEvaluationSeconds: null,
-    avgEvaluationNote: EVALUATION_TIME_NOTE,
+    avgEvaluationSeconds: evaluationSample ? Math.round(sumEvaluationSeconds / evaluationSample) : null,
+    avgEvaluationNote: evaluationSample ? null : NO_COMPLETED_REVIEWS_NOTE,
+    avgEvaluationSample: evaluationSample,
     avgCostUsdPerOrder: totalOrders ? Number((sumCostUsd / totalOrders).toFixed(4)) : null,
     illegibleDocumentRate: withOcrStatus ? Number(((illegible / withOcrStatus) * 100).toFixed(1)) : null,
     illegibleDocumentSample: withOcrStatus,

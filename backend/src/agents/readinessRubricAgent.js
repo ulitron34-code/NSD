@@ -870,6 +870,7 @@ export async function evaluateReadinessDocument({ documentTypeCode, extractedTex
   }
 
   let extraContext = '';
+  const sourcesUsed = [];
   if (itemId === 'estudio_mercado') {
     try {
       const [densidad, macro] = await Promise.all([
@@ -878,6 +879,10 @@ export async function evaluateReadinessDocument({ documentTypeCode, extractedTex
       ]);
       extraContext = `Densidad de negocios (INEGI DENUE): ${densidad.establishmentCount ?? 'no disponible'} establecimientos encontrados para "${densidad.term}" (fuente: ${densidad.source}).
 Indicadores macro (Banxico SIE): tipo de cambio FIX ${macro.exchangeRateFix?.valor ?? 'no disponible'}, tasa de referencia ${macro.referenceRate?.valor ?? 'no disponible'}, INPC ${macro.inpc?.valor ?? 'no disponible'} (fuente: ${macro.source}).`;
+      sourcesUsed.push(
+        { source: densidad.source, label: 'Densidad de negocios (INEGI DENUE)' },
+        { source: macro.source, label: 'Indicadores macro (Banxico SIE)' }
+      );
     } catch (err) {
       console.warn('[readinessRubricAgent] Error obteniendo contexto INEGI/Banxico:', err.message);
     }
@@ -885,10 +890,12 @@ Indicadores macro (Banxico SIE): tipo de cambio FIX ${macro.exchangeRateFix?.val
 
   try {
     const result = await evaluateWithClaude(rubric, extractedText, extraContext, order);
+    if (sourcesUsed.length) result.sources_used = sourcesUsed;
     return enrichResult(itemId, documentTypeCode, result, { extractedText, order });
   } catch (err) {
     console.error('[readinessRubricAgent] Error evaluando con Claude:', err);
     const fallback = heuristicFallback(rubric, extractedText);
+    if (sourcesUsed.length) fallback.sources_used = sourcesUsed;
     return enrichResult(itemId, documentTypeCode, fallback, { extractedText, order });
   }
 }

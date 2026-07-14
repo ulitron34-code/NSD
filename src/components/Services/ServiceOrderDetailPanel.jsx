@@ -7,6 +7,7 @@ import ComplianceMonitorPanel from "./ComplianceMonitorPanel";
 import DynamicChecklistPanel from "./DynamicChecklistPanel";
 import DocumentMatrixPanel from "./DocumentMatrixPanel";
 import RemediationPlanPanel from "./RemediationPlanPanel";
+import RedFlagsPanel from "./RedFlagsPanel";
 import { DOCUMENT_STATUSES, DOCUMENT_TYPES, formatDocumentStatus, formatDocumentType } from "../../utils/institutional";
 
 const demoPanelDocuments = [
@@ -1665,17 +1666,8 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
                 </div>
 
                 {riskScore.red_flags?.length > 0 && (
-                  <div style={{ display: "grid", gap: "0.4rem", marginBottom: riskScore.informacion_pendiente?.length ? "0.6rem" : 0 }}>
-                    {riskScore.red_flags.slice(0, 4).map((flag, index) => (
-                      <div key={`${flag.rule_code}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: "0.65rem", alignItems: "flex-start" }}>
-                        <p style={{ color: COLORS.navy, fontSize: "0.74rem", lineHeight: 1.35, margin: 0 }}>
-                          [{flag.pilar}] {flag.hallazgo}
-                        </p>
-                        <span style={{ color: "#C62828", fontWeight: 900, textTransform: "uppercase", fontSize: "0.66rem", whiteSpace: "nowrap" }}>
-                          {flag.severidad}
-                        </span>
-                      </div>
-                    ))}
+                  <div style={{ marginBottom: riskScore.informacion_pendiente?.length ? "0.6rem" : 0 }}>
+                    <RedFlagsPanel redFlags={riskScore.red_flags} />
                   </div>
                 )}
 

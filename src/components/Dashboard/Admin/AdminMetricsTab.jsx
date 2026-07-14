@@ -5,6 +5,13 @@ import { adminAPI } from "../../../services/api";
 import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
 
+function formatEvaluationSeconds(seconds) {
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds}s`;
+}
+
 function StatCard({ label, value, hint }) {
   return (
     <article style={{ border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "0.85rem", background: COLORS.bg }}>
@@ -83,12 +90,21 @@ export default function AdminMetricsTab() {
             <StatCard label={L("Tasa docs. ilegibles", "Illegible docs. rate")} value={metrics.illegibleDocumentRate != null ? `${metrics.illegibleDocumentRate}%` : "—"} hint={L(`Sobre ${metrics.illegibleDocumentSample} documentos con estatus OCR`, `Over ${metrics.illegibleDocumentSample} documents with OCR status`)} />
             <StatCard label={L("Correcciones por documento (prom.)", "Corrections per document (avg.)")} value={metrics.avgCorrectionsPerDocument ?? "—"} />
             <StatCard label={L("Reportes descargados por otorgantes", "Reports downloaded by funders")} value={`${metrics.granteeReportDownloads} / ${metrics.totalReportDownloads}`} />
+            {metrics.avgEvaluationSeconds != null && (
+              <StatCard
+                label={L("Tiempo promedio de evaluación", "Average evaluation time")}
+                value={formatEvaluationSeconds(metrics.avgEvaluationSeconds)}
+                hint={L(`Sobre ${metrics.avgEvaluationSample} evaluaciones completadas`, `Over ${metrics.avgEvaluationSample} completed evaluations`)}
+              />
+            )}
           </div>
 
-          <div style={{ border: `1px dashed ${COLORS.border}`, borderRadius: "8px", padding: "0.7rem 0.85rem", background: "rgba(201,168,76,0.06)" }}>
-            <strong style={{ color: COLORS.navy, fontSize: "0.78rem" }}>{L("Tiempo promedio de evaluación: no disponible", "Average evaluation time: not available")}</strong>
-            <p style={{ margin: "0.25rem 0 0", color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45 }}>{metrics.avgEvaluationNote}</p>
-          </div>
+          {metrics.avgEvaluationSeconds == null && (
+            <div style={{ border: `1px dashed ${COLORS.border}`, borderRadius: "8px", padding: "0.7rem 0.85rem", background: "rgba(201,168,76,0.06)" }}>
+              <strong style={{ color: COLORS.navy, fontSize: "0.78rem" }}>{L("Tiempo promedio de evaluación: no disponible", "Average evaluation time: not available")}</strong>
+              <p style={{ margin: "0.25rem 0 0", color: COLORS.textMuted, fontSize: "0.76rem", lineHeight: 1.45 }}>{metrics.avgEvaluationNote}</p>
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "0.75rem" }}>
             <RankedList

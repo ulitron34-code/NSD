@@ -5,7 +5,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { validateRfc } from '../services/satValidationService.js';
-import { getCreditScore } from '../services/bureauCreditService.js';
+import { getCreditReport } from '../services/creditProviders/creditProviderGateway.js';
 import { screenEntity } from '../services/sanctionsGateway.js';
 import { screenCargoAgainstPepCatalog } from '../services/pepScreening.js';
 import { calculateNsdScore, calculateGlobalRisk, detectFlags } from '../services/nsdApplicantScoringService.js';
@@ -101,7 +101,7 @@ async function dispatchTool(name, input) {
     case 'validate_rfc_sat':
       return await validateRfc(input.rfc);
     case 'get_credit_score':
-      return await getCreditScore(input.rfc);
+      return await getCreditReport({ countryCode: 'MX', identifier: input.rfc });
     case 'check_sanctions':
       return await screenEntity(input.name);
     case 'check_pep':

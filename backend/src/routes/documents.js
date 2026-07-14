@@ -7,6 +7,7 @@ import { runAIReviewCascaded } from '../services/aiEngine.js';
 import { evaluateReadinessDocument } from '../agents/readinessRubricAgent.js';
 import { runReadinessCrossReferences } from '../agents/readinessCrossRefAgent.js';
 import { classifyOcrQuality } from '../services/ocrQualityService.js';
+import { isConfigured as isOcrFallbackConfigured, extractTextFromScannedPdf } from '../services/pdfOcrFallbackService.js';
 
 const router = express.Router();
 const MAX_DOCUMENT_BYTES = Number(process.env.MAX_DOCUMENT_BYTES || 25 * 1024 * 1024);
@@ -193,6 +194,24 @@ async function getNextDocumentVersion(orderId, documentType, filename) {
 
 // Función obsoleta reemplazada por runAIReviewCascaded
 
+const OPTIONAL_REVIEW_COLUMNS = ['extracted_data', 'warnings', 'completed_at', 'sources_used'];
+
+function isMissingOptionalReviewColumn(error) {
+  return OPTIONAL_REVIEW_COLUMNS.some((col) => error.message?.includes(col));
+}
+
+function stripOptionalReviewColumns(payload) {
+  const compatiblePayload = { ...payload };
+  const stripped = {};
+  for (const col of OPTIONAL_REVIEW_COLUMNS) {
+    if (col in compatiblePayload) {
+      stripped[col] = compatiblePayload[col];
+      delete compatiblePayload[col];
+    }
+  }
+  return { compatiblePayload, stripped };
+}
+
 async function insertDocumentReview(payload) {
   const { data, error } = await supabaseAdmin
     .from('document_reviews')
@@ -202,15 +221,11 @@ async function insertDocumentReview(payload) {
 
   if (!error) return data;
 
-  const missingOptionalReviewColumns =
-    error.message?.includes('extracted_data') ||
-    error.message?.includes('warnings');
-
-  if (!missingOptionalReviewColumns) {
+  if (!isMissingOptionalReviewColumn(error)) {
     throw error;
   }
 
-  const { extracted_data, warnings, ...compatiblePayload } = payload;
+  const { compatiblePayload, stripped } = stripOptionalReviewColumns(payload);
   const { data: fallbackData, error: fallbackError } = await supabaseAdmin
     .from('document_reviews')
     .insert([compatiblePayload])
@@ -221,8 +236,8 @@ async function insertDocumentReview(payload) {
 
   return {
     ...fallbackData,
-    extracted_data: extracted_data || [],
-    warnings: warnings || []
+    extracted_data: stripped.extracted_data || [],
+    warnings: stripped.warnings || []
   };
 }
 
@@ -234,15 +249,11 @@ async function updateDocumentReview(reviewId, payload) {
 
   if (!error) return;
 
-  const missingOptionalReviewColumns =
-    error.message?.includes('extracted_data') ||
-    error.message?.includes('warnings');
-
-  if (!missingOptionalReviewColumns) {
+  if (!isMissingOptionalReviewColumn(error)) {
     throw error;
   }
 
-  const { extracted_data, warnings, ...compatiblePayload } = payload;
+  const { compatiblePayload } = stripOptionalReviewColumns(payload);
   const { error: fallbackError } = await supabaseAdmin
     .from('document_reviews')
     .update(compatiblePayload)
@@ -516,6 +527,7 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
         let fileSizeBytes = 0;
         let pdfExtractionError = null;
         let isPdfDocument = false;
+        let pdfBuffer = null;
         const { data: fileData, error: downloadError } = await supabaseAdmin.storage
           .from('documents')
           .download(document.storage_path);
@@ -526,13 +538,13 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           try {
             isPdfDocument = String(document.filename || '').toLowerCase().endsWith('.pdf');
             const arrayBuffer = await fileData.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            fileSizeBytes = buffer.length;
+            pdfBuffer = Buffer.from(arrayBuffer);
+            fileSizeBytes = pdfBuffer.length;
 
             if (isPdfDocument) {
               try {
                 const pdfParse = (await import('pdf-parse')).default;
-                const parsed = await pdfParse(buffer);
+                const parsed = await pdfParse(pdfBuffer);
                 extractedText = parsed.text || '';
               } catch (pdfErr) {
                 console.error("Error al procesar PDF con pdf-parse:", pdfErr);
@@ -541,10 +553,30 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
               }
             } else {
               // Decodificar como texto UTF-8 plano si es TXT, CSV, etc.
-              extractedText = buffer.toString('utf-8').slice(0, 15000);
+              extractedText = pdfBuffer.toString('utf-8').slice(0, 15000);
             }
           } catch (bufErr) {
             console.error("Error al convertir buffer del archivo:", bufErr);
+          }
+        }
+
+        // Fallback de OCR real (seccion 20.4 del plan): si el PDF parece un
+        // escaneo sin capa de texto util, se intenta transcribir con Claude
+        // (ver pdfOcrFallbackService.js para por que Claude y no Tesseract)
+        // ANTES de evaluar el documento, para que el agente trabaje con texto
+        // real en vez de una cadena vacia/basura. Si falla o no esta
+        // configurado, se sigue exactamente igual que antes (solo se marca
+        // low_quality/failed mas abajo, sin romper el flujo).
+        let ocrFallbackUsed = false;
+        if (isPdfDocument && isOcrFallbackConfigured()) {
+          const preFallbackQuality = classifyOcrQuality({ extractedText, fileSizeBytes, extractionError: pdfExtractionError });
+          if (preFallbackQuality.status !== 'completed') {
+            const fallback = await extractTextFromScannedPdf(pdfBuffer);
+            if (fallback.text && fallback.text.trim().length > 50) {
+              extractedText = fallback.text;
+              pdfExtractionError = null;
+              ocrFallbackUsed = true;
+            }
           }
         }
 
@@ -588,7 +620,11 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           } else {
             reviewPayload = {
               ...reviewPayload,
-              extracted_data: [...(reviewPayload.extracted_data || []), { key: 'ocr_status', value: ocrQuality.status }]
+              extracted_data: [
+                ...(reviewPayload.extracted_data || []),
+                { key: 'ocr_status', value: ocrQuality.status },
+                ...(ocrFallbackUsed ? [{ key: 'ocr_fallback_used', value: 'CLAUDE_PDF_OCR' }] : [])
+              ]
             };
           }
         }
@@ -602,7 +638,9 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
             findings: reviewPayload.findings,
             missing_items: reviewPayload.missing_items,
             extracted_data: reviewPayload.extracted_data,
-            warnings: reviewPayload.warnings
+            warnings: reviewPayload.warnings,
+            completed_at: new Date().toISOString(),
+            sources_used: reviewPayload.sources_used || []
           });
 
           await logAuditEvent({
@@ -641,7 +679,8 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           .from('document_reviews')
           .update({
             status: 'red',
-            summary: `Error critico en la ejecucion del analisis de IA: ${bgError.message}`
+            summary: `Error critico en la ejecucion del analisis de IA: ${bgError.message}`,
+            completed_at: new Date().toISOString()
           })
           .eq('id', review.id);
       }
