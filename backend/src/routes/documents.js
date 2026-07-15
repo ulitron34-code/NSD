@@ -8,6 +8,7 @@ import { evaluateReadinessDocument } from '../agents/readinessRubricAgent.js';
 import { runReadinessCrossReferences } from '../agents/readinessCrossRefAgent.js';
 import { classifyOcrQuality } from '../services/ocrQualityService.js';
 import { isConfigured as isOcrFallbackConfigured, extractTextFromScannedPdf } from '../services/pdfOcrFallbackService.js';
+import { ingestDocumentText, findSimilarDocumentChunks } from '../services/ragService.js';
 
 const router = express.Router();
 const MAX_DOCUMENT_BYTES = Number(process.env.MAX_DOCUMENT_BYTES || 25 * 1024 * 1024);
@@ -580,6 +581,16 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           }
         }
 
+        // Indexa el texto extraído para RAG (búsqueda semántica sobre el
+        // expediente, sección "RAG/vector DB" del plan). No condiciona ni
+        // bloquea la evaluación de IA si falla o si no hay OPENAI_API_KEY
+        // configurado -- ver ragService.js.
+        try {
+          await ingestDocumentText(document.id, req.params.orderId, extractedText);
+        } catch (ragIngestError) {
+          console.error("Error indexando texto para RAG:", ragIngestError);
+        }
+
         let reviewPayload;
         if (String(document.document_type || '').startsWith('READY_')) {
           const { data: order } = await supabaseAdmin
@@ -594,6 +605,29 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
           });
         } else {
           reviewPayload = await runAIReviewCascaded(document, extractedText);
+        }
+
+        // Señal semántica adicional (RAG) que complementa al auditor cruzado
+        // existente (readinessCrossRefAgent.js compara solo campos atómicos
+        // EXACTOS tras normalizar): contenido parecido en OTRO documento del
+        // mismo expediente, redactado distinto -- posible duplicado o
+        // inconsistencia que el comparador exacto no puede ver. Solo aplica
+        // a documentos READY_* (mismo alcance que el auditor cruzado).
+        if (String(document.document_type || '').startsWith('READY_')) {
+          try {
+            const similarChunks = await findSimilarDocumentChunks(req.params.orderId, document.id, extractedText);
+            if (similarChunks.length) {
+              reviewPayload = {
+                ...reviewPayload,
+                findings: [
+                  ...(reviewPayload.findings || []),
+                  `Contenido semánticamente similar a otro documento del expediente (similitud ${(similarChunks[0].similarity * 100).toFixed(0)}%) — verificar posible duplicado o inconsistencia (RAG).`
+                ]
+              };
+            }
+          } catch (ragSearchError) {
+            console.error("Error en búsqueda semántica RAG:", ragSearchError);
+          }
         }
 
         // Estados y reglas de calidad OCR (secciones 20.2/20.3 del plan): solo

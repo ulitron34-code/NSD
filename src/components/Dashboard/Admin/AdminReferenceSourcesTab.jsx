@@ -8,7 +8,7 @@ import { uiText } from "../../../utils/runtimeCopy";
 
 const INTEGRATION_STATUSES = ["real_api", "real_scraping", "rule_based", "manual", "named_only"];
 
-const EMPTY_FORM = { id: null, name: "", sourceType: "", countryCode: "", url: "", integrationStatus: "manual", notes: "" };
+const EMPTY_FORM = { id: null, name: "", sourceType: "", countryCode: "", url: "", integrationStatus: "manual", notes: "", content: "" };
 
 export default function AdminReferenceSourcesTab() {
   const { i18n } = useTranslation();
@@ -45,7 +45,8 @@ export default function AdminReferenceSourcesTab() {
       countryCode: source.country_code || "",
       url: source.url || "",
       integrationStatus: source.integration_status || "manual",
-      notes: source.notes || ""
+      notes: source.notes || "",
+      content: source.content || ""
     });
   };
 
@@ -55,7 +56,8 @@ export default function AdminReferenceSourcesTab() {
     try {
       const payload = {
         name: form.name, sourceType: form.sourceType, countryCode: form.countryCode || null,
-        url: form.url || null, integrationStatus: form.integrationStatus, notes: form.notes || null
+        url: form.url || null, integrationStatus: form.integrationStatus, notes: form.notes || null,
+        content: form.content || null
       };
       if (form.id) {
         await adminAPI.updateReferenceSource(form.id, payload);
@@ -103,6 +105,19 @@ export default function AdminReferenceSourcesTab() {
             {INTEGRATION_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
           </select>
           <input placeholder={L("Notas", "Notes")} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ padding: "0.5rem", borderRadius: "6px", border: `1px solid ${COLORS.border}` }} />
+          <textarea
+            placeholder={L("Contenido regulatorio (texto real de la norma/estándar, para búsqueda RAG)", "Regulatory content (real text of the rule/standard, for RAG search)")}
+            value={form.content}
+            onChange={(e) => setForm({ ...form, content: e.target.value })}
+            rows={4}
+            style={{ padding: "0.5rem", borderRadius: "6px", border: `1px solid ${COLORS.border}`, gridColumn: "1 / -1", fontFamily: "inherit", resize: "vertical" }}
+          />
+          <p style={{ gridColumn: "1 / -1", margin: 0, fontSize: "0.75rem", color: COLORS.textMuted }}>
+            {L(
+              "Si se llena, este texto se indexa automáticamente (RAG) y los agentes de evaluación lo citan como contexto real al revisar documentos.",
+              "If filled, this text is automatically indexed (RAG) and evaluation agents cite it as real context when reviewing documents."
+            )}
+          </p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button type="submit" disabled={saving} style={{ padding: "0.5rem 1rem", borderRadius: "6px", border: "none", background: COLORS.navy, color: "white", fontWeight: 800, cursor: saving ? "wait" : "pointer" }}>
               {form.id ? L("Guardar cambios", "Save changes") : L("Agregar fuente", "Add source")}
@@ -127,6 +142,7 @@ export default function AdminReferenceSourcesTab() {
                   <th style={{ padding: "0.5rem" }}>{L("Tipo", "Type")}</th>
                   <th style={{ padding: "0.5rem" }}>{L("País", "Country")}</th>
                   <th style={{ padding: "0.5rem" }}>{L("Integración", "Integration")}</th>
+                  <th style={{ padding: "0.5rem" }}>{L("RAG", "RAG")}</th>
                   <th style={{ padding: "0.5rem" }}>{L("Activa", "Active")}</th>
                   <th style={{ padding: "0.5rem" }}></th>
                 </tr>
@@ -138,6 +154,7 @@ export default function AdminReferenceSourcesTab() {
                     <td style={{ padding: "0.5rem" }}>{s.source_type}</td>
                     <td style={{ padding: "0.5rem" }}>{s.country_code || L("Global", "Global")}</td>
                     <td style={{ padding: "0.5rem" }}>{s.integration_status}</td>
+                    <td style={{ padding: "0.5rem" }}>{s.content ? L("Indexado", "Indexed") : L("Sin contenido", "No content")}</td>
                     <td style={{ padding: "0.5rem" }}>{s.is_active ? L("Sí", "Yes") : L("No", "No")}</td>
                     <td style={{ padding: "0.5rem", display: "flex", gap: "0.4rem" }}>
                       <button onClick={() => startEdit(s)} style={{ padding: "0.3rem 0.6rem", borderRadius: "5px", border: `1px solid ${COLORS.border}`, background: "white", fontSize: "0.75rem", fontWeight: 800, cursor: "pointer" }}>

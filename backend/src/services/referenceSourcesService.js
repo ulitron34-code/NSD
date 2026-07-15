@@ -38,7 +38,8 @@ function sanitizeReferenceSourcePayload(payload = {}) {
     integration_status: integrationStatus,
     update_frequency: payload.updateFrequency || null,
     reliability_level: payload.reliabilityLevel || 'official',
-    notes: payload.notes || null
+    notes: payload.notes || null,
+    content: payload.content || null
   };
 }
 

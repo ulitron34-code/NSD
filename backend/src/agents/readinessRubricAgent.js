@@ -16,6 +16,7 @@ import { screenRfcAgainstSat69b } from '../services/satBlacklistScreening.js';
 import { findDatesInText } from './agentValidator.js';
 import { screenBeneficiaryOwners, normalizeBeneficiaryOwnerList } from '../services/beneficiaryOwners.js';
 import { generateJsonWithFallback, hasAnyJsonProvider } from '../services/aiJsonProvider.js';
+import { searchReferenceSources } from '../services/ragService.js';
 
 // Bitacora auditable (seccion 28 del plan): version del prompt/rubrica usados
 // por cada evaluacion, guardada dentro de extracted_data (sin migracion de
@@ -886,6 +887,26 @@ Indicadores macro (Banxico SIE): tipo de cambio FIX ${macro.exchangeRateFix?.val
     } catch (err) {
       console.warn('[readinessRubricAgent] Error obteniendo contexto INEGI/Banxico:', err.message);
     }
+  }
+
+  // RAG sobre el catálogo de fuentes regulatorias (reference_sources.content,
+  // cargado por el Administrador): fundamenta la evaluación en texto real de
+  // regulación/estándares en vez de solo el conocimiento previo del modelo.
+  // Se suma al extraContext de estudio_mercado (no lo reemplaza) y corre para
+  // cualquier rubro, no solo ese. Vacío sin OPENAI_API_KEY o sin fuentes
+  // indexadas todavía -- mismo criterio de "seguir sin ella" que INEGI/Banxico.
+  try {
+    const ragMatches = await searchReferenceSources(
+      `${rubric.label} (${itemId}). ${String(extractedText || '').slice(0, 500)}`,
+      { countryCode: country, matchCount: 3 }
+    );
+    if (ragMatches.length) {
+      extraContext = `${extraContext ? `${extraContext}\n\n` : ''}Fragmentos relevantes de fuentes regulatorias internas (RAG, similitud coseno):
+${ragMatches.map((m) => `- [${m.sourceName}] ${m.content.slice(0, 600)}`).join('\n')}`;
+      sourcesUsed.push(...ragMatches.map((m) => ({ source: m.sourceName, label: `Fuente regulatoria (RAG): ${m.sourceName}` })));
+    }
+  } catch (err) {
+    console.warn('[readinessRubricAgent] Error en búsqueda RAG de fuentes regulatorias:', err.message);
   }
 
   try {
