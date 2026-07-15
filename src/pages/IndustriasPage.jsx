@@ -21,6 +21,12 @@ const INDUSTRIES = [
   { id: "publico",        name: "Sector público y supervisores" },
   { id: "salud",          name: "Salud y farmacéutico" },
   { id: "tecnologia",     name: "Tecnología y SaaS" },
+  { id: "financiamiento", name: "Empresas y desarrolladores buscando financiamiento" },
+  { id: "notarias",       name: "Notarías" },
+  { id: "contable-fiscal",name: "Despachos contables y fiscales" },
+  { id: "educacion",      name: "Universidades e instituciones educativas" },
+  { id: "camaras-comercio", name: "Cámaras de comercio" },
+  { id: "eau",            name: "Alcance internacional — Emiratos Árabes Unidos" },
 ];
 
 const INDUSTRY_CONTENT = {
@@ -204,6 +210,78 @@ const INDUSTRY_CONTENT = {
     regulaciones: ["Ley Federal de Protección de Datos Personales (LFPDPPP)", "GDPR (para operaciones EU)", "Ley 1581 de Protección de Datos (Colombia)", "SOC 2 / ISO 27001 (controles internos)", "FATF Guidance on Technology Companies"],
     docs: ["Acta constitutiva y poderes", "RFC + constancia fiscal", "Identificación del representante legal", "Declaración de beneficiario final", "DPA / acuerdo de tratamiento de datos", "Contrato de servicios SaaS firmado", "Certificado ISO 27001 / SOC 2 (si aplica)"],
   },
+  "financiamiento": {
+    desc: "Preparación de expediente, data room trazable y calificación de riesgo A-E para empresas y desarrolladores que buscan capital, socios o participar en licitaciones.",
+    casos: [
+      { titulo: "Expediente corporativo listo para inversionistas", detalle: "Empresas privadas ordenan su información corporativa, legal y financiera cuando buscan financiamiento, socios o participar en licitaciones. Obtienen un expediente verificado y una calificación A-E que da confianza a contrapartes e inversionistas y acelera las negociaciones." },
+      { titulo: "Data room trazable para desarrollo inmobiliario", detalle: "Desarrolladores estructuran cada proyecto —terreno, permisos, pro forma y uso de recursos— en un data room trazable y lo presentan ya calificado a los financiadores. Reducen el tiempo de levantamiento de capital y demuestran la viabilidad y el cumplimiento del proyecto." },
+      { titulo: "Preparación para licitaciones y procesos competitivos", detalle: "Checklist de documentos corporativos, financieros y de cumplimiento requeridos por convocantes. Expediente reutilizable entre licitaciones con evidencia ordenada y trazabilidad de cada actualización." },
+      { titulo: "Calificación A-E para acelerar negociaciones con financiadores", detalle: "Scoring de riesgo explicable que resume el expediente para comité de crédito o inversión. Reduce las rondas de preguntas y acorta el tiempo entre presentación y decisión." },
+    ],
+    modulos: ["Preparación de expediente", "Data Room", "Scoring A-E", "Checklists dinámicos", "Trazabilidad"],
+    regulaciones: ["Requisitos de banca de desarrollo / multilaterales (NAFIN, BID, IFC)", "Estándares ESG para project finance", "Ley de Asociaciones Público-Privadas (APP)", "FATF Rec. 10–12 (CDD de contrapartes)"],
+    docs: ["Acta constitutiva y poderes", "Estados financieros dictaminados", "Plan de negocio / pro forma del proyecto", "Permisos y licencias del proyecto (uso de suelo, ambiental)", "Declaración de beneficiario final", "Estructura de capital y fuentes de financiamiento"],
+  },
+  "notarias": {
+    desc: "Refuerzan la identificación de las partes, el beneficiario final y la revisión de listas de sanciones y PEP antes de dar fe de actos y operaciones. Cumplen sus obligaciones antilavado y conservan trazabilidad documental de cada expediente.",
+    casos: [
+      { titulo: "Identificación de partes antes de dar fe", detalle: "Verificación de identidad de comparecientes, apoderados y representantes legales previo a la firma de la escritura o acta. Expediente digital con evidencia de cada verificación." },
+      { titulo: "Screening de beneficiario final, PEP y sanciones", detalle: "Revisión automática del beneficiario controlador y de las partes contra listas OFAC, ONU, UE y PEP antes de formalizar el acto. Resultado con nivel de coincidencia y nota de auditoría." },
+      { titulo: "Expediente notarial trazable y conservación documental", detalle: "Data room del instrumento con todos los documentos de identificación, poderes y antecedentes registrales, con control de acceso y conservación mínima conforme a ley." },
+      { titulo: "Cumplimiento PLDFT como fedatario público", detalle: "Clasificación de actos como actividad vulnerable, aviso de operaciones relevantes e inusuales, y checklist por tipo de acto (compraventa, fideicomiso, constitución de sociedad)." },
+    ],
+    modulos: ["KYC/KYB", "Sanciones Gateway", "Expedientes", "Trazabilidad", "Checklists dinámicos"],
+    regulaciones: ["Ley Federal PLDFT Art. 17 (fedatarios públicos)", "Ley del Notariado (estatal)", "Reglas de identificación del cliente SAT para notarios", "FATF Rec. 22–23 (DNFBP)"],
+    docs: ["Identificación oficial de las partes", "RFC y comprobante de domicilio", "Declaración de beneficiario final (UBO)", "Escritura y antecedentes registrales", "Verificación en listas de sanciones y PEP", "Aviso de operación relevante o inusual"],
+  },
+  "contable-fiscal": {
+    desc: "Integran y validan la documentación financiera y fiscal de sus clientes, detectan inconsistencias y preparan expedientes para auditoría, crédito o inversión. Ganan eficiencia y respaldan sus dictámenes con evidencia ordenada.",
+    casos: [
+      { titulo: "Validación de documentación financiera y fiscal del cliente", detalle: "Integración y cotejo de estados financieros, declaraciones y comprobantes fiscales del cliente en un expediente único, con checklist por tipo de dictamen o servicio." },
+      { titulo: "Detección de inconsistencias antes del dictamen", detalle: "Cruce automático entre documentos declarados y evidencia soporte para identificar faltantes o discrepancias antes de emitir el dictamen o entregable al cliente." },
+      { titulo: "Expediente de auditoría listo para crédito o inversión", detalle: "Data room ordenado con papeles de trabajo, conciliaciones y evidencia soporte, listo para compartir con bancos, inversionistas u otros terceros autorizados." },
+      { titulo: "Cumplimiento PLDFT como actividad vulnerable", detalle: "Identificación del cliente, beneficiario final y origen de recursos cuando el despacho presta servicios señalados como actividad vulnerable. Checklist y aviso conforme a la ley." },
+    ],
+    modulos: ["Expedientes", "Checklists dinámicos", "Scoring A-E", "Trazabilidad", "Data Room"],
+    regulaciones: ["Ley Federal PLDFT Art. 17 (servicios de auditoría y contables)", "Normas de Información Financiera (NIF)", "Código de Ética Profesional IMCP", "Reglas SAT de dictamen fiscal"],
+    docs: ["Estados financieros del cliente", "Papeles de trabajo de auditoría", "RFC y opinión de cumplimiento SAT", "Declaración de beneficiario final", "Conciliaciones y evidencia soporte", "Dictamen fiscal o financiero firmado"],
+  },
+  "educacion": {
+    desc: "Estructuran y verifican proyectos de infraestructura, alianzas y donativos, y ordenan la due-diligence de contrapartes y patrocinadores. Aseguran el cumplimiento y el buen uso de los recursos en proyectos financiados.",
+    casos: [
+      { titulo: "Due diligence de donantes y patrocinadores", detalle: "Identificación y screening de sanciones/PEP de donantes y patrocinadores antes de aceptar un donativo o alianza, con expediente trazable del origen de los recursos." },
+      { titulo: "Estructuración de proyectos de infraestructura y alianzas", detalle: "Data room del proyecto —convenio, presupuesto, permisos y cronograma— para presentarlo ya ordenado a patrocinadores, comités o instancias de aprobación." },
+      { titulo: "Verificación de contrapartes en convenios y patrocinios", detalle: "KYB de la contraparte institucional o empresarial: acta constitutiva, representante legal y beneficiario final, antes de firmar el convenio." },
+      { titulo: "Trazabilidad del uso de recursos en proyectos financiados", detalle: "Registro auditable de cómo se ejercen los recursos del proyecto, con evidencia vinculada para reportes internos o ante el patrocinador." },
+    ],
+    modulos: ["Expedientes", "Data Room", "Checklists dinámicos", "Sanciones Gateway", "Trazabilidad"],
+    regulaciones: ["Ley General de Educación (transparencia en donativos)", "Ley Federal de Transparencia y Acceso a la Información Pública", "FATF Rec. 8 (organizaciones sin fines de lucro)", "Reglas de comprobación de recursos (CONAC)"],
+    docs: ["Convenio de donativo o patrocinio", "Identificación y beneficiario final del donante", "Screening de sanciones del patrocinador", "Plan de uso de recursos del proyecto", "Permisos y licencias de obra (infraestructura)", "Reporte de comprobación de recursos"],
+  },
+  "camaras-comercio": {
+    desc: "Ofrecen a sus afiliados una herramienta de cumplimiento y preparación de proyectos, y verifican a miembros y contrapartes en misiones comerciales o ruedas de negocio. Elevan la confianza y la calidad del ecosistema empresarial que representan.",
+    casos: [
+      { titulo: "Verificación de miembros y afiliados", detalle: "Expediente de afiliación con identificación, RFC, acta constitutiva y screening de sanciones del miembro, con alertas de renovación y actualización de datos." },
+      { titulo: "Due diligence en misiones comerciales y ruedas de negocio", detalle: "Verificación previa de las empresas participantes en misiones y ruedas de negocio, para elevar la confianza entre contrapartes que se conocen por primera vez." },
+      { titulo: "Herramienta de cumplimiento para afiliados", detalle: "La cámara ofrece a sus miembros acceso a preparación de expediente y checklist de cumplimiento como beneficio de afiliación, sin que cada empresa construya su propio proceso." },
+      { titulo: "Preparación de proyectos de miembros para inversión", detalle: "Apoyo a los afiliados que buscan financiamiento o inversión: expediente ordenado y calificación A-E antes de presentarlo a contrapartes o financiadores." },
+    ],
+    modulos: ["KYC/KYB", "Sanciones Gateway", "Expedientes", "Scoring A-E", "Cobertura Global"],
+    regulaciones: ["Ley de Cámaras Empresariales y sus Confederaciones", "FATF Rec. 10–12 (CDD de contrapartes comerciales)", "Protocolos de verificación en misiones comerciales internacionales"],
+    docs: ["Constancia de afiliación", "Acta constitutiva y RFC del miembro", "Identificación del representante legal", "Screening de sanciones del miembro", "Expediente de proyecto para inversión (si aplica)"],
+  },
+  "eau": {
+    desc: "Cumplimiento y due-diligence alineados con estándares internacionales (GAFI/FATF) para el mercado de los Emiratos Árabes Unidos, con soporte bilingüe y expedientes listos para comité. Conecta el capital de la región MENA con proyectos preparados en México y Latinoamérica.",
+    casos: [
+      { titulo: "Empresas de EAU: due diligence de contrapartes en LatAm", detalle: "Verifican contrapartes, socios y proyectos en México y Latinoamérica antes de invertir o contratar, con KYC/KYB y trazabilidad conforme a estándares internacionales." },
+      { titulo: "Fundaciones de EAU: cumplimiento en donativos e inversión de impacto", detalle: "Aseguran que sus donativos, inversiones de impacto y contrapartes cumplan due-diligence y prevención de lavado, protegiendo su reputación y su misión." },
+      { titulo: "Family offices e inversionistas de EAU: dealflow LatAm calificado", detalle: "Acceden a dealflow latinoamericano ya preparado y calificado, con expedientes que su comité puede revisar con confianza y con asistencia bilingüe." },
+      { titulo: "Cámaras de comercio de EAU: due diligence cruzada MENA-LatAm", detalle: "Facilitan a sus miembros la due-diligence de contrapartes latinoamericanas y la preparación de proyectos para inversión cruzada MENA-LatAm." },
+    ],
+    modulos: ["KYC/KYB", "Sanciones Gateway", "Scoring A-E", "Data Room", "Cobertura Global", "Trazabilidad"],
+    regulaciones: ["GAFI/FATF (estándares internacionales)", "UAE AML-CFT Federal Decree-Law No. 20 of 2018", "TRN / Trade Licence (EAU)", "Al Etihad Credit Bureau (AECB)"],
+    docs: ["Trade Licence / Emirates ID", "Pasaporte y UBO Declaration", "MOA / CoI (Certificate of Incorporation)", "Declaración de origen de recursos", "Expediente bilingüe para comité de inversión"],
+  },
 };
 
 function Tag({ children, color = COLORS.navy, bg = "#EEF2F7" }) {
@@ -369,7 +447,7 @@ export default function IndustriasPage() {
             Cumplimiento configurado para su industria
           </h1>
           <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "1rem", maxWidth: "620px", margin: "0 auto", lineHeight: 1.65 }}>
-            NEXUS se adapta a los requerimientos regulatorios de 15 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
+            NEXUS se adapta a los requerimientos regulatorios de 21 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
           </p>
         </section>
 
