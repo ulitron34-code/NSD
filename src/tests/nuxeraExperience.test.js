@@ -4,6 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies } from "../nuxera/markets/marketDataProvider";
+import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
@@ -234,5 +235,37 @@ describe("NUXERA Finance journey", () => {
         "/dashboard/nuxera/strategy",
       ])
     );
+  });
+});
+
+describe("NUXERA Intelligence research missions", () => {
+  it("defines premium research mission types", () => {
+    expect(getResearchMissionTypes().map((mission) => mission.id)).toEqual(
+      expect.arrayContaining(["company-diligence", "person-screening", "sector-context"])
+    );
+  });
+
+  it("builds a role-aware mission with plan, sources, findings and report metadata", () => {
+    const mission = getResearchMission("grantor", "company-diligence");
+
+    expect(mission.roleFocus).toContain("riesgos");
+    expect(mission.plan.length).toBeGreaterThan(0);
+    expect(mission.sources.length).toBeGreaterThan(0);
+    expect(mission.findings[0]).toMatchObject({
+      confidence: expect.any(String),
+      evidenceIds: expect.any(Array),
+    });
+    expect(mission.report.auditNote).toContain("evidencia");
+  });
+
+  it("resolves evidence metadata for material findings", () => {
+    const evidence = getEvidenceByFinding("document-gap");
+
+    expect(evidence.length).toBeGreaterThan(0);
+    expect(evidence[0]).toMatchObject({
+      source: expect.any(String),
+      provenance: expect.any(String),
+      reliability: expect.any(String),
+    });
   });
 });

@@ -237,3 +237,21 @@ Validation:
 - Frontend unit tests: passed with `pnpm run test:run`, 9 files and 188 tests.
 
 Next recommended task: `NU-INT-002` for research missions with evidence/citations, or continue Finance with persisted progress/action state.
+
+## NU-INT-002 update - 2026-07-16
+
+Started evolving NUXERA Intelligence beyond the document adapter.
+
+Changed runtime surface:
+- Added a local research mission model with mission types, subject, plan, sources, findings, evidence ids, confidence and report metadata.
+- NUXERA Intelligence now shows a mission layer above the existing `DocumentIntelligenceTab`.
+- Existing document intelligence module remains mounted and unmodified.
+- Backend/API contracts remain untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 30 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 191 tests.
+
+Next recommended task: continue `NU-INT-003` with persistence/export approval, or move to `NU-MKT-002` for provider abstraction hardening.
