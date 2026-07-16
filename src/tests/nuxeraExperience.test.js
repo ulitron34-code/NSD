@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
+import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 
 describe("NUXERA experience controls", () => {
@@ -60,5 +61,23 @@ describe("NUXERA role navigation", () => {
     expect(navigationByRole.admin[0].path).toBe("/dashboard");
     expect(navigationByRole.applicant.map((item) => item.id)).toContain("finance");
     expect(navigationByRole.admin.map((item) => item.id)).toContain("security");
+  });
+});
+
+describe("NUXERA section registry", () => {
+  it("mounts Intelligence as the first legacy adapter section", () => {
+    expect(resolveNuxeraSection("intelligence")).toMatchObject({
+      id: "intelligence",
+      type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
+      adapter: "document-intelligence",
+    });
+  });
+
+  it("keeps future sections as placeholders until their adapters are approved", () => {
+    expect(resolveNuxeraSection("finance")).toMatchObject({
+      id: "finance",
+      type: NUXERA_SECTION_TYPES.PLACEHOLDER,
+    });
+    expect(resolveNuxeraSection("home")).toBeNull();
   });
 });

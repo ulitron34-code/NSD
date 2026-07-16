@@ -1,12 +1,20 @@
 import React from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import DocumentIntelligenceAdapter from "./adapters/DocumentIntelligenceAdapter";
 import { resolveNuxeraRole } from "./navigation/roleResolver";
 import NuxeraHome from "./pages/NuxeraHome";
+import { resolveNuxeraSection } from "./sections/sectionRegistry";
 import NuxeraShell from "./shell/NuxeraShell";
 
 function RoleWorkspace({ role }) {
   const { section = "home" } = useParams();
+  const resolvedSection = resolveNuxeraSection(section);
+
+  if (resolvedSection?.adapter === "document-intelligence") {
+    return <DocumentIntelligenceAdapter role={role} />;
+  }
+
   return <NuxeraHome role={role} section={section} />;
 }
 

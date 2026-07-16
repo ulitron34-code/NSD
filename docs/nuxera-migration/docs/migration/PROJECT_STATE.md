@@ -112,3 +112,25 @@ Remaining NU-SHELL-001 gaps:
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
 Next recommended task: `NU-SHELL-002` should connect the first real migrated workspace section while still leaving legacy tabs available.
+
+## NU-SHELL-002 update - 2026-07-16
+
+Connected the first real NUXERA workspace section through a controlled adapter.
+
+Changed runtime surface:
+- Added a NUXERA section registry.
+- Mounted `/dashboard/nuxera/intelligence` to a wrapper around the existing `DocumentIntelligenceTab`.
+- Left all other engine routes as placeholders until their adapters are approved.
+- Preserved the legacy dashboard tab and backend/API contracts.
+
+Validation:
+- Targeted NUXERA tests: passed, 9 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 170 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- `NUXERA Intelligence` is currently an adapter over document intelligence, not the full future research missions module described in `NU-INT-001`.
+
+Next recommended task: start a small `NU-FIN-ADAPTER-001` or `NU-INT-002` depending on whether the next priority is Finance readiness or deeper Intelligence missions.

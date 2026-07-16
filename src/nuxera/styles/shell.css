@@ -161,6 +161,72 @@
   line-height: 1.45;
 }
 
+
+.nuxera-adapter {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.nuxera-adapter-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.nuxera-adapter-header h1 {
+  margin: 0 0 10px;
+  color: var(--nuxera-ink);
+  font-size: 1.55rem;
+  line-height: 1.2;
+}
+
+.nuxera-adapter-header p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--nuxera-muted);
+  line-height: 1.55;
+}
+
+.nuxera-adapter-status,
+.nuxera-adapter-loading {
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-adapter-status {
+  padding: 16px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.nuxera-adapter-status span,
+.nuxera-adapter-status small {
+  color: var(--nuxera-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.nuxera-adapter-status strong {
+  color: var(--nuxera-ink);
+  font-size: 1.05rem;
+  text-transform: capitalize;
+}
+
+.nuxera-adapter-body {
+  min-width: 0;
+}
+
+.nuxera-adapter-loading {
+  padding: 18px;
+  color: var(--nuxera-muted);
+  font-weight: 800;
+}
 @media (max-width: 900px) {
   .nuxera-shell {
     grid-template-columns: 1fr;
