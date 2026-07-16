@@ -4,6 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
+import { getGrantorCaseQueue, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
@@ -211,6 +212,35 @@ describe("NUXERA Finance adapter", () => {
   });
 });
 
+
+describe("NUXERA grantor case queue", () => {
+  it("builds a local case queue with analytics and priorities", () => {
+    const queue = getGrantorCaseQueue();
+    const summary = getGrantorQueueSummary();
+
+    expect(queue.cases.length).toBeGreaterThan(0);
+    expect(summary.total).toBe(queue.cases.length);
+    expect(summary.requiresHumanReview).toBe(true);
+    expect(queue.cases.map((item) => item.priority)).toEqual(
+      expect.arrayContaining(["committee-ready", "needs-information"])
+    );
+  });
+
+  it("connects each grantor case to evidence engines without automatic approval", () => {
+    const queue = getGrantorCaseQueue();
+    const firstCase = queue.cases[0];
+
+    expect(firstCase.decisionSignals).toEqual(
+      expect.arrayContaining([expect.stringContaining("Readiness"), expect.stringContaining("Riesgo")])
+    );
+    expect(firstCase.evidenceLinks.map((link) => link.engine)).toEqual(
+      expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
+    );
+    expect(queue.policies).toEqual(
+      expect.arrayContaining([expect.stringContaining("no aprueba credito")])
+    );
+  });
+});
 describe("NUXERA Markets foundation", () => {
   it("exposes data provenance, delay and no-advice disclaimer", () => {
     const status = getMarketProviderStatus();

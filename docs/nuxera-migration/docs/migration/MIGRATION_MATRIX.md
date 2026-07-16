@@ -12,7 +12,7 @@
 | Applicant onboarding | Yes | Guided mission wizard | Planned | No |
 | Company and project data | Yes | Unified guided workspace | Planned | No |
 | Document management | Yes | Contextual document center | Planned | No |
-| Grantor dashboard | Yes | Decision queue and alerts | Finance adapter mounts pipeline module | No |
+| Grantor dashboard | Yes | Decision queue and alerts | Local case queue foundation mounted | No |
 | Case review | Yes | Unified case workbench | Planned | No |
 | Admin | Yes | Operations/config/security/AI split | Shell placeholder implemented | No |
 | Compliance | Yes | Transversal services | Preserve | No |

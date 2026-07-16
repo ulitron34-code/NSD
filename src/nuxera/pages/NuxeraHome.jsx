@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
+import { getGrantorCaseQueue, getGrantorQueueSummary } from "../grantor/caseQueue";
 
 const roleCopy = {
   applicant: {
@@ -72,22 +73,10 @@ function ApplicantMissionHome({ sectionLabel }) {
           <strong>{checklist.summary.status}</strong>
         </header>
         <div className="nuxera-checklist-summary">
-          <article>
-            <span>Listos</span>
-            <strong>{checklist.summary.ready}</strong>
-          </article>
-          <article>
-            <span>En revision</span>
-            <strong>{checklist.summary.inReview}</strong>
-          </article>
-          <article>
-            <span>Faltantes</span>
-            <strong>{checklist.summary.missing}</strong>
-          </article>
-          <article>
-            <span>Criticos</span>
-            <strong>{checklist.summary.criticalMissing}</strong>
-          </article>
+          <article><span>Listos</span><strong>{checklist.summary.ready}</strong></article>
+          <article><span>En revision</span><strong>{checklist.summary.inReview}</strong></article>
+          <article><span>Faltantes</span><strong>{checklist.summary.missing}</strong></article>
+          <article><span>Criticos</span><strong>{checklist.summary.criticalMissing}</strong></article>
         </div>
         <div className="nuxera-data-room-folders">
           {checklist.folders.map((folder) => (
@@ -121,11 +110,67 @@ function ApplicantMissionHome({ sectionLabel }) {
         </section>
         <section>
           <h2>Guardrails</h2>
-          {mission.guardrails.map((guardrail) => (
-            <p key={guardrail}>{guardrail}</p>
-          ))}
+          {mission.guardrails.map((guardrail) => <p key={guardrail}>{guardrail}</p>)}
         </section>
       </div>
+    </section>
+  );
+}
+
+function GrantorQueueHome({ sectionLabel }) {
+  const queue = getGrantorCaseQueue();
+  const summary = getGrantorQueueSummary();
+
+  return (
+    <section className="nuxera-home" aria-labelledby="nuxera-home-title">
+      <p className="nuxera-eyebrow">NUXERA Financial Intelligence / Otorgante</p>
+      <div className="nuxera-hero-row">
+        <div>
+          <h1 id="nuxera-home-title">Cola de casos priorizada</h1>
+          <p>Revisa oportunidades por evidencia, riesgo, readiness y siguiente accion sin ejecutar decisiones automaticas.</p>
+        </div>
+        <div className="nuxera-status-panel">
+          <span>{summary.status}</span>
+          <strong>{summary.total} casos</strong>
+          <small>{sectionLabel}</small>
+        </div>
+      </div>
+
+      <div className="nuxera-grantor-summary">
+        <article><span>Comite</span><strong>{summary.committeeReady}</strong></article>
+        <article><span>Faltantes</span><strong>{summary.needsInformation}</strong></article>
+        <article><span>Riesgo alto</span><strong>{summary.observed}</strong></article>
+        <article><span>Revision humana</span><strong>{summary.requiresHumanReview ? "Si" : "No"}</strong></article>
+      </div>
+
+      <div className="nuxera-grantor-queue">
+        {queue.cases.map((item) => (
+          <article key={item.id}>
+            <header>
+              <div>
+                <span>{item.priority}</span>
+                <strong>{item.name}</strong>
+              </div>
+              <em>{item.risk}</em>
+            </header>
+            <p>{item.applicant} / {item.sector} / {item.amountLabel}</p>
+            <div>
+              {item.decisionSignals.map((signal) => <small key={signal}>{signal}</small>)}
+            </div>
+            <p>{item.nextAction}</p>
+            <footer>
+              {item.evidenceLinks.map((link) => (
+                <NavLink key={link.engine} to={link.path}>{link.engine}</NavLink>
+              ))}
+            </footer>
+          </article>
+        ))}
+      </div>
+
+      <section className="nuxera-grantor-policies" aria-label="Politicas de revision otorgante">
+        <h2>Politicas de cola</h2>
+        {queue.policies.map((policy) => <p key={policy}>{policy}</p>)}
+      </section>
     </section>
   );
 }
@@ -136,6 +181,10 @@ export default function NuxeraHome({ role = "applicant", section = "home" }) {
 
   if (role === "applicant") {
     return <ApplicantMissionHome sectionLabel={sectionLabel} />;
+  }
+
+  if (role === "grantor") {
+    return <GrantorQueueHome sectionLabel={sectionLabel} />;
   }
 
   return (
