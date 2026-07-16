@@ -3,9 +3,9 @@
 | Capability | Legacy available | New target | Status | Retirement allowed |
 |---|---:|---|---|---:|
 | Migration docs | N/A | NUXERA migration package in repo | In progress | N/A |
-| Repository baseline | N/A | Verified inventory and dependency map | In progress; unit tests passed, build/lint blocked by baseline issues | N/A |
+| Repository baseline | N/A | Verified inventory and dependency map | Baseline complete except E2E deferred by local npm tooling | N/A |
 | Public landing | Yes | Outcome-led NUXERA landing | Planned | No |
-| Authentication | Yes | Reused with compatibility | Baseline mapped; validation pending | No |
+| Authentication | Yes | Reused with compatibility | Baseline mapped and validated | No |
 | View switcher | Yes | Formal feature-flag control | Planned | No |
 | Applicant dashboard | Yes | Progress and next-action home | Planned | No |
 | Applicant onboarding | Yes | Guided mission wizard | Planned | No |

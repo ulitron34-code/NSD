@@ -294,3 +294,32 @@ Current NU-BASE-001 status:
 - Build: blocked by Sentry dependency hygiene under pnpm strict layout.
 - Lint: blocked by lint scope/config issue.
 - E2E: not run yet; should wait until build/lint baseline is resolved or explicitly documented as deferred.
+
+## Baseline Hygiene Fixes - 2026-07-16
+
+Minimal runtime-adjacent fixes applied before starting `NU-SHELL-001`:
+
+- Added `@sentry/browser` as an explicit root dependency because `src/utils/sentry.js` imports it directly. It was previously only available as a transitive dependency of `@sentry/react`, which is fragile and failed under pnpm strict resolution.
+- Added root `eslint.config.js` for ESLint flat config.
+- Updated the root lint script from `eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0` to `eslint . --report-unused-disable-directives --max-warnings 0` because flat config does not support `--ext`.
+- Scoped lint to app/e2e JavaScript and JSX, while ignoring backend, generated output, docs, scratch, test results and Storybook stories. Backend has its own test/check surface and should receive a dedicated lint task later if desired.
+- Disabled `react-refresh/only-export-components` in baseline lint to avoid forcing context/helper extraction before the migration shell task.
+
+Validation after fixes:
+
+- Frontend build: passed with `pnpm run build` using bundled Node on PATH and escalated execution for Vite native process access.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend unit tests: passed, 8 test files and 161 tests.
+- Backend unit tests: passed via direct Vitest execution, 36 test files and 385 tests.
+- E2E: not run. `playwright.config.js` uses `webServer.command: npm run dev`, but npm is not available on PATH in this environment. Do not change Playwright config inside NU-BASE-001 just to work around local tooling.
+
+Current NU-BASE-001 status after these fixes:
+
+- Baseline inventory: complete.
+- Build: pass.
+- Lint: pass.
+- Frontend tests: pass.
+- Backend tests: pass.
+- E2E: deferred due local npm tooling gap.
+
+Recommended next action: commit these baseline hygiene fixes, then begin `NU-SHELL-001` in a separate commit.

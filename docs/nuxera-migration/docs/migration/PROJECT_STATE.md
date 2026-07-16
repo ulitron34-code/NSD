@@ -71,3 +71,20 @@ Results:
 - Lint failed because the root lint script scans backend files and ESLint config discovery fails in `backend/scripts`.
 
 NU-BASE-001 remains open until build/lint are either fixed in dedicated baseline hygiene tasks or accepted as known pre-existing issues.
+
+## Baseline closeout update - 2026-07-16
+
+Baseline hygiene fixes were applied:
+- Explicit `@sentry/browser` dependency.
+- Root ESLint flat config.
+- Root lint script updated for flat config.
+
+Validation now passes for:
+- Frontend build.
+- Frontend lint.
+- Frontend unit tests: 8 files, 161 tests.
+- Backend unit tests: 36 files, 385 tests.
+
+E2E remains deferred because Playwright is configured to start `npm run dev`, but npm is not available on PATH in this environment.
+
+Next task after committing baseline hygiene: `NU-SHELL-001`.
