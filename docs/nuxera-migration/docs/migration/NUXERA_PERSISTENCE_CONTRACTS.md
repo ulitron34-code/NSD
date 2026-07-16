@@ -232,3 +232,12 @@ The applicant NUXERA home now has a read-only frontend adapter for the first bac
 - UI surface: applicant checklist in `src/nuxera/pages/NuxeraHome.jsx`.
 
 The UI only reads `GET /api/nuxera/orders/:orderId/state` when a real applicant order id exists and the NUXERA feature flag is active. If the endpoint is unavailable, no order exists or no persisted state exists, the checklist remains on the local preparation fallback. No frontend write path was connected.
+
+## NU-DB-VERIFY-001 implementation note
+
+A local SQL guard now verifies the NUXERA workspace state draft before any Supabase application:
+- Script: `backend/scripts/check-nuxera-workspace-state-sql.js`.
+- Package script: `check:nuxera-sql`.
+- Verified invariants: additive `nuxera_workspace_states` table, `service_orders` ownership anchor, active unique index, RLS enabled, owner-scoped select/update/insert policies and no destructive table operations.
+
+This is static verification only. Live Supabase schema verification and SQL application remain blocked until `SUPABASE_URL`, `SUPABASE_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are available in a controlled environment.

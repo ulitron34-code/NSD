@@ -559,3 +559,27 @@ Remaining gaps:
 - Manual browser screenshots remain blocked in this environment by browser launch restrictions.
 
 Next recommended task after validation: apply/verify SQL in a controlled Supabase environment before enabling the first UI write path, or continue with read-only evidence-link adapters.
+
+## NU-DB-VERIFY-001 update - 2026-07-16
+
+Added local guard verification for the NUXERA workspace state SQL draft without applying it to Supabase.
+
+Changed backend/tooling surface:
+- Added `backend/scripts/check-nuxera-workspace-state-sql.js`.
+- Added backend package script `check:nuxera-sql`.
+- The guard checks table creation, `service_orders` FK, role/surface checks, JSON payload, soft archive, active unique index, supporting indexes, RLS enablement and owner-scoped policies.
+- The guard rejects destructive operations such as `DROP TABLE`, `TRUNCATE`, legacy table drops and deletes against `service_orders`.
+
+Validation:
+- `node --check scripts/check-nuxera-workspace-state-sql.js`: passed.
+- `node scripts/check-nuxera-workspace-state-sql.js`: passed.
+- `node scripts/check-supabase-schema.js`: blocked because Supabase env vars are not present in this environment.
+- `pnpm run check:nuxera-sql`: blocked by pnpm wrapper attempting a non-TTY modules purge/install; direct Node execution passed.
+
+Remaining gaps:
+- SQL draft has not been applied to Supabase/production.
+- Live schema/RLS verification is still pending in a controlled Supabase environment.
+- Applicant checklist writes remain disconnected from UI.
+- Grantor memo, review artifacts, evidence links and admin controls remain contract-only.
+
+Next recommended task after validation: run the SQL draft and schema checks in an environment with Supabase credentials, then test GET/PATCH against controlled real rows before enabling UI writes.
