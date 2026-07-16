@@ -60,3 +60,14 @@ Required before NU-BASE-001 completion:
 
 ## Handoff
 Next action: install dependencies for this checkout or use an environment with npm available, then run the baseline validation commands and update `NU_BASE_001_BASELINE_INVENTORY.md` with results. Do not start runtime shell changes until this baseline is validated or explicitly accepted as documentation-only partial baseline.
+## Validation update - 2026-07-16
+
+Dependencies were installed with bundled pnpm only as a temporary validation mechanism because npm is not available on PATH. No pnpm lockfiles are intended to be committed.
+
+Results:
+- Frontend unit tests passed: 8 files, 161 tests.
+- Backend unit tests passed via direct Vitest: 36 files, 385 tests.
+- Frontend build progressed outside sandbox but failed on unresolved `@sentry/browser` import under pnpm strict dependency resolution.
+- Lint failed because the root lint script scans backend files and ESLint config discovery fails in `backend/scripts`.
+
+NU-BASE-001 remains open until build/lint are either fixed in dedicated baseline hygiene tasks or accepted as known pre-existing issues.

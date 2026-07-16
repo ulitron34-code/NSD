@@ -3,7 +3,7 @@
 | Capability | Legacy available | New target | Status | Retirement allowed |
 |---|---:|---|---|---:|
 | Migration docs | N/A | NUXERA migration package in repo | In progress | N/A |
-| Repository baseline | N/A | Verified inventory and dependency map | In progress; validation pending dependencies | N/A |
+| Repository baseline | N/A | Verified inventory and dependency map | In progress; unit tests passed, build/lint blocked by baseline issues | N/A |
 | Public landing | Yes | Outcome-led NUXERA landing | Planned | No |
 | Authentication | Yes | Reused with compatibility | Baseline mapped; validation pending | No |
 | View switcher | Yes | Formal feature-flag control | Planned | No |

@@ -256,3 +256,41 @@ Tooling check:
 - `Get-Command npm`: no npm command found.
 - Bundled Node works: `v24.14.0`.
 - Bundled pnpm works: `11.7.0`, but this repo uses `package-lock.json`; pnpm was not used to avoid introducing a different lockfile or dependency graph in the baseline task.
+
+## Validation Attempts - 2026-07-16 Continued
+
+Dependency bootstrap:
+
+- Frontend dependencies installed with bundled `pnpm install --lockfile=false` because `npm` was unavailable on PATH. No pnpm lockfile was retained.
+- Backend dependencies were partially installed with bundled pnpm. pnpm reported `ERR_PNPM_IGNORED_BUILDS` for `tesseract.js@7.0.0`; generated backend pnpm lock/workspace files were removed to keep the repository on its existing npm lockfile contract.
+
+Build:
+
+- First sandbox run failed with `spawn EPERM` from Vite/Rolldown while loading config.
+- Escalated run progressed through production build and transformed 1000 modules, then failed on unresolved import `@sentry/browser` from `src/utils/sentry.js`.
+- `package-lock.json` contains `@sentry/browser` as a transitive dependency of `@sentry/react`, so this may pass under npm's hoisted layout but fails under pnpm's strict dependency resolution. Treat as a real dependency hygiene risk before shell work.
+
+Lint:
+
+- `pnpm run lint` failed with ESLint configuration discovery error while scanning `backend/scripts`.
+- Root script is `eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0`; the command currently scans backend files but no ESLint config is found from `backend/scripts` upward under ESLint 8.
+- Recommended follow-up: make lint scope explicit or add a compatible root ESLint config task. Do not hide errors by disabling lint globally.
+
+Frontend tests:
+
+- `pnpm run test:run` passed.
+- Result: 8 test files passed, 161 tests passed.
+
+Backend tests:
+
+- `pnpm test` was blocked by pnpm dependency status / ignored build script check.
+- Direct Vitest execution succeeded with bundled Node: `node ./node_modules/vitest/vitest.mjs run`.
+- Result: 36 test files passed, 385 tests passed.
+
+Current NU-BASE-001 status:
+
+- Baseline inventory: created.
+- Tests: frontend and backend unit tests pass through available tooling.
+- Build: blocked by Sentry dependency hygiene under pnpm strict layout.
+- Lint: blocked by lint scope/config issue.
+- E2E: not run yet; should wait until build/lint baseline is resolved or explicitly documented as deferred.
