@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
-import { getGrantorCaseQueue, getGrantorQueueSummary } from "../grantor/caseQueue";
+import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorQueueSummary } from "../grantor/caseQueue";
 
 const roleCopy = {
   applicant: {
@@ -120,6 +120,7 @@ function ApplicantMissionHome({ sectionLabel }) {
 function GrantorQueueHome({ sectionLabel }) {
   const queue = getGrantorCaseQueue();
   const summary = getGrantorQueueSummary();
+  const workbench = getGrantorCaseWorkbench(queue.cases[0]?.id);
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -166,6 +167,49 @@ function GrantorQueueHome({ sectionLabel }) {
           </article>
         ))}
       </div>
+
+      <section className="nuxera-grantor-workbench" aria-label="Workbench del caso prioritario">
+        <header>
+          <div>
+            <span>{workbench.status}</span>
+            <h2>{workbench.case.name}</h2>
+          </div>
+          <strong>{workbench.case.readinessLevel}</strong>
+        </header>
+        <div className="nuxera-workbench-grid">
+          <section>
+            <h3>Preguntas de revision</h3>
+            {workbench.questions.map((question) => (
+              <article key={question.id}>
+                <span>{question.owner}</span>
+                <strong>{question.label}</strong>
+                <p>{question.prompt}</p>
+              </article>
+            ))}
+          </section>
+          <section>
+            <h3>Evidencia requerida</h3>
+            {workbench.requiredEvidence.map((item) => (
+              <article key={item.id}>
+                <span>{item.status}</span>
+                <p>{item.label}</p>
+              </article>
+            ))}
+          </section>
+          <section>
+            <h3>Condiciones no vinculantes</h3>
+            {workbench.conditions.map((condition) => (
+              <article key={condition}>
+                <span>Condicion</span>
+                <p>{condition}</p>
+              </article>
+            ))}
+          </section>
+        </div>
+        <div className="nuxera-workbench-audit">
+          {workbench.auditTrail.map((entry) => <p key={entry}>{entry}</p>)}
+        </div>
+      </section>
 
       <section className="nuxera-grantor-policies" aria-label="Politicas de revision otorgante">
         <h2>Politicas de cola</h2>

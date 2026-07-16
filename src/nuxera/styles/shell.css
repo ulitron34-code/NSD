@@ -348,6 +348,91 @@
 
 .nuxera-grantor-summary article,
 .nuxera-grantor-queue article,
+
+.nuxera-grantor-workbench {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-grantor-workbench > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.nuxera-grantor-workbench > header span,
+.nuxera-workbench-grid span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-grantor-workbench h2,
+.nuxera-workbench-grid h3 {
+  margin: 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-grantor-workbench > header h2 {
+  margin-top: 4px;
+}
+
+.nuxera-grantor-workbench > header > strong {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #e8f5ee;
+  color: #207348;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+}
+
+.nuxera-workbench-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nuxera-workbench-grid section {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.nuxera-workbench-grid article,
+.nuxera-workbench-audit {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-workbench-grid strong {
+  color: var(--nuxera-ink);
+  font-size: 0.9rem;
+}
+
+.nuxera-workbench-grid p,
+.nuxera-workbench-audit p {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nuxera-workbench-audit {
+  margin-top: 12px;
+}
+
 .nuxera-grantor-policies {
   background: var(--nuxera-panel);
   border: 1px solid var(--nuxera-border);
@@ -443,6 +528,7 @@
   font-weight: 900;
   text-decoration: none;
 }
+
 
 .nuxera-grantor-policies {
   padding: 16px;
@@ -1085,6 +1171,7 @@
   .nuxera-data-room-folders,
   .nuxera-grantor-summary,
   .nuxera-grantor-queue,
+  .nuxera-workbench-grid,
   .nuxera-decision-flow > div {
     grid-template-columns: 1fr;
   }

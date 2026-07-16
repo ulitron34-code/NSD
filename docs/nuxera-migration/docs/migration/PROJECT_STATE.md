@@ -371,3 +371,26 @@ Remaining gaps:
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
 Next recommended task after validation: deepen grantor case detail or design persistence/contracts for applicant and grantor NUXERA state.
+
+## NU-GRA-003 update - 2026-07-16
+
+Deepened the grantor local queue with a case workbench foundation.
+
+Changed runtime surface:
+- Added a local case workbench over the existing grantor queue.
+- Added review questions, required evidence, non-binding conditions and audit trail for the selected case.
+- Updated grantor NUXERA home to show the workbench under the prioritized queue.
+- Kept all output local and human-review gated; no credit approvals, term sheets, backend/API or permission changes were introduced.
+- Existing legacy PipelineTab remains untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 42 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 203 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
+
+Next recommended task after validation: `NU-ADM-002` for an admin operations foundation, or design persistence/contracts for NUXERA state.

@@ -4,7 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
-import { getGrantorCaseQueue, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
+import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
@@ -238,6 +238,24 @@ describe("NUXERA grantor case queue", () => {
     );
     expect(queue.policies).toEqual(
       expect.arrayContaining([expect.stringContaining("no aprueba credito")])
+    );
+  });
+
+  it("opens a local case workbench with questions, conditions and audit trail", () => {
+    const queue = getGrantorCaseQueue();
+    const workbench = getGrantorCaseWorkbench(queue.cases[0].id);
+
+    expect(workbench.case.id).toBe(queue.cases[0].id);
+    expect(workbench.questions.length).toBeGreaterThan(0);
+    expect(workbench.requiredEvidence.length).toBeGreaterThan(0);
+    expect(workbench.conditions).toEqual(
+      expect.arrayContaining([expect.stringContaining("no vinculantes")])
+    );
+    expect(workbench.auditTrail).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("No emite term sheet"),
+        expect.stringContaining("permisos existentes"),
+      ])
     );
   });
 });

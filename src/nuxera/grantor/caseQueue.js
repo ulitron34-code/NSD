@@ -135,3 +135,55 @@ export function getGrantorQueueSummary() {
     requiresHumanReview: true,
   };
 }
+function getWorkbenchQuestions(caseItem) {
+  return [
+    {
+      id: "risk-gap",
+      label: "Riesgo y faltantes",
+      prompt: `Que evidencia falta para bajar riesgo ${caseItem.risk} antes de comite?`,
+      owner: "Analista de riesgo",
+    },
+    {
+      id: "structure-fit",
+      label: "Estructura",
+      prompt: `La estructura ${caseItem.structure} calza con ticket, plazo y garantias?`,
+      owner: "Otorgante",
+    },
+    {
+      id: "permission-check",
+      label: "Permisos",
+      prompt: "El data room permite revisar todos los documentos citados sin ampliar acceso indebidamente?",
+      owner: "Operacion NUXERA",
+    },
+  ];
+}
+
+function getWorkbenchConditions(caseItem) {
+  return [
+    `Confirmar ${caseItem.documentsCount} documentos visibles y vigentes antes de contacto formal.`,
+    "Cerrar informacion abierta antes de emitir condiciones no vinculantes.",
+    "Registrar decision humana, supuestos y rollback si cambian score, mercado o permisos.",
+  ];
+}
+
+export function getGrantorCaseWorkbench(caseId) {
+  const queue = getGrantorCaseQueue();
+  const selectedCase = queue.cases.find((item) => item.id === caseId) || queue.cases[0];
+
+  return {
+    case: selectedCase,
+    status: selectedCase.priority === "committee-ready" ? "ready-for-memo" : "evidence-required",
+    questions: getWorkbenchQuestions(selectedCase),
+    requiredEvidence: selectedCase.documents.map((documentName, index) => ({
+      id: `${selectedCase.id}-doc-${index + 1}`,
+      label: documentName,
+      status: index < Math.max(selectedCase.documents.length - 1, 1) ? "visible" : "verify",
+    })),
+    conditions: getWorkbenchConditions(selectedCase),
+    auditTrail: [
+      "Workbench local para revision del otorgante.",
+      "No emite term sheet ni aprobacion vinculante.",
+      "Respeta permisos existentes del data room; no concede accesos nuevos.",
+    ],
+  };
+}
