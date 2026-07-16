@@ -5,7 +5,7 @@ import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdap
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
-import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
+import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
@@ -304,6 +304,25 @@ describe("NUXERA grantor case queue", () => {
       expect.arrayContaining([
         expect.stringContaining("No emite term sheet"),
         expect.stringContaining("permisos existentes"),
+      ])
+    );
+  });
+
+  it("builds a non-binding local decision memo for grantor review", () => {
+    const queue = getGrantorCaseQueue();
+    const memo = getGrantorDecisionMemo(queue.cases[0].id);
+
+    expect(memo.id).toContain(queue.cases[0].id);
+    expect(memo.title).toContain("Memo local no vinculante");
+    expect(memo.evidenceSnapshot.documents.length).toBeGreaterThan(0);
+    expect(memo.proposedConditions).toEqual(
+      expect.arrayContaining([expect.stringContaining("no vinculantes")])
+    );
+    expect(memo.guardrails).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("no es term sheet"),
+        expect.stringContaining("No cambia permisos"),
+        expect.stringContaining("No persiste estado"),
       ])
     );
   });

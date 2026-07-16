@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
-import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorQueueSummary } from "../grantor/caseQueue";
+import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../grantor/caseQueue";
 
 const roleCopy = {
   applicant: {
@@ -122,6 +122,7 @@ function GrantorQueueHome({ sectionLabel }) {
   const queue = getGrantorCaseQueue();
   const summary = getGrantorQueueSummary();
   const workbench = getGrantorCaseWorkbench(queue.cases[0]?.id);
+  const memo = getGrantorDecisionMemo(workbench.case.id);
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -212,7 +213,39 @@ function GrantorQueueHome({ sectionLabel }) {
         </div>
       </section>
 
-      <section className="nuxera-grantor-policies" aria-label="Politicas de revision otorgante">
+            <section className="nuxera-grantor-memo" aria-label="Memo local no vinculante del otorgante">
+        <header>
+          <div>
+            <span>{memo.status}</span>
+            <h2>{memo.title}</h2>
+          </div>
+          <strong>{memo.evidenceSnapshot.visible}/{memo.evidenceSnapshot.documents.length} evidencias</strong>
+        </header>
+        <div className="nuxera-memo-grid">
+          <section>
+            <h3>Tesis preliminar</h3>
+            {memo.thesis.map((item) => <p key={item}>{item}</p>)}
+          </section>
+          <section>
+            <h3>Riesgos y recomendacion</h3>
+            <strong>{memo.recommendation}</strong>
+            {memo.riskNotes.map((note) => <p key={note}>{note}</p>)}
+          </section>
+          <section>
+            <h3>Siguientes acciones</h3>
+            {memo.nextActions.map((item) => (
+              <article key={item.id}>
+                <span>{item.owner}</span>
+                <p>{item.action}</p>
+              </article>
+            ))}
+          </section>
+        </div>
+        <div className="nuxera-memo-guardrails">
+          {memo.guardrails.map((guardrail) => <p key={guardrail}>{guardrail}</p>)}
+        </div>
+      </section>
+<section className="nuxera-grantor-policies" aria-label="Politicas de revision otorgante">
         <h2>Politicas de cola</h2>
         {queue.policies.map((policy) => <p key={policy}>{policy}</p>)}
       </section>

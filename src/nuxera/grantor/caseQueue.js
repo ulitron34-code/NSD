@@ -187,3 +187,55 @@ export function getGrantorCaseWorkbench(caseId) {
     ],
   };
 }
+function getMemoRecommendation(caseItem) {
+  if (caseItem.priority === "committee-ready") {
+    return "Preparar comite interno con condiciones no vinculantes y confirmacion documental.";
+  }
+
+  if (caseItem.priority === "needs-information") {
+    return "No avanzar a comite hasta cerrar evidencia faltante y actualizar riesgo.";
+  }
+
+  return "Mantener en observacion hasta recibir nueva evidencia o cambio de apetito.";
+}
+
+export function getGrantorDecisionMemo(caseId) {
+  const workbench = getGrantorCaseWorkbench(caseId);
+  const caseItem = workbench.case;
+  const visibleEvidence = workbench.requiredEvidence.filter((item) => item.status === "visible");
+  const pendingEvidence = workbench.requiredEvidence.filter((item) => item.status !== "visible");
+
+  return {
+    id: `${caseItem.id}-memo-local`,
+    case: caseItem,
+    title: `Memo local no vinculante: ${caseItem.name}`,
+    status: caseItem.priority === "committee-ready" ? "draft-ready" : "evidence-blocked",
+    recommendation: getMemoRecommendation(caseItem),
+    thesis: [
+      `${caseItem.applicant} solicita ${caseItem.amountLabel} para ${caseItem.sector}.`,
+      `Estructura preliminar: ${caseItem.structure}.`,
+      `Readiness reportado: ${caseItem.readinessLevel}; riesgo operativo: ${caseItem.risk}.`,
+    ],
+    evidenceSnapshot: {
+      visible: visibleEvidence.length,
+      pending: pendingEvidence.length,
+      documents: workbench.requiredEvidence,
+    },
+    riskNotes: [
+      `Score promedio observado: ${caseItem.averageScore}/100.`,
+      `Faltantes abiertos: ${pendingEvidence.length}.`,
+      "La decision final requiere revision humana y evidencia vigente.",
+    ],
+    proposedConditions: workbench.conditions,
+    nextActions: workbench.questions.map((question) => ({
+      id: question.id,
+      owner: question.owner,
+      action: question.prompt,
+    })),
+    guardrails: [
+      "Memo local para preparacion; no es term sheet ni aprobacion de credito.",
+      "No cambia permisos del data room ni comparte documentos fuera del flujo existente.",
+      "No persiste estado ni crea compromisos vinculantes sin contrato backend aprobado.",
+    ],
+  };
+}
