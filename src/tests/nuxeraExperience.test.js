@@ -173,6 +173,24 @@ describe("NUXERA admin operations console", () => {
       expect.arrayContaining([expect.stringContaining("Grantor queue")])
     );
   });
+
+  it("tracks rollout readiness, incident controls and compliance evidence", () => {
+    const consoleState = getAdminOperationsConsole();
+
+    expect(consoleState.summary.readiness).toBeGreaterThan(0);
+    expect(consoleState.summary.highSeverityIncidents).toBe(1);
+    expect(consoleState.rolloutReadiness.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["applicant-surface", "grantor-surface", "admin-surface"])
+    );
+    expect(consoleState.incidentControls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "data-contracts", status: "blocked-by-design" }),
+      ])
+    );
+    expect(consoleState.complianceEvidence.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["identity", "feature-flag", "decision-safety", "market-data"])
+    );
+  });
 });
 describe("NUXERA applicant guided mission", () => {
   it("builds a financing readiness mission with engine-linked steps", () => {

@@ -417,3 +417,27 @@ Remaining gaps:
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
 Next recommended task after validation: decide whether to design persistence contracts or continue with admin detail slices.
+
+## NU-ADM-003 update - 2026-07-16
+
+Deepened the admin operations console with local readiness, incident controls and compliance evidence.
+
+Changed runtime surface:
+- Added rollout readiness for applicant, grantor and admin NUXERA surfaces.
+- Added incident controls for known browser/E2E blocker, runtime PATH watch and blocked data contracts.
+- Added compliance evidence for identity, feature flag, decision safety and market data guardrails.
+- Updated admin NUXERA home to show readiness, incident and compliance panels.
+- Kept the console local/read-only; no permissions, backend/API, data-room, telemetry or automation changes were introduced.
+
+Validation:
+- Targeted NUXERA tests: passed, 45 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 206 tests.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
+
+Next recommended task after validation: either design persistence contracts for real NUXERA state or continue admin detail slices for rollout controls.

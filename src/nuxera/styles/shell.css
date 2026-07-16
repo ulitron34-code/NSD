@@ -1256,6 +1256,86 @@
   margin-bottom: 16px;
   background: #f8fbff;
 }
+
+.nuxera-admin-readiness,
+.nuxera-admin-control-grid section {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-admin-readiness,
+.nuxera-admin-control-grid section {
+  display: grid;
+  gap: 12px;
+}
+
+.nuxera-admin-readiness > header,
+.nuxera-admin-readiness article header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.nuxera-admin-readiness > div,
+.nuxera-admin-control-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.nuxera-admin-readiness > div {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.nuxera-admin-control-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.nuxera-admin-readiness article,
+.nuxera-admin-control-grid article {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-admin-readiness span,
+.nuxera-admin-control-grid span,
+.nuxera-admin-control-grid h2 {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-admin-readiness h2,
+.nuxera-admin-readiness h3,
+.nuxera-admin-control-grid h2,
+.nuxera-admin-control-grid strong {
+  margin: 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-admin-readiness strong {
+  color: var(--nuxera-ink);
+  font-size: 1.1rem;
+}
+
+.nuxera-admin-readiness p,
+.nuxera-admin-readiness small,
+.nuxera-admin-control-grid p {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
 @media (max-width: 900px) {
   .nuxera-shell {
     grid-template-columns: 1fr;
@@ -1285,6 +1365,8 @@
   .nuxera-admin-lanes,
   .nuxera-admin-gates > div,
   .nuxera-admin-panels,
+  .nuxera-admin-readiness > div,
+  .nuxera-admin-control-grid,
   .nuxera-decision-flow > div {
     grid-template-columns: 1fr;
   }

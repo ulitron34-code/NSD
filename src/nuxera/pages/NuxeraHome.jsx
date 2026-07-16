@@ -243,7 +243,7 @@ function AdminOperationsHome({ sectionLabel }) {
         <article><span>Lanes</span><strong>{consoleState.summary.lanes}</strong></article>
         <article><span>Watch</span><strong>{consoleState.summary.watch}</strong></article>
         <article><span>Bloqueos</span><strong>{consoleState.summary.blockedGates}</strong></article>
-        <article><span>Revision humana</span><strong>{consoleState.summary.requiresHumanReview ? "Si" : "No"}</strong></article>
+        <article><span>Readiness</span><strong>{consoleState.summary.readiness}%</strong></article>
       </div>
 
       <div className="nuxera-admin-lanes">
@@ -274,6 +274,48 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
       </section>
 
+      <section className="nuxera-admin-readiness" aria-label="Readiness operativo NUXERA">
+        <header>
+          <span>Readiness operativo</span>
+          <h2>Superficies listas para revision controlada</h2>
+        </header>
+        <div>
+          {consoleState.rolloutReadiness.map((item) => (
+            <article key={item.id}>
+              <header>
+                <span>{item.status}</span>
+                <strong>{item.readiness}%</strong>
+              </header>
+              <h3>{item.label}</h3>
+              <p>{item.evidence}</p>
+              <small>{item.gap}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <div className="nuxera-admin-control-grid">
+        <section aria-label="Controles de incidentes NUXERA">
+          <h2>Controles de incidentes</h2>
+          {consoleState.incidentControls.map((control) => (
+            <article key={control.id}>
+              <span>{control.severity} / {control.status}</span>
+              <strong>{control.signal}</strong>
+              <p>{control.response}</p>
+            </article>
+          ))}
+        </section>
+        <section aria-label="Evidencia compliance NUXERA">
+          <h2>Evidencia compliance</h2>
+          {consoleState.complianceEvidence.map((item) => (
+            <article key={item.id}>
+              <span>{item.status}</span>
+              <strong>{item.label}</strong>
+              <p>{item.detail}</p>
+            </article>
+          ))}
+        </section>
+      </div>
       <div className="nuxera-admin-panels">
         <section>
           <h2>Audit trail local</h2>
