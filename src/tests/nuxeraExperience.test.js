@@ -9,7 +9,7 @@ import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } fro
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
-import { getStrategyActionPlan, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
+import { getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 
 describe("NUXERA experience controls", () => {
   it("keeps NUXERA hidden unless the feature flag is enabled", () => {
@@ -232,6 +232,32 @@ describe("NUXERA Strategy foundation", () => {
         expect.stringContaining("decision humana"),
         expect.stringContaining("Markets"),
       ])
+    );
+  });
+
+  it("adds decision flow gates with evidence and rollback conditions", () => {
+    const workspace = getStrategyWorkspace("admin");
+
+    expect(workspace.decisionFlowStages.length).toBeGreaterThan(0);
+    expect(workspace.decisionFlowStages[0]).toMatchObject({
+      owner: expect.any(String),
+      gate: expect.any(String),
+      evidenceIds: expect.any(Array),
+      rollback: expect.stringContaining("Volver"),
+    });
+    expect(workspace.decisionReadinessCriteria.map((criterion) => criterion.id)).toContain("human-review");
+  });
+
+  it("builds a local decision package without automatic approval", () => {
+    const decisionPackage = getStrategyDecisionPackage("grantor");
+
+    expect(decisionPackage.status).toBe("human-review-required");
+    expect(decisionPackage.requiredEvidenceIds).toEqual(
+      expect.arrayContaining(["finance-readiness", "intelligence-docs", "markets-watchlist"])
+    );
+    expect(decisionPackage.rollbackConditions.length).toBeGreaterThan(0);
+    expect(decisionPackage.auditTrail).toEqual(
+      expect.arrayContaining([expect.stringContaining("No ejecuta aprobaciones automaticas")])
     );
   });
 });

@@ -77,6 +77,57 @@ const scenarios = [
   },
 ];
 
+const decisionFlowStages = [
+  {
+    id: "frame-decision",
+    label: "Enmarcar decision",
+    owner: "Sponsor del caso",
+    status: "ready",
+    gate: "Objetivo, fecha limite y responsable confirmados.",
+    evidenceIds: ["finance-readiness", "intelligence-docs"],
+    rollback: "Volver a discovery si cambia el objetivo o falta responsable.",
+  },
+  {
+    id: "stress-evidence",
+    label: "Tensionar evidencia",
+    owner: "Analista NUXERA",
+    status: "in-review",
+    gate: "Supuestos criticos contrastados contra Finance, Intelligence y Markets.",
+    evidenceIds: ["finance-readiness", "intelligence-docs", "markets-watchlist"],
+    rollback: "Pausar decision si un hallazgo critico no tiene fuente verificable.",
+  },
+  {
+    id: "approve-path",
+    label: "Elegir ruta controlada",
+    owner: "Comite humano",
+    status: "blocked-until-review",
+    gate: "Decision documentada con condiciones, mitigantes y umbrales de pausa.",
+    evidenceIds: ["markets-watchlist"],
+    rollback: "No ejecutar acciones irreversibles sin aprobacion y bitacora.",
+  },
+];
+
+const decisionReadinessCriteria = [
+  {
+    id: "evidence-coverage",
+    label: "Cobertura de evidencia",
+    state: "partial",
+    requirement: "Cada supuesto material debe ligar a Finance, Intelligence o Markets.",
+  },
+  {
+    id: "human-review",
+    label: "Revision humana",
+    state: "required",
+    requirement: "Una persona autorizada debe aceptar incertidumbre, mitigantes y rollback.",
+  },
+  {
+    id: "reversibility",
+    label: "Reversibilidad",
+    state: "controlled",
+    requirement: "Separar acciones reversibles de compromisos de capital, reputacion o cumplimiento.",
+  },
+];
+
 export function getStrategyWorkspace(role = "applicant") {
   const roleFocus = {
     applicant: "Preparar una decision de avance con evidencia, supuestos y siguientes acciones.",
@@ -90,11 +141,31 @@ export function getStrategyWorkspace(role = "applicant") {
     assumptions,
     scenarios,
     evidenceLinks,
+    decisionFlowStages,
+    decisionReadinessCriteria,
     recommendation: {
       summary: "Avanzar en modo controlado, cerrando evidencia critica antes de comprometer capital o decision final.",
       uncertainty: "Recomendacion sujeta a calidad documental, condiciones de mercado y revision humana autorizada.",
       auditState: "Borrador local auditable; persistencia formal pendiente de tarea posterior.",
     },
+  };
+}
+
+export function getStrategyDecisionPackage(role = "applicant") {
+  const workspace = getStrategyWorkspace(role);
+  const blockedCriteria = workspace.decisionReadinessCriteria.filter((criterion) => criterion.state === "required");
+
+  return {
+    status: blockedCriteria.length > 0 ? "human-review-required" : "ready-for-record",
+    decisionType: "controlled-advance",
+    summary: workspace.recommendation.summary,
+    requiredEvidenceIds: [...new Set(workspace.decisionFlowStages.flatMap((stage) => stage.evidenceIds))],
+    rollbackConditions: workspace.decisionFlowStages.map((stage) => stage.rollback),
+    auditTrail: [
+      "Decision package generado localmente en NUXERA Strategy.",
+      "No ejecuta aprobaciones automaticas ni cambios de contrato.",
+      "Persistencia formal pendiente de tarea aprobada.",
+    ],
   };
 }
 

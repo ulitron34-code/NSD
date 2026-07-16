@@ -279,3 +279,26 @@ Remaining gaps:
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
 Next recommended task after validation: continue with `NU-STR-002` for deeper strategy decision flows or `NU-INT-003` for Intelligence persistence/export approval.
+
+## NU-STR-002 update - 2026-07-16
+
+Deepened NUXERA Strategy from scenario display into an auditable decision-flow layer.
+
+Changed runtime surface:
+- Added decision flow stages with owner, status, gate, evidence ids and rollback condition.
+- Added readiness criteria for evidence coverage, human review and reversibility.
+- Added a local Strategy decision package with required evidence ids, rollback conditions and audit trail.
+- Updated the Strategy workspace to show decision gates before assumptions and scenarios.
+- Kept decision output local/auditable only; no approvals, persistence, backend or API changes were introduced.
+
+Validation:
+- Targeted NUXERA tests: passed, 35 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 196 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
+
+Next recommended task after validation: continue with `NU-INT-003` only if persistence/export is approved, or start a frontend-only applicant guided mission slice.
