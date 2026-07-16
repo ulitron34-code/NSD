@@ -1465,3 +1465,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+.nuxera-evidence-ledger article {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-evidence-ledger article span,
+.nuxera-evidence-ledger small {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-evidence-ledger article strong {
+  color: var(--nuxera-ink);
+  font-size: 0.9rem;
+}

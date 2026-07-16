@@ -583,3 +583,28 @@ Remaining gaps:
 - Grantor memo, review artifacts, evidence links and admin controls remain contract-only.
 
 Next recommended task after validation: run the SQL draft and schema checks in an environment with Supabase credentials, then test GET/PATCH against controlled real rows before enabling UI writes.
+
+## NU-EVID-001 update - 2026-07-16
+
+Added a frontend-only NUXERA evidence ledger to normalize evidence signals before backend evidence persistence exists.
+
+Changed frontend surface:
+- Added `src/nuxera/evidence/evidenceLedger.js`.
+- Ledger combines applicant checklist requirements, demo document summaries, Intelligence research sources, Strategy evidence links and Finance journey links.
+- Applicant NUXERA home now shows a compact read-only ledger panel with source, engine, status and provenance.
+- Visibility remains role-scoped metadata only; no document access or data-room permission changes are made.
+- No backend/API, SQL, persistence or write path was introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 50 tests.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build`.
+- Frontend full unit suite: passed, 9 files / 211 tests.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- `nuxera_evidence_links` remains contract-only and has no SQL/backend implementation.
+- SQL draft for `nuxera_workspace_states` has not been applied to Supabase/production.
+- Manual browser screenshots remain blocked by local browser launch restrictions.
+
+Next recommended task after validation: either continue read-only evidence surfaces for grantor/admin, or implement `NU-BE-EVID-001` contract/skeleton for `nuxera_evidence_links` without enabling UI writes.

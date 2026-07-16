@@ -17,6 +17,6 @@
 | Case review | Yes | Unified case workbench | Local workbench and non-binding memo mounted | No |
 | Admin | Yes | Operations/config/security/AI split | Local readiness and incident controls mounted | No |
 | Compliance | Yes | Transversal services | Preserve | No |
-| Intelligence | Partial | Deep research engine | Research mission foundation mounted over document adapter | N/A |
+| Intelligence | Partial | Deep research engine | Research mission foundation and read-only evidence ledger mounted | N/A |
 | Markets | No/partial | Market intelligence engine | Provider degradation and realtime license gate hardened | N/A |
 | Strategy | No/partial | Strategic decision engine | Decision flow gates and local audit package mounted | N/A |

@@ -5,6 +5,7 @@ import { NavLink } from "react-router-dom";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
+import { getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../grantor/caseQueue";
 
 const roleCopy = {
@@ -39,6 +40,7 @@ function ApplicantMissionHome({ sectionLabel }) {
     getApplicantDataRoomChecklist("es"),
     workspaceState
   );
+  const evidenceLedger = getNuxeraEvidenceLedger("applicant", "es");
   const stateDetail = ordersLoading
     ? "Buscando expediente real para lectura NUXERA."
     : !orderId || isDemo
@@ -126,6 +128,18 @@ function ApplicantMissionHome({ sectionLabel }) {
               <p>{link.signal}</p>
             </NavLink>
           ))}
+        </section>
+        <section className="nuxera-evidence-ledger">
+          <h2>Ledger read-only</h2>
+          <p>{evidenceLedger.summary.total} evidencias normalizadas / {evidenceLedger.status}</p>
+          {evidenceLedger.items.slice(0, 4).map((item) => (
+            <article key={item.id}>
+              <span>{item.engine} / {item.status}</span>
+              <strong>{item.label}</strong>
+              <p>{item.provenance}</p>
+            </article>
+          ))}
+          <small>{evidenceLedger.policies[1]}</small>
         </section>
         <section>
           <h2>Guardrails</h2>

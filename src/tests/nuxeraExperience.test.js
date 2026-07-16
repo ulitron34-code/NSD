@@ -10,6 +10,7 @@ import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, g
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
+import { getEvidenceLedgerByEngine, getNuxeraEvidenceLedger } from "../nuxera/evidence/evidenceLedger";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
@@ -295,6 +296,35 @@ describe("NUXERA applicant guided mission", () => {
     expect(merged.workspaceState).toMatchObject({ persisted: true, version: 2 });
     expect(merged.summary.ready).toBe(localChecklist.summary.ready + 1);
     expect(merged.summary.missing).toBe(localChecklist.summary.missing - 1);
+  });
+});
+
+describe("NUXERA evidence ledger", () => {
+  it("builds a read-only evidence ledger across Finance, Intelligence and Strategy", () => {
+    const ledger = getNuxeraEvidenceLedger("applicant");
+
+    expect(ledger.status).toBe("read-only-local");
+    expect(ledger.summary.total).toBeGreaterThan(10);
+    expect(ledger.items.map((item) => item.engine)).toEqual(
+      expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
+    );
+    expect(ledger.policies).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("no crea evidence_links"),
+        expect.stringContaining("no otorga acceso nuevo"),
+      ])
+    );
+  });
+
+  it("keeps evidence visibility role-scoped without changing permissions", () => {
+    const applicantLedger = getNuxeraEvidenceLedger("applicant");
+    const grantorLedger = getNuxeraEvidenceLedger("grantor");
+    const grouped = getEvidenceLedgerByEngine("grantor");
+
+    expect(applicantLedger.summary.visibilityModes).toEqual(["owner"]);
+    expect(grantorLedger.summary.visibilityModes).toEqual(["authorized-summary-only"]);
+    expect(Object.keys(grouped)).toEqual(expect.arrayContaining(["Finance", "Intelligence", "Strategy"]));
+    expect(grouped.Intelligence[0]).toMatchObject({ sourceType: expect.any(String), guardrail: expect.any(String) });
   });
 });
 describe("NUXERA Finance adapter", () => {

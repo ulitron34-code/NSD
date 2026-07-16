@@ -241,3 +241,12 @@ A local SQL guard now verifies the NUXERA workspace state draft before any Supab
 - Verified invariants: additive `nuxera_workspace_states` table, `service_orders` ownership anchor, active unique index, RLS enabled, owner-scoped select/update/insert policies and no destructive table operations.
 
 This is static verification only. Live Supabase schema verification and SQL application remain blocked until `SUPABASE_URL`, `SUPABASE_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are available in a controlled environment.
+
+## NU-EVID-001 implementation note
+
+A frontend-only evidence ledger now normalizes local NUXERA evidence signals before backend `nuxera_evidence_links` exists:
+- Ledger model: `src/nuxera/evidence/evidenceLedger.js`.
+- UI surface: applicant home read-only ledger panel in `src/nuxera/pages/NuxeraHome.jsx`.
+- Covered sources: applicant checklist requirements, demo document summaries, Intelligence research sources, Strategy evidence links and Finance journey links.
+
+This does not create evidence links, persist rows, grant document access or change data-room permissions. It is a read-only bridge so future `nuxera_evidence_links` persistence has a stable frontend shape.
