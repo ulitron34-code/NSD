@@ -17,4 +17,4 @@
 | Compliance | Yes | Transversal services | Preserve | No |
 | Intelligence | Partial | Deep research engine | Document intelligence adapter mounted in NUXERA shell | N/A |
 | Markets | No/partial | Market intelligence engine | Local delayed provider and watchlist foundation mounted | N/A |
-| Strategy | No/partial | Strategic decision engine | Planned | N/A |
+| Strategy | No/partial | Strategic decision engine | Decision-support foundation mounted with assumptions and evidence links | N/A |

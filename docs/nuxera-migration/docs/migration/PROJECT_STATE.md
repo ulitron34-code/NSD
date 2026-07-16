@@ -179,3 +179,25 @@ Remaining gaps:
 - Markets uses local controlled data; licensed provider integration remains future work.
 
 Next recommended task: `NU-STR-ADAPTER-001` to open Strategy as a decision-support workspace that references Finance, Intelligence and Markets evidence.
+
+## NU-STR-ADAPTER-001 update - 2026-07-16
+
+Opened the first NUXERA Strategy foundation in line with `NU-STR-001` from the migration package.
+
+Changed runtime surface:
+- `/dashboard/nuxera/strategy` now resolves to a Strategy workspace.
+- Added guided questions, assumptions, scenario comparison, recommendation uncertainty, evidence links and action plan.
+- Strategy links back to Finance, Intelligence and Markets evidence.
+- Backend/API contracts remain untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 20 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 181 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- Strategy outputs are local/auditable draft only; persistence and export require a dedicated task.
+
+Next recommended task: consolidate the four engine adapters into a shared engine registry/metadata layer or begin the first true module-deepening task (`NU-FIN-002`, `NU-INT-002`, `NU-MKT-002` or `NU-STR-002`).

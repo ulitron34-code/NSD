@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 import DocumentIntelligenceAdapter from "./adapters/DocumentIntelligenceAdapter";
 import FinanceWorkspaceAdapter from "./adapters/FinanceWorkspaceAdapter";
 import MarketsWorkspace from "./adapters/MarketsWorkspace";
+import StrategyWorkspace from "./adapters/StrategyWorkspace";
 import { resolveNuxeraRole } from "./navigation/roleResolver";
 import NuxeraHome from "./pages/NuxeraHome";
 import { resolveNuxeraSection } from "./sections/sectionRegistry";
@@ -19,6 +20,10 @@ function RoleWorkspace({ role }) {
 
   if (resolvedSection?.adapter === "markets-workspace") {
     return <MarketsWorkspace role={role} />;
+  }
+
+  if (resolvedSection?.adapter === "strategy-workspace") {
+    return <StrategyWorkspace role={role} />;
   }
 
   if (resolvedSection?.adapter === "document-intelligence") {

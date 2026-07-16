@@ -6,6 +6,7 @@ import { getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies } fr
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
+import { getStrategyActionPlan, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 
 describe("NUXERA experience controls", () => {
   it("keeps NUXERA hidden unless the feature flag is enabled", () => {
@@ -83,6 +84,14 @@ describe("NUXERA section registry", () => {
     });
   });
 
+  it("mounts Strategy as a decision-support workspace section", () => {
+    expect(resolveNuxeraSection("strategy")).toMatchObject({
+      id: "strategy",
+      type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
+      adapter: "strategy-workspace",
+    });
+  });
+
   it("mounts Intelligence as the document intelligence adapter section", () => {
     expect(resolveNuxeraSection("intelligence")).toMatchObject({
       id: "intelligence",
@@ -92,8 +101,8 @@ describe("NUXERA section registry", () => {
   });
 
   it("keeps future sections as placeholders until their adapters are approved", () => {
-    expect(resolveNuxeraSection("strategy")).toMatchObject({
-      id: "strategy",
+    expect(resolveNuxeraSection("automation")).toMatchObject({
+      id: "automation",
       type: NUXERA_SECTION_TYPES.PLACEHOLDER,
     });
     expect(resolveNuxeraSection("home")).toBeNull();
@@ -135,6 +144,32 @@ describe("NUXERA Markets foundation", () => {
       expect.arrayContaining([
         expect.stringContaining("procedencia"),
         expect.stringContaining("proveedor falla"),
+      ])
+    );
+  });
+});
+
+describe("NUXERA Strategy foundation", () => {
+  it("exposes assumptions, scenarios and uncertainty", () => {
+    const workspace = getStrategyWorkspace("grantor");
+
+    expect(workspace.focus).toContain("riesgo");
+    expect(workspace.assumptions.length).toBeGreaterThan(0);
+    expect(workspace.scenarios.length).toBeGreaterThan(0);
+    expect(workspace.recommendation.uncertainty).toContain("revision humana");
+  });
+
+  it("links Strategy evidence back to Finance, Intelligence and Markets", () => {
+    const engines = getStrategyWorkspace().evidenceLinks.map((link) => link.engine);
+
+    expect(engines).toEqual(expect.arrayContaining(["Finance", "Intelligence", "Markets"]));
+  });
+
+  it("defines an auditable human-review action plan", () => {
+    expect(getStrategyActionPlan()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("decision humana"),
+        expect.stringContaining("Markets"),
       ])
     );
   });

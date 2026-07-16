@@ -363,6 +363,113 @@
   color: var(--nuxera-ink);
   font-size: 0.9rem;
 }
+
+.nuxera-strategy-notice,
+.nuxera-strategy-audit {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: #eef6ff;
+  border: 1px solid #c9def5;
+  border-radius: 8px;
+  color: var(--nuxera-ink);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.nuxera-strategy-notice span,
+.nuxera-strategy-audit {
+  color: var(--nuxera-muted);
+}
+
+.nuxera-strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.nuxera-strategy-grid section,
+.nuxera-scenario-table {
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-strategy-grid section,
+.nuxera-scenario-table {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.nuxera-strategy-grid h2,
+.nuxera-scenario-table h2 {
+  margin: 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-strategy-grid article,
+.nuxera-scenario-table article,
+.nuxera-evidence-link {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.nuxera-strategy-grid article span,
+.nuxera-scenario-table article span,
+.nuxera-evidence-link span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-strategy-grid article strong,
+.nuxera-scenario-table article strong,
+.nuxera-evidence-link strong {
+  color: var(--nuxera-ink);
+  font-size: 0.9rem;
+}
+
+.nuxera-strategy-grid article p,
+.nuxera-scenario-table article p,
+.nuxera-evidence-link p {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.nuxera-scenario-table {
+  margin-bottom: 16px;
+}
+
+.nuxera-scenario-table > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nuxera-scenario-table article header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.nuxera-evidence-link:hover {
+  border-color: rgba(183, 146, 58, 0.55);
+  background: #fffaf0;
+}
 @media (max-width: 900px) {
   .nuxera-shell {
     grid-template-columns: 1fr;
