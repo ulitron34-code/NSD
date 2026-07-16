@@ -464,3 +464,26 @@ Remaining gaps:
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
 Next recommended task after validation: design backend contracts for persisted NUXERA state, or continue frontend-only with applicant/strategy detail slices.
+
+## NU-BE-001 update - 2026-07-16
+
+Designed the first NUXERA persistence contract without applying backend/schema/runtime changes.
+
+Changed documentation surface:
+- Added `NUXERA_PERSISTENCE_CONTRACTS.md` as the canonical contract for persisted NUXERA state.
+- Proposed additive modules: `nuxera_workspace_states`, `nuxera_evidence_links`, `nuxera_review_artifacts` and `nuxera_admin_controls`.
+- Mapped contracts to existing anchors: `service_orders`, `documents`, `document_reviews`, `audit_logs`, data-room shares and backend role permissions.
+- Drafted `/nuxera` API route families, additive permissions, role access matrix, required audit events and rollback requirements.
+- Updated migration matrix, QA acceptance matrix and rollback plan.
+
+Validation:
+- Documentation-only task; runtime tests not required because no executable code changed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- No SQL migration exists yet.
+- No backend route/service exists yet.
+- No UI writes are connected to backend persistence.
+- Production schema must be confirmed before `NU-BE-002`.
+
+Next recommended task after validation: `NU-BE-002` SQL draft and read/write backend route skeleton for `nuxera_workspace_states`, starting with applicant checklist only.
