@@ -1,6 +1,9 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
+import { useExperience } from "../experience/ExperienceContext";
+import { EXPERIENCE_VALUES } from "../experience/experienceStorage";
+import NuxeraWorkspaceRouter from "../nuxera/NuxeraWorkspaceRouter";
 import { COLORS } from "../utils/constants";
 import NotificationCenter from "../components/NotificationCenter";
 import DashboardStats from "../components/Dashboard/DashboardStats";
@@ -77,12 +80,17 @@ function DashboardLoadingFallback() {
 }
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const { allowedExperiences, experience, setExperience } = useExperience();
+  const nuxeraEnabled = allowedExperiences.includes(EXPERIENCE_VALUES.NUXERA);
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (value) => translateCopy(value, i18n.language);
   const [userMode, setUserMode] = useState(() => localStorage.getItem("nsd_demo_profile") || "solicitante");
   const [activeTab, setActiveTab] = useState("perfil");
-  const [uiView, setUiView] = useState(() => localStorage.getItem("nsd_ui_view") || "new");
+  const [uiView, setUiView] = useState(() => {
+    const stored = localStorage.getItem("nsd_ui_view");
+    return stored === EXPERIENCE_VALUES.CLASSIC ? EXPERIENCE_VALUES.CLASSIC : EXPERIENCE_VALUES.CURRENT;
+  });
   const [otorganteOpportunities, setOtorganteOpportunities] = useState([]);
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("nsd_sidebar_collapsed") === "1");
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -226,9 +234,19 @@ export default function DashboardPage() {
   const tabs = getTabs();
 
   const toggleUiView = () => {
-    const next = uiView === "classic" ? "new" : "classic";
-    localStorage.setItem("nsd_ui_view", next);
+    const next = uiView === EXPERIENCE_VALUES.CLASSIC ? EXPERIENCE_VALUES.CURRENT : EXPERIENCE_VALUES.CLASSIC;
+    setExperience(next);
     setUiView(next);
+  };
+
+  const openNuxeraExperience = () => {
+    setExperience(EXPERIENCE_VALUES.NUXERA);
+    setUiView(EXPERIENCE_VALUES.NUXERA);
+  };
+
+  const exitNuxeraExperience = () => {
+    setExperience(EXPERIENCE_VALUES.CURRENT);
+    setUiView(EXPERIENCE_VALUES.CURRENT);
   };
 
   const handleModeSwitch = (mode) => {
@@ -492,6 +510,10 @@ export default function DashboardPage() {
     return <ServiceOrdersPage />;
   };
 
+  if (experience === EXPERIENCE_VALUES.NUXERA) {
+    return <NuxeraWorkspaceRouter demoMode={userMode} onExit={exitNuxeraExperience} />;
+  }
+
   const railWidth = "76px";
   const fullWidth = "260px";
   const sidebarOpen = isMobile ? mobileNavOpen : true;
@@ -642,6 +664,28 @@ export default function DashboardPage() {
               {uiView === "classic" ? L("Vista nueva", "New view") : L("Vista clasica", "Classic view")}
             </button>
           </div>
+        )}
+
+        {!sidebarCollapsed && nuxeraEnabled && (
+          <button
+            type="button"
+            onClick={openNuxeraExperience}
+            title={L("Abrir experiencia NUXERA", "Open NUXERA experience")}
+            style={{
+              width: "100%",
+              marginBottom: "0.75rem",
+              padding: "0.7rem 0.85rem",
+              fontSize: "0.8rem",
+              fontWeight: 900,
+              borderRadius: "8px",
+              background: "rgba(201,168,76,0.24)",
+              color: COLORS.goldLight,
+              border: "1px solid rgba(201,168,76,0.48)",
+              cursor: "pointer",
+            }}
+          >
+            NUXERA
+          </button>
         )}
 
         {uiView === "classic" ? (

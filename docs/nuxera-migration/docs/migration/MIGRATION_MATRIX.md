@@ -6,14 +6,14 @@
 | Repository baseline | N/A | Verified inventory and dependency map | Baseline complete except E2E deferred by local npm tooling | N/A |
 | Public landing | Yes | Outcome-led NUXERA landing | Planned | No |
 | Authentication | Yes | Reused with compatibility | Baseline mapped and validated | No |
-| View switcher | Yes | Formal feature-flag control | Planned | No |
-| Applicant dashboard | Yes | Progress and next-action home | Planned | No |
+| View switcher | Yes | Formal feature-flag control | Feature-flagged NUXERA entry implemented | No |
+| Applicant dashboard | Yes | Progress and next-action home | Shell placeholder implemented | No |
 | Applicant onboarding | Yes | Guided mission wizard | Planned | No |
 | Company and project data | Yes | Unified guided workspace | Planned | No |
 | Document management | Yes | Contextual document center | Planned | No |
-| Grantor dashboard | Yes | Decision queue and alerts | Planned | No |
+| Grantor dashboard | Yes | Decision queue and alerts | Shell placeholder implemented | No |
 | Case review | Yes | Unified case workbench | Planned | No |
-| Admin | Yes | Operations/config/security/AI split | Planned | No |
+| Admin | Yes | Operations/config/security/AI split | Shell placeholder implemented | No |
 | Compliance | Yes | Transversal services | Preserve | No |
 | Intelligence | Partial | Deep research engine | Planned | N/A |
 | Markets | No/partial | Market intelligence engine | Planned | N/A |

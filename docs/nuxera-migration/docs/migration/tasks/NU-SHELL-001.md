@@ -1,4 +1,4 @@
-# NU-SHELL-001 - N&U parallel application shell
+# NU-SHELL-001 - NUXERA parallel application shell
 
 ## Objective
 Create the new role-aware shell while preserving the old and current views.
@@ -16,7 +16,7 @@ New shell, feature flags, compatibility routing and design tokens.
 - Do not perform unrelated refactors.
 
 ## Required work
-Implement a reversible N&U shell behind a feature flag. Preserve existing routes through adapters. Add role-aware navigation for Applicant, Grantor and Admin.
+Implement a reversible NUXERA shell behind a feature flag. Preserve existing routes through adapters. Add role-aware navigation for Applicant, Grantor and Admin.
 
 ## Acceptance criteria
 Users can switch safely; refresh and deep links work; permissions remain identical; legacy remains available.
@@ -33,3 +33,37 @@ List changed files, screenshots where applicable, commands executed, test result
 
 ## Handoff
 Update PROJECT_STATE and MIGRATION_MATRIX.
+
+## Implementation update - 2026-07-16
+
+Status: implemented as a first controlled shell slice.
+
+Changed files:
+- `src/App.jsx`
+- `src/pages/DashboardPage.jsx`
+- `src/experience/experienceStorage.js`
+- `src/experience/experienceFlags.js`
+- `src/experience/ExperienceContext.jsx`
+- `src/nuxera/navigation/roleResolver.js`
+- `src/nuxera/navigation/navigationByRole.js`
+- `src/nuxera/pages/NuxeraHome.jsx`
+- `src/nuxera/shell/NuxeraShell.jsx`
+- `src/nuxera/NuxeraWorkspaceRouter.jsx`
+- `src/nuxera/styles/tokens.css`
+- `src/nuxera/styles/shell.css`
+
+Evidence:
+- `pnpm run lint`: passed.
+- `pnpm run build`: passed with bundled Node and escalated execution for Vite/Rolldown native process access.
+- `pnpm run test:run`: passed, 8 files and 161 tests.
+
+Acceptance notes:
+- NUXERA entry is feature-flagged by `VITE_NUXERA_EXPERIENCE_ENABLED=true`.
+- Legacy `classic` and `new` dashboard views remain available.
+- The shell can return to the current dashboard view.
+- Role-aware navigation is present for applicant, grantor and admin.
+
+Remaining evidence needed before product acceptance:
+- Manual browser check with feature flag enabled.
+- Screenshots for each role.
+- Deep-link verification for `/dashboard/nuxera/:section`.
