@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
-import { getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
+import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
@@ -172,6 +172,31 @@ describe("NUXERA applicant guided mission", () => {
         expect.stringContaining("no como recomendacion"),
       ])
     );
+  });
+
+  it("builds a local data-room checklist from minimum requirements", () => {
+    const checklist = getApplicantDataRoomChecklist("es");
+
+    expect(checklist.summary.total).toBe(13);
+    expect(checklist.summary.status).toBe("critical-gaps");
+    expect(checklist.summary.criticalMissing).toBeGreaterThan(0);
+    expect(checklist.categories.map((category) => category.id)).toEqual(
+      expect.arrayContaining(["documentacion", "viabilidad", "financiero", "impacto"])
+    );
+    expect(checklist.nextEvidence[0]).toMatchObject({
+      id: expect.any(String),
+      status: "missing",
+    });
+  });
+
+  it("groups applicant requirements into data-room folders without persistence", () => {
+    const checklist = getApplicantDataRoomChecklist();
+
+    expect(checklist.folders.length).toBeGreaterThan(0);
+    expect(checklist.folders.map((folder) => folder.id)).toEqual(
+      expect.arrayContaining(["identity-kyb", "finance-transparency", "impact-risk"])
+    );
+    expect(checklist.guardrail).toContain("Checklist local");
   });
 });
 describe("NUXERA Finance adapter", () => {

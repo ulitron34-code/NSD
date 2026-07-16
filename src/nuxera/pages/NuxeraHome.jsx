@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
+import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
 
 const roleCopy = {
   applicant: {
@@ -26,6 +26,7 @@ const roleCopy = {
 function ApplicantMissionHome({ sectionLabel }) {
   const mission = getApplicantGuidedMission("applicant");
   const readiness = getApplicantMissionReadiness("applicant");
+  const checklist = getApplicantDataRoomChecklist("es");
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -61,6 +62,51 @@ function ApplicantMissionHome({ sectionLabel }) {
           </article>
         ))}
       </div>
+
+      <section className="nuxera-applicant-checklist" aria-label="Checklist documental del solicitante">
+        <header>
+          <div>
+            <span>Data room readiness</span>
+            <h2>Checklist para preparar expediente</h2>
+          </div>
+          <strong>{checklist.summary.status}</strong>
+        </header>
+        <div className="nuxera-checklist-summary">
+          <article>
+            <span>Listos</span>
+            <strong>{checklist.summary.ready}</strong>
+          </article>
+          <article>
+            <span>En revision</span>
+            <strong>{checklist.summary.inReview}</strong>
+          </article>
+          <article>
+            <span>Faltantes</span>
+            <strong>{checklist.summary.missing}</strong>
+          </article>
+          <article>
+            <span>Criticos</span>
+            <strong>{checklist.summary.criticalMissing}</strong>
+          </article>
+        </div>
+        <div className="nuxera-data-room-folders">
+          {checklist.folders.map((folder) => (
+            <article key={folder.id}>
+              <span>{folder.status}</span>
+              <strong>{folder.label}</strong>
+              <p>{folder.visibility}</p>
+              <small>{folder.items.filter((item) => item.status === "ready").length}/{folder.items.length} documentos listos</small>
+            </article>
+          ))}
+        </div>
+        <div className="nuxera-next-evidence">
+          <strong>Siguiente evidencia</strong>
+          {checklist.nextEvidence.map((item) => (
+            <p key={item.id}>{item.critical ? "Critico" : "Pendiente"}: {item.label}</p>
+          ))}
+          <small>{checklist.guardrail}</small>
+        </div>
+      </section>
 
       <div className="nuxera-mission-panels">
         <section>

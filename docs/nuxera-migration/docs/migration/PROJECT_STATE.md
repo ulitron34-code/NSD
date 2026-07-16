@@ -325,3 +325,26 @@ Remaining gaps:
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
 Next recommended task after validation: add a frontend-only applicant data-room/checklist layer, or pause for backend contract design before persistence.
+
+## NU-APP-003 update - 2026-07-16
+
+Connected the applicant guided mission to a frontend-only data-room/checklist foundation.
+
+Changed runtime surface:
+- Reused existing minimum requirements semantics from `src/data/requisitosMinimos.js`.
+- Added local applicant checklist summary, categories, data-room folders and next evidence.
+- Updated applicant NUXERA home to show data-room readiness, folder visibility and critical missing evidence.
+- Kept checklist output local/preparation-only; no persistence, backend/API or permission changes were introduced.
+- Legacy requirements and data-room modules remain untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 39 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 200 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
+
+Next recommended task after validation: `NU-GRA-002` for a grantor case queue foundation, or design backend contracts for persisted applicant mission/checklist state.

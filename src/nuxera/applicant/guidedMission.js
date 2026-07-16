@@ -1,3 +1,5 @@
+import { REQUISITOS_CATEGORIAS, REQUISITOS_MINIMOS, pickLang } from "../../data/requisitosMinimos";
+
 const missionByRole = {
   applicant: {
     id: "applicant-capital-readiness",
@@ -11,7 +13,7 @@ const missionByRole = {
     id: "grantor-case-intake",
     title: "Preparar caso para revision",
     summary: "Ordenar evidencia inicial antes de pasar a cola de decision.",
-    outcome: "Caso con señales suficientes para priorizacion.",
+    outcome: "Caso con senales suficientes para priorizacion.",
     progress: 38,
     nextAction: "Revisar Finance e Intelligence antes de solicitar informacion adicional.",
   },
@@ -65,6 +67,59 @@ const applicantGuardrails = [
   "La persistencia formal de la mision queda pendiente de una tarea aprobada de datos/API.",
 ];
 
+const localStatusByRequirement = {
+  doc_corporativa: "ready",
+  identificacion_oficial: "ready",
+  doc_kyc: "in-review",
+  marco_riesgos: "missing",
+  estudio_viabilidad: "in-review",
+  estudio_mercado: "missing",
+  plan_negocios: "ready",
+  modelo_financiero: "missing",
+  viabilidad_financiera: "missing",
+  transparencia_documental: "in-review",
+  ods: "ready",
+  esg: "missing",
+  esia: "in-review",
+};
+
+const statusLabels = {
+  ready: "Listo",
+  "in-review": "En revision",
+  missing: "Faltante",
+};
+
+const dataRoomFolders = [
+  {
+    id: "identity-kyb",
+    label: "Identidad y KYB",
+    visibility: "Solicitante + NUXERA",
+    requirementIds: ["doc_corporativa", "identificacion_oficial", "doc_kyc"],
+  },
+  {
+    id: "project-viability",
+    label: "Proyecto y viabilidad",
+    visibility: "Solicitante + revision autorizada",
+    requirementIds: ["estudio_viabilidad", "estudio_mercado", "plan_negocios"],
+  },
+  {
+    id: "finance-transparency",
+    label: "Finanzas y transparencia",
+    visibility: "NUXERA + otorgante autorizado",
+    requirementIds: ["modelo_financiero", "viabilidad_financiera", "transparencia_documental"],
+  },
+  {
+    id: "impact-risk",
+    label: "Impacto, ESG y riesgos",
+    visibility: "Revision humana requerida",
+    requirementIds: ["marco_riesgos", "ods", "esg", "esia"],
+  },
+];
+
+function getRequirementStatus(requirementId) {
+  return localStatusByRequirement[requirementId] || "missing";
+}
+
 export function getApplicantGuidedMission(role = "applicant") {
   const mission = missionByRole[role] || missionByRole.applicant;
 
@@ -93,5 +148,45 @@ export function getApplicantMissionReadiness(role = "applicant") {
     nextAction: mission.nextAction,
     openStepIds: openSteps.map((step) => step.id),
     requiresHumanReview: true,
+  };
+}
+
+export function getApplicantDataRoomChecklist(language = "es") {
+  const requirements = REQUISITOS_MINIMOS.map((requirement) => ({
+    id: requirement.id,
+    category: requirement.categoria,
+    label: pickLang(requirement.label, language),
+    detail: pickLang(requirement.detalle, language),
+    critical: Boolean(requirement.critico),
+    status: getRequirementStatus(requirement.id),
+    statusLabel: statusLabels[getRequirementStatus(requirement.id)],
+  }));
+  const missing = requirements.filter((requirement) => requirement.status === "missing");
+  const criticalMissing = missing.filter((requirement) => requirement.critical);
+
+  return {
+    summary: {
+      total: requirements.length,
+      ready: requirements.filter((requirement) => requirement.status === "ready").length,
+      inReview: requirements.filter((requirement) => requirement.status === "in-review").length,
+      missing: missing.length,
+      criticalMissing: criticalMissing.length,
+      status: criticalMissing.length > 0 ? "critical-gaps" : "fillable-gaps",
+    },
+    categories: REQUISITOS_CATEGORIAS.map((category) => ({
+      id: category.id,
+      label: pickLang(category.label, language),
+      items: requirements.filter((requirement) => requirement.category === category.id),
+    })),
+    folders: dataRoomFolders.map((folder) => {
+      const items = requirements.filter((requirement) => folder.requirementIds.includes(requirement.id));
+      return {
+        ...folder,
+        items,
+        status: items.some((item) => item.status === "missing") ? "needs-evidence" : "ready-for-review",
+      };
+    }),
+    nextEvidence: missing.slice(0, 3),
+    guardrail: "Checklist local de preparacion; no sustituye validacion documental ni decision humana.",
   };
 }

@@ -249,6 +249,91 @@
   display: grid;
   gap: 10px;
 }
+
+.nuxera-applicant-checklist {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-applicant-checklist > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.nuxera-applicant-checklist > header span,
+.nuxera-checklist-summary span,
+.nuxera-data-room-folders span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-applicant-checklist h2 {
+  margin: 4px 0 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-applicant-checklist > header > strong {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #fff4dc;
+  color: #95650f;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+}
+
+.nuxera-checklist-summary,
+.nuxera-data-room-folders {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nuxera-checklist-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nuxera-data-room-folders {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nuxera-checklist-summary article,
+.nuxera-data-room-folders article,
+.nuxera-next-evidence {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-checklist-summary strong,
+.nuxera-data-room-folders strong,
+.nuxera-next-evidence strong {
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-data-room-folders p,
+.nuxera-data-room-folders small,
+.nuxera-next-evidence p,
+.nuxera-next-evidence small {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 .nuxera-adapter {
   max-width: 1240px;
   margin: 0 auto;
@@ -881,6 +966,8 @@
   .nuxera-mission-next,
   .nuxera-mission-grid,
   .nuxera-mission-panels,
+  .nuxera-checklist-summary,
+  .nuxera-data-room-folders,
   .nuxera-decision-flow > div {
     grid-template-columns: 1fr;
   }
