@@ -259,3 +259,12 @@ The grantor NUXERA home now consumes the frontend-only evidence ledger as author
 - Validation: grantor evidence rows keep guardrails and do not grant document/data-room access.
 
 This remains read-only and does not create `nuxera_evidence_links`, backend rows, exports, permission changes or data-room shares.
+
+## NU-ADM-EVID-001 implementation note
+
+Admin operations now includes read-only evidence coverage derived from the frontend NUXERA evidence ledger:
+- Model surface: `src/nuxera/admin/operationsConsole.js`.
+- UI surface: admin evidence coverage panel in `src/nuxera/pages/NuxeraHome.jsx`.
+- Visibility mode: `internal-review`.
+
+This is compliance/readiness metadata only. It does not grant access, export evidence, write backend rows or create `nuxera_admin_controls`.

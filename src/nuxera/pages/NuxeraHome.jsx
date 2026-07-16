@@ -379,6 +379,22 @@ function AdminOperationsHome({ sectionLabel }) {
           ))}
         </div>
       </section>
+      <section className="nuxera-admin-evidence-coverage" aria-label="Cobertura de evidencia NUXERA">
+        <header>
+          <span>Evidence coverage</span>
+          <h2>Ledger read-only para auditoria interna</h2>
+        </header>
+        <div>
+          {consoleState.evidenceCoverage.map((item) => (
+            <article key={item.engine}>
+              <span>{item.visibility}</span>
+              <strong>{item.engine}</strong>
+              <p>{item.ready}/{item.total} listas; {item.watch} en watch.</p>
+              <small>{item.policy}</small>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <div className="nuxera-admin-control-grid">
         <section aria-label="Controles de incidentes NUXERA">

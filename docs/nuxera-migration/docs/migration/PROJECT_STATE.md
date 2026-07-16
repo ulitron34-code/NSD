@@ -632,3 +632,28 @@ Remaining gaps:
 - Manual browser screenshots remain blocked by local browser launch restrictions.
 
 Next recommended task after validation: add admin read-only evidence/compliance mapping, or start a dedicated backend contract/skeleton for `nuxera_evidence_links` while keeping UI writes disabled.
+
+## NU-ADM-EVID-001 update - 2026-07-16
+
+Added admin read-only evidence coverage to the NUXERA operations console.
+
+Changed frontend surface:
+- Admin console model now derives evidence coverage from the NUXERA evidence ledger.
+- Admin home shows coverage by Finance, Intelligence and Strategy with `internal-review` visibility metadata.
+- Summary now includes total evidence signals for admin readiness review.
+- No backend/API, SQL, persistence, export or permission change was introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 52 tests.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build`.
+- Frontend full unit suite: passed, 9 files / 213 tests.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- `nuxera_admin_controls` remains contract-only and has no SQL/backend implementation.
+- `nuxera_evidence_links` remains contract-only and has no SQL/backend implementation.
+- SQL draft for `nuxera_workspace_states` has not been applied to Supabase/production.
+- Manual browser screenshots remain blocked by local browser launch restrictions.
+
+Next recommended task after validation: stop here for handoff, or start a backend contract/skeleton for `nuxera_evidence_links` only if a dedicated backend task is approved.

@@ -1,3 +1,4 @@
+import { getEvidenceLedgerByEngine, getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
 const operationLanes = [
   {
     id: "operations",
@@ -149,6 +150,16 @@ export function getAdminOperationsConsole() {
   const blockedGates = releaseGates.filter((gate) => gate.state === "blocked");
   const watchLanes = operationLanes.filter((lane) => ["watch", "limited"].includes(lane.status));
   const highSeverityIncidents = incidentControls.filter((control) => control.severity === "high");
+  const evidenceLedger = getNuxeraEvidenceLedger("admin");
+  const evidenceByEngine = getEvidenceLedgerByEngine("admin");
+  const evidenceCoverage = Object.entries(evidenceByEngine).map(([engine, items]) => ({
+    engine,
+    total: items.length,
+    ready: items.filter((item) => item.status === "ready").length,
+    watch: items.filter((item) => item.status !== "ready").length,
+    visibility: "internal-review",
+    policy: "Read-only compliance mapping; no grants, exports or backend writes.",
+  }));
   const averageReadiness = Math.round(
     rolloutReadiness.reduce((total, item) => total + item.readiness, 0) / rolloutReadiness.length
   );
@@ -161,6 +172,8 @@ export function getAdminOperationsConsole() {
     rolloutReadiness,
     incidentControls,
     complianceEvidence,
+    evidenceLedger,
+    evidenceCoverage,
     summary: {
       lanes: operationLanes.length,
       watch: watchLanes.length,
@@ -168,6 +181,7 @@ export function getAdminOperationsConsole() {
       readiness: averageReadiness,
       highSeverityIncidents: highSeverityIncidents.length,
       complianceAligned: complianceEvidence.filter((item) => item.status === "aligned").length,
+      evidenceSignals: evidenceLedger.summary.total,
       requiresHumanReview: true,
     },
     policies: [

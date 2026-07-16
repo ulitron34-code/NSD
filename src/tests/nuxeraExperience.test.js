@@ -194,6 +194,18 @@ describe("NUXERA admin operations console", () => {
     );
   });
 });
+  it("maps read-only evidence coverage into admin console", () => {
+    const consoleState = getAdminOperationsConsole();
+
+    expect(consoleState.summary.evidenceSignals).toBeGreaterThan(10);
+    expect(consoleState.evidenceCoverage.map((item) => item.engine)).toEqual(
+      expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
+    );
+    expect(consoleState.evidenceCoverage.every((item) => item.visibility === "internal-review")).toBe(true);
+    expect(consoleState.evidenceCoverage.every((item) => item.policy.includes("no grants"))).toBe(true);
+    expect(consoleState.evidenceLedger.policies.join(" ")).toContain("no otorga acceso nuevo");
+  });
+
 describe("NUXERA applicant guided mission", () => {
   it("builds a financing readiness mission with engine-linked steps", () => {
     const mission = getApplicantGuidedMission("applicant");
