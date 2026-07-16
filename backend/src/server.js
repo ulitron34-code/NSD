@@ -43,6 +43,7 @@ import referenceSourcesRoutes from './routes/referenceSources.js';
 import messagingRoutes from './routes/messaging.js';
 import activitySummaryRoutes from './routes/activitySummary.js';
 import adminRoutes from './routes/admin.js';
+import nuxeraRoutes from './routes/nuxera.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { primeRegulatoryLists } from './services/regulatoryGateway.js';
@@ -126,6 +127,7 @@ app.use('/api', referenceSourcesRoutes);
 app.use('/api', messagingRoutes);
 app.use('/api', activitySummaryRoutes);
 app.use('/api', adminRoutes);
+app.use('/api', nuxeraRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

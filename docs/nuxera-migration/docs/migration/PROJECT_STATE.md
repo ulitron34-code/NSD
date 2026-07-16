@@ -487,3 +487,27 @@ Remaining gaps:
 - Production schema must be confirmed before `NU-BE-002`.
 
 Next recommended task after validation: `NU-BE-002` SQL draft and read/write backend route skeleton for `nuxera_workspace_states`, starting with applicant checklist only.
+
+## NU-BE-002 update - 2026-07-16
+
+Started the first backend skeleton for NUXERA persisted state, limited to applicant checklist state.
+
+Changed backend surface:
+- Added draft SQL for `nuxera_workspace_states` in `backend/sql_migrations_pendientes/2026-07-16_nuxera_workspace_states.sql`.
+- Added `nuxeraWorkspaceStateService` with owner-scoped applicant checklist read/upsert.
+- Added `/api/nuxera/orders/:orderId/state` read route and `/api/nuxera/orders/:orderId/state/checklist` patch route.
+- Mounted the NUXERA backend route in `backend/src/server.js`.
+- Added mocked backend tests for default state, ownership rejection, create/update audit metadata and invalid status rejection.
+
+Validation:
+- Backend targeted test: passed, 1 file / 5 tests.
+- Backend full test suite: passed, 37 files / 390 tests.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL draft has not been applied to Supabase/production.
+- Frontend writes remain disconnected.
+- Grantor memo, review artifacts, evidence links and admin controls remain contract-only.
+- Production schema/RLS review is still required before applying SQL.
+
+Next recommended task after validation: `NU-BE-003` to add route-level tests and a read-only frontend adapter behind the NUXERA flag, or apply/verify SQL in a controlled Supabase environment before UI writes.

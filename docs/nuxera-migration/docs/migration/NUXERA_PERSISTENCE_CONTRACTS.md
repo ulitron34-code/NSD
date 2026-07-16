@@ -204,3 +204,13 @@ Reason:
 - Applicant owns the order, so authorization is simpler.
 - Checklist state is lower risk than grantor memo or admin controls.
 - Existing `readiness-checklist` services already reference documents/reviews and can coexist with the new state table.
+
+## NU-BE-002 implementation note
+
+The first implementation skeleton now exists for applicant checklist state only:
+- SQL draft: `backend/sql_migrations_pendientes/2026-07-16_nuxera_workspace_states.sql`.
+- Service: `backend/src/services/nuxeraWorkspaceStateService.js`.
+- Route: `GET /api/nuxera/orders/:orderId/state` and `PATCH /api/nuxera/orders/:orderId/state/checklist`.
+- Tests: `backend/src/services/nuxeraWorkspaceStateService.test.js`.
+
+This is not a production-applied schema and does not connect UI writes. Grantor memo, review artifacts, admin controls and evidence links remain contract-only.
