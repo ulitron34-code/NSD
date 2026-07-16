@@ -16,5 +16,5 @@
 | Admin | Yes | Operations/config/security/AI split | Shell placeholder implemented | No |
 | Compliance | Yes | Transversal services | Preserve | No |
 | Intelligence | Partial | Deep research engine | Document intelligence adapter mounted in NUXERA shell | N/A |
-| Markets | No/partial | Market intelligence engine | Planned | N/A |
+| Markets | No/partial | Market intelligence engine | Local delayed provider and watchlist foundation mounted | N/A |
 | Strategy | No/partial | Strategic decision engine | Planned | N/A |

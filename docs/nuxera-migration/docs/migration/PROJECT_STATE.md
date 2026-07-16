@@ -157,3 +157,25 @@ Remaining gaps:
 - Finance is currently an adapter over existing role-specific modules, not the final unified Finance workspace.
 
 Next recommended task: choose between `NU-MKT-ADAPTER-001` for a lightweight Markets placeholder-to-adapter path, or `NU-FIN-002` to begin unifying the Finance user journey beyond adapters.
+
+## NU-MKT-ADAPTER-001 update - 2026-07-16
+
+Opened the first NUXERA Markets foundation in line with `NU-MKT-001` from the migration package.
+
+Changed runtime surface:
+- `/dashboard/nuxera/markets` now resolves to a Markets workspace.
+- Added a local delayed market provider with explicit provenance and no-advice disclaimer.
+- Added watchlist, monitored events and monitoring policies for graceful provider degradation.
+- Backend/API contracts remain untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 16 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 177 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- Markets uses local controlled data; licensed provider integration remains future work.
+
+Next recommended task: `NU-STR-ADAPTER-001` to open Strategy as a decision-support workspace that references Finance, Intelligence and Markets evidence.

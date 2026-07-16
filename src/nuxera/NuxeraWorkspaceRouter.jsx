@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import DocumentIntelligenceAdapter from "./adapters/DocumentIntelligenceAdapter";
 import FinanceWorkspaceAdapter from "./adapters/FinanceWorkspaceAdapter";
+import MarketsWorkspace from "./adapters/MarketsWorkspace";
 import { resolveNuxeraRole } from "./navigation/roleResolver";
 import NuxeraHome from "./pages/NuxeraHome";
 import { resolveNuxeraSection } from "./sections/sectionRegistry";
@@ -14,6 +15,10 @@ function RoleWorkspace({ role }) {
 
   if (resolvedSection?.adapter === "finance-workspace") {
     return <FinanceWorkspaceAdapter role={role} />;
+  }
+
+  if (resolvedSection?.adapter === "markets-workspace") {
+    return <MarketsWorkspace role={role} />;
   }
 
   if (resolvedSection?.adapter === "document-intelligence") {

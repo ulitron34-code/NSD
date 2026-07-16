@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
+import { getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies } from "../nuxera/markets/marketDataProvider";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
@@ -74,6 +75,14 @@ describe("NUXERA section registry", () => {
     });
   });
 
+  it("mounts Markets as a provenance-first workspace section", () => {
+    expect(resolveNuxeraSection("markets")).toMatchObject({
+      id: "markets",
+      type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
+      adapter: "markets-workspace",
+    });
+  });
+
   it("mounts Intelligence as the document intelligence adapter section", () => {
     expect(resolveNuxeraSection("intelligence")).toMatchObject({
       id: "intelligence",
@@ -83,8 +92,8 @@ describe("NUXERA section registry", () => {
   });
 
   it("keeps future sections as placeholders until their adapters are approved", () => {
-    expect(resolveNuxeraSection("markets")).toMatchObject({
-      id: "markets",
+    expect(resolveNuxeraSection("strategy")).toMatchObject({
+      id: "strategy",
       type: NUXERA_SECTION_TYPES.PLACEHOLDER,
     });
     expect(resolveNuxeraSection("home")).toBeNull();
@@ -100,5 +109,33 @@ describe("NUXERA Finance adapter", () => {
 
   it("falls back to applicant Finance when role is unknown", () => {
     expect(getFinanceAdapterConfig("unknown").title).toBe("Preparacion financiera");
+  });
+});
+
+describe("NUXERA Markets foundation", () => {
+  it("exposes data provenance, delay and no-advice disclaimer", () => {
+    const status = getMarketProviderStatus();
+
+    expect(status.mode).toBe("delayed-demo");
+    expect(status.delayLabel).toContain("no tiempo real");
+    expect(status.provenance).toContain("Dataset local");
+    expect(status.disclaimer).toContain("No constituye recomendacion");
+  });
+
+  it("builds a role-aware watchlist with monitored events", () => {
+    const watchlist = getMarketWatchlist("grantor");
+
+    expect(watchlist.scope).toContain("riesgo");
+    expect(watchlist.rows.length).toBeGreaterThan(0);
+    expect(watchlist.events.length).toBeGreaterThan(0);
+  });
+
+  it("defines monitoring policies for graceful provider degradation", () => {
+    expect(getMonitoringPolicies()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("procedencia"),
+        expect.stringContaining("proveedor falla"),
+      ])
+    );
   });
 });

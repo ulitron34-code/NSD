@@ -227,6 +227,142 @@
   color: var(--nuxera-muted);
   font-weight: 800;
 }
+
+.nuxera-market-disclaimer {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--nuxera-gold-soft);
+  border: 1px solid rgba(183, 146, 58, 0.36);
+  border-radius: 8px;
+  color: var(--nuxera-ink);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.nuxera-market-disclaimer span {
+  color: var(--nuxera-muted);
+}
+
+.nuxera-market-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.nuxera-market-card,
+.nuxera-market-panels section {
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-market-card {
+  min-height: 214px;
+  padding: 15px;
+  display: grid;
+  gap: 10px;
+}
+
+.nuxera-market-card span,
+.nuxera-market-panels span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-market-card h2 {
+  margin: 4px 0;
+  color: var(--nuxera-ink);
+  font-size: 1.05rem;
+}
+
+.nuxera-market-card p,
+.nuxera-market-panels p {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.nuxera-market-value {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.nuxera-market-value strong {
+  color: var(--nuxera-ink);
+  font-size: 1.25rem;
+}
+
+.nuxera-market-value small {
+  color: #247a52;
+  font-weight: 900;
+}
+
+.nuxera-market-card em {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  background: #eef2f6;
+  color: var(--nuxera-muted);
+}
+
+.nuxera-market-card em.is-low {
+  background: #e8f5ee;
+  color: #207348;
+}
+
+.nuxera-market-card em.is-medium {
+  background: #fff4dc;
+  color: #95650f;
+}
+
+.nuxera-market-card em.is-high {
+  background: #fdeaea;
+  color: #b42318;
+}
+
+.nuxera-market-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 14px;
+}
+
+.nuxera-market-panels section {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.nuxera-market-panels h2 {
+  margin: 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-market-panels article {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-market-panels article strong {
+  color: var(--nuxera-ink);
+  font-size: 0.9rem;
+}
 @media (max-width: 900px) {
   .nuxera-shell {
     grid-template-columns: 1fr;

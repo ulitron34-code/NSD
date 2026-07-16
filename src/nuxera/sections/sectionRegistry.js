@@ -10,6 +10,12 @@ export const nuxeraSectionRegistry = Object.freeze({
     title: "Workspace financiero",
     adapter: "finance-workspace",
   },
+  markets: {
+    id: "markets",
+    type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
+    title: "Monitoreo de mercado",
+    adapter: "markets-workspace",
+  },
   intelligence: {
     id: "intelligence",
     type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
