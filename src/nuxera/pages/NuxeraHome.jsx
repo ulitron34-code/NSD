@@ -155,6 +155,7 @@ function GrantorQueueHome({ sectionLabel }) {
   const summary = getGrantorQueueSummary();
   const workbench = getGrantorCaseWorkbench(queue.cases[0]?.id);
   const memo = getGrantorDecisionMemo(workbench.case.id);
+  const grantorEvidenceLedger = getNuxeraEvidenceLedger("grantor", "es");
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -245,6 +246,26 @@ function GrantorQueueHome({ sectionLabel }) {
         </div>
       </section>
 
+      <section className="nuxera-grantor-evidence-ledger" aria-label="Ledger read-only de evidencia otorgante">
+        <header>
+          <div>
+            <span>{grantorEvidenceLedger.status}</span>
+            <h2>Evidencia visible resumida</h2>
+          </div>
+          <strong>{grantorEvidenceLedger.summary.total} senales</strong>
+        </header>
+        <div>
+          {grantorEvidenceLedger.items.slice(0, 6).map((item) => (
+            <article key={item.id}>
+              <span>{item.engine} / {item.visibility}</span>
+              <strong>{item.label}</strong>
+              <p>{item.detail}</p>
+              <small>{item.guardrail}</small>
+            </article>
+          ))}
+        </div>
+        <footer>{grantorEvidenceLedger.policies[1]}</footer>
+      </section>
             <section className="nuxera-grantor-memo" aria-label="Memo local no vinculante del otorgante">
         <header>
           <div>

@@ -14,7 +14,7 @@
 | Company and project data | Yes | Unified guided workspace | Planned | No |
 | Document management | Yes | Contextual document center | Planned | No |
 | Grantor dashboard | Yes | Decision queue and alerts | Local case queue foundation mounted | No |
-| Case review | Yes | Unified case workbench | Local workbench and non-binding memo mounted | No |
+| Case review | Yes | Unified case workbench | Local workbench, non-binding memo and grantor read-only evidence ledger mounted | No |
 | Admin | Yes | Operations/config/security/AI split | Local readiness and incident controls mounted | No |
 | Compliance | Yes | Transversal services | Preserve | No |
 | Intelligence | Partial | Deep research engine | Research mission foundation and read-only evidence ledger mounted | N/A |

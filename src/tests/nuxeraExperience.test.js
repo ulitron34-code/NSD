@@ -326,6 +326,16 @@ describe("NUXERA evidence ledger", () => {
     expect(Object.keys(grouped)).toEqual(expect.arrayContaining(["Finance", "Intelligence", "Strategy"]));
     expect(grouped.Intelligence[0]).toMatchObject({ sourceType: expect.any(String), guardrail: expect.any(String) });
   });
+
+  it("provides grantor-safe evidence rows for workbench and memo", () => {
+    const ledger = getNuxeraEvidenceLedger("grantor");
+    const visibleRows = ledger.items.slice(0, 6);
+
+    expect(visibleRows).toHaveLength(6);
+    expect(visibleRows.every((item) => item.visibility === "authorized-summary-only")).toBe(true);
+    expect(visibleRows.every((item) => item.guardrail.includes("No") || item.guardrail.includes("no"))).toBe(true);
+    expect(ledger.policies.join(" ")).toContain("no otorga acceso nuevo");
+  });
 });
 describe("NUXERA Finance adapter", () => {
   it("selects role-specific legacy modules for Finance", () => {

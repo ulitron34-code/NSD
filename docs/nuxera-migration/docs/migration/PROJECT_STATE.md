@@ -608,3 +608,27 @@ Remaining gaps:
 - Manual browser screenshots remain blocked by local browser launch restrictions.
 
 Next recommended task after validation: either continue read-only evidence surfaces for grantor/admin, or implement `NU-BE-EVID-001` contract/skeleton for `nuxera_evidence_links` without enabling UI writes.
+
+## NU-GRA-EVID-001 update - 2026-07-16
+
+Added a grantor-safe read-only evidence ledger panel to the NUXERA grantor workspace.
+
+Changed frontend surface:
+- Grantor NUXERA home now shows summarized evidence below the case workbench and before the local memo.
+- Ledger rows use `authorized-summary-only` visibility metadata.
+- Each row preserves a guardrail explaining that it is read-only and does not change data-room permissions.
+- No backend/API, SQL, persistence, export or permission change was introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 51 tests.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build`.
+- Frontend full unit suite: passed, 9 files / 212 tests.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- `nuxera_evidence_links` remains contract-only and has no SQL/backend implementation.
+- SQL draft for `nuxera_workspace_states` has not been applied to Supabase/production.
+- Manual browser screenshots remain blocked by local browser launch restrictions.
+
+Next recommended task after validation: add admin read-only evidence/compliance mapping, or start a dedicated backend contract/skeleton for `nuxera_evidence_links` while keeping UI writes disabled.

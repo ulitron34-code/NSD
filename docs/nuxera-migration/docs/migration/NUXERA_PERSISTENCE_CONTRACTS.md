@@ -250,3 +250,12 @@ A frontend-only evidence ledger now normalizes local NUXERA evidence signals bef
 - Covered sources: applicant checklist requirements, demo document summaries, Intelligence research sources, Strategy evidence links and Finance journey links.
 
 This does not create evidence links, persist rows, grant document access or change data-room permissions. It is a read-only bridge so future `nuxera_evidence_links` persistence has a stable frontend shape.
+
+## NU-GRA-EVID-001 implementation note
+
+The grantor NUXERA home now consumes the frontend-only evidence ledger as authorized-summary metadata:
+- UI surface: `src/nuxera/pages/NuxeraHome.jsx` grantor workbench/memo area.
+- Visibility mode: `authorized-summary-only`.
+- Validation: grantor evidence rows keep guardrails and do not grant document/data-room access.
+
+This remains read-only and does not create `nuxera_evidence_links`, backend rows, exports, permission changes or data-room shares.
