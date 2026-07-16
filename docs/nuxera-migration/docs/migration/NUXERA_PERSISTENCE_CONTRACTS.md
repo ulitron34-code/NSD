@@ -214,3 +214,12 @@ The first implementation skeleton now exists for applicant checklist state only:
 - Tests: `backend/src/services/nuxeraWorkspaceStateService.test.js`.
 
 This is not a production-applied schema and does not connect UI writes. Grantor memo, review artifacts, admin controls and evidence links remain contract-only.
+
+## NU-BE-003 implementation note
+
+Route-level coverage now protects the first NUXERA state endpoints:
+- Tests: `backend/src/routes/nuxera.test.js`.
+- Covered read guardrails: authentication, `case:own:read`, applicant checklist response shape and service delegation.
+- Covered write guardrails: `case:own:update`, checklist-only surface enforcement and service delegation with request context.
+
+This keeps the backend slice narrow. SQL remains unapplied, UI writes remain disconnected and only applicant checklist state is executable.

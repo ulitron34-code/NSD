@@ -511,3 +511,25 @@ Remaining gaps:
 - Production schema/RLS review is still required before applying SQL.
 
 Next recommended task after validation: `NU-BE-003` to add route-level tests and a read-only frontend adapter behind the NUXERA flag, or apply/verify SQL in a controlled Supabase environment before UI writes.
+
+## NU-BE-003 update - 2026-07-16
+
+Added route-level coverage for the first NUXERA backend state endpoints.
+
+Changed backend surface:
+- Added `backend/src/routes/nuxera.test.js`.
+- Verified auth and permission gates for `GET /api/nuxera/orders/:orderId/state`.
+- Verified auth, permission and checklist-only surface gates for `PATCH /api/nuxera/orders/:orderId/state/:surface`.
+- Verified route delegation to the applicant checklist state service with order id, user id, status, payload and request context.
+
+Validation:
+- Backend targeted route test: passed, 1 file / 6 tests.
+- Backend full test suite: passed, 38 files / 396 tests.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL draft has not been applied to Supabase/production.
+- Frontend reads/writes remain disconnected.
+- Grantor memo, review artifacts, evidence links and admin controls remain contract-only.
+
+Next recommended task after validation: connect a read-only frontend adapter behind the NUXERA flag, or apply/verify SQL in a controlled Supabase environment before any UI write path.
