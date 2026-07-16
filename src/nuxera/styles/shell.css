@@ -470,6 +470,111 @@
   border-color: rgba(183, 146, 58, 0.55);
   background: #fffaf0;
 }
+
+.nuxera-finance-journey {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(240px, 0.8fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.nuxera-finance-next-action,
+.nuxera-finance-goals,
+.nuxera-finance-alerts,
+.nuxera-finance-evidence {
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-finance-next-action {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.nuxera-finance-next-action span,
+.nuxera-finance-alerts h2,
+.nuxera-finance-evidence h2 {
+  color: var(--nuxera-gold);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-finance-next-action h2,
+.nuxera-finance-alerts h2,
+.nuxera-finance-evidence h2 {
+  margin: 0;
+}
+
+.nuxera-finance-next-action h2 {
+  color: var(--nuxera-ink);
+  font-size: 1.1rem;
+}
+
+.nuxera-finance-next-action p,
+.nuxera-finance-alerts p,
+.nuxera-finance-evidence span {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.nuxera-progress-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8edf3;
+}
+
+.nuxera-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--nuxera-gold), #247a52);
+}
+
+.nuxera-finance-goals {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nuxera-finance-goals button {
+  min-height: 42px;
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  background: var(--nuxera-bg);
+  color: var(--nuxera-ink);
+  font-weight: 850;
+  cursor: default;
+}
+
+.nuxera-finance-alerts,
+.nuxera-finance-evidence {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.nuxera-finance-evidence a {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  background: var(--nuxera-bg);
+  text-decoration: none;
+}
+
+.nuxera-finance-evidence strong {
+  color: var(--nuxera-ink);
+  font-size: 0.88rem;
+}
 @media (max-width: 900px) {
   .nuxera-shell {
     grid-template-columns: 1fr;

@@ -219,3 +219,21 @@ Validation:
 - Frontend unit tests: passed with `pnpm run test:run`, 9 files and 184 tests.
 
 Next recommended task: begin one module-deepening task (`NU-FIN-002`, `NU-INT-002`, `NU-MKT-002` or `NU-STR-002`) now that shell and engine registry are stable.
+
+## NU-FIN-002 update - 2026-07-16
+
+Started unifying the NUXERA Finance journey beyond a raw adapter.
+
+Changed runtime surface:
+- Added a role-aware Finance journey model with next action, progress, goals, alerts and evidence links.
+- NUXERA Finance now shows guided context above the existing operational module for applicant, grantor and admin roles.
+- Existing Finance-related modules remain mounted and unmodified.
+- Backend/API contracts remain untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 27 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 188 tests.
+
+Next recommended task: `NU-INT-002` for research missions with evidence/citations, or continue Finance with persisted progress/action state.

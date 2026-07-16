@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
+import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies } from "../nuxera/markets/marketDataProvider";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
@@ -199,6 +200,38 @@ describe("NUXERA Strategy foundation", () => {
       expect.arrayContaining([
         expect.stringContaining("decision humana"),
         expect.stringContaining("Markets"),
+      ])
+    );
+  });
+});
+
+describe("NUXERA Finance journey", () => {
+  it("gives applicants a plain next action and progress", () => {
+    const journey = getFinanceJourney("applicant");
+
+    expect(journey.headline).toContain("solicitud");
+    expect(journey.nextAction).toContain("faltantes");
+    expect(journey.progress).toBeGreaterThan(0);
+    expect(journey.goals).toContain("Conseguir financiamiento");
+  });
+
+  it("gives grantors queue-oriented actions", () => {
+    const journey = getFinanceJourney("grantor");
+
+    expect(journey.headline).toContain("casos");
+    expect(journey.goals).toContain("Preparar comite");
+  });
+
+  it("falls back to applicant journey for unknown roles", () => {
+    expect(getFinanceJourney("unknown").headline).toBe(getFinanceJourney("applicant").headline);
+  });
+
+  it("connects Finance evidence to adjacent NUXERA engines", () => {
+    expect(getFinanceJourneyEvidenceLinks().map((link) => link.path)).toEqual(
+      expect.arrayContaining([
+        "/dashboard/nuxera/finance",
+        "/dashboard/nuxera/intelligence",
+        "/dashboard/nuxera/strategy",
       ])
     );
   });
