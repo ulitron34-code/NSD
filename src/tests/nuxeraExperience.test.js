@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
+import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
-import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
+import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
 
 describe("NUXERA experience controls", () => {
   it("keeps NUXERA hidden unless the feature flag is enabled", () => {
@@ -65,7 +66,15 @@ describe("NUXERA role navigation", () => {
 });
 
 describe("NUXERA section registry", () => {
-  it("mounts Intelligence as the first legacy adapter section", () => {
+  it("mounts Finance as a role-aware legacy adapter section", () => {
+    expect(resolveNuxeraSection("finance")).toMatchObject({
+      id: "finance",
+      type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
+      adapter: "finance-workspace",
+    });
+  });
+
+  it("mounts Intelligence as the document intelligence adapter section", () => {
     expect(resolveNuxeraSection("intelligence")).toMatchObject({
       id: "intelligence",
       type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
@@ -74,10 +83,22 @@ describe("NUXERA section registry", () => {
   });
 
   it("keeps future sections as placeholders until their adapters are approved", () => {
-    expect(resolveNuxeraSection("finance")).toMatchObject({
-      id: "finance",
+    expect(resolveNuxeraSection("markets")).toMatchObject({
+      id: "markets",
       type: NUXERA_SECTION_TYPES.PLACEHOLDER,
     });
     expect(resolveNuxeraSection("home")).toBeNull();
+  });
+});
+
+describe("NUXERA Finance adapter", () => {
+  it("selects role-specific legacy modules for Finance", () => {
+    expect(getFinanceAdapterConfig("applicant").title).toBe("Preparacion financiera");
+    expect(getFinanceAdapterConfig("grantor").title).toBe("Pipeline financiero");
+    expect(getFinanceAdapterConfig("admin").title).toBe("Operacion financiera");
+  });
+
+  it("falls back to applicant Finance when role is unknown", () => {
+    expect(getFinanceAdapterConfig("unknown").title).toBe("Preparacion financiera");
   });
 });

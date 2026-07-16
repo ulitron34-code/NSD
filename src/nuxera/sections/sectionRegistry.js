@@ -4,6 +4,12 @@ export const NUXERA_SECTION_TYPES = Object.freeze({
 });
 
 export const nuxeraSectionRegistry = Object.freeze({
+  finance: {
+    id: "finance",
+    type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
+    title: "Workspace financiero",
+    adapter: "finance-workspace",
+  },
   intelligence: {
     id: "intelligence",
     type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,

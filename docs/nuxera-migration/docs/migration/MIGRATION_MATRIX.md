@@ -7,11 +7,11 @@
 | Public landing | Yes | Outcome-led NUXERA landing | Planned | No |
 | Authentication | Yes | Reused with compatibility | Baseline mapped and validated | No |
 | View switcher | Yes | Formal feature-flag control | Feature-flagged NUXERA entry implemented | No |
-| Applicant dashboard | Yes | Progress and next-action home | Shell placeholder implemented | No |
+| Applicant dashboard | Yes | Progress and next-action home | Finance adapter mounts readiness module | No |
 | Applicant onboarding | Yes | Guided mission wizard | Planned | No |
 | Company and project data | Yes | Unified guided workspace | Planned | No |
 | Document management | Yes | Contextual document center | Planned | No |
-| Grantor dashboard | Yes | Decision queue and alerts | Shell placeholder implemented | No |
+| Grantor dashboard | Yes | Decision queue and alerts | Finance adapter mounts pipeline module | No |
 | Case review | Yes | Unified case workbench | Planned | No |
 | Admin | Yes | Operations/config/security/AI split | Shell placeholder implemented | No |
 | Compliance | Yes | Transversal services | Preserve | No |

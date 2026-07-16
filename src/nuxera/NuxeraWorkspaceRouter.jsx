@@ -2,6 +2,7 @@ import React from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import DocumentIntelligenceAdapter from "./adapters/DocumentIntelligenceAdapter";
+import FinanceWorkspaceAdapter from "./adapters/FinanceWorkspaceAdapter";
 import { resolveNuxeraRole } from "./navigation/roleResolver";
 import NuxeraHome from "./pages/NuxeraHome";
 import { resolveNuxeraSection } from "./sections/sectionRegistry";
@@ -10,6 +11,10 @@ import NuxeraShell from "./shell/NuxeraShell";
 function RoleWorkspace({ role }) {
   const { section = "home" } = useParams();
   const resolvedSection = resolveNuxeraSection(section);
+
+  if (resolvedSection?.adapter === "finance-workspace") {
+    return <FinanceWorkspaceAdapter role={role} />;
+  }
 
   if (resolvedSection?.adapter === "document-intelligence") {
     return <DocumentIntelligenceAdapter role={role} />;

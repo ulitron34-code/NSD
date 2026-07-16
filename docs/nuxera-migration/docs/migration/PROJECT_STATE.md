@@ -134,3 +134,26 @@ Remaining gaps:
 - `NUXERA Intelligence` is currently an adapter over document intelligence, not the full future research missions module described in `NU-INT-001`.
 
 Next recommended task: start a small `NU-FIN-ADAPTER-001` or `NU-INT-002` depending on whether the next priority is Finance readiness or deeper Intelligence missions.
+
+## NU-FIN-ADAPTER-001 update - 2026-07-16
+
+Mounted the first role-aware NUXERA Finance adapter by reusing existing modules.
+
+Changed runtime surface:
+- `/dashboard/nuxera/finance` now resolves to a Finance adapter.
+- Applicant role mounts `FundingReadinessTab`.
+- Grantor role mounts `PipelineTab`.
+- Admin role mounts `ServiceOrdersPage`.
+- Legacy dashboard tabs and backend/API contracts remain untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 12 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 173 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- Finance is currently an adapter over existing role-specific modules, not the final unified Finance workspace.
+
+Next recommended task: choose between `NU-MKT-ADAPTER-001` for a lightweight Markets placeholder-to-adapter path, or `NU-FIN-002` to begin unifying the Finance user journey beyond adapters.
