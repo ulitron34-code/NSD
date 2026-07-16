@@ -9,7 +9,7 @@
 | Authentication | Yes | Reused with compatibility | Baseline mapped and validated | No |
 | View switcher | Yes | Formal feature-flag control | Feature-flagged NUXERA entry implemented | No |
 | Engine registry | N/A | Shared engine metadata source | Implemented for Finance, Intelligence, Markets and Strategy | N/A |
-| Applicant dashboard | Yes | Progress and next-action home | Guided mission with local data-room checklist mounted | No |
+| Applicant dashboard | Yes | Progress and next-action home | Guided mission with read-only NUXERA state fallback mounted | No |
 | Applicant onboarding | Yes | Guided mission wizard | Planned | No |
 | Company and project data | Yes | Unified guided workspace | Planned | No |
 | Document management | Yes | Contextual document center | Planned | No |

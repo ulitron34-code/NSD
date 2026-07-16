@@ -1,7 +1,10 @@
 import React from "react";
+import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
+import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
+import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../grantor/caseQueue";
 
 const roleCopy = {
@@ -28,7 +31,21 @@ const roleCopy = {
 function ApplicantMissionHome({ sectionLabel }) {
   const mission = getApplicantGuidedMission("applicant");
   const readiness = getApplicantMissionReadiness("applicant");
-  const checklist = getApplicantDataRoomChecklist("es");
+  const { orderId, isDemo, loading: ordersLoading } = useMyOrders();
+  const workspaceState = useApplicantWorkspaceState(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+  });
+  const checklist = mergeApplicantChecklistWithWorkspaceState(
+    getApplicantDataRoomChecklist("es"),
+    workspaceState
+  );
+  const stateDetail = ordersLoading
+    ? "Buscando expediente real para lectura NUXERA."
+    : !orderId || isDemo
+      ? "Fallback local; sin expediente real conectado."
+      : workspaceState.persisted
+        ? `Version ${workspaceState.version} leida desde NUXERA state.`
+        : "Endpoint NUXERA disponible; usando checklist local como fallback.";
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -70,8 +87,9 @@ function ApplicantMissionHome({ sectionLabel }) {
           <div>
             <span>Data room readiness</span>
             <h2>Checklist para preparar expediente</h2>
+            <p className="nuxera-state-caption">{workspaceState.label}: {stateDetail}</p>
           </div>
-          <strong>{checklist.summary.status}</strong>
+          <strong>{workspaceState.loading ? "loading" : checklist.summary.status}</strong>
         </header>
         <div className="nuxera-checklist-summary">
           <article><span>Listos</span><strong>{checklist.summary.ready}</strong></article>
@@ -94,7 +112,7 @@ function ApplicantMissionHome({ sectionLabel }) {
           {checklist.nextEvidence.map((item) => (
             <p key={item.id}>{item.critical ? "Critico" : "Pendiente"}: {item.label}</p>
           ))}
-          <small>{checklist.guardrail}</small>
+          <small>{checklist.guardrail} {workspaceState.persisted ? `Estado persistido: ${workspaceState.status}.` : "Sin writes desde UI."}</small>
         </div>
       </section>
 

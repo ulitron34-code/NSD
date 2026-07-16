@@ -4,6 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
+import { mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
@@ -247,6 +248,53 @@ describe("NUXERA applicant guided mission", () => {
       expect.arrayContaining(["identity-kyb", "finance-transparency", "impact-risk"])
     );
     expect(checklist.guardrail).toContain("Checklist local");
+  });
+
+  it("normalizes read-only NUXERA applicant checklist state", () => {
+    const state = normalizeNuxeraApplicantChecklistState({
+      orderId: "order-1",
+      states: {
+        checklist: {
+          orderId: "order-1",
+          surface: "checklist",
+          status: "in_progress",
+          version: 3,
+          persisted: true,
+          payload: { completedItemIds: ["modelo_financiero"] },
+          guardrails: ["Persistencia limitada a applicant checklist."],
+        },
+      },
+    });
+
+    expect(state).toMatchObject({
+      source: "remote-persisted",
+      persisted: true,
+      status: "in_progress",
+      version: 3,
+      completedItemIds: ["modelo_financiero"],
+    });
+  });
+
+  it("merges persisted checklist completion without creating frontend writes", () => {
+    const localChecklist = getApplicantDataRoomChecklist();
+    const merged = mergeApplicantChecklistWithWorkspaceState(localChecklist, {
+      source: "remote-persisted",
+      persisted: true,
+      status: "in_progress",
+      version: 2,
+      completedItemIds: ["modelo_financiero"],
+    });
+    const modeloFinanciero = merged.categories
+      .flatMap((category) => category.items)
+      .find((item) => item.id === "modelo_financiero");
+
+    expect(modeloFinanciero).toMatchObject({
+      status: "ready",
+      persistedByNuxera: true,
+    });
+    expect(merged.workspaceState).toMatchObject({ persisted: true, version: 2 });
+    expect(merged.summary.ready).toBe(localChecklist.summary.ready + 1);
+    expect(merged.summary.missing).toBe(localChecklist.summary.missing - 1);
   });
 });
 describe("NUXERA Finance adapter", () => {

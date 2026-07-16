@@ -237,6 +237,10 @@ export const checklistAPI = {
     api.get(`/orders/${orderId}/checklist`)
 };
 
+export const nuxeraWorkspaceStateAPI = {
+  getOrderState: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/state`)
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

@@ -282,6 +282,13 @@
   font-size: 1rem;
 }
 
+.nuxera-state-caption {
+  margin: 6px 0 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .nuxera-applicant-checklist > header > strong {
   border-radius: 999px;
   padding: 6px 10px;

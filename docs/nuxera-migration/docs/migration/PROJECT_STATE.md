@@ -533,3 +533,29 @@ Remaining gaps:
 - Grantor memo, review artifacts, evidence links and admin controls remain contract-only.
 
 Next recommended task after validation: connect a read-only frontend adapter behind the NUXERA flag, or apply/verify SQL in a controlled Supabase environment before any UI write path.
+
+## NU-FE-BE-001 update - 2026-07-16
+
+Connected the first read-only frontend adapter to the NUXERA applicant checklist state endpoint.
+
+Changed frontend surface:
+- Added `nuxeraWorkspaceStateAPI.getOrderState(orderId)` to the shared API client.
+- Added `workspaceStateAdapter` to normalize backend state and merge persisted `completedItemIds` into the local checklist view.
+- Updated applicant NUXERA home to read backend state only when the NUXERA flag is active and a real order id exists.
+- Preserved local fallback for demo mode, missing orders, unavailable endpoint or non-persisted default state.
+- Kept UI writes disconnected; no PATCH, persistence action or document permission change was introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 48 tests.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build`.
+- Frontend full unit suite: passed, 9 files / 209 tests.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL draft has not been applied to Supabase/production.
+- Applicant checklist writes remain disconnected from UI.
+- Grantor memo, review artifacts, evidence links and admin controls remain contract-only.
+- Manual browser screenshots remain blocked in this environment by browser launch restrictions.
+
+Next recommended task after validation: apply/verify SQL in a controlled Supabase environment before enabling the first UI write path, or continue with read-only evidence-link adapters.

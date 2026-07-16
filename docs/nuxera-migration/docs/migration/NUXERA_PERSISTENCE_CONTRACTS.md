@@ -223,3 +223,12 @@ Route-level coverage now protects the first NUXERA state endpoints:
 - Covered write guardrails: `case:own:update`, checklist-only surface enforcement and service delegation with request context.
 
 This keeps the backend slice narrow. SQL remains unapplied, UI writes remain disconnected and only applicant checklist state is executable.
+
+## NU-FE-BE-001 implementation note
+
+The applicant NUXERA home now has a read-only frontend adapter for the first backend state endpoint:
+- API client: `nuxeraWorkspaceStateAPI.getOrderState(orderId)` in `src/services/api.js`.
+- Adapter/hook: `src/nuxera/applicant/workspaceStateAdapter.js`.
+- UI surface: applicant checklist in `src/nuxera/pages/NuxeraHome.jsx`.
+
+The UI only reads `GET /api/nuxera/orders/:orderId/state` when a real applicant order id exists and the NUXERA feature flag is active. If the endpoint is unavailable, no order exists or no persisted state exists, the checklist remains on the local preparation fallback. No frontend write path was connected.
