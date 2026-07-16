@@ -51,11 +51,13 @@ Changed files:
 - `src/nuxera/NuxeraWorkspaceRouter.jsx`
 - `src/nuxera/styles/tokens.css`
 - `src/nuxera/styles/shell.css`
+- `src/tests/nuxeraExperience.test.js`
 
 Evidence:
 - `pnpm run lint`: passed.
 - `pnpm run build`: passed with bundled Node and escalated execution for Vite/Rolldown native process access.
-- `pnpm run test:run`: passed, 8 files and 161 tests.
+- `pnpm run test:run`: passed, 9 files and 168 tests.
+- Targeted NUXERA test coverage added for feature flag gating, legacy-compatible storage key, role resolution and role navigation.
 
 Acceptance notes:
 - NUXERA entry is feature-flagged by `VITE_NUXERA_EXPERIENCE_ENABLED=true`.
@@ -64,6 +66,6 @@ Acceptance notes:
 - Role-aware navigation is present for applicant, grantor and admin.
 
 Remaining evidence needed before product acceptance:
-- Manual browser check with feature flag enabled.
+- Manual browser check with feature flag enabled. Attempted with installed Chrome, but browser launch is blocked by local `spawn EPERM` restrictions in this environment and no admin/install path is available.
 - Screenshots for each role.
 - Deep-link verification for `/dashboard/nuxera/:section`.

@@ -104,10 +104,10 @@ Changed runtime surface:
 Validation:
 - Frontend lint: passed with `pnpm run lint`.
 - Frontend build: passed with `pnpm run build` using bundled Node and escalated execution due Vite/Rolldown EPERM in the restricted sandbox.
-- Frontend unit tests: passed with `pnpm run test:run`, 8 files and 161 tests; first sandbox attempt failed at startup with EPERM, elevated run passed.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 168 tests after adding targeted NUXERA coverage; sandbox attempts can fail at startup with EPERM, elevated runs pass.
 
 Remaining NU-SHELL-001 gaps:
-- Manual browser verification with feature flag enabled.
+- Manual browser verification with feature flag enabled. Attempted with installed Chrome, but local browser launch is blocked by `spawn EPERM` and no admin/install path is available.
 - Screenshots for applicant/grantor/admin shell states.
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
