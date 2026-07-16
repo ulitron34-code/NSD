@@ -14,7 +14,7 @@
 | Document management | Yes | Contextual document center | Planned | No |
 | Grantor dashboard | Yes | Decision queue and alerts | Local case queue foundation mounted | No |
 | Case review | Yes | Unified case workbench | Local grantor case workbench foundation mounted | No |
-| Admin | Yes | Operations/config/security/AI split | Shell placeholder implemented | No |
+| Admin | Yes | Operations/config/security/AI split | Local operations console foundation mounted | No |
 | Compliance | Yes | Transversal services | Preserve | No |
 | Intelligence | Partial | Deep research engine | Research mission foundation mounted over document adapter | N/A |
 | Markets | No/partial | Market intelligence engine | Provider degradation and realtime license gate hardened | N/A |

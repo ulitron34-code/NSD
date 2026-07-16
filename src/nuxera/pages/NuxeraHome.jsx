@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorQueueSummary } from "../grantor/caseQueue";
 
@@ -219,6 +220,73 @@ function GrantorQueueHome({ sectionLabel }) {
   );
 }
 
+
+function AdminOperationsHome({ sectionLabel }) {
+  const consoleState = getAdminOperationsConsole();
+
+  return (
+    <section className="nuxera-home" aria-labelledby="nuxera-home-title">
+      <p className="nuxera-eyebrow">NUXERA Financial Intelligence / Administrador</p>
+      <div className="nuxera-hero-row">
+        <div>
+          <h1 id="nuxera-home-title">Consola operativa NUXERA</h1>
+          <p>Monitorea salud, gates, auditoria y politicas de la migracion sin cambiar permisos ni activar persistencia.</p>
+        </div>
+        <div className="nuxera-status-panel">
+          <span>{consoleState.status}</span>
+          <strong>{consoleState.summary.blockedGates} gates</strong>
+          <small>{sectionLabel}</small>
+        </div>
+      </div>
+
+      <div className="nuxera-admin-summary">
+        <article><span>Lanes</span><strong>{consoleState.summary.lanes}</strong></article>
+        <article><span>Watch</span><strong>{consoleState.summary.watch}</strong></article>
+        <article><span>Bloqueos</span><strong>{consoleState.summary.blockedGates}</strong></article>
+        <article><span>Revision humana</span><strong>{consoleState.summary.requiresHumanReview ? "Si" : "No"}</strong></article>
+      </div>
+
+      <div className="nuxera-admin-lanes">
+        {consoleState.lanes.map((lane) => (
+          <article key={lane.id}>
+            <span>{lane.status}</span>
+            <strong>{lane.label}</strong>
+            <p>{lane.signal}</p>
+            <small>{lane.owner}</small>
+            <em>{lane.action}</em>
+          </article>
+        ))}
+      </div>
+
+      <section className="nuxera-admin-gates" aria-label="Release gates NUXERA">
+        <header>
+          <span>Release gates</span>
+          <h2>Condiciones antes de persistencia o rollout</h2>
+        </header>
+        <div>
+          {consoleState.releaseGates.map((gate) => (
+            <article key={gate.id}>
+              <span>{gate.state}</span>
+              <strong>{gate.label}</strong>
+              <p>{gate.requirement}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <div className="nuxera-admin-panels">
+        <section>
+          <h2>Audit trail local</h2>
+          {consoleState.auditEvents.map((event) => <p key={event}>{event}</p>)}
+        </section>
+        <section>
+          <h2>Politicas admin</h2>
+          {consoleState.policies.map((policy) => <p key={policy}>{policy}</p>)}
+        </section>
+      </div>
+    </section>
+  );
+}
 export default function NuxeraHome({ role = "applicant", section = "home" }) {
   const copy = roleCopy[role] || roleCopy.applicant;
   const sectionLabel = section === "home" ? "Workspace" : section;
@@ -229,6 +297,10 @@ export default function NuxeraHome({ role = "applicant", section = "home" }) {
 
   if (role === "grantor") {
     return <GrantorQueueHome sectionLabel={sectionLabel} />;
+  }
+
+  if (role === "admin") {
+    return <AdminOperationsHome sectionLabel={sectionLabel} />;
   }
 
   return (

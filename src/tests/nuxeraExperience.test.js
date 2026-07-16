@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
+import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
@@ -143,6 +144,36 @@ describe("NUXERA section registry", () => {
 });
 
 
+
+describe("NUXERA admin operations console", () => {
+  it("builds local admin lanes and release gates", () => {
+    const consoleState = getAdminOperationsConsole();
+
+    expect(consoleState.status).toBe("release-gated");
+    expect(consoleState.lanes.map((lane) => lane.id)).toEqual(
+      expect.arrayContaining(["operations", "security", "ai-agents", "system"])
+    );
+    expect(consoleState.releaseGates.map((gate) => gate.id)).toEqual(
+      expect.arrayContaining(["feature-flag", "legacy-safe", "backend-contracts", "human-review"])
+    );
+  });
+
+  it("keeps admin operations local and human-review gated", () => {
+    const consoleState = getAdminOperationsConsole();
+
+    expect(consoleState.summary.blockedGates).toBeGreaterThan(0);
+    expect(consoleState.summary.requiresHumanReview).toBe(true);
+    expect(consoleState.policies).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("no cambia permisos"),
+        expect.stringContaining("contrato backend"),
+      ])
+    );
+    expect(consoleState.auditEvents).toEqual(
+      expect.arrayContaining([expect.stringContaining("Grantor queue")])
+    );
+  });
+});
 describe("NUXERA applicant guided mission", () => {
   it("builds a financing readiness mission with engine-linked steps", () => {
     const mission = getApplicantGuidedMission("applicant");
