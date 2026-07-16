@@ -302,3 +302,26 @@ Remaining gaps:
 - E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
 
 Next recommended task after validation: continue with `NU-INT-003` only if persistence/export is approved, or start a frontend-only applicant guided mission slice.
+
+## NU-APP-002 update - 2026-07-16
+
+Started replacing the applicant NUXERA home placeholder with a guided mission foundation.
+
+Changed runtime surface:
+- Added a local applicant guided mission model with financing readiness summary, outcome, progress, next action, steps and guardrails.
+- Added mission readiness status with open step ids and human-review requirement.
+- Updated applicant home to show mission steps and evidence links to Finance, Intelligence and Strategy.
+- Kept grantor/admin home placeholder behavior unchanged.
+- Backend/API contracts remain untouched and mission state is not persisted.
+
+Validation:
+- Targeted NUXERA tests: passed, 37 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 198 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
+
+Next recommended task after validation: add a frontend-only applicant data-room/checklist layer, or pause for backend contract design before persistence.

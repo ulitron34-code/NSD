@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
+import { getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
@@ -140,6 +141,39 @@ describe("NUXERA section registry", () => {
   });
 });
 
+
+describe("NUXERA applicant guided mission", () => {
+  it("builds a financing readiness mission with engine-linked steps", () => {
+    const mission = getApplicantGuidedMission("applicant");
+
+    expect(mission.title).toContain("financiamiento");
+    expect(mission.steps.map((step) => step.engine)).toEqual(
+      expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
+    );
+    expect(mission.evidenceLinks.map((link) => link.path)).toEqual(
+      expect.arrayContaining([
+        "/dashboard/nuxera/finance",
+        "/dashboard/nuxera/intelligence",
+        "/dashboard/nuxera/strategy",
+      ])
+    );
+  });
+
+  it("keeps applicant mission guarded by human review and no-guarantee language", () => {
+    const mission = getApplicantGuidedMission();
+    const readiness = getApplicantMissionReadiness();
+
+    expect(readiness.status).toBe("evidence-in-progress");
+    expect(readiness.requiresHumanReview).toBe(true);
+    expect(readiness.openStepIds).toContain("complete-evidence");
+    expect(mission.guardrails).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("no aprueba credito"),
+        expect.stringContaining("no como recomendacion"),
+      ])
+    );
+  });
+});
 describe("NUXERA Finance adapter", () => {
   it("selects role-specific legacy modules for Finance", () => {
     expect(getFinanceAdapterConfig("applicant").title).toBe("Preparacion financiera");
