@@ -1,38 +1,25 @@
+import { getNuxeraEngine } from "../engines/engineRegistry";
+
 export const NUXERA_SECTION_TYPES = Object.freeze({
   LEGACY_ADAPTER: "legacy-adapter",
   PLACEHOLDER: "placeholder",
 });
 
-export const nuxeraSectionRegistry = Object.freeze({
-  finance: {
-    id: "finance",
-    type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
-    title: "Workspace financiero",
-    adapter: "finance-workspace",
-  },
-  markets: {
-    id: "markets",
-    type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
-    title: "Monitoreo de mercado",
-    adapter: "markets-workspace",
-  },
-  strategy: {
-    id: "strategy",
-    type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
-    title: "Soporte de decision",
-    adapter: "strategy-workspace",
-  },
-  intelligence: {
-    id: "intelligence",
-    type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
-    title: "Inteligencia documental",
-    adapter: "document-intelligence",
-  },
-});
-
 export function resolveNuxeraSection(section) {
   if (!section || section === "home") return null;
-  return nuxeraSectionRegistry[section] || {
+
+  const engine = getNuxeraEngine(section);
+  if (engine) {
+    return {
+      id: engine.id,
+      type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
+      title: engine.title,
+      adapter: engine.adapter,
+      status: engine.status,
+    };
+  }
+
+  return {
     id: section,
     type: NUXERA_SECTION_TYPES.PLACEHOLDER,
     title: section,

@@ -1,9 +1,6 @@
-const sharedEngines = [
-  { id: "finance", label: "Finance", path: "/dashboard/nuxera/finance" },
-  { id: "intelligence", label: "Intelligence", path: "/dashboard/nuxera/intelligence" },
-  { id: "markets", label: "Markets", path: "/dashboard/nuxera/markets" },
-  { id: "strategy", label: "Strategy", path: "/dashboard/nuxera/strategy" },
-];
+import { getNuxeraEngineNavigationItems } from "../engines/engineRegistry";
+
+const sharedEngines = getNuxeraEngineNavigationItems();
 
 export const navigationByRole = {
   applicant: [

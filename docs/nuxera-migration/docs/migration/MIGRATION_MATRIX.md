@@ -7,6 +7,7 @@
 | Public landing | Yes | Outcome-led NUXERA landing | Planned | No |
 | Authentication | Yes | Reused with compatibility | Baseline mapped and validated | No |
 | View switcher | Yes | Formal feature-flag control | Feature-flagged NUXERA entry implemented | No |
+| Engine registry | N/A | Shared engine metadata source | Implemented for Finance, Intelligence, Markets and Strategy | N/A |
 | Applicant dashboard | Yes | Progress and next-action home | Finance adapter mounts readiness module | No |
 | Applicant onboarding | Yes | Guided mission wizard | Planned | No |
 | Company and project data | Yes | Unified guided workspace | Planned | No |

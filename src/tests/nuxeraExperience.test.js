@@ -3,6 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies } from "../nuxera/markets/marketDataProvider";
+import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
@@ -67,6 +68,34 @@ describe("NUXERA role navigation", () => {
   });
 });
 
+
+describe("NUXERA engine registry", () => {
+  it("defines the four approved engines in migration order", () => {
+    expect(getNuxeraEngines().map((engine) => engine.id)).toEqual([
+      "finance",
+      "intelligence",
+      "markets",
+      "strategy",
+    ]);
+  });
+
+  it("is the source for shared navigation items", () => {
+    expect(getNuxeraEngineNavigationItems()).toEqual([
+      { id: "finance", label: "Finance", path: "/dashboard/nuxera/finance" },
+      { id: "intelligence", label: "Intelligence", path: "/dashboard/nuxera/intelligence" },
+      { id: "markets", label: "Markets", path: "/dashboard/nuxera/markets" },
+      { id: "strategy", label: "Strategy", path: "/dashboard/nuxera/strategy" },
+    ]);
+  });
+
+  it("provides adapter metadata used by section resolution", () => {
+    expect(getNuxeraEngine("strategy")).toMatchObject({
+      title: "Soporte de decision",
+      adapter: "strategy-workspace",
+      status: "foundation-mounted",
+    });
+  });
+});
 describe("NUXERA section registry", () => {
   it("mounts Finance as a role-aware legacy adapter section", () => {
     expect(resolveNuxeraSection("finance")).toMatchObject({

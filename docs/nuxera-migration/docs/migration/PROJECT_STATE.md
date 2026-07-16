@@ -201,3 +201,21 @@ Remaining gaps:
 - Strategy outputs are local/auditable draft only; persistence and export require a dedicated task.
 
 Next recommended task: consolidate the four engine adapters into a shared engine registry/metadata layer or begin the first true module-deepening task (`NU-FIN-002`, `NU-INT-002`, `NU-MKT-002` or `NU-STR-002`).
+
+## NU-ENGINE-REGISTRY-001 update - 2026-07-16
+
+Centralized NUXERA engine metadata after mounting the four initial engines.
+
+Changed runtime surface:
+- Added `src/nuxera/engines/engineRegistry.js` as the source of truth for Finance, Intelligence, Markets and Strategy.
+- NUXERA navigation now derives shared engine links from the engine registry.
+- Section resolution now derives engine adapters, titles and status from the engine registry.
+- Routes and role semantics remain unchanged.
+
+Validation:
+- Targeted NUXERA tests: passed, 23 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 184 tests.
+
+Next recommended task: begin one module-deepening task (`NU-FIN-002`, `NU-INT-002`, `NU-MKT-002` or `NU-STR-002`) now that shell and engine registry are stable.
