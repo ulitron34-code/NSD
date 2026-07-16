@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
-import { getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies } from "../nuxera/markets/marketDataProvider";
+import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
@@ -177,6 +177,36 @@ describe("NUXERA Markets foundation", () => {
         expect.stringContaining("proveedor falla"),
       ])
     );
+  });
+
+  it("blocks realtime market data unless a licensed provider is explicitly active", () => {
+    const status = getMarketProviderStatus(MARKET_PROVIDER_STATES.UNLICENSED);
+
+    expect(status.mode).toBe("license-required");
+    expect(status.delayLabel).toContain("no tiempo real");
+    expect(canUseRealtimeMarketData(status)).toBe(false);
+  });
+
+  it("returns a visible degradation plan when the provider fails", () => {
+    const plan = getProviderDegradationPlan(MARKET_PROVIDER_STATES.DEGRADED);
+
+    expect(plan.health).toBe("degraded");
+    expect(plan.realtimeAvailable).toBe(false);
+    expect(plan.actions).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("degradacion visible"),
+        expect.stringContaining("snapshot local"),
+      ])
+    );
+  });
+
+  it("keeps local watchlist context available in degraded mode", () => {
+    const watchlist = getMarketWatchlist("admin", MARKET_PROVIDER_STATES.DEGRADED);
+
+    expect(watchlist.status.degradation).toBe(true);
+    expect(watchlist.degradationPlan.fallbackStrategy).toContain("revision humana");
+    expect(watchlist.rows.length).toBeGreaterThan(0);
+    expect(watchlist.events.length).toBeGreaterThan(0);
   });
 });
 

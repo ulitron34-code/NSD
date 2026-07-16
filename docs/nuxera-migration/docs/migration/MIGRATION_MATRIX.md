@@ -17,5 +17,5 @@
 | Admin | Yes | Operations/config/security/AI split | Shell placeholder implemented | No |
 | Compliance | Yes | Transversal services | Preserve | No |
 | Intelligence | Partial | Deep research engine | Research mission foundation mounted over document adapter | N/A |
-| Markets | No/partial | Market intelligence engine | Local delayed provider and watchlist foundation mounted | N/A |
+| Markets | No/partial | Market intelligence engine | Provider degradation and realtime license gate hardened | N/A |
 | Strategy | No/partial | Strategic decision engine | Decision-support foundation mounted with assumptions and evidence links | N/A |

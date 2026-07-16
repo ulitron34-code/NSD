@@ -31,6 +31,24 @@ export default function MarketsWorkspace({ role }) {
         <span>{watchlist.status.disclaimer}</span>
       </div>
 
+      <section className="nuxera-market-provider" aria-label="Estado del proveedor de mercado">
+        <div>
+          <span>{watchlist.degradationPlan.health}</span>
+          <strong>{watchlist.degradationPlan.label}</strong>
+          <p>{watchlist.degradationPlan.fallbackStrategy}</p>
+        </div>
+        <div>
+          <span>Realtime</span>
+          <strong>{watchlist.degradationPlan.realtimeAvailable ? "Disponible" : "No disponible"}</strong>
+          <p>{watchlist.status.asOf}</p>
+        </div>
+        <ul>
+          {watchlist.degradationPlan.actions.map((action) => (
+            <li key={action}>{action}</li>
+          ))}
+        </ul>
+      </section>
+
       <div className="nuxera-market-grid">
         {watchlist.rows.map((row) => (
           <article className="nuxera-market-card" key={row.symbol}>

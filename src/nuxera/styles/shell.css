@@ -245,6 +245,50 @@
   color: var(--nuxera-muted);
 }
 
+
+.nuxera-market-provider {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(180px, 0.45fr) minmax(0, 1.2fr);
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: #f8fbff;
+  border: 1px solid #c9def5;
+  border-radius: 8px;
+}
+
+.nuxera-market-provider div {
+  display: grid;
+  gap: 5px;
+  align-content: start;
+}
+
+.nuxera-market-provider span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-market-provider strong {
+  color: var(--nuxera-ink);
+  font-size: 0.95rem;
+}
+
+.nuxera-market-provider p {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nuxera-market-provider ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
 .nuxera-market-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -671,7 +715,8 @@
   }
 
   .nuxera-hero-row,
-  .nuxera-card-grid {
+  .nuxera-card-grid,
+  .nuxera-market-provider {
     grid-template-columns: 1fr;
   }
 }

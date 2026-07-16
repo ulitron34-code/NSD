@@ -255,3 +255,27 @@ Validation:
 - Frontend unit tests: passed with `pnpm run test:run`, 9 files and 191 tests.
 
 Next recommended task: continue `NU-INT-003` with persistence/export approval, or move to `NU-MKT-002` for provider abstraction hardening.
+
+## NU-MKT-002 update - 2026-07-16
+
+Hardened the NUXERA Markets provider layer after the initial watchlist foundation.
+
+Changed runtime surface:
+- Added explicit market provider states for local delayed, degraded and unlicensed modes.
+- Added a realtime guard so realtime market data is unavailable unless a licensed realtime status is explicitly active.
+- Added a provider degradation plan with visible fallback strategy, actions and human-review framing.
+- Updated the Markets workspace to show provider health, realtime availability, snapshot time and fallback actions before the watchlist.
+- Kept local watchlist context available in degraded mode.
+- Backend/API contracts remain untouched.
+
+Validation:
+- Targeted NUXERA tests: passed, 33 checks.
+- Frontend lint: passed with `pnpm run lint`.
+- Frontend build: passed with `pnpm run build` using bundled Node and elevated execution due Vite/Rolldown EPERM in the restricted sandbox.
+- Frontend unit tests: passed with `pnpm run test:run`, 9 files and 194 tests.
+
+Remaining gaps:
+- Manual visual verification and screenshots remain blocked by local browser launch `spawn EPERM`.
+- E2E remains deferred because the local Playwright webServer command uses `npm run dev`, but npm is unavailable on PATH in this environment.
+
+Next recommended task after validation: continue with `NU-STR-002` for deeper strategy decision flows or `NU-INT-003` for Intelligence persistence/export approval.
