@@ -1,0 +1,12 @@
+export const BRAND = {
+  name: "N&U",
+  legalName: "N&U",
+  tagline: "Financial Intelligence",
+  productName: "N&U Platform",
+  category: "Enterprise Financial Intelligence",
+  contactEmail: "info@nsd.com",
+  contactPhone: "+52 XX XXXX XXXX",
+  location: "Ciudad de Mexico",
+  logoAlt: "N&U",
+  logoPath: "/logo-nu.png",
+};
