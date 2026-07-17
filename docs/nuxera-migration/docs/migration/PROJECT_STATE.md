@@ -805,3 +805,28 @@ Remaining gaps:
 - Writes are limited to applicant checklist metadata; no document/data-room writes are connected.
 
 Next recommended task after validation: verify the write UX against a controlled Supabase environment with real `nuxera_workspace_states` RLS, or keep writes disabled in production until SQL is applied.
+## NU-APP-004 update - 2026-07-17
+
+Added a frontend-only applicant onboarding wizard foundation.
+
+Changed frontend surface:
+- Added `getApplicantOnboardingWizard` derived from the local applicant checklist and minimum requirements.
+- Applicant NUXERA home now shows a three-stage onboarding sequence for company profile, project/use of funds and risk/impact.
+- Each stage exposes owner, objective, evidence readiness, next evidence and an existing NUXERA module link.
+- Kept onboarding local preparation-only; no persistence, backend contract, document permission or data-room write changes were introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 58 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 219 tests.
+- `node --check` on `guidedMission.js`: passed.
+- `node --check` on `.jsx`: not applicable in Node 24 because `.jsx` is an unknown extension; covered by Vite/Vitest.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Onboarding answers are not persisted.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: connect onboarding to persisted workspace state only after SQL/RLS is verified, or continue with a frontend-only company/project data workspace foundation.

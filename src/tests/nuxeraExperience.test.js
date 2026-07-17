@@ -4,7 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
-import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
+import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
@@ -301,6 +301,18 @@ describe("NUXERA applicant guided mission", () => {
     );
   });
 
+  it("builds a local applicant onboarding wizard from checklist evidence", () => {
+    const wizard = getApplicantOnboardingWizard("es");
+
+    expect(wizard.status).toBe("local-preparation-only");
+    expect(wizard.summary.totalStages).toBe(3);
+    expect(wizard.stages.map((stage) => stage.id)).toEqual(
+      expect.arrayContaining(["company-profile", "project-case", "risk-impact"])
+    );
+    expect(wizard.nextStage.missingEvidence).toBeGreaterThan(0);
+    expect(wizard.guardrails.join(" ")).toContain("no persiste");
+    expect(wizard.guardrails.join(" ")).toContain("No aprueba credito");
+  });
   it("builds a local data-room checklist from minimum requirements", () => {
     const checklist = getApplicantDataRoomChecklist("es");
 

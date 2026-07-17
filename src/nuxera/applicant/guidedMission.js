@@ -115,6 +115,38 @@ const dataRoomFolders = [
     requirementIds: ["marco_riesgos", "ods", "esg", "esia"],
   },
 ];
+const applicantOnboardingStages = [
+  {
+    id: "company-profile",
+    label: "Empresa y responsables",
+    status: "ready",
+    owner: "Solicitante",
+    objective: "Confirmar identidad, estructura corporativa y responsables del expediente.",
+    action: "Revisar datos base antes de pedir analisis financiero.",
+    sectionPath: "/dashboard/nuxera/intelligence",
+    requirementIds: ["doc_corporativa", "identificacion_oficial", "doc_kyc"],
+  },
+  {
+    id: "project-case",
+    label: "Proyecto y uso de fondos",
+    status: "in-progress",
+    owner: "Solicitante + analista",
+    objective: "Explicar para que se solicita capital, avance del proyecto y supuestos principales.",
+    action: "Completar plan, modelo financiero y viabilidad antes de revision humana.",
+    sectionPath: "/dashboard/nuxera/finance",
+    requirementIds: ["plan_negocios", "modelo_financiero", "viabilidad_financiera"],
+  },
+  {
+    id: "risk-impact",
+    label: "Riesgo, mercado e impacto",
+    status: "blocked-by-evidence",
+    owner: "NUXERA Strategy",
+    objective: "Separar riesgos, impacto y contexto de mercado de cualquier decision automatica.",
+    action: "Agregar mercado, ESG, ESIA y marco de riesgos para tener una lectura completa.",
+    sectionPath: "/dashboard/nuxera/strategy",
+    requirementIds: ["estudio_mercado", "marco_riesgos", "esg", "esia"],
+  },
+];
 
 function getRequirementStatus(requirementId) {
   return localStatusByRequirement[requirementId] || "missing";
@@ -188,5 +220,47 @@ export function getApplicantDataRoomChecklist(language = "es") {
     }),
     nextEvidence: missing.slice(0, 3),
     guardrail: "Checklist local de preparacion; no sustituye validacion documental ni decision humana.",
+  };
+}
+export function getApplicantOnboardingWizard(language = "es") {
+  const checklist = getApplicantDataRoomChecklist(language);
+  const requirementsById = new Map(
+    checklist.categories.flatMap((category) => category.items).map((item) => [item.id, item])
+  );
+  const stages = applicantOnboardingStages.map((stage, index) => {
+    const evidence = stage.requirementIds
+      .map((requirementId) => requirementsById.get(requirementId))
+      .filter(Boolean);
+    const missingEvidence = evidence.filter((item) => item.status === "missing");
+    const readyEvidence = evidence.filter((item) => item.status === "ready");
+
+    return {
+      ...stage,
+      order: index + 1,
+      evidence,
+      readyEvidence: readyEvidence.length,
+      missingEvidence: missingEvidence.length,
+      nextEvidence: missingEvidence[0]?.label || evidence.find((item) => item.status === "in-review")?.label || "Revision humana",
+      complete: missingEvidence.length === 0,
+    };
+  });
+  const nextStage = stages.find((stage) => !stage.complete) || stages[stages.length - 1];
+
+  return {
+    id: "applicant-onboarding-wizard-local",
+    status: "local-preparation-only",
+    summary: {
+      totalStages: stages.length,
+      completedStages: stages.filter((stage) => stage.complete).length,
+      blockedStages: stages.filter((stage) => stage.missingEvidence > 0).length,
+      progress: Math.round((checklist.summary.ready / checklist.summary.total) * 100),
+    },
+    stages,
+    nextStage,
+    guardrails: [
+      "Wizard local de preparacion; no persiste respuestas ni documentos.",
+      "No aprueba credito, no emite term sheet y no reemplaza revision humana.",
+      "Las rutas conectan a modulos existentes sin cambiar permisos ni contratos backend.",
+    ],
   };
 }

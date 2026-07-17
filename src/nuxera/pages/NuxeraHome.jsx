@@ -4,7 +4,7 @@ import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
-import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
+import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
@@ -34,6 +34,7 @@ const roleCopy = {
 function ApplicantMissionHome({ sectionLabel }) {
   const mission = getApplicantGuidedMission("applicant");
   const readiness = getApplicantMissionReadiness("applicant");
+  const onboardingWizard = getApplicantOnboardingWizard("es");
   const { orderId, isDemo, loading: ordersLoading } = useMyOrders();
   const workspaceState = useApplicantWorkspaceState(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
@@ -78,6 +79,27 @@ function ApplicantMissionHome({ sectionLabel }) {
         <p>{readiness.nextAction}</p>
       </section>
 
+      <section className="nuxera-onboarding-wizard" aria-label="Onboarding guiado del solicitante">
+        <header>
+          <div>
+            <span>{onboardingWizard.status}</span>
+            <h2>Onboarding del expediente</h2>
+          </div>
+          <strong>{onboardingWizard.summary.progress}% evidencia lista</strong>
+        </header>
+        <div>
+          {onboardingWizard.stages.map((stage) => (
+            <article key={stage.id}>
+              <span>Paso {stage.order} / {stage.status}</span>
+              <strong>{stage.label}</strong>
+              <p>{stage.objective}</p>
+              <small>{stage.readyEvidence}/{stage.evidence.length} evidencias listas; siguiente: {stage.nextEvidence}</small>
+              <NavLink to={stage.sectionPath}>{stage.owner}</NavLink>
+            </article>
+          ))}
+        </div>
+        <footer>{onboardingWizard.guardrails[0]} Siguiente etapa: {onboardingWizard.nextStage.label}.</footer>
+      </section>
       <div className="nuxera-mission-grid">
         {mission.steps.map((step) => (
           <article className="nuxera-mission-step" key={step.id}>

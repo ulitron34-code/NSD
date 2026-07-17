@@ -10,7 +10,7 @@
 | View switcher | Yes | Formal feature-flag control | Feature-flagged NUXERA entry implemented | No |
 | Engine registry | N/A | Shared engine metadata source | Implemented for Finance, Intelligence, Markets and Strategy | N/A |
 | Applicant dashboard | Yes | Progress and next-action home | Guided mission with guarded applicant checklist write UX and owner evidence fallback mounted | No |
-| Applicant onboarding | Yes | Guided mission wizard | Planned | No |
+| Applicant onboarding | Yes | Guided mission wizard | Local three-stage onboarding wizard mounted | No |
 | Company and project data | Yes | Unified guided workspace | Planned | No |
 | Document management | Yes | Contextual document center | Planned | No |
 | Grantor dashboard | Yes | Decision queue and alerts | Local case queue foundation mounted | No |
