@@ -830,3 +830,27 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: connect onboarding to persisted workspace state only after SQL/RLS is verified, or continue with a frontend-only company/project data workspace foundation.
+## NU-APP-DATA-001 update - 2026-07-17
+
+Added a frontend-only applicant company/project workspace foundation.
+
+Changed frontend surface:
+- Added `projectWorkspace` to normalize existing order metadata into company, project, financing and risk/impact sections.
+- Applicant NUXERA home now shows company/project profile, evidence readiness and next evidence per section.
+- Workspace links stay within existing NUXERA modules and keep fallback data when no real order exists.
+- Kept the surface local-only; no metadata persistence, backend contract, document permission or data-room visibility changes were introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 60 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 221 tests.
+- `node --check` on `projectWorkspace.js`: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Company/project answers are not persisted.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: add a contextual document center foundation, or defer writes until SQL/RLS is verified in Supabase.

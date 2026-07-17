@@ -5,6 +5,7 @@ import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
+import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
@@ -35,7 +36,8 @@ function ApplicantMissionHome({ sectionLabel }) {
   const mission = getApplicantGuidedMission("applicant");
   const readiness = getApplicantMissionReadiness("applicant");
   const onboardingWizard = getApplicantOnboardingWizard("es");
-  const { orderId, isDemo, loading: ordersLoading } = useMyOrders();
+  const { orders, orderId, isDemo, loading: ordersLoading } = useMyOrders();
+  const projectWorkspace = getApplicantCompanyProjectWorkspace(orders[0], "es");
   const workspaceState = useApplicantWorkspaceState(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
   });
@@ -112,6 +114,34 @@ function ApplicantMissionHome({ sectionLabel }) {
         ))}
       </div>
 
+      <section className="nuxera-project-workspace" aria-label="Datos de empresa y proyecto del solicitante">
+        <header>
+          <div>
+            <span>{projectWorkspace.source}</span>
+            <h2>Empresa y proyecto</h2>
+            <p>{projectWorkspace.profile.companyName} / {projectWorkspace.profile.projectName}</p>
+          </div>
+          <strong>{projectWorkspace.summary.readiness}% readiness</strong>
+        </header>
+        <div className="nuxera-project-profile">
+          <article><span>Monto</span><strong>{projectWorkspace.profile.requestedAmount}</strong></article>
+          <article><span>Sector</span><strong>{projectWorkspace.profile.sector}</strong></article>
+          <article><span>Pais</span><strong>{projectWorkspace.profile.country}</strong></article>
+          <article><span>Etapa</span><strong>{projectWorkspace.profile.stage}</strong></article>
+        </div>
+        <div className="nuxera-project-sections">
+          {projectWorkspace.sections.map((section) => (
+            <article key={section.id}>
+              <span>{section.status}</span>
+              <strong>{section.label}</strong>
+              <p>{section.readyEvidence}/{section.evidence.length} evidencias listas; siguiente: {section.nextEvidence}</p>
+              <small>{section.owner}</small>
+              <NavLink to={section.path}>Abrir modulo</NavLink>
+            </article>
+          ))}
+        </div>
+        <footer>{projectWorkspace.nextAction} {projectWorkspace.guardrails[0]}</footer>
+      </section>
       <section className="nuxera-applicant-checklist" aria-label="Checklist documental del solicitante">
         <header>
           <div>

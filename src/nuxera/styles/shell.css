@@ -320,6 +320,89 @@
   gap: 10px;
 }
 
+.nuxera-project-workspace {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-project-workspace > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.nuxera-project-workspace > header p,
+.nuxera-project-workspace footer {
+  margin: 4px 0 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nuxera-project-profile,
+.nuxera-project-sections {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nuxera-project-profile {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nuxera-project-sections {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nuxera-project-profile article,
+.nuxera-project-sections article {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-project-workspace span,
+.nuxera-project-workspace footer {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-project-workspace h2,
+.nuxera-project-workspace strong {
+  margin: 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-project-sections p,
+.nuxera-project-sections small {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nuxera-project-sections a {
+  width: fit-content;
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: var(--nuxera-gold-soft);
+  color: var(--nuxera-ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-decoration: none;
+}
 .nuxera-applicant-checklist {
   margin-bottom: 16px;
   padding: 16px;
@@ -1522,6 +1605,8 @@
   .nuxera-mission-panels,
   .nuxera-checklist-summary,
   .nuxera-data-room-folders,
+  .nuxera-project-profile,
+  .nuxera-project-sections,
   .nuxera-grantor-summary,
   .nuxera-grantor-queue,
   .nuxera-workbench-grid,

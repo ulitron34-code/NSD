@@ -11,7 +11,7 @@
 | Engine registry | N/A | Shared engine metadata source | Implemented for Finance, Intelligence, Markets and Strategy | N/A |
 | Applicant dashboard | Yes | Progress and next-action home | Guided mission with guarded applicant checklist write UX and owner evidence fallback mounted | No |
 | Applicant onboarding | Yes | Guided mission wizard | Local three-stage onboarding wizard mounted | No |
-| Company and project data | Yes | Unified guided workspace | Planned | No |
+| Company and project data | Yes | Unified guided workspace | Local company/project workspace mounted | No |
 | Document management | Yes | Contextual document center | Planned | No |
 | Grantor dashboard | Yes | Decision queue and alerts | Local case queue foundation mounted | No |
 | Case review | Yes | Unified case workbench | Local workbench, non-binding memo and grantor read-only evidence ledger mounted | No |

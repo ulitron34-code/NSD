@@ -5,6 +5,7 @@ import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdap
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
+import { getApplicantCompanyProjectWorkspace, normalizeApplicantProjectProfile } from "../nuxera/applicant/projectWorkspace";
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
@@ -312,6 +313,39 @@ describe("NUXERA applicant guided mission", () => {
     expect(wizard.nextStage.missingEvidence).toBeGreaterThan(0);
     expect(wizard.guardrails.join(" ")).toContain("no persiste");
     expect(wizard.guardrails.join(" ")).toContain("No aprueba credito");
+  });
+  it("normalizes applicant company and project metadata without persistence", () => {
+    const profile = normalizeApplicantProjectProfile({
+      id: "order-1",
+      projectName: "Planta Solar Norte",
+      metadata: {
+        companyName: "Energia Norte S.A.",
+        requestedAmount: "USD 2.5M",
+        sector: "Energia distribuida",
+        country: "MX",
+        useOfFunds: "CAPEX y capital de trabajo",
+      },
+    });
+
+    expect(profile).toMatchObject({
+      companyName: "Energia Norte S.A.",
+      projectName: "Planta Solar Norte",
+      requestedAmount: "USD 2.5M",
+      sector: "Energia distribuida",
+    });
+  });
+
+  it("builds a local company/project workspace with evidence guardrails", () => {
+    const workspace = getApplicantCompanyProjectWorkspace(null, "es");
+
+    expect(workspace.source).toBe("local-fallback");
+    expect(workspace.sections.map((section) => section.id)).toEqual(
+      expect.arrayContaining(["company-profile", "project-case", "funding-plan", "risk-impact"])
+    );
+    expect(workspace.summary.missingEvidence).toBeGreaterThan(0);
+    expect(workspace.nextAction).toContain("Completar");
+    expect(workspace.guardrails.join(" ")).toContain("no persiste");
+    expect(workspace.guardrails.join(" ")).toContain("No cambia permisos");
   });
   it("builds a local data-room checklist from minimum requirements", () => {
     const checklist = getApplicantDataRoomChecklist("es");
