@@ -77,16 +77,60 @@ export function normalizeNuxeraBackendReadinessResponse(response) {
   };
 }
 
+function buildBackendReadinessHealthSignal(state) {
+  return {
+    id: "backend-readiness-preflight",
+    label: "Backend readiness",
+    status: state.ready ? "backend-visible" : "backend-blocked",
+    severity: state.ready ? "low" : "high",
+    signal: `${state.summary.unavailable}/${state.summary.total} tablas NUXERA pendientes o no visibles.`,
+    nextAction: state.ready
+      ? "Mantener verificacion RLS controlada antes de produccion."
+      : "Verificar SQL/RLS en Supabase controlado antes de habilitar writes productivos.",
+  };
+}
+
+function buildBackendReadinessActions(state) {
+  return state.signals
+    .filter((signal) => !signal.ready)
+    .map((signal) => ({
+      id: `backend-readiness-${signal.id}`,
+      domain: "Backend readiness",
+      priority: signal.id === "workspace-states" ? "critical-path" : "review",
+      status: "backend-preflight-open",
+      owner: signal.owner || "Platform",
+      action: `Verificar ${signal.table} en Supabase controlado antes de depender de ${signal.requiredFor.join(", ") || "NUXERA backend"}.`,
+      source: "backend-readiness-preflight",
+      guardrail: "Accion humana; la consola no aplica SQL ni cambia RLS.",
+    }));
+}
+
 export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE) {
   const state = readinessState || LOCAL_BACKEND_READINESS_STATE;
+  const readinessHealthSignal = buildBackendReadinessHealthSignal(state);
+  const readinessActions = buildBackendReadinessActions(state);
+  const adminHealthSignals = [
+    ...consoleState.adminHealthSignals.filter((signal) => signal.id !== readinessHealthSignal.id),
+    readinessHealthSignal,
+  ];
+  const adminActionQueue = [
+    ...readinessActions,
+    ...consoleState.adminActionQueue.filter((item) => !item.id.startsWith("backend-readiness-")),
+  ];
 
   return {
     ...consoleState,
     backendReadiness: state,
+    adminHealthSignals,
+    adminActionQueue,
     summary: {
       ...consoleState.summary,
       backendReadiness: state.summary.readiness,
       backendReadinessUnavailable: state.summary.unavailable,
+      adminHealthSignals: adminHealthSignals.length,
+      adminHealthWatch: adminHealthSignals.filter((item) => item.severity !== "low").length,
+      adminActionQueue: adminActionQueue.length,
+      adminCriticalActions: adminActionQueue.filter((item) => item.priority === "critical-path").length,
     },
     policies: [
       ...consoleState.policies,

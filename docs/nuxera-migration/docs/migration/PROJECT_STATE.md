@@ -1096,3 +1096,24 @@ Remaining gaps:
 - Backend readiness confirms table visibility only; it does not replace RLS checks with applicant/grantor/admin identities.
 
 Next recommended task after validation: run broader frontend/backend test pass, then update Downloads handoff if requested or continue controlled Supabase/RLS evidence work when credentials are available.
+## NU-ADM-BE-ACT-001 update - 2026-07-17
+
+Connected backend readiness gaps to actionable admin follow-up.
+
+Changed admin surface:
+- Backend readiness now contributes a dedicated admin health signal.
+- Each unavailable backend readiness signal creates a human-owned admin action queue item.
+- Workspace state readiness gaps are prioritized as critical-path because they gate applicant checklist writes.
+- Kept readiness actions informational; the console does not apply SQL, change RLS or execute backend mutations.
+
+Validation:
+- `node --check` on `src/nuxera/admin/backendReadinessAdapter.js`: passed.
+- Targeted frontend NUXERA test: passed, 1 file / 69 tests.
+- Frontend full suite: passed, 9 files / 230 tests.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: run full frontend test pass if time allows, or continue backend readiness/RLS evidence work.

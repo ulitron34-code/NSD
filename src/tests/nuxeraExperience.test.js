@@ -637,6 +637,31 @@ describe("NUXERA backend readiness adapter", () => {
     expect(readiness.guardrails.join(" ")).toContain("no aplica SQL");
   });
 
+  it("turns unavailable backend readiness signals into admin health actions", () => {
+    const consoleState = getAdminOperationsConsole();
+    const readiness = normalizeNuxeraBackendReadinessResponse({
+      readiness: {
+        ready: false,
+        summary: { total: 3, available: 1, unavailable: 2, readiness: 33 },
+        signals: [
+          { id: "workspace-states", table: "nuxera_workspace_states", label: "Workspace states", owner: "backend-persistence", ready: false, requiredFor: ["applicant-checklist-write"] },
+          { id: "admin-controls", table: "nuxera_admin_controls", label: "Admin controls", owner: "admin-console", ready: false, requiredFor: ["admin-readiness-read"] },
+        ],
+      },
+    });
+    const merged = mergeBackendReadinessWithConsole(consoleState, readiness);
+
+    expect(merged.summary.backendReadinessUnavailable).toBe(2);
+    expect(merged.adminHealthSignals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "backend-readiness-preflight", severity: "high" }),
+      ])
+    );
+    expect(merged.adminActionQueue.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["backend-readiness-workspace-states", "backend-readiness-admin-controls"])
+    );
+    expect(merged.adminActionQueue[0]).toMatchObject({ priority: "critical-path" });
+  });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();
     const readiness = normalizeNuxeraBackendReadinessResponse({
