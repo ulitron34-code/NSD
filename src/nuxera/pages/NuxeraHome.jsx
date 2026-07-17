@@ -3,6 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -437,7 +438,11 @@ function GrantorQueueHome({ sectionLabel }) {
 
 function AdminOperationsHome({ sectionLabel }) {
   const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled() });
-  const consoleState = mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls);
+  const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled() });
+  const consoleState = mergeBackendReadinessWithConsole(
+    mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
+    backendReadiness
+  );
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -508,7 +513,24 @@ function AdminOperationsHome({ sectionLabel }) {
           ))}
         </div>
       </section>
-      <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
+      <section className="nuxera-admin-backend-readiness" aria-label="Readiness backend NUXERA">
+        <header>
+          <span>{consoleState.backendReadiness.status}</span>
+          <h2>Readiness backend</h2>
+        </header>
+        <p>{consoleState.backendReadiness.label}: {consoleState.summary.backendReadiness}% visible; {consoleState.summary.backendReadinessUnavailable} pendientes.</p>
+        {consoleState.backendReadiness.loading && <small>Cargando readiness NUXERA...</small>}
+        <div>
+          {consoleState.backendReadiness.signals.map((signal) => (
+            <article key={signal.id}>
+              <span>{signal.status}</span>
+              <strong>{signal.label}</strong>
+              <p>{signal.table}</p>
+              <small>{signal.guardrail}</small>
+            </article>
+          ))}
+        </div>
+      </section>      <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
         <header>
           <span>{consoleState.backendControls.status}</span>
           <h2>Controles backend read-only</h2>

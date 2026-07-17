@@ -3,6 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -613,6 +614,43 @@ describe("NUXERA evidence ledger", () => {
     });
     expect(merged.backendEvidence.persisted).toBe(true);
     expect(merged.policies.join(" ")).toContain("no otorgan acceso documental");
+  });
+});
+describe("NUXERA backend readiness adapter", () => {
+  it("normalizes backend readiness responses for admin review", () => {
+    const readiness = normalizeNuxeraBackendReadinessResponse({
+      readiness: {
+        status: "blocked-by-backend-readiness",
+        ready: false,
+        summary: { total: 3, available: 2, unavailable: 1, readiness: 67 },
+        signals: [
+          { id: "workspace-states", table: "nuxera_workspace_states", label: "Workspace states", status: "available", ready: true },
+          { id: "evidence-links", table: "nuxera_evidence_links", label: "Evidence links", status: "unavailable", ready: false },
+        ],
+        guardrails: ["Read-only backend readiness; no aplica SQL."],
+      },
+    });
+
+    expect(readiness.status).toBe("blocked-by-backend-readiness");
+    expect(readiness.summary.readiness).toBe(67);
+    expect(readiness.signals[1]).toMatchObject({ table: "nuxera_evidence_links", ready: false });
+    expect(readiness.guardrails.join(" ")).toContain("no aplica SQL");
+  });
+
+  it("merges backend readiness into the admin console without enabling writes", () => {
+    const consoleState = getAdminOperationsConsole();
+    const readiness = normalizeNuxeraBackendReadinessResponse({
+      ready: true,
+      summary: { total: 3, available: 3, unavailable: 0, readiness: 100 },
+      signals: [
+        { id: "workspace-states", table: "nuxera_workspace_states", ready: true },
+      ],
+    });
+    const merged = mergeBackendReadinessWithConsole(consoleState, readiness);
+
+    expect(merged.summary.backendReadiness).toBe(100);
+    expect(merged.backendReadiness.ready).toBe(true);
+    expect(merged.policies.join(" ")).toContain("RLS aun requiere verificacion controlada");
   });
 });
 describe("NUXERA Finance adapter", () => {

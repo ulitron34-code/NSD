@@ -1,6 +1,7 @@
 import express from 'express';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { getAdminControls } from '../services/nuxeraAdminControlService.js';
+import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
 import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 
@@ -28,6 +29,28 @@ function sendNuxeraError(res, error) {
     code: 'NUXERA_BACKEND_UNAVAILABLE'
   });
 }
+router.get(
+  '/nuxera/admin/readiness',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const readiness = await getNuxeraBackendReadiness();
+
+      res.json({
+        workspaceRole: 'admin',
+        readiness,
+        guardrails: [
+          'NU-BE-READINESS-001 exposes backend readiness in read-only mode.',
+          'Readiness does not apply SQL, change RLS or enable writes.',
+          'RLS must still be verified with controlled identities before production use.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
 router.get(
   '/nuxera/admin/controls',
   authMiddleware,

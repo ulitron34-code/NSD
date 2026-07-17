@@ -1070,3 +1070,29 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: run a broader frontend/backend test pass when time allows, or continue backend readiness around controlled Supabase/RLS evidence.
+## NU-BE-READINESS-001 update - 2026-07-17
+
+Added a read-only backend readiness preflight for NUXERA admin review.
+
+Changed backend/frontend surface:
+- Added `nuxeraBackendReadinessService` to check expected NUXERA table visibility as readiness signals.
+- Added `GET /api/nuxera/admin/readiness` behind `nuxera:admin:read`.
+- Missing/unavailable tables are returned as controlled `unavailable` signals instead of raw backend failures.
+- Added `nuxeraBackendReadinessAPI` and `backendReadinessAdapter` on the frontend.
+- Admin NUXERA console now displays backend readiness percentage, unavailable table count and per-table signals.
+- Kept SQL drafts unapplied; no RLS policies, permission grants, schemas, document permissions, data-room behavior or new write endpoints changed.
+
+Validation:
+- `node --check` on backend readiness service/test, NUXERA routes/test and frontend readiness adapter: passed.
+- Targeted backend tests: passed, 2 files / 19 tests.
+- Targeted frontend NUXERA test: passed, 1 file / 68 tests.
+- Backend full suite: passed, 41 files / 419 tests.
+- Frontend full suite: passed, 9 files / 229 tests.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+- Backend readiness confirms table visibility only; it does not replace RLS checks with applicant/grantor/admin identities.
+
+Next recommended task after validation: run broader frontend/backend test pass, then update Downloads handoff if requested or continue controlled Supabase/RLS evidence work when credentials are available.

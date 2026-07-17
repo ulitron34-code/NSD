@@ -5,7 +5,8 @@ const serviceCalls = {
   get: [],
   upsert: [],
   evidence: [],
-  adminControls: []
+  adminControls: [],
+  readiness: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -68,6 +69,22 @@ vi.mock('../services/nuxeraWorkspaceStateService.js', () => ({
 
 
 
+vi.mock('../services/nuxeraBackendReadinessService.js', () => ({
+  getNuxeraBackendReadiness: vi.fn(async () => {
+    serviceCalls.readiness.push({ called: true });
+    return {
+      status: 'blocked-by-backend-readiness',
+      ready: false,
+      summary: { total: 3, available: 2, unavailable: 1, readiness: 67 },
+      signals: [
+        { id: 'workspace-states', table: 'nuxera_workspace_states', status: 'available', ready: true },
+        { id: 'evidence-links', table: 'nuxera_evidence_links', status: 'unavailable', ready: false },
+        { id: 'admin-controls', table: 'nuxera_admin_controls', status: 'available', ready: true }
+      ],
+      guardrails: ['Read-only backend readiness.']
+    };
+  })
+}));
 vi.mock('../services/nuxeraAdminControlService.js', () => ({
   getAdminControls: vi.fn(async () => {
     serviceCalls.adminControls.push({ called: true });
@@ -91,6 +108,7 @@ vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
 }));
 const workspaceStateService = await import('../services/nuxeraWorkspaceStateService.js');
 const adminControlService = await import('../services/nuxeraAdminControlService.js');
+const backendReadinessService = await import('../services/nuxeraBackendReadinessService.js');
 const { default: nuxeraRoutes } = await import('./nuxera.js');
 
 function createApp() {
@@ -118,6 +136,7 @@ describe('nuxera routes', () => {
     serviceCalls.upsert = [];
     serviceCalls.evidence = [];
     serviceCalls.adminControls = [];
+    serviceCalls.readiness = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -128,6 +147,51 @@ describe('nuxera routes', () => {
   });
 
 
+  it('requires nuxera:admin:read before reading backend readiness', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/readiness`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.readiness).toHaveLength(0);
+  });
+
+  it('returns backend readiness with SQL/RLS guardrails', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/readiness`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      readiness: {
+        ready: false,
+        summary: { total: 3, available: 2, unavailable: 1, readiness: 67 }
+      }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not apply SQL')])
+    );
+    expect(serviceCalls.readiness).toEqual([{ called: true }]);
+  });
+
+  it('returns controlled backend-unavailable errors for readiness service failures', async () => {
+    backendReadinessService.getNuxeraBackendReadiness.mockRejectedValueOnce(
+      new Error('unexpected readiness backend failure')
+    );
+
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/readiness`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: 'Servicio NUXERA no disponible',
+      code: 'NUXERA_BACKEND_UNAVAILABLE'
+    });
+  });
   it('requires nuxera:admin:read before reading admin controls', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/controls`, {
       headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }

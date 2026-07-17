@@ -253,6 +253,11 @@ export const nuxeraAdminControlsAPI = {
   getControls: () =>
     api.get('/nuxera/admin/controls')
 };
+
+export const nuxeraBackendReadinessAPI = {
+  getReadiness: () =>
+    api.get('/nuxera/admin/readiness')
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),
