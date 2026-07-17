@@ -1704,6 +1704,7 @@
   .nuxera-admin-gates > div,
   .nuxera-admin-panels,
   .nuxera-admin-readiness > div,
+  .nuxera-admin-document-readiness > div,
   .nuxera-admin-control-grid,
   .nuxera-decision-flow > div {
     grid-template-columns: 1fr;
@@ -1848,7 +1849,8 @@
   display: block;
   margin-top: 12px;
 }
-.nuxera-admin-evidence-coverage {
+.nuxera-admin-evidence-coverage,
+.nuxera-admin-document-readiness {
   margin-bottom: 16px;
   padding: 16px;
   background: var(--nuxera-panel);
@@ -1857,17 +1859,20 @@
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
-.nuxera-admin-evidence-coverage > header {
+.nuxera-admin-evidence-coverage > header,
+.nuxera-admin-document-readiness > header {
   margin-bottom: 14px;
 }
 
-.nuxera-admin-evidence-coverage > div {
+.nuxera-admin-evidence-coverage > div,
+.nuxera-admin-document-readiness > div {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.nuxera-admin-evidence-coverage article {
+.nuxera-admin-evidence-coverage article,
+.nuxera-admin-document-readiness article {
   display: grid;
   gap: 6px;
   padding: 12px;
@@ -1877,7 +1882,10 @@
 }
 
 .nuxera-admin-evidence-coverage span,
-.nuxera-admin-evidence-coverage small {
+.nuxera-admin-evidence-coverage small,
+.nuxera-admin-document-readiness span,
+.nuxera-admin-document-readiness small,
+.nuxera-admin-document-readiness em {
   color: var(--nuxera-gold);
   font-size: 0.72rem;
   font-weight: 900;
@@ -1885,13 +1893,16 @@
 }
 
 .nuxera-admin-evidence-coverage h2,
-.nuxera-admin-evidence-coverage strong {
+.nuxera-admin-evidence-coverage strong,
+.nuxera-admin-document-readiness h2,
+.nuxera-admin-document-readiness strong {
   margin: 0;
   color: var(--nuxera-ink);
   font-size: 1rem;
 }
 
-.nuxera-admin-evidence-coverage p {
+.nuxera-admin-evidence-coverage p,
+.nuxera-admin-document-readiness p {
   margin: 0;
   color: var(--nuxera-muted);
   font-size: 0.82rem;

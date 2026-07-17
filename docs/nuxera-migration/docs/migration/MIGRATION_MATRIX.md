@@ -15,7 +15,7 @@
 | Document management | Yes | Contextual document center | Local contextual document center mounted | No |
 | Grantor dashboard | Yes | Decision queue and alerts | Local case queue foundation mounted | No |
 | Case review | Yes | Unified case workbench | Local workbench, authorized document summary, non-binding memo and grantor read-only evidence ledger mounted | No |
-| Admin | Yes | Operations/config/security/AI split | Local readiness, incident controls, admin evidence coverage and read-only backend controls mounted | No |
+| Admin | Yes | Operations/config/security/AI split | Local readiness, incident controls, grantor document readiness, admin evidence coverage and read-only backend controls mounted | No |
 | Compliance | Yes | Transversal services | Preserve | No |
 | Intelligence | Partial | Deep research engine | Research mission foundation and read-only evidence ledger mounted | N/A |
 | Markets | No/partial | Market intelligence engine | Provider degradation and realtime license gate hardened | N/A |

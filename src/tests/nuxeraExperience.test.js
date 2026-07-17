@@ -210,6 +210,18 @@ it("maps read-only evidence coverage into admin console", () => {
   expect(consoleState.evidenceLedger.policies.join(" ")).toContain("no otorga acceso nuevo");
 });
 
+it("maps grantor document readiness into admin console without permission changes", () => {
+  const consoleState = getAdminOperationsConsole();
+
+  expect(consoleState.summary.grantorDocumentCases).toBeGreaterThan(0);
+  expect(consoleState.summary.grantorDocumentPending).toBeGreaterThanOrEqual(0);
+  expect(consoleState.grantorDocumentReadiness.map((item) => item.status)).toEqual(
+    expect.arrayContaining([expect.stringContaining("authorized-summary")])
+  );
+  expect(consoleState.grantorDocumentReadiness.every((item) => item.policy.includes("no concede acceso nuevo"))).toBe(true);
+  expect(consoleState.policies.join(" ")).toContain("no otorga acceso");
+});
+
 it("normalizes backend admin controls as read-only non-activating controls", () => {
   const state = normalizeNuxeraAdminControlsResponse({
     workspaceRole: "admin",

@@ -1,4 +1,5 @@
 import { getEvidenceLedgerByEngine, getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
+import { getGrantorCaseQueue, getGrantorDocumentSummary } from "../grantor/caseQueue";
 const operationLanes = [
   {
     id: "operations",
@@ -160,6 +161,22 @@ export function getAdminOperationsConsole() {
     visibility: "internal-review",
     policy: "Read-only compliance mapping; no grants, exports or backend writes.",
   }));
+  const grantorQueue = getGrantorCaseQueue();
+  const grantorDocumentReadiness = grantorQueue.cases.map((caseItem) => {
+    const documentSummary = getGrantorDocumentSummary(caseItem.id);
+
+    return {
+      caseId: caseItem.id,
+      label: caseItem.name,
+      applicant: caseItem.applicant,
+      status: documentSummary.status,
+      visible: documentSummary.summary.visible,
+      pending: documentSummary.summary.pending,
+      total: documentSummary.summary.total,
+      nextAction: documentSummary.nextAction,
+      policy: documentSummary.guardrails[0],
+    };
+  });
   const averageReadiness = Math.round(
     rolloutReadiness.reduce((total, item) => total + item.readiness, 0) / rolloutReadiness.length
   );
@@ -174,6 +191,7 @@ export function getAdminOperationsConsole() {
     complianceEvidence,
     evidenceLedger,
     evidenceCoverage,
+    grantorDocumentReadiness,
     summary: {
       lanes: operationLanes.length,
       watch: watchLanes.length,
@@ -182,11 +200,14 @@ export function getAdminOperationsConsole() {
       highSeverityIncidents: highSeverityIncidents.length,
       complianceAligned: complianceEvidence.filter((item) => item.status === "aligned").length,
       evidenceSignals: evidenceLedger.summary.total,
+      grantorDocumentCases: grantorDocumentReadiness.length,
+      grantorDocumentPending: grantorDocumentReadiness.reduce((total, item) => total + item.pending, 0),
       requiresHumanReview: true,
     },
     policies: [
       "Admin observa salud y controles; no cambia permisos desde esta fundacion local.",
       "Toda persistencia NUXERA requiere contrato backend dedicado.",
+      "Readiness documental grantor es summary-only y no otorga acceso a documentos.",
       "La automatizacion IA debe permanecer asistiva y trazable.",
     ],
   };

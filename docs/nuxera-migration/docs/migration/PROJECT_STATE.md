@@ -902,3 +902,28 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: add admin visibility for grantor document review readiness, or verify SQL/RLS before connecting real document permission reads.
+
+## NU-ADM-DOC-001 update - 2026-07-17
+
+Added admin visibility for grantor document review readiness.
+
+Changed frontend surface:
+- Admin operations console now aggregates authorized-summary document readiness from grantor cases.
+- Admin NUXERA home shows visible, pending and total document signals per grantor case.
+- Policies explicitly keep this as summary-only visibility with no document access grant.
+- Kept permissions, data-room access, uploads, downloads, shares, backend contracts and SQL/RLS unchanged.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 63 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 224 tests.
+- `node --check` on `operationsConsole.js`: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Admin readiness is local and derived from demo/workbench metadata only.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: update admin observability/audit packaging, or verify SQL/RLS before connecting real document permission reads.

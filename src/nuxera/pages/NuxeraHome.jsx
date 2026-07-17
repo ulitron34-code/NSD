@@ -543,6 +543,27 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
       </section>
 
+      <section className="nuxera-admin-document-readiness" aria-label="Readiness documental grantor NUXERA">
+        <header>
+          <span>Grantor documents</span>
+          <h2>Readiness documental otorgante</h2>
+        </header>
+        <p>
+          {consoleState.summary.grantorDocumentCases} casos visibles; {consoleState.summary.grantorDocumentPending} senales documentales pendientes.
+        </p>
+        <div>
+          {consoleState.grantorDocumentReadiness.map((item) => (
+            <article key={item.caseId}>
+              <span>{item.status}</span>
+              <strong>{item.label}</strong>
+              <p>{item.applicant}: {item.visible}/{item.total} visibles; {item.pending} pendientes.</p>
+              <small>{item.nextAction}</small>
+              <em>{item.policy}</em>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <div className="nuxera-admin-control-grid">
         <section aria-label="Controles de incidentes NUXERA">
           <h2>Controles de incidentes</h2>
