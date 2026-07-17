@@ -1224,3 +1224,23 @@ Guardrails:
 - No production writes, document grants, data-room permissions or admin mutations were enabled.
 
 Next recommended task after validation: run `npm run check:nuxera-verification-plan` together with `npm run check:nuxera-sql` in a Supabase-capable environment, then apply drafts only to a controlled non-production Supabase project and record RLS/endpoint evidence for the four identities.
+
+## NUXERA controlled evidence template
+
+Added a reusable controlled-run evidence template for the next Supabase/RLS verification step.
+
+Changes made:
+- Added `docs/nuxera-migration/docs/migration/NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md`.
+- Extended `backend/scripts/check-nuxera-controlled-verification-plan.js` so the guard fails if the evidence template is missing required identities, endpoints, no-go criteria, rollback rehearsal evidence or decision fields.
+- Updated `NU-DB-RLS-ENDPOINT-VERIFY-001` and QA acceptance guidance to require the template before production decisions.
+
+Validation:
+- Direct controlled verification-plan guard execution from `backend/` passed.
+- Existing consolidated SQL draft guard still passed.
+
+Guardrails:
+- No SQL was applied.
+- No live RLS checks were executed.
+- No production writes, data-room grants, document permissions or admin mutations were enabled.
+
+Next recommended task after validation: use the template in a controlled non-production Supabase run, attach the completed evidence to the handoff, and only then decide whether applicant checklist writes can move beyond local fallback.

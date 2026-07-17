@@ -3,6 +3,25 @@ import { resolve } from 'node:path';
 
 const requiredFiles = [
   {
+    label: 'controlled RLS/endpoint evidence template',
+    path: '../docs/nuxera-migration/docs/migration/NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md',
+    snippets: [
+      'applicant-owner',
+      'different-applicant',
+      'authorized-grantor',
+      'admin-internal',
+      'GET /api/nuxera/orders/:orderId/state',
+      'PATCH /api/nuxera/orders/:orderId/state/checklist',
+      'GET /api/nuxera/orders/:orderId/evidence',
+      'GET /api/nuxera/admin/controls',
+      'GET /api/nuxera/admin/readiness',
+      'No-go criteria',
+      'Rollback rehearsal evidence',
+      'Decision',
+    ],
+  },
+
+  {
     label: 'SQL/RLS readiness checklist',
     path: '../docs/nuxera-migration/docs/migration/NUXERA_SQL_RLS_READINESS_CHECKLIST.md',
     snippets: [

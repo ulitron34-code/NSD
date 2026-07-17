@@ -33,6 +33,7 @@ Before any pending NUXERA SQL draft is applied outside local static verification
 
 - Attach local `check-nuxera-sql-drafts` output to the handoff.
 - Attach local `check:nuxera-verification-plan` output before controlled RLS/endpoint testing.
+- Record controlled results in `NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md` before any production decision.
 - Apply drafts only in a controlled non-production Supabase environment first.
 - Verify RLS with applicant owner, different applicant, grantor/otorgante and admin/internal identities.
 - Verify denied reads/writes return controlled responses without row-existence leaks.
