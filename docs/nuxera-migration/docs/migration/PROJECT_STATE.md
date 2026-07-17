@@ -927,3 +927,28 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: update admin observability/audit packaging, or verify SQL/RLS before connecting real document permission reads.
+
+## NU-ADM-AUD-001 update - 2026-07-17
+
+Added a local admin audit package foundation.
+
+Changed frontend surface:
+- Admin operations console now builds an `auditPackage` from release gates, readiness, evidence, grantor document readiness and incident controls.
+- Admin NUXERA home shows consolidated audit signals and guardrails for human review.
+- Package remains local and read-only; it does not export files, write backend state or create downloads.
+- Kept permissions, data-room access, shares, signed URLs, backend contracts and SQL/RLS unchanged.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 64 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 225 tests.
+- `node --check` on `operationsConsole.js`: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Audit package is derived from local/demo signals only.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: update portable Downloads handoff, then continue with admin observability details or verify SQL/RLS before real backend connections.

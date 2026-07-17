@@ -147,6 +147,64 @@ const complianceEvidence = [
   },
 ];
 
+function buildAdminAuditPackage({
+  blockedGates,
+  highSeverityIncidents,
+  evidenceLedger,
+  grantorDocumentReadiness,
+  averageReadiness,
+}) {
+  const pendingDocumentCases = grantorDocumentReadiness.filter((item) => item.pending > 0);
+
+  return {
+    id: "nuxera-admin-audit-package-local",
+    status: blockedGates.length > 0 ? "release-gated-audit-ready" : "controlled-review-ready",
+    generatedFor: "internal-review",
+    scope: ["release-gates", "readiness", "evidence-ledger", "grantor-documents", "incident-controls"],
+    signals: [
+      {
+        id: "blocked-gates",
+        label: "Release gates bloqueados",
+        value: blockedGates.length,
+        status: blockedGates.length > 0 ? "requires-action" : "clear",
+      },
+      {
+        id: "readiness-average",
+        label: "Readiness promedio",
+        value: `${averageReadiness}%`,
+        status: averageReadiness >= 70 ? "watch" : "needs-controls",
+      },
+      {
+        id: "evidence-signals",
+        label: "Senales de evidencia",
+        value: evidenceLedger.summary.total,
+        status: "read-only-indexed",
+      },
+      {
+        id: "grantor-document-pending",
+        label: "Casos grantor con documentos pendientes",
+        value: pendingDocumentCases.length,
+        status: pendingDocumentCases.length > 0 ? "authorized-summary-watch" : "authorized-summary-ready",
+      },
+      {
+        id: "high-severity-incidents",
+        label: "Incidentes high severity",
+        value: highSeverityIncidents.length,
+        status: highSeverityIncidents.length > 0 ? "blocked-by-design" : "clear",
+      },
+    ],
+    nextActions: [
+      ...blockedGates.map((gate) => `Resolver gate: ${gate.label}.`),
+      ...highSeverityIncidents.map((control) => `Mantener control: ${control.signal}.`),
+      ...pendingDocumentCases.map((item) => `Confirmar documentos pendientes para ${item.label}.`),
+    ],
+    guardrails: [
+      "Paquete local de auditoria; no exporta archivos ni escribe backend.",
+      "No cambia permisos, shares, data-room ni visibilidad documental.",
+      "Solo consolida senales existentes para revision humana.",
+    ],
+  };
+}
 export function getAdminOperationsConsole() {
   const blockedGates = releaseGates.filter((gate) => gate.state === "blocked");
   const watchLanes = operationLanes.filter((lane) => ["watch", "limited"].includes(lane.status));
@@ -180,6 +238,13 @@ export function getAdminOperationsConsole() {
   const averageReadiness = Math.round(
     rolloutReadiness.reduce((total, item) => total + item.readiness, 0) / rolloutReadiness.length
   );
+  const auditPackage = buildAdminAuditPackage({
+    blockedGates,
+    highSeverityIncidents,
+    evidenceLedger,
+    grantorDocumentReadiness,
+    averageReadiness,
+  });
 
   return {
     status: blockedGates.length > 0 ? "release-gated" : "ready-for-controlled-review",
@@ -192,6 +257,7 @@ export function getAdminOperationsConsole() {
     evidenceLedger,
     evidenceCoverage,
     grantorDocumentReadiness,
+    auditPackage,
     summary: {
       lanes: operationLanes.length,
       watch: watchLanes.length,
@@ -202,6 +268,8 @@ export function getAdminOperationsConsole() {
       evidenceSignals: evidenceLedger.summary.total,
       grantorDocumentCases: grantorDocumentReadiness.length,
       grantorDocumentPending: grantorDocumentReadiness.reduce((total, item) => total + item.pending, 0),
+      auditPackageSignals: auditPackage.signals.length,
+      auditPackageActions: auditPackage.nextActions.length,
       requiresHumanReview: true,
     },
     policies: [

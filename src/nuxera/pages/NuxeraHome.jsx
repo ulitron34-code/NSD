@@ -564,6 +564,25 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
       </section>
 
+      <section className="nuxera-admin-audit-package" aria-label="Paquete de auditoria admin NUXERA">
+        <header>
+          <span>{consoleState.auditPackage.status}</span>
+          <h2>Paquete local de auditoria</h2>
+        </header>
+        <p>{consoleState.summary.auditPackageSignals} senales consolidadas; {consoleState.summary.auditPackageActions} acciones abiertas para revision humana.</p>
+        <div>
+          {consoleState.auditPackage.signals.map((signal) => (
+            <article key={signal.id}>
+              <span>{signal.status}</span>
+              <strong>{signal.value}</strong>
+              <p>{signal.label}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          {consoleState.auditPackage.guardrails.map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
+        </footer>
+      </section>
       <div className="nuxera-admin-control-grid">
         <section aria-label="Controles de incidentes NUXERA">
           <h2>Controles de incidentes</h2>

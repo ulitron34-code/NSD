@@ -222,6 +222,24 @@ it("maps grantor document readiness into admin console without permission change
   expect(consoleState.policies.join(" ")).toContain("no otorga acceso");
 });
 
+it("builds a local admin audit package without exports or backend writes", () => {
+  const consoleState = getAdminOperationsConsole();
+
+  expect(consoleState.auditPackage).toMatchObject({
+    id: "nuxera-admin-audit-package-local",
+    generatedFor: "internal-review",
+  });
+  expect(consoleState.auditPackage.scope).toEqual(
+    expect.arrayContaining(["release-gates", "evidence-ledger", "grantor-documents", "incident-controls"])
+  );
+  expect(consoleState.summary.auditPackageSignals).toBe(consoleState.auditPackage.signals.length);
+  expect(consoleState.summary.auditPackageActions).toBeGreaterThan(0);
+  expect(consoleState.auditPackage.signals.map((signal) => signal.id)).toEqual(
+    expect.arrayContaining(["blocked-gates", "evidence-signals", "grantor-document-pending"])
+  );
+  expect(consoleState.auditPackage.guardrails.join(" ")).toContain("no exporta archivos");
+  expect(consoleState.auditPackage.guardrails.join(" ")).toContain("No cambia permisos");
+});
 it("normalizes backend admin controls as read-only non-activating controls", () => {
   const state = normalizeNuxeraAdminControlsResponse({
     workspaceRole: "admin",
