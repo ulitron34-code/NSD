@@ -101,3 +101,19 @@ Guardrails:
 - Review is in-memory/read-only and does not persist submitted Markdown.
 - Ready-for-human-review is not production approval.
 - Any TODO, missing decision or no-go keeps NUXERA writes blocked.
+## Approval package follow-up
+
+The controlled evidence review now feeds a read-only approval package for human release decision preparation.
+
+Additional scope completed:
+- Added `nuxeraControlledApprovalPackageService` to require clean evidence review plus approver, approval date, scope and evidence hash.
+- Added `POST /api/nuxera/admin/verification-approval-package`, protected by `nuxera:admin:read`.
+- Added backend CLI alias `approval:nuxera-evidence` for local approval-package generation.
+- Added frontend API, normalizer and optional hook for approval package state.
+- Added an admin `Approval package` panel showing approval metadata blockers and next decision.
+- Added backend and frontend tests for blocked and ready-for-human-release-decision states.
+
+Guardrails:
+- Approval package is read-only and does not persist approvals.
+- Ready-for-human-release-decision is not automatic production approval.
+- A separate deployment/change-control action remains required before any production write path.

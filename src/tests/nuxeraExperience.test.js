@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -746,6 +746,32 @@ describe("NUXERA backend readiness adapter", () => {
     expect(review.summary.missingSections).toBe(0);
     expect(review.blockers).toEqual([]);
     expect(review.guardrails.join(" ")).toContain("not production approval");
+  });
+
+  it("normalizes remote controlled approval packages for release review", () => {
+    const approvalPackage = normalizeNuxeraControlledApprovalPackageResponse({
+      approvalPackage: {
+        id: "nuxera-controlled-approval-package",
+        status: "ready-for-human-release-decision",
+        readyForReleaseDecision: true,
+        sourceReviewId: "nuxera-controlled-evidence-review",
+        sourcePlanId: "nuxera-controlled-rls-endpoint-evidence",
+        approvalMetadata: { approver: "Compliance lead", decision: "approve" },
+        missingApprovalMetadata: [],
+        summary: { evidenceReady: true, evidenceBlockers: 0, approvalMetadataMissing: 0, decisionAccepted: true, blockers: 0 },
+        blockers: [],
+        releaseChecklist: ["Human approver reviewed completed controlled evidence."],
+        nextDecision: "Route to human release decision; do not enable writes automatically.",
+        guardrails: ["Approval package is read-only."],
+      },
+      guardrails: ["Ready-for-human-release-decision is not automatic production approval."],
+    });
+
+    expect(approvalPackage.source).toBe("remote-read-only");
+    expect(approvalPackage.readyForReleaseDecision).toBe(true);
+    expect(approvalPackage.summary.approvalMetadataMissing).toBe(0);
+    expect(approvalPackage.blockers).toEqual([]);
+    expect(approvalPackage.guardrails.join(" ")).toContain("not automatic production approval");
   });
 
   it("turns unavailable backend readiness signals into admin health actions", () => {

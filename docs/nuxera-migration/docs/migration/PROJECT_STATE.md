@@ -1387,3 +1387,29 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: run review against a completed controlled-run evidence Markdown file and only route clean evidence to human approval review.
+## NUXERA controlled approval package
+
+Added a read-only approval package layer after evidence review so clean evidence can be routed to human release decision without enabling writes automatically.
+
+Changes made:
+- Added backend `nuxeraControlledApprovalPackageService`.
+- Added protected endpoint `POST /api/nuxera/admin/verification-approval-package`.
+- Added backend CLI alias `approval:nuxera-evidence`.
+- Added frontend API, normalizer, optional hook and admin panel for approval package state.
+- Approval package requires ready evidence review, approver, approval date, approval scope, evidence hash and explicit decision.
+- Added backend/frontend tests for blocked and ready states.
+
+Validation:
+- Empty approval CLI package blocked as expected.
+- Backend targeted route/service tests passed: 3 files / 33 tests.
+- Backend full suite passed: 46 files / 441 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 74 tests.
+- Frontend full suite passed: 9 files / 235 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No approvals are persisted by the endpoint.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: use approval package only after clean evidence review and human release decision; production writes still require separate change control.

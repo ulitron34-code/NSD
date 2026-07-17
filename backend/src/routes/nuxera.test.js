@@ -9,7 +9,8 @@ const serviceCalls = {
   readiness: [],
   evidenceScaffold: [],
   runbook: [],
-  evidenceReview: []
+  evidenceReview: [],
+  approvalPackage: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -102,7 +103,26 @@ vi.mock('../services/nuxeraControlledEvidenceScaffoldService.js', () => ({
     };
   })
 }));
-vi.mock('../services/nuxeraControlledEvidenceReviewService.js', () => ({
+vi.mock('../services/nuxeraControlledApprovalPackageService.js', () => ({
+  getNuxeraControlledApprovalPackage: vi.fn((input = {}) => {
+    serviceCalls.approvalPackage.push(input);
+    const ready = Boolean(input.approver && input.approvalDate && input.approvalScope && input.evidenceHash && input.decision);
+    return {
+      id: 'nuxera-controlled-approval-package',
+      status: ready ? 'ready-for-human-release-decision' : 'blocked-by-approval-gates',
+      readyForReleaseDecision: ready,
+      sourceReviewId: 'nuxera-controlled-evidence-review',
+      sourcePlanId: 'nuxera-controlled-rls-endpoint-evidence',
+      approvalMetadata: { approver: input.approver || 'TODO' },
+      missingApprovalMetadata: ready ? [] : [{ id: 'approver' }],
+      summary: { evidenceReady: true, evidenceBlockers: 0, approvalMetadataMissing: ready ? 0 : 1, decisionAccepted: ready, blockers: ready ? 0 : 1 },
+      blockers: ready ? [] : ['Missing approval metadata: Approver.'],
+      releaseChecklist: ['Human approver reviewed completed controlled evidence.'],
+      nextDecision: ready ? 'Route to human release decision; do not enable writes automatically.' : 'Resolve approval blockers before any release decision.',
+      guardrails: ['Approval package is read-only; it does not persist approvals.']
+    };
+  })
+}));vi.mock('../services/nuxeraControlledEvidenceReviewService.js', () => ({
   reviewNuxeraControlledEvidence: vi.fn((input = {}) => {
     serviceCalls.evidenceReview.push(input);
     const hasMarkdown = Boolean(input.markdown);
@@ -289,6 +309,50 @@ describe('nuxera routes', () => {
     );
     expect(serviceCalls.evidenceScaffold).toEqual([
       expect.objectContaining({ repoCommit: 'abc1234', environment: 'non-production-supabase' })
+    ]);
+  });
+
+  it('requires nuxera:admin:read before building approval package', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-approval-package`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      body: JSON.stringify({ approver: 'Compliance lead' })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.approvalPackage).toHaveLength(0);
+  });
+
+  it('returns controlled approval package without persisting approvals', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-approval-package`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({
+        evidenceReview: { id: 'nuxera-controlled-evidence-review', readyForHumanReview: true, blockers: [] },
+        approver: 'Compliance lead',
+        approvalDate: '2026-07-17',
+        approvalScope: 'controlled applicant checklist write review',
+        evidenceHash: 'sha256-test',
+        decision: 'approve'
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      approvalPackage: {
+        id: 'nuxera-controlled-approval-package',
+        readyForReleaseDecision: true,
+        summary: { approvalMetadataMissing: 0 }
+      }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not persist approvals')])
+    );
+    expect(serviceCalls.approvalPackage).toEqual([
+      expect.objectContaining({ approver: 'Compliance lead', decision: 'approve' })
     ]);
   });
 

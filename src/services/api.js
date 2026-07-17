@@ -278,6 +278,11 @@ export const nuxeraControlledEvidenceReviewAPI = {
   review: (markdown) =>
     api.post('/nuxera/admin/verification-evidence-review', { markdown })
 };
+
+export const nuxeraControlledApprovalPackageAPI = {
+  build: (payload = {}) =>
+    api.post('/nuxera/admin/verification-approval-package', payload)
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

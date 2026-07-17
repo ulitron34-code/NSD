@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -443,6 +443,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled() });
   const controlledRunbook = useControlledRunbook({ enabled: isNuxeraExperienceEnabled() });
   const controlledEvidenceReview = useControlledEvidenceReview({ enabled: isNuxeraExperienceEnabled() });
+  const controlledApprovalPackage = useControlledApprovalPackage({ enabled: isNuxeraExperienceEnabled() });
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
     backendReadiness,
@@ -660,6 +661,29 @@ function AdminOperationsHome({ sectionLabel }) {
         <footer>
           <small>{controlledEvidenceReview.nextDecision}</small>
           <small>{controlledEvidenceReview.guardrails[0]}</small>
+        </footer>
+      </section>
+      <section className="nuxera-admin-controlled-verification" aria-label="Paquete de aprobacion controlada NUXERA">
+        <header>
+          <span>{controlledApprovalPackage.status}</span>
+          <h2>Approval package</h2>
+        </header>
+        <p>
+          {controlledApprovalPackage.summary.approvalMetadataMissing} metadatos faltantes; {controlledApprovalPackage.summary.blockers} bloqueos; decision {controlledApprovalPackage.summary.decisionAccepted ? "lista" : "pendiente"}.
+        </p>
+        {controlledApprovalPackage.loading && <small>Construyendo approval package NUXERA...</small>}
+        <div>
+          {controlledApprovalPackage.blockers.slice(0, 3).map((blocker) => (
+            <article key={blocker}>
+              <span>{controlledApprovalPackage.readyForReleaseDecision ? "ready" : "blocked"}</span>
+              <strong>{controlledApprovalPackage.source}</strong>
+              <p>{blocker}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{controlledApprovalPackage.nextDecision}</small>
+          <small>{controlledApprovalPackage.guardrails[0]}</small>
         </footer>
       </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">

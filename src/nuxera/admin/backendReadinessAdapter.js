@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -371,6 +371,79 @@ export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fall
       ...fallback.metadata,
       ...asObject(payload.metadata),
     },
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+function buildLocalApprovalPackage() {
+  return {
+    id: "nuxera-controlled-approval-package",
+    status: "blocked-by-approval-gates",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    readyForReleaseDecision: false,
+    sourceReviewId: "nuxera-controlled-evidence-review",
+    sourcePlanId: "nuxera-controlled-rls-endpoint-evidence",
+    approvalMetadata: {
+      approver: "TODO",
+      approvalDate: "TODO",
+      approvalScope: "TODO",
+      evidenceHash: "TODO",
+      decision: "TODO",
+    },
+    missingApprovalMetadata: [
+      { id: "approver", label: "Approver" },
+      { id: "approvalDate", label: "Approval date" },
+      { id: "approvalScope", label: "Approval scope" },
+      { id: "evidenceHash", label: "Evidence hash" },
+    ],
+    summary: {
+      evidenceReady: false,
+      evidenceBlockers: 1,
+      approvalMetadataMissing: 4,
+      decisionAccepted: false,
+      blockers: 5,
+    },
+    blockers: ["Evidence review is not ready for human approval review."],
+    releaseChecklist: ["Human approver reviewed completed controlled evidence."],
+    nextDecision: "Resolve approval blockers before any release decision.",
+    guardrails: ["Local approval package fallback; no persiste aprobaciones ni habilita writes."],
+  };
+}
+
+export function normalizeNuxeraControlledApprovalPackageResponse(response, fallbackApprovalPackage = null) {
+  const payload = response?.approvalPackage || response || null;
+  const fallback = fallbackApprovalPackage || buildLocalApprovalPackage();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-approval-package-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    approvalMetadata: {
+      ...fallback.approvalMetadata,
+      ...asObject(payload.approvalMetadata),
+    },
+    missingApprovalMetadata: asArray(payload.missingApprovalMetadata),
+    blockers: asArray(payload.blockers),
+    releaseChecklist: asArray(payload.releaseChecklist).length ? asArray(payload.releaseChecklist) : fallback.releaseChecklist,
     summary: {
       ...fallback.summary,
       ...asObject(payload.summary),
@@ -761,6 +834,42 @@ export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold
   }, [enabled, fallbackScaffold]);
 
   return evidenceScaffoldState;
+}
+
+export function useControlledApprovalPackage({ enabled = true, payload = null, fallbackApprovalPackage = null } = {}) {
+  const [approvalPackageState, setApprovalPackageState] = useState(fallbackApprovalPackage || buildLocalApprovalPackage());
+
+  useEffect(() => {
+    if (!enabled || !payload) {
+      setApprovalPackageState(fallbackApprovalPackage || buildLocalApprovalPackage());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackApprovalPackage || buildLocalApprovalPackage();
+    setApprovalPackageState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledApprovalPackageAPI.build(payload)
+      .then(({ data }) => {
+        if (!active) return;
+        setApprovalPackageState(normalizeNuxeraControlledApprovalPackageResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo construir approval package; usando fallback local", err);
+        setApprovalPackageState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-approval-package-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, payload, fallbackApprovalPackage]);
+
+  return approvalPackageState;
 }
 
 export function useControlledEvidenceReview({ enabled = true, markdown = "", fallbackReview = null } = {}) {

@@ -1,6 +1,7 @@
 import express from 'express';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { getAdminControls } from '../services/nuxeraAdminControlService.js';
+import { getNuxeraControlledApprovalPackage } from '../services/nuxeraControlledApprovalPackageService.js';
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
 import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlledEvidenceScaffoldService.js';
 import { reviewNuxeraControlledEvidence } from '../services/nuxeraControlledEvidenceReviewService.js';
@@ -77,6 +78,36 @@ router.get(
           'Evidence scaffold is generated read-only and does not execute endpoint checks.',
           'No SQL, RLS, feature flag, permission, document grant or data-room mutation is performed.',
           'Operators must fill observed evidence from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  '/nuxera/admin/verification-approval-package',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const approvalPackage = getNuxeraControlledApprovalPackage({
+        evidenceReview: req.body?.evidenceReview,
+        markdown: req.body?.markdown,
+        approver: req.body?.approver,
+        approvalDate: req.body?.approvalDate,
+        approvalScope: req.body?.approvalScope,
+        evidenceHash: req.body?.evidenceHash,
+        decision: req.body?.decision
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        approvalPackage,
+        guardrails: [
+          'Approval package is read-only and does not persist approvals.',
+          'Approval package does not execute endpoint checks, apply SQL, change RLS or enable writes.',
+          'Ready-for-human-release-decision is not automatic production approval.'
         ]
       });
     } catch (error) {
