@@ -1138,3 +1138,24 @@ Remaining gaps:
 - Handoff package is displayed in-app but not yet written to Downloads as a portable artifact.
 
 Next recommended task after validation: run full frontend test pass, then update Downloads handoff if requested.
+## NU-ADM-BE-AUDIT-001 update - 2026-07-17
+
+Included backend readiness evidence in the local admin audit package.
+
+Changed admin surface:
+- Backend readiness now adds `backend-readiness` to the merged audit package scope.
+- Audit package includes a backend readiness signal with readiness percentage and status.
+- Backend readiness next actions are copied into audit package actions with a clear preflight prefix.
+- Audit package remains local/read-only; it does not export files, apply SQL, change RLS or execute actions.
+
+Validation:
+- `node --check` on `src/nuxera/admin/backendReadinessAdapter.js`: passed.
+- Targeted frontend NUXERA test: passed, 1 file / 69 tests.
+- Frontend full suite: passed, 9 files / 230 tests.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: run full frontend suite, then continue portable handoff/export work when requested.

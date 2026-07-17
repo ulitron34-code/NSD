@@ -670,6 +670,16 @@ describe("NUXERA backend readiness adapter", () => {
       expect.arrayContaining(["nuxera_workspace_states", "nuxera_admin_controls"])
     );
     expect(merged.backendReadinessHandoff.nextActions.length).toBe(2);
+    expect(merged.auditPackage.scope).toContain("backend-readiness");
+    expect(merged.auditPackage.signals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "backend-readiness", value: "33%" }),
+      ])
+    );
+    expect(merged.auditPackage.nextActions).toEqual(
+      expect.arrayContaining([expect.stringContaining("Verificar backend readiness:")])
+    );
+    expect(merged.summary.auditPackageSignals).toBe(merged.auditPackage.signals.length);
   });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();

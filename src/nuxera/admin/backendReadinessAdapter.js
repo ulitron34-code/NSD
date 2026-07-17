@@ -125,12 +125,41 @@ function buildBackendReadinessHandoff(state, actions) {
     ],
   };
 }
+function mergeBackendReadinessIntoAuditPackage(auditPackage, handoff) {
+  const existingSignals = asArray(auditPackage?.signals).filter((signal) => signal.id !== "backend-readiness");
+  const existingActions = asArray(auditPackage?.nextActions).filter(
+    (action) => !String(action).startsWith("Verificar backend readiness:")
+  );
+
+  return {
+    ...auditPackage,
+    scope: [...new Set([...asArray(auditPackage?.scope), "backend-readiness"])],
+    signals: [
+      ...existingSignals,
+      {
+        id: "backend-readiness",
+        label: "Readiness backend",
+        value: `${handoff.summary.readiness}%`,
+        status: handoff.status,
+      },
+    ],
+    nextActions: [
+      ...existingActions,
+      ...handoff.nextActions.map((action) => `Verificar backend readiness: ${action}`),
+    ],
+    guardrails: [
+      ...asArray(auditPackage?.guardrails),
+      "Backend readiness en audit package es evidencia local; no aplica SQL ni valida RLS por si sola.",
+    ],
+  };
+}
 
 export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE) {
   const state = readinessState || LOCAL_BACKEND_READINESS_STATE;
   const readinessHealthSignal = buildBackendReadinessHealthSignal(state);
   const readinessActions = buildBackendReadinessActions(state);
   const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
+  const auditPackage = mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff);
   const adminHealthSignals = [
     ...consoleState.adminHealthSignals.filter((signal) => signal.id !== readinessHealthSignal.id),
     readinessHealthSignal,
@@ -144,6 +173,7 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
     ...consoleState,
     backendReadiness: state,
     backendReadinessHandoff: readinessHandoff,
+    auditPackage,
     adminHealthSignals,
     adminActionQueue,
     summary: {
@@ -151,6 +181,8 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
       backendReadiness: state.summary.readiness,
       backendReadinessUnavailable: state.summary.unavailable,
       backendReadinessActions: readinessActions.length,
+      auditPackageSignals: auditPackage.signals.length,
+      auditPackageActions: auditPackage.nextActions.length,
       adminHealthSignals: adminHealthSignals.length,
       adminHealthWatch: adminHealthSignals.filter((item) => item.severity !== "low").length,
       adminActionQueue: adminActionQueue.length,
