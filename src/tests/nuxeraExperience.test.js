@@ -4,6 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
+import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace, normalizeApplicantProjectProfile } from "../nuxera/applicant/projectWorkspace";
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
@@ -346,6 +347,19 @@ describe("NUXERA applicant guided mission", () => {
     expect(workspace.nextAction).toContain("Completar");
     expect(workspace.guardrails.join(" ")).toContain("no persiste");
     expect(workspace.guardrails.join(" ")).toContain("No cambia permisos");
+  });
+  it("builds a contextual read-only applicant document center", () => {
+    const center = getApplicantDocumentCenter(null, "es");
+
+    expect(center.status).toBe("read-only-local");
+    expect(center.folders.map((folder) => folder.id)).toEqual(
+      expect.arrayContaining(["identity-kyb", "project-file", "financial-file", "impact-risk"])
+    );
+    expect(center.summary.documents).toBeGreaterThan(10);
+    expect(center.activeFolder.status).toBe("needs-document-work");
+    expect(center.nextAction).toContain("Revisar");
+    expect(center.guardrails.join(" ")).toContain("no sube");
+    expect(center.guardrails.join(" ")).toContain("No cambia permisos");
   });
   it("builds a local data-room checklist from minimum requirements", () => {
     const checklist = getApplicantDataRoomChecklist("es");

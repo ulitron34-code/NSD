@@ -4,6 +4,7 @@ import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
+import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
@@ -38,6 +39,7 @@ function ApplicantMissionHome({ sectionLabel }) {
   const onboardingWizard = getApplicantOnboardingWizard("es");
   const { orders, orderId, isDemo, loading: ordersLoading } = useMyOrders();
   const projectWorkspace = getApplicantCompanyProjectWorkspace(orders[0], "es");
+  const documentCenter = getApplicantDocumentCenter(orders[0], "es");
   const workspaceState = useApplicantWorkspaceState(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
   });
@@ -141,6 +143,38 @@ function ApplicantMissionHome({ sectionLabel }) {
           ))}
         </div>
         <footer>{projectWorkspace.nextAction} {projectWorkspace.guardrails[0]}</footer>
+      </section>
+      <section className="nuxera-document-center" aria-label="Centro documental contextual del solicitante">
+        <header>
+          <div>
+            <span>{documentCenter.status}</span>
+            <h2>Centro documental contextual</h2>
+            <p>{documentCenter.profile.companyName} / {documentCenter.profile.projectName}</p>
+          </div>
+          <strong>{documentCenter.summary.ready}/{documentCenter.summary.documents} listos</strong>
+        </header>
+        <div className="nuxera-document-folders">
+          {documentCenter.folders.map((folder) => (
+            <article key={folder.id}>
+              <span>{folder.status}</span>
+              <strong>{folder.label}</strong>
+              <p>{folder.summary.ready}/{folder.summary.total} listos; {folder.summary.missing + folder.summary.needsAttention} pendientes</p>
+              <small>{folder.scope}</small>
+              <NavLink to={folder.path}>Abrir contexto</NavLink>
+            </article>
+          ))}
+        </div>
+        <div className="nuxera-document-rows">
+          {documentCenter.activeFolder.rows.slice(0, 5).map((document) => (
+            <article key={document.id}>
+              <span>{document.status} / {document.source}</span>
+              <strong>{document.label}</strong>
+              <p>{document.detail}</p>
+              <small>{document.owner} / {document.version} / {document.risk}</small>
+            </article>
+          ))}
+        </div>
+        <footer>{documentCenter.nextAction} {documentCenter.guardrails[0]}</footer>
       </section>
       <section className="nuxera-applicant-checklist" aria-label="Checklist documental del solicitante">
         <header>

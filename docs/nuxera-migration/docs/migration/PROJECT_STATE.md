@@ -854,3 +854,27 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: add a contextual document center foundation, or defer writes until SQL/RLS is verified in Supabase.
+## NU-DOC-001 update - 2026-07-17
+
+Added a frontend-only contextual document center foundation for applicants.
+
+Changed frontend surface:
+- Added `documentCenter` to group demo document metadata and minimum requirements into contextual folders.
+- Applicant NUXERA home now shows identity/KYB, project, financial and risk/impact document folders.
+- Active folder rows expose read-only document/requirement status, owner, version and risk context.
+- Kept the center local/read-only; no upload, delete, signed URL, backend contract, data-room share or permission change was introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 61 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 222 tests.
+- `node --check` on `documentCenter.js`: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Document center uses local/demo metadata and requirement-derived rows only.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: either add grantor-safe document summary panels, or verify/apply SQL/RLS before connecting real document-center reads/writes.
