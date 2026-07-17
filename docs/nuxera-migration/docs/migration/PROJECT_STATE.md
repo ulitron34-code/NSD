@@ -1000,3 +1000,26 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: continue frontend-only admin details, or pause and verify SQL/RLS before connecting real backend state.
+## NU-DB-APPLY-READINESS-001 update - 2026-07-17
+
+Added a documentation-only SQL/RLS readiness checklist before controlled Supabase application.
+
+Changed migration docs:
+- Added `NUXERA_SQL_RLS_READINESS_CHECKLIST.md` with pending draft order, local guard, controlled Supabase, RLS, endpoint, feature-flag, go/no-go and rollback gates.
+- Updated migration matrix to show SQL guard plus SQL/RLS readiness checklist as local backend-prep progress.
+- Updated QA acceptance matrix with live-application readiness evidence.
+- Updated rollback plan with SQL/RLS rollback rehearsal requirements.
+- Kept SQL drafts unapplied; no backend routes, RLS policies, permissions, UI writes or data-room behavior changed.
+
+Validation:
+- Documentation-only task; no runtime behavior changed.
+- Direct NUXERA SQL draft guard from `backend/`: passed.
+- Literal newline check: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: run controlled SQL/RLS verification in a non-production Supabase environment, or continue frontend-only/admin detail work if credentials are unavailable.

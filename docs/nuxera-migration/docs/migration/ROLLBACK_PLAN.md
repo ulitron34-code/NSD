@@ -21,3 +21,14 @@ Rollback immediately for authentication failure, authorization leak, data corrup
 - If a NUXERA write path fails, the UI must degrade to local/read-only state and show that persistence is unavailable.
 - Grantor memos and review artifacts can be hidden or archived but cannot be treated as approved, exported or deleted by rollback.
 - Admin controls must record the prior known-good commit, feature flag status and incident reason before rollback is marked complete.
+
+## NUXERA SQL/RLS rollback rehearsal
+
+Before applying pending NUXERA SQL drafts to production:
+
+- Rehearse feature-flag rollback in a controlled environment.
+- Confirm legacy service order, document, review and data-room flows do not require `nuxera_*` tables.
+- Confirm `nuxera_*` records can be hidden or soft-archived without deleting audit history.
+- Capture row counts for each new table before and after rollback rehearsal.
+- Record the prior known-good commit, SQL filenames, deployment id, rollback owner and incident criteria.
+- Do not rollback by deleting `audit_logs`, documents, document reviews or service orders.
