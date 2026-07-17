@@ -1440,3 +1440,30 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: use the gate only to prepare a separate controlled change request; write enablement remains a separate reviewed deploy/change-control action.
+## NUXERA controlled change request
+
+Added a read-only change request package after the write gate so a ready write gate can be routed into separate deploy/change-control review without enabling writes.
+
+Changes made:
+- Added backend `nuxeraControlledChangeRequestService`.
+- Added protected endpoint `POST /api/nuxera/admin/verification-change-request`.
+- Added backend CLI alias `request:nuxera-change` with JSON/Markdown output.
+- Added frontend API, normalizer, optional hook and admin panel for change request package state.
+- Change request requires ready write gate, deployment window, rollback owner and release reviewer.
+- Added backend/frontend tests for blocked and ready states.
+
+Validation:
+- Syntax checks passed for change request service, route, backend adapter, route tests, service tests and CLI script.
+- Empty change request CLI blocked as expected.
+- Backend targeted route/service tests passed: 3 files / 36 tests.
+- Backend full suite passed: 48 files / 451 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 76 tests.
+- Frontend full suite passed: 9 files / 237 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No approvals, change tickets or deployment windows are persisted by the endpoint.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: submit change request packages only to separate change-control review; write enablement remains a separate reviewed deploy/change-control action.

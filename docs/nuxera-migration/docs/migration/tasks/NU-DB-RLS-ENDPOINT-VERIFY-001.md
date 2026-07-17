@@ -133,3 +133,19 @@ Guardrails:
 - Write gate is read-only and does not persist approvals or change tickets.
 - Ready-for-controlled-write-change is not automatic production approval.
 - Write enablement still requires a separate reviewed deploy/change-control action.
+## Controlled change request follow-up
+
+The write gate now feeds a read-only change request package for separate deploy/change-control preparation.
+
+Additional scope completed:
+- Added `nuxeraControlledChangeRequestService` to require a ready write gate plus deployment window, rollback owner and release reviewer.
+- Added `POST /api/nuxera/admin/verification-change-request`, protected by `nuxera:admin:read`.
+- Added backend CLI alias `request:nuxera-change` for local JSON/Markdown package generation.
+- Added frontend API, normalizer and optional hook for change request state.
+- Added an admin `Change request` panel showing metadata blockers and next decision.
+- Added backend and frontend tests for blocked and ready-for-separate-change-review states.
+
+Guardrails:
+- Change request package is read-only and does not persist tickets.
+- Ready-for-separate-change-review is not deployment approval.
+- Write enablement still requires a separate reviewed deploy/change-control action.

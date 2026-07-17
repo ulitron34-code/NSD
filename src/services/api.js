@@ -288,6 +288,10 @@ export const nuxeraControlledWriteGateAPI = {
   evaluate: (payload = {}) =>
     api.post('/nuxera/admin/verification-write-gate', payload)
 };
+export const nuxeraControlledChangeRequestAPI = {
+  build: (payload = {}) =>
+    api.post('/nuxera/admin/verification-change-request', payload)
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

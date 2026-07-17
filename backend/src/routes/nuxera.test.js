@@ -11,7 +11,8 @@ const serviceCalls = {
   runbook: [],
   evidenceReview: [],
   approvalPackage: [],
-  writeGate: []
+  writeGate: [],
+  changeRequest: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -121,6 +122,33 @@ vi.mock('../services/nuxeraControlledWriteGateService.js', () => ({
       releaseChecklist: ['Write enablement requires a separate deploy/change-control action.'],
       nextDecision: ready ? 'Prepare a separate controlled change request; do not enable writes automatically.' : 'Resolve write gate blockers before any controlled write change request.',
       guardrails: ['Write gate is read-only; it does not execute endpoints.']
+    };
+  })
+}));vi.mock('../services/nuxeraControlledChangeRequestService.js', () => ({
+  getNuxeraControlledChangeRequest: vi.fn((input = {}) => {
+    serviceCalls.changeRequest.push(input);
+    const ready = Boolean(input.writeGate?.readyForControlledWriteChange && input.deploymentWindow && input.rollbackOwner && input.releaseReviewer);
+    return {
+      id: 'nuxera-controlled-change-request',
+      status: ready ? 'ready-for-separate-change-review' : 'blocked-by-change-request-gates',
+      readyForChangeReview: ready,
+      sourceWriteGateId: 'nuxera-controlled-write-gate',
+      changeMetadata: {
+        changeTicket: input.changeTicket || input.writeGate?.changeTicket || 'CHG-NUXERA-001',
+        requestedScope: input.requestedScope || input.writeGate?.requestedScope || 'applicant-checklist-controlled-write',
+        requestedEnvironment: input.requestedEnvironment || input.writeGate?.requestedEnvironment || 'controlled-non-production',
+        deploymentWindow: input.deploymentWindow || 'TODO',
+        rollbackOwner: input.rollbackOwner || 'TODO',
+        releaseReviewer: input.releaseReviewer || 'TODO'
+      },
+      missingChangeMetadata: ready ? [] : [{ id: 'deploymentWindow' }],
+      summary: { writeGateReady: Boolean(input.writeGate?.readyForControlledWriteChange), changeMetadataMissing: ready ? 0 : 1, blockers: ready ? 0 : 1, reviewChecklist: 7, rollbackSteps: 5 },
+      blockers: ready ? [] : ['Missing change metadata: Deployment Window.'],
+      reviewChecklist: ['Change ticket references completed evidence review, approval package and write gate output.'],
+      rollbackPlan: ['Disable NUXERA experience flag if UI behavior degrades.'],
+      nextDecision: ready ? 'Submit this package to separate change-control review; do not enable writes from this endpoint.' : 'Resolve change-request blockers before submitting to change control.',
+      guardrails: ['Change request package is read-only; it does not persist tickets.'],
+      markdown: '# NUXERA Controlled Change Request Package'
     };
   })
 }));vi.mock('../services/nuxeraControlledApprovalPackageService.js', () => ({
@@ -257,6 +285,12 @@ describe('nuxera routes', () => {
     serviceCalls.adminControls = [];
     serviceCalls.readiness = [];
     serviceCalls.verificationPlan = [];
+    serviceCalls.evidenceScaffold = [];
+    serviceCalls.runbook = [];
+    serviceCalls.evidenceReview = [];
+    serviceCalls.approvalPackage = [];
+    serviceCalls.writeGate = [];
+    serviceCalls.changeRequest = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -374,6 +408,54 @@ describe('nuxera routes', () => {
     ]);
   });
 
+  it('requires nuxera:admin:read before building change request package', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-change-request`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      body: JSON.stringify({ deploymentWindow: '2026-07-20T03:00Z/2026-07-20T04:00Z' })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.changeRequest).toHaveLength(0);
+  });
+
+  it('returns controlled change request package without enabling writes', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-change-request`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({
+        writeGate: {
+          id: 'nuxera-controlled-write-gate',
+          readyForControlledWriteChange: true,
+          requestedScope: 'applicant-checklist-controlled-write',
+          requestedEnvironment: 'controlled-non-production',
+          changeTicket: 'CHG-NUXERA-001',
+          blockers: []
+        },
+        deploymentWindow: '2026-07-20T03:00Z/2026-07-20T04:00Z',
+        rollbackOwner: 'Platform lead',
+        releaseReviewer: 'Compliance reviewer'
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      changeRequest: {
+        id: 'nuxera-controlled-change-request',
+        readyForChangeReview: true,
+        summary: { blockers: 0 }
+      }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not persist tickets')])
+    );
+    expect(serviceCalls.changeRequest).toEqual([
+      expect.objectContaining({ deploymentWindow: '2026-07-20T03:00Z/2026-07-20T04:00Z', rollbackOwner: 'Platform lead' })
+    ]);
+  });
   it('requires nuxera:admin:read before building approval package', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-approval-package`, {
       method: 'POST',

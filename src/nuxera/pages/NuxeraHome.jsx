@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -445,6 +445,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledEvidenceReview = useControlledEvidenceReview({ enabled: isNuxeraExperienceEnabled() });
   const controlledApprovalPackage = useControlledApprovalPackage({ enabled: isNuxeraExperienceEnabled() });
   const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled() });
+  const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled() });
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
     backendReadiness,
@@ -708,6 +709,29 @@ function AdminOperationsHome({ sectionLabel }) {
         <footer>
           <small>{controlledWriteGate.nextDecision}</small>
           <small>{controlledWriteGate.guardrails[0]}</small>
+        </footer>
+      </section>
+      <section className="nuxera-admin-controlled-verification" aria-label="Change request controlado NUXERA">
+        <header>
+          <span>{controlledChangeRequest.status}</span>
+          <h2>Change request</h2>
+        </header>
+        <p>
+          {controlledChangeRequest.summary.blockers} bloqueos; metadata {controlledChangeRequest.summary.changeMetadataMissing}; rollback {controlledChangeRequest.summary.rollbackSteps} pasos.
+        </p>
+        {controlledChangeRequest.loading && <small>Construyendo change request NUXERA...</small>}
+        <div>
+          {controlledChangeRequest.blockers.slice(0, 3).map((blocker) => (
+            <article key={blocker}>
+              <span>{controlledChangeRequest.readyForChangeReview ? "ready" : "blocked"}</span>
+              <strong>{controlledChangeRequest.changeMetadata.changeTicket}</strong>
+              <p>{blocker}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{controlledChangeRequest.nextDecision}</small>
+          <small>{controlledChangeRequest.guardrails[0]}</small>
         </footer>
       </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">

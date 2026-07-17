@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -800,6 +800,40 @@ describe("NUXERA backend readiness adapter", () => {
     expect(writeGate.guardrails.join(" ")).toContain("separate deploy/change-control");
   });
 
+  it("normalizes remote controlled change request packages for separate review", () => {
+    const changeRequest = normalizeNuxeraControlledChangeRequestResponse({
+      changeRequest: {
+        id: "nuxera-controlled-change-request",
+        status: "ready-for-separate-change-review",
+        readyForChangeReview: true,
+        sourceWriteGateId: "nuxera-controlled-write-gate",
+        changeMetadata: {
+          changeTicket: "CHG-NUXERA-001",
+          requestedScope: "applicant-checklist-controlled-write",
+          requestedEnvironment: "controlled-non-production",
+          deploymentWindow: "2026-07-20T03:00Z/2026-07-20T04:00Z",
+          rollbackOwner: "Platform lead",
+          releaseReviewer: "Compliance reviewer",
+        },
+        missingChangeMetadata: [],
+        summary: { writeGateReady: true, changeMetadataMissing: 0, blockers: 0, reviewChecklist: 7, rollbackSteps: 5 },
+        blockers: [],
+        reviewChecklist: ["Change ticket references completed evidence review."],
+        rollbackPlan: ["Disable NUXERA experience flag if UI behavior degrades."],
+        nextDecision: "Submit this package to separate change-control review; do not enable writes from this endpoint.",
+        guardrails: ["Change request package is read-only."],
+        markdown: "# NUXERA Controlled Change Request Package",
+      },
+      guardrails: ["Ready-for-separate-change-review is not deployment approval."],
+    });
+
+    expect(changeRequest.source).toBe("remote-read-only");
+    expect(changeRequest.readyForChangeReview).toBe(true);
+    expect(changeRequest.changeMetadata.rollbackOwner).toBe("Platform lead");
+    expect(changeRequest.summary.rollbackSteps).toBe(5);
+    expect(changeRequest.blockers).toEqual([]);
+    expect(changeRequest.guardrails.join(" ")).toContain("not deployment approval");
+  });
   it("turns unavailable backend readiness signals into admin health actions", () => {
     const consoleState = getAdminOperationsConsole();
     const readiness = normalizeNuxeraBackendReadinessResponse({

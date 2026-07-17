@@ -2,6 +2,7 @@ import express from 'express';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { getAdminControls } from '../services/nuxeraAdminControlService.js';
 import { getNuxeraControlledApprovalPackage } from '../services/nuxeraControlledApprovalPackageService.js';
+import { getNuxeraControlledChangeRequest } from '../services/nuxeraControlledChangeRequestService.js';
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
 import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlledEvidenceScaffoldService.js';
 import { reviewNuxeraControlledEvidence } from '../services/nuxeraControlledEvidenceReviewService.js';
@@ -122,6 +123,44 @@ router.post(
   }
 );
 router.post(
+  '/nuxera/admin/verification-change-request',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const changeRequest = getNuxeraControlledChangeRequest({
+        writeGate: req.body?.writeGate,
+        backendReadiness: req.body?.backendReadiness,
+        approvalPackage: req.body?.approvalPackage,
+        evidenceReview: req.body?.evidenceReview,
+        markdown: req.body?.markdown,
+        approver: req.body?.approver,
+        approvalDate: req.body?.approvalDate,
+        approvalScope: req.body?.approvalScope,
+        evidenceHash: req.body?.evidenceHash,
+        decision: req.body?.decision,
+        requestedScope: req.body?.requestedScope,
+        requestedEnvironment: req.body?.requestedEnvironment,
+        changeTicket: req.body?.changeTicket,
+        deploymentWindow: req.body?.deploymentWindow,
+        rollbackOwner: req.body?.rollbackOwner,
+        releaseReviewer: req.body?.releaseReviewer
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        changeRequest,
+        guardrails: [
+          'Change request package is read-only and does not persist tickets.',
+          'Change request package does not execute endpoint checks, apply SQL, change RLS or enable writes.',
+          'Ready-for-separate-change-review is not deployment approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);router.post(
   '/nuxera/admin/verification-approval-package',
   authMiddleware,
   requirePermission('nuxera:admin:read'),

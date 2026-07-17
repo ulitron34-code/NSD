@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledChangeRequestAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -444,6 +444,85 @@ export function normalizeNuxeraControlledWriteGateResponse(response, fallbackWri
   };
 }
 
+function buildLocalChangeRequest() {
+  return {
+    id: "nuxera-controlled-change-request",
+    status: "blocked-by-change-request-gates",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    readyForChangeReview: false,
+    sourceWriteGateId: "nuxera-controlled-write-gate",
+    changeMetadata: {
+      changeTicket: "TODO",
+      requestedScope: "applicant-checklist-controlled-write",
+      requestedEnvironment: "TODO",
+      deploymentWindow: "TODO",
+      rollbackOwner: "TODO",
+      releaseReviewer: "TODO",
+    },
+    missingChangeMetadata: [
+      { id: "deploymentWindow", label: "Deployment window" },
+      { id: "rollbackOwner", label: "Rollback owner" },
+      { id: "releaseReviewer", label: "Release reviewer" },
+    ],
+    summary: {
+      writeGateReady: false,
+      changeMetadataMissing: 3,
+      blockers: 4,
+      reviewChecklist: 7,
+      rollbackSteps: 5,
+    },
+    blockers: [
+      "Write gate is not ready for controlled write change review.",
+      "Missing change metadata: Deployment Window.",
+      "Missing change metadata: Rollback Owner.",
+      "Missing change metadata: Release Reviewer.",
+    ],
+    reviewChecklist: ["Change ticket references completed evidence review, approval package and write gate output."],
+    rollbackPlan: ["Disable NUXERA experience flag if UI behavior degrades."],
+    nextDecision: "Resolve change-request blockers before submitting to change control.",
+    guardrails: ["Local change request fallback; no persiste tickets ni habilita writes."],
+    markdown: "# NUXERA Controlled Change Request Package\n\nStatus: blocked-by-change-request-gates",
+  };
+}
+
+export function normalizeNuxeraControlledChangeRequestResponse(response, fallbackChangeRequest = null) {
+  const payload = response?.changeRequest || response || null;
+  const fallback = fallbackChangeRequest || buildLocalChangeRequest();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-change-request-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    changeMetadata: {
+      ...fallback.changeMetadata,
+      ...asObject(payload.changeMetadata),
+    },
+    missingChangeMetadata: asArray(payload.missingChangeMetadata),
+    blockers: asArray(payload.blockers),
+    reviewChecklist: asArray(payload.reviewChecklist).length ? asArray(payload.reviewChecklist) : fallback.reviewChecklist,
+    rollbackPlan: asArray(payload.rollbackPlan).length ? asArray(payload.rollbackPlan) : fallback.rollbackPlan,
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
 function buildLocalApprovalPackage() {
   return {
     id: "nuxera-controlled-approval-package",
@@ -934,6 +1013,41 @@ export function useControlledWriteGate({ enabled = true, payload = null, fallbac
   return writeGateState;
 }
 
+export function useControlledChangeRequest({ enabled = true, payload = null, fallbackChangeRequest = null } = {}) {
+  const [changeRequestState, setChangeRequestState] = useState(fallbackChangeRequest || buildLocalChangeRequest());
+
+  useEffect(() => {
+    if (!enabled || !payload) {
+      setChangeRequestState(fallbackChangeRequest || buildLocalChangeRequest());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackChangeRequest || buildLocalChangeRequest();
+    setChangeRequestState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledChangeRequestAPI.build(payload)
+      .then(({ data }) => {
+        if (!active) return;
+        setChangeRequestState(normalizeNuxeraControlledChangeRequestResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo construir change request; usando fallback local", err);
+        setChangeRequestState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-change-request-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, payload, fallbackChangeRequest]);
+
+  return changeRequestState;
+}
 export function useControlledApprovalPackage({ enabled = true, payload = null, fallbackApprovalPackage = null } = {}) {
   const [approvalPackageState, setApprovalPackageState] = useState(fallbackApprovalPackage || buildLocalApprovalPackage());
 
