@@ -708,3 +708,27 @@ Remaining gaps:
 - Manual browser screenshots remain blocked by local browser launch restrictions.
 
 Next recommended task after validation: decide between SQL verification in a controlled Supabase environment or an admin-controls contract/skeleton task.
+## NU-ADM-CTRL-001 update - 2026-07-17
+
+Added the first backend skeleton for NUXERA admin controls in read-only mode.
+
+Changed backend surface:
+- Added draft SQL for `nuxera_admin_controls` in `backend/sql_migrations_pendientes/2026-07-17_nuxera_admin_controls.sql`.
+- Added `nuxeraAdminControlService` with guarded defaults and persisted-row validation.
+- Added `GET /api/nuxera/admin/controls` behind auth and `nuxera:admin:read`.
+- Added service and route tests.
+- Kept POST/PATCH/DELETE admin control writes disabled.
+
+Validation:
+- Backend targeted tests: passed, 2 files / 14 tests.
+- Backend full test suite: passed, 40 files / 408 tests.
+- `node --check` on new/changed backend files: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL drafts have not been applied to Supabase/production.
+- Admin control writes remain disabled.
+- Internal reviewer read access is not expanded beyond current admin wildcard behavior.
+- Manual browser screenshots remain blocked by local browser launch restrictions.
+
+Next recommended task after validation: add frontend read-only admin controls adapter, or verify/apply SQL drafts in a controlled Supabase environment.

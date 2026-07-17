@@ -1,9 +1,32 @@
 import express from 'express';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
+import { getAdminControls } from '../services/nuxeraAdminControlService.js';
 import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 
 const router = express.Router();
+router.get(
+  '/nuxera/admin/controls',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const controls = await getAdminControls();
+
+      res.json({
+        workspaceRole: 'admin',
+        controls,
+        guardrails: [
+          'NU-ADM-CTRL-001 exposes admin controls in read-only mode.',
+          'Admin controls do not activate automation, permissions or licensed market data.',
+          'No write endpoint is exposed for admin controls.'
+        ]
+      });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
 
 router.get(
   '/nuxera/orders/:orderId/state',

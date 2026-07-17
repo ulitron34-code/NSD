@@ -278,3 +278,13 @@ The first backend skeleton for NUXERA evidence links now exists in read-only own
 - Tests: service and route coverage with Supabase/service mocks.
 
 This slice only returns owner-visible evidence links and default guardrails. It does not expose POST/PATCH, does not grant document access, does not change data-room permissions and does not implement grantor/internal authorization yet.
+
+## NU-ADM-CTRL-001 implementation note
+
+The first backend skeleton for NUXERA admin controls now exists in read-only mode:
+- SQL draft: `backend/sql_migrations_pendientes/2026-07-17_nuxera_admin_controls.sql`.
+- Service: `backend/src/services/nuxeraAdminControlService.js`.
+- Route: `GET /api/nuxera/admin/controls` guarded by `nuxera:admin:read`.
+- Tests: `backend/src/services/nuxeraAdminControlService.test.js` and `backend/src/routes/nuxera.test.js`.
+
+This is not a production-applied schema and does not expose writes. Controls do not activate automations, permissions, feature flags or licensed market data.

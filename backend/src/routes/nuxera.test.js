@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const serviceCalls = {
   get: [],
   upsert: [],
-  evidence: []
+  evidence: [],
+  adminControls: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -66,6 +67,17 @@ vi.mock('../services/nuxeraWorkspaceStateService.js', () => ({
 }));
 
 
+
+vi.mock('../services/nuxeraAdminControlService.js', () => ({
+  getAdminControls: vi.fn(async () => {
+    serviceCalls.adminControls.push({ called: true });
+    return {
+      persisted: false,
+      controls: [],
+      guardrails: ['No persisted admin controls.']
+    };
+  })
+}));
 vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
   getOwnerEvidenceLinks: vi.fn(async (input) => {
     serviceCalls.evidence.push(input);
@@ -103,6 +115,7 @@ describe('nuxera routes', () => {
     serviceCalls.get = [];
     serviceCalls.upsert = [];
     serviceCalls.evidence = [];
+    serviceCalls.adminControls = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -112,6 +125,36 @@ describe('nuxera routes', () => {
     await new Promise((resolve) => server.close(resolve));
   });
 
+
+  it('requires nuxera:admin:read before reading admin controls', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/controls`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.adminControls).toHaveLength(0);
+  });
+
+  it('returns read-only admin controls with no-automation guardrails', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/controls`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      controls: { persisted: false, controls: [] }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('read-only mode'),
+        expect.stringContaining('do not activate automation')
+      ])
+    );
+    expect(serviceCalls.adminControls).toEqual([{ called: true }]);
+  });
   it('requires authentication before reading NUXERA state', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/state`);
 
