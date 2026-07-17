@@ -1,5 +1,6 @@
 import express from 'express';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
+import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 
 const router = express.Router();
@@ -30,6 +31,32 @@ router.get(
   }
 );
 
+router.get(
+  '/nuxera/orders/:orderId/evidence',
+  authMiddleware,
+  requirePermission('case:own:read'),
+  async (req, res) => {
+    try {
+      const evidence = await getOwnerEvidenceLinks({
+        orderId: req.params.orderId,
+        userId: req.userId
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'applicant',
+        evidence,
+        guardrails: [
+          'NU-BE-EVID-001 exposes owner-scoped evidence links only.',
+          'Evidence links do not grant document access or data-room visibility.',
+          'No write endpoint is exposed for evidence links.'
+        ]
+      });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
 router.patch(
   '/nuxera/orders/:orderId/state/:surface',
   authMiddleware,

@@ -657,3 +657,28 @@ Remaining gaps:
 - Manual browser screenshots remain blocked by local browser launch restrictions.
 
 Next recommended task after validation: stop here for handoff, or start a backend contract/skeleton for `nuxera_evidence_links` only if a dedicated backend task is approved.
+
+## NU-BE-EVID-001 update - 2026-07-17
+
+Added the first backend skeleton for NUXERA evidence links in read-only owner-scoped mode.
+
+Changed backend surface:
+- Added draft SQL for `nuxera_evidence_links` in `backend/sql_migrations_pendientes/2026-07-17_nuxera_evidence_links.sql`.
+- Added `nuxeraEvidenceLinkService` with owner order verification and read-only mapping of owner-visible links.
+- Added `GET /api/nuxera/orders/:orderId/evidence` behind auth and `case:own:read`.
+- Added service and route tests with Supabase/service mocks.
+- Kept POST/PATCH evidence writes disabled.
+
+Validation:
+- Backend targeted tests: passed, 2 files / 12 tests.
+- Backend full test suite: passed, 39 files / 402 tests.
+- `node --check` on new/changed backend files: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL drafts have not been applied to Supabase/production.
+- Grantor/internal evidence authorization remains contract-only until data-room permissions are reviewed.
+- Frontend still uses local evidence ledger; no UI writes are connected.
+- `nuxera_admin_controls` and review artifacts remain contract-only.
+
+Next recommended task after validation: add a read-only frontend adapter for `GET /api/nuxera/orders/:orderId/evidence`, or verify/apply SQL drafts in a controlled Supabase environment.

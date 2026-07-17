@@ -268,3 +268,13 @@ Admin operations now includes read-only evidence coverage derived from the front
 - Visibility mode: `internal-review`.
 
 This is compliance/readiness metadata only. It does not grant access, export evidence, write backend rows or create `nuxera_admin_controls`.
+
+## NU-BE-EVID-001 implementation note
+
+The first backend skeleton for NUXERA evidence links now exists in read-only owner-scoped mode:
+- SQL draft: `backend/sql_migrations_pendientes/2026-07-17_nuxera_evidence_links.sql`.
+- Service: `backend/src/services/nuxeraEvidenceLinkService.js`.
+- Route: `GET /api/nuxera/orders/:orderId/evidence`.
+- Tests: service and route coverage with Supabase/service mocks.
+
+This slice only returns owner-visible evidence links and default guardrails. It does not expose POST/PATCH, does not grant document access, does not change data-room permissions and does not implement grantor/internal authorization yet.

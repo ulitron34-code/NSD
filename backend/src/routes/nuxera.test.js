@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const serviceCalls = {
   get: [],
-  upsert: []
+  upsert: [],
+  evidence: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -64,6 +65,18 @@ vi.mock('../services/nuxeraWorkspaceStateService.js', () => ({
   })
 }));
 
+
+vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
+  getOwnerEvidenceLinks: vi.fn(async (input) => {
+    serviceCalls.evidence.push(input);
+    return {
+      orderId: input.orderId,
+      persisted: false,
+      links: [],
+      guardrails: ['No persisted evidence links.']
+    };
+  })
+}));
 const { default: nuxeraRoutes } = await import('./nuxera.js');
 
 function createApp() {
@@ -89,6 +102,7 @@ describe('nuxera routes', () => {
   beforeEach(async () => {
     serviceCalls.get = [];
     serviceCalls.upsert = [];
+    serviceCalls.evidence = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -134,6 +148,34 @@ describe('nuxera routes', () => {
     expect(serviceCalls.get[0]).toEqual({ orderId: 'order-1', userId: 'user-1' });
   });
 
+
+  it('requires case:own:read before reading owner evidence links', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/evidence`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:update' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'case:own:read' });
+    expect(serviceCalls.evidence).toHaveLength(0);
+  });
+
+  it('returns owner evidence links with no-access guardrails', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/evidence`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      orderId: 'order-1',
+      workspaceRole: 'applicant',
+      evidence: { persisted: false, links: [] }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('do not grant document access')])
+    );
+    expect(serviceCalls.evidence[0]).toEqual({ orderId: 'order-1', userId: 'user-1' });
+  });
   it('requires case:own:update before patching checklist state', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/state/checklist`, {
       method: 'PATCH',
