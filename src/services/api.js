@@ -283,6 +283,11 @@ export const nuxeraControlledApprovalPackageAPI = {
   build: (payload = {}) =>
     api.post('/nuxera/admin/verification-approval-package', payload)
 };
+
+export const nuxeraControlledWriteGateAPI = {
+  evaluate: (payload = {}) =>
+    api.post('/nuxera/admin/verification-write-gate', payload)
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

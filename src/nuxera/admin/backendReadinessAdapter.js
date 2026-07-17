@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -371,6 +371,68 @@ export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fall
       ...fallback.metadata,
       ...asObject(payload.metadata),
     },
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+function buildLocalWriteGate() {
+  return {
+    id: "nuxera-controlled-write-gate",
+    status: "blocked-by-write-gates",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    readyForControlledWriteChange: false,
+    requestedScope: "applicant-checklist-controlled-write",
+    requestedEnvironment: "TODO",
+    changeTicket: "TODO",
+    sourceApprovalPackageId: "nuxera-controlled-approval-package",
+    summary: {
+      backendReady: false,
+      backendReadiness: 0,
+      approvalReady: false,
+      blockers: 4,
+      releaseChecklist: 6,
+    },
+    blockers: [
+      "Backend readiness is not fully visible.",
+      "Approval package is not ready for human release decision.",
+      "Requested environment is required before controlled write gate review.",
+      "Change-control ticket is required before controlled write gate review.",
+    ],
+    releaseChecklist: ["Write enablement requires a separate deploy/change-control action."],
+    nextDecision: "Resolve write gate blockers before any controlled write change request.",
+    guardrails: ["Local write gate fallback; no habilita writes ni cambia feature flags."],
+  };
+}
+
+export function normalizeNuxeraControlledWriteGateResponse(response, fallbackWriteGate = null) {
+  const payload = response?.writeGate || response || null;
+  const fallback = fallbackWriteGate || buildLocalWriteGate();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-write-gate-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    blockers: asArray(payload.blockers),
+    releaseChecklist: asArray(payload.releaseChecklist).length ? asArray(payload.releaseChecklist) : fallback.releaseChecklist,
     summary: {
       ...fallback.summary,
       ...asObject(payload.summary),
@@ -834,6 +896,42 @@ export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold
   }, [enabled, fallbackScaffold]);
 
   return evidenceScaffoldState;
+}
+
+export function useControlledWriteGate({ enabled = true, payload = null, fallbackWriteGate = null } = {}) {
+  const [writeGateState, setWriteGateState] = useState(fallbackWriteGate || buildLocalWriteGate());
+
+  useEffect(() => {
+    if (!enabled || !payload) {
+      setWriteGateState(fallbackWriteGate || buildLocalWriteGate());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackWriteGate || buildLocalWriteGate();
+    setWriteGateState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledWriteGateAPI.evaluate(payload)
+      .then(({ data }) => {
+        if (!active) return;
+        setWriteGateState(normalizeNuxeraControlledWriteGateResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo evaluar write gate; usando fallback local", err);
+        setWriteGateState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-write-gate-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, payload, fallbackWriteGate]);
+
+  return writeGateState;
 }
 
 export function useControlledApprovalPackage({ enabled = true, payload = null, fallbackApprovalPackage = null } = {}) {

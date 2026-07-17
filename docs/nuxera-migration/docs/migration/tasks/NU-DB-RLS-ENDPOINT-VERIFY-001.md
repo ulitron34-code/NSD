@@ -117,3 +117,19 @@ Guardrails:
 - Approval package is read-only and does not persist approvals.
 - Ready-for-human-release-decision is not automatic production approval.
 - A separate deployment/change-control action remains required before any production write path.
+## Controlled write gate follow-up
+
+The approval package now feeds a final read-only write gate for controlled change-request preparation.
+
+Additional scope completed:
+- Added `nuxeraControlledWriteGateService` to combine backend readiness, approval package, requested environment and change-control ticket.
+- Added `POST /api/nuxera/admin/verification-write-gate`, protected by `nuxera:admin:read`.
+- Added backend CLI alias `gate:nuxera-write` for local write-gate evaluation.
+- Added frontend API, normalizer and optional hook for write gate state.
+- Added an admin `Write gate` panel showing backend/approval blockers and next decision.
+- Added backend and frontend tests for blocked and ready-for-controlled-write-change states.
+
+Guardrails:
+- Write gate is read-only and does not persist approvals or change tickets.
+- Ready-for-controlled-write-change is not automatic production approval.
+- Write enablement still requires a separate reviewed deploy/change-control action.

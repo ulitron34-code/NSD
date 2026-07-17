@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -444,6 +444,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledRunbook = useControlledRunbook({ enabled: isNuxeraExperienceEnabled() });
   const controlledEvidenceReview = useControlledEvidenceReview({ enabled: isNuxeraExperienceEnabled() });
   const controlledApprovalPackage = useControlledApprovalPackage({ enabled: isNuxeraExperienceEnabled() });
+  const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled() });
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
     backendReadiness,
@@ -684,6 +685,29 @@ function AdminOperationsHome({ sectionLabel }) {
         <footer>
           <small>{controlledApprovalPackage.nextDecision}</small>
           <small>{controlledApprovalPackage.guardrails[0]}</small>
+        </footer>
+      </section>
+      <section className="nuxera-admin-controlled-verification" aria-label="Gate de write controlado NUXERA">
+        <header>
+          <span>{controlledWriteGate.status}</span>
+          <h2>Write gate</h2>
+        </header>
+        <p>
+          {controlledWriteGate.summary.blockers} bloqueos; backend {controlledWriteGate.summary.backendReadiness}%; approval {controlledWriteGate.summary.approvalReady ? "ready" : "blocked"}.
+        </p>
+        {controlledWriteGate.loading && <small>Evaluando write gate NUXERA...</small>}
+        <div>
+          {controlledWriteGate.blockers.slice(0, 3).map((blocker) => (
+            <article key={blocker}>
+              <span>{controlledWriteGate.readyForControlledWriteChange ? "ready" : "blocked"}</span>
+              <strong>{controlledWriteGate.requestedScope}</strong>
+              <p>{blocker}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{controlledWriteGate.nextDecision}</small>
+          <small>{controlledWriteGate.guardrails[0]}</small>
         </footer>
       </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">

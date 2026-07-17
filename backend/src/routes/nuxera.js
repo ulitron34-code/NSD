@@ -7,6 +7,7 @@ import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlle
 import { reviewNuxeraControlledEvidence } from '../services/nuxeraControlledEvidenceReviewService.js';
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
+import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 
@@ -78,6 +79,41 @@ router.get(
           'Evidence scaffold is generated read-only and does not execute endpoint checks.',
           'No SQL, RLS, feature flag, permission, document grant or data-room mutation is performed.',
           'Operators must fill observed evidence from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  '/nuxera/admin/verification-write-gate',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const writeGate = getNuxeraControlledWriteGate({
+        backendReadiness: req.body?.backendReadiness,
+        approvalPackage: req.body?.approvalPackage,
+        evidenceReview: req.body?.evidenceReview,
+        markdown: req.body?.markdown,
+        approver: req.body?.approver,
+        approvalDate: req.body?.approvalDate,
+        approvalScope: req.body?.approvalScope,
+        evidenceHash: req.body?.evidenceHash,
+        decision: req.body?.decision,
+        requestedScope: req.body?.requestedScope,
+        requestedEnvironment: req.body?.requestedEnvironment,
+        changeTicket: req.body?.changeTicket
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        writeGate,
+        guardrails: [
+          'Write gate is read-only and does not persist approvals or change tickets.',
+          'Write gate does not execute endpoint checks, apply SQL, change RLS or enable writes.',
+          'Ready-for-controlled-write-change requires separate deploy/change-control.'
         ]
       });
     } catch (error) {

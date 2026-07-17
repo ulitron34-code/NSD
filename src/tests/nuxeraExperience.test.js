@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -772,6 +772,32 @@ describe("NUXERA backend readiness adapter", () => {
     expect(approvalPackage.summary.approvalMetadataMissing).toBe(0);
     expect(approvalPackage.blockers).toEqual([]);
     expect(approvalPackage.guardrails.join(" ")).toContain("not automatic production approval");
+  });
+
+  it("normalizes remote controlled write gates for change review", () => {
+    const writeGate = normalizeNuxeraControlledWriteGateResponse({
+      writeGate: {
+        id: "nuxera-controlled-write-gate",
+        status: "ready-for-controlled-write-change",
+        readyForControlledWriteChange: true,
+        requestedScope: "applicant-checklist-controlled-write",
+        requestedEnvironment: "controlled-non-production",
+        changeTicket: "CHG-NUXERA-001",
+        sourceApprovalPackageId: "nuxera-controlled-approval-package",
+        summary: { backendReady: true, backendReadiness: 100, approvalReady: true, blockers: 0, releaseChecklist: 6 },
+        blockers: [],
+        releaseChecklist: ["Write enablement requires a separate deploy/change-control action."],
+        nextDecision: "Prepare a separate controlled change request; do not enable writes automatically.",
+        guardrails: ["Write gate is read-only."],
+      },
+      guardrails: ["Ready-for-controlled-write-change requires separate deploy/change-control."],
+    });
+
+    expect(writeGate.source).toBe("remote-read-only");
+    expect(writeGate.readyForControlledWriteChange).toBe(true);
+    expect(writeGate.summary.blockers).toBe(0);
+    expect(writeGate.blockers).toEqual([]);
+    expect(writeGate.guardrails.join(" ")).toContain("separate deploy/change-control");
   });
 
   it("turns unavailable backend readiness signals into admin health actions", () => {

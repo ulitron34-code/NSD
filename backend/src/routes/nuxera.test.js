@@ -10,7 +10,8 @@ const serviceCalls = {
   evidenceScaffold: [],
   runbook: [],
   evidenceReview: [],
-  approvalPackage: []
+  approvalPackage: [],
+  writeGate: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -103,7 +104,26 @@ vi.mock('../services/nuxeraControlledEvidenceScaffoldService.js', () => ({
     };
   })
 }));
-vi.mock('../services/nuxeraControlledApprovalPackageService.js', () => ({
+vi.mock('../services/nuxeraControlledWriteGateService.js', () => ({
+  getNuxeraControlledWriteGate: vi.fn((input = {}) => {
+    serviceCalls.writeGate.push(input);
+    const ready = Boolean(input.backendReadiness?.ready && input.approvalPackage?.readyForReleaseDecision && input.requestedEnvironment && input.changeTicket);
+    return {
+      id: 'nuxera-controlled-write-gate',
+      status: ready ? 'ready-for-controlled-write-change' : 'blocked-by-write-gates',
+      readyForControlledWriteChange: ready,
+      requestedScope: input.requestedScope || 'applicant-checklist-controlled-write',
+      requestedEnvironment: input.requestedEnvironment || 'TODO',
+      changeTicket: input.changeTicket || 'TODO',
+      sourceApprovalPackageId: 'nuxera-controlled-approval-package',
+      summary: { backendReady: Boolean(input.backendReadiness?.ready), backendReadiness: 100, approvalReady: Boolean(input.approvalPackage?.readyForReleaseDecision), blockers: ready ? 0 : 1, releaseChecklist: 6 },
+      blockers: ready ? [] : ['Backend readiness is not fully visible.'],
+      releaseChecklist: ['Write enablement requires a separate deploy/change-control action.'],
+      nextDecision: ready ? 'Prepare a separate controlled change request; do not enable writes automatically.' : 'Resolve write gate blockers before any controlled write change request.',
+      guardrails: ['Write gate is read-only; it does not execute endpoints.']
+    };
+  })
+}));vi.mock('../services/nuxeraControlledApprovalPackageService.js', () => ({
   getNuxeraControlledApprovalPackage: vi.fn((input = {}) => {
     serviceCalls.approvalPackage.push(input);
     const ready = Boolean(input.approver && input.approvalDate && input.approvalScope && input.evidenceHash && input.decision);
@@ -309,6 +329,48 @@ describe('nuxera routes', () => {
     );
     expect(serviceCalls.evidenceScaffold).toEqual([
       expect.objectContaining({ repoCommit: 'abc1234', environment: 'non-production-supabase' })
+    ]);
+  });
+
+  it('requires nuxera:admin:read before evaluating write gate', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-write-gate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      body: JSON.stringify({ changeTicket: 'CHG-1' })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.writeGate).toHaveLength(0);
+  });
+
+  it('returns controlled write gate without enabling writes', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-write-gate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({
+        backendReadiness: { ready: true },
+        approvalPackage: { readyForReleaseDecision: true },
+        requestedEnvironment: 'controlled-non-production',
+        changeTicket: 'CHG-NUXERA-001'
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      writeGate: {
+        id: 'nuxera-controlled-write-gate',
+        readyForControlledWriteChange: true,
+        summary: { blockers: 0 }
+      }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not execute endpoint checks')])
+    );
+    expect(serviceCalls.writeGate).toEqual([
+      expect.objectContaining({ requestedEnvironment: 'controlled-non-production', changeTicket: 'CHG-NUXERA-001' })
     ]);
   });
 

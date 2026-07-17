@@ -1413,3 +1413,30 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: use approval package only after clean evidence review and human release decision; production writes still require separate change control.
+## NUXERA controlled write gate
+
+Added a final read-only gate that combines backend readiness, approval package, requested environment and change-control ticket before any controlled write change request.
+
+Changes made:
+- Added backend `nuxeraControlledWriteGateService`.
+- Added protected endpoint `POST /api/nuxera/admin/verification-write-gate`.
+- Added backend CLI alias `gate:nuxera-write`.
+- Added frontend API, normalizer, optional hook and admin panel for write gate state.
+- Write gate requires backend readiness, ready approval package, requested environment and change ticket.
+- Added backend/frontend tests for blocked and ready states.
+
+Validation:
+- Syntax checks passed for write gate service, route, backend adapter, route tests, service tests and CLI script.
+- Empty write gate CLI blocked as expected.
+- Backend targeted route/service tests passed: 3 files / 34 tests.
+- Backend full suite passed: 47 files / 446 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 75 tests.
+- Frontend full suite passed: 9 files / 236 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No approvals or change tickets are persisted by the endpoint.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: use the gate only to prepare a separate controlled change request; write enablement remains a separate reviewed deploy/change-control action.
