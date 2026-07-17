@@ -695,6 +695,15 @@ describe("NUXERA backend readiness adapter", () => {
     );
     expect(merged.summary.rlsVerificationScenarios).toBe(4);
     expect(merged.summary.rlsVerificationBlocked).toBeGreaterThan(0);
+    expect(merged.auditPackage.scope).toContain("rls-verification-matrix");
+    expect(merged.auditPackage.signals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "rls-verification-matrix", value: "4/4" }),
+      ])
+    );
+    expect(merged.auditPackage.nextActions).toEqual(
+      expect.arrayContaining([expect.stringContaining("Verificar RLS controlado:")])
+    );
   });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();

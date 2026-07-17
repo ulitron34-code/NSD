@@ -206,6 +206,35 @@ function mergeBackendReadinessIntoAuditPackage(auditPackage, handoff) {
     ],
   };
 }
+function mergeRlsMatrixIntoAuditPackage(auditPackage, matrix) {
+  const blockedScenarios = matrix.scenarios.filter((scenario) => scenario.blockedBy.length > 0);
+  const existingSignals = asArray(auditPackage?.signals).filter((signal) => signal.id !== "rls-verification-matrix");
+  const existingActions = asArray(auditPackage?.nextActions).filter(
+    (action) => !String(action).startsWith("Verificar RLS controlado:")
+  );
+
+  return {
+    ...auditPackage,
+    scope: [...new Set([...asArray(auditPackage?.scope), "rls-verification-matrix"])],
+    signals: [
+      ...existingSignals,
+      {
+        id: "rls-verification-matrix",
+        label: "Matriz RLS controlada",
+        value: `${blockedScenarios.length}/${matrix.scenarios.length}`,
+        status: matrix.status,
+      },
+    ],
+    nextActions: [
+      ...existingActions,
+      ...blockedScenarios.map((scenario) => `Verificar RLS controlado: ${scenario.identity} bloqueado por ${scenario.blockedBy.join(", ")}.`),
+    ],
+    guardrails: [
+      ...asArray(auditPackage?.guardrails),
+      "Matriz RLS en audit package es planeacion local; requiere pruebas con identidades controladas.",
+    ],
+  };
+}
 
 export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE) {
   const state = readinessState || LOCAL_BACKEND_READINESS_STATE;
@@ -213,7 +242,10 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
   const readinessActions = buildBackendReadinessActions(state);
   const rlsVerificationMatrix = buildRlsVerificationMatrix(state);
   const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
-  const auditPackage = mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff);
+  const auditPackage = mergeRlsMatrixIntoAuditPackage(
+    mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff),
+    rlsVerificationMatrix
+  );
   const adminHealthSignals = [
     ...consoleState.adminHealthSignals.filter((signal) => signal.id !== readinessHealthSignal.id),
     readinessHealthSignal,

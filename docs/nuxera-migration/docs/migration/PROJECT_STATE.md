@@ -1180,3 +1180,26 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: run full frontend suite, then continue controlled Supabase/RLS evidence work or portable handoff updates.
+## NU-ADM-RLS-MATRIX-002 update - 2026-07-17
+
+Finalized the local RLS verification matrix as an admin-visible readiness artifact.
+
+Changed admin surface:
+- Backend readiness now derives four controlled-identity RLS scenarios: applicant owner, different applicant, authorized grantor and admin/internal.
+- Each scenario carries expected reads, writes, denials and readiness blockers.
+- Admin console displays the matrix next to backend readiness handoff, with scenario and blocked counts.
+- Merged admin audit package now includes RLS matrix scope, signal and blocked-scenario actions.
+- Matrix remains local/read-only and does not run Supabase queries, apply SQL, change RLS or mutate permissions.
+
+Validation:
+- `node --check` on `src/nuxera/admin/backendReadinessAdapter.js`: passed.
+- Targeted frontend NUXERA test: passed, 1 file / 69 tests.
+- Frontend full suite: passed, 9 files / 230 tests.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+- Downloads handoff must be updated after this commit.
+
+Next recommended task after validation: update Downloads handoff, then continue with controlled Supabase/RLS evidence when credentials are available.
