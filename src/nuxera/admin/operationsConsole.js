@@ -205,6 +205,81 @@ function buildAdminAuditPackage({
     ],
   };
 }
+
+function buildAdminHealthSignals({
+  operationLanes,
+  blockedGates,
+  incidentControls,
+  evidenceCoverage,
+  complianceEvidence,
+  grantorDocumentReadiness,
+  auditPackage,
+}) {
+  const pendingDocuments = grantorDocumentReadiness.reduce((total, item) => total + item.pending, 0);
+  const evidenceWatch = evidenceCoverage.reduce((total, item) => total + item.watch, 0);
+  const runtimeIncidents = incidentControls.filter((control) => ["browser-e2e", "runtime-path"].includes(control.id));
+  const aiLane = operationLanes.find((lane) => lane.id === "ai-agents");
+  const decisionSafety = complianceEvidence.find((item) => item.id === "decision-safety");
+
+  return [
+    {
+      id: "rollout-governance",
+      label: "Gobernanza rollout",
+      status: blockedGates.length > 0 ? "release-gated" : "controlled",
+      severity: blockedGates.length > 0 ? "high" : "low",
+      signal: `${blockedGates.length} gates requieren revision antes de persistencia.`,
+      nextAction: blockedGates.length > 0 ? "Mantener rollout bloqueado hasta cerrar contratos backend." : "Preparar revision controlada.",
+    },
+    {
+      id: "runtime-tooling",
+      label: "Runtime y tooling",
+      status: runtimeIncidents.length > 0 ? "environment-watch" : "clear",
+      severity: runtimeIncidents.length > 0 ? "medium" : "low",
+      signal: `${runtimeIncidents.length} controles de entorno activos.`,
+      nextAction: "Seguir validando con lint/build/unit tests mientras browser automation siga bloqueado.",
+    },
+    {
+      id: "evidence-observability",
+      label: "Evidencia observable",
+      status: evidenceWatch > 0 ? "read-only-watch" : "read-only-ready",
+      severity: evidenceWatch > 0 ? "medium" : "low",
+      signal: `${evidenceWatch} senales en watch dentro del ledger admin.`,
+      nextAction: "Usar ledger como indice interno, no como fuente de permisos o exports.",
+    },
+    {
+      id: "document-visibility",
+      label: "Visibilidad documental",
+      status: pendingDocuments > 0 ? "authorized-summary-watch" : "authorized-summary-ready",
+      severity: pendingDocuments > 0 ? "medium" : "low",
+      signal: `${pendingDocuments} senales documentales pendientes en casos grantor.`,
+      nextAction: "Confirmar faltantes sin abrir archivos ni cambiar data-room.",
+    },
+    {
+      id: "decision-safety",
+      label: "Decision safety",
+      status: decisionSafety?.status || "watch",
+      severity: decisionSafety?.status === "aligned" ? "low" : "high",
+      signal: decisionSafety?.detail || "Decision humana requerida antes de cualquier decision vinculante.",
+      nextAction: "Mantener revision humana y condiciones no vinculantes.",
+    },
+    {
+      id: "ai-automation",
+      label: "IA y automatizacion",
+      status: aiLane?.status || "limited",
+      severity: aiLane?.status === "limited" ? "medium" : "low",
+      signal: aiLane?.signal || "Automatizacion IA limitada a senales auditables.",
+      nextAction: "No activar agentes sin trazabilidad, costo y fallback aprobados.",
+    },
+    {
+      id: "audit-readiness",
+      label: "Audit readiness",
+      status: auditPackage.status,
+      severity: auditPackage.nextActions.length > 0 ? "medium" : "low",
+      signal: `${auditPackage.nextActions.length} acciones abiertas en paquete local.`,
+      nextAction: "Resolver acciones abiertas antes de conectar persistencia real.",
+    },
+  ];
+}
 export function getAdminOperationsConsole() {
   const blockedGates = releaseGates.filter((gate) => gate.state === "blocked");
   const watchLanes = operationLanes.filter((lane) => ["watch", "limited"].includes(lane.status));
@@ -245,6 +320,15 @@ export function getAdminOperationsConsole() {
     grantorDocumentReadiness,
     averageReadiness,
   });
+  const adminHealthSignals = buildAdminHealthSignals({
+    operationLanes,
+    blockedGates,
+    incidentControls,
+    evidenceCoverage,
+    complianceEvidence,
+    grantorDocumentReadiness,
+    auditPackage,
+  });
 
   return {
     status: blockedGates.length > 0 ? "release-gated" : "ready-for-controlled-review",
@@ -258,6 +342,7 @@ export function getAdminOperationsConsole() {
     evidenceCoverage,
     grantorDocumentReadiness,
     auditPackage,
+    adminHealthSignals,
     summary: {
       lanes: operationLanes.length,
       watch: watchLanes.length,
@@ -270,6 +355,8 @@ export function getAdminOperationsConsole() {
       grantorDocumentPending: grantorDocumentReadiness.reduce((total, item) => total + item.pending, 0),
       auditPackageSignals: auditPackage.signals.length,
       auditPackageActions: auditPackage.nextActions.length,
+      adminHealthSignals: adminHealthSignals.length,
+      adminHealthWatch: adminHealthSignals.filter((item) => item.severity !== "low").length,
       requiresHumanReview: true,
     },
     policies: [

@@ -1706,6 +1706,7 @@
   .nuxera-admin-readiness > div,
   .nuxera-admin-document-readiness > div,
   .nuxera-admin-audit-package > div,
+  .nuxera-admin-health-signals > div,
   .nuxera-admin-control-grid,
   .nuxera-decision-flow > div {
     grid-template-columns: 1fr;
@@ -1852,7 +1853,8 @@
 }
 .nuxera-admin-evidence-coverage,
 .nuxera-admin-document-readiness,
-.nuxera-admin-audit-package {
+.nuxera-admin-audit-package,
+.nuxera-admin-health-signals {
   margin-bottom: 16px;
   padding: 16px;
   background: var(--nuxera-panel);
@@ -1863,13 +1865,15 @@
 
 .nuxera-admin-evidence-coverage > header,
 .nuxera-admin-document-readiness > header,
-.nuxera-admin-audit-package > header {
+.nuxera-admin-audit-package > header,
+.nuxera-admin-health-signals > header {
   margin-bottom: 14px;
 }
 
 .nuxera-admin-evidence-coverage > div,
 .nuxera-admin-document-readiness > div,
-.nuxera-admin-audit-package > div {
+.nuxera-admin-audit-package > div,
+.nuxera-admin-health-signals > div {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
@@ -1877,7 +1881,8 @@
 
 .nuxera-admin-evidence-coverage article,
 .nuxera-admin-document-readiness article,
-.nuxera-admin-audit-package article {
+.nuxera-admin-audit-package article,
+.nuxera-admin-health-signals article {
   display: grid;
   gap: 6px;
   padding: 12px;
@@ -1892,7 +1897,9 @@
 .nuxera-admin-document-readiness small,
 .nuxera-admin-document-readiness em,
 .nuxera-admin-audit-package span,
-.nuxera-admin-audit-package small {
+.nuxera-admin-audit-package small,
+.nuxera-admin-health-signals span,
+.nuxera-admin-health-signals small {
   color: var(--nuxera-gold);
   font-size: 0.72rem;
   font-weight: 900;
@@ -1904,7 +1911,9 @@
 .nuxera-admin-document-readiness h2,
 .nuxera-admin-document-readiness strong,
 .nuxera-admin-audit-package h2,
-.nuxera-admin-audit-package strong {
+.nuxera-admin-audit-package strong,
+.nuxera-admin-health-signals h2,
+.nuxera-admin-health-signals strong {
   margin: 0;
   color: var(--nuxera-ink);
   font-size: 1rem;
@@ -1912,7 +1921,8 @@
 
 .nuxera-admin-evidence-coverage p,
 .nuxera-admin-document-readiness p,
-.nuxera-admin-audit-package p {
+.nuxera-admin-audit-package p,
+.nuxera-admin-health-signals p {
   margin: 0;
   color: var(--nuxera-muted);
   font-size: 0.82rem;
@@ -1923,7 +1933,9 @@
   display: grid;
   gap: 6px;
   margin-top: 12px;
-}.nuxera-admin-backend-controls {
+}
+
+.nuxera-admin-backend-controls {
   display: grid;
   gap: 0.75rem;
   margin-top: 1rem;

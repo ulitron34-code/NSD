@@ -952,3 +952,27 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: update portable Downloads handoff, then continue with admin observability details or verify SQL/RLS before real backend connections.
+## NU-ADM-OBS-001 update - 2026-07-17
+
+Added local admin health signals for operational observability.
+
+Changed frontend surface:
+- Admin operations console now derives `adminHealthSignals` across rollout governance, runtime tooling, evidence, document visibility, decision safety, AI automation and audit readiness.
+- Admin NUXERA home shows monitored domains, watch count and next actions.
+- Signals are local/read-only and consolidate existing state only.
+- Kept backend contracts, SQL/RLS, permissions, data-room access, exports and AI activation unchanged.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 65 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 226 tests.
+- `node --check` on `operationsConsole.js`: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Health signals are local/demo-derived only.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: continue frontend-only admin details, or pause and verify SQL/RLS before connecting real backend state.

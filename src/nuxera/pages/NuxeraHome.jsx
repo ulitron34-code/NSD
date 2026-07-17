@@ -583,6 +583,24 @@ function AdminOperationsHome({ sectionLabel }) {
           {consoleState.auditPackage.guardrails.map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
         </footer>
       </section>
+      <section className="nuxera-admin-health-signals" aria-label="Senales de salud admin NUXERA">
+        <header>
+          <span>Health signals</span>
+          <h2>Observabilidad operativa local</h2>
+        </header>
+        <p>{consoleState.summary.adminHealthSignals} dominios monitoreados; {consoleState.summary.adminHealthWatch} requieren seguimiento.</p>
+        <div>
+          {consoleState.adminHealthSignals.map((signal) => (
+            <article key={signal.id}>
+              <span>{signal.status} / {signal.severity}</span>
+              <strong>{signal.label}</strong>
+              <p>{signal.signal}</p>
+              <small>{signal.nextAction}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <div className="nuxera-admin-control-grid">
         <section aria-label="Controles de incidentes NUXERA">
           <h2>Controles de incidentes</h2>

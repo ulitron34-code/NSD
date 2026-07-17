@@ -240,6 +240,25 @@ it("builds a local admin audit package without exports or backend writes", () =>
   expect(consoleState.auditPackage.guardrails.join(" ")).toContain("no exporta archivos");
   expect(consoleState.auditPackage.guardrails.join(" ")).toContain("No cambia permisos");
 });
+it("builds local admin health signals without changing runtime controls", () => {
+  const consoleState = getAdminOperationsConsole();
+
+  expect(consoleState.summary.adminHealthSignals).toBe(consoleState.adminHealthSignals.length);
+  expect(consoleState.summary.adminHealthWatch).toBeGreaterThan(0);
+  expect(consoleState.adminHealthSignals.map((signal) => signal.id)).toEqual(
+    expect.arrayContaining([
+      "rollout-governance",
+      "runtime-tooling",
+      "evidence-observability",
+      "document-visibility",
+      "decision-safety",
+      "ai-automation",
+      "audit-readiness",
+    ])
+  );
+  expect(consoleState.adminHealthSignals.every((signal) => signal.nextAction)).toBe(true);
+  expect(consoleState.adminHealthSignals.find((signal) => signal.id === "document-visibility").nextAction).toContain("sin abrir archivos");
+});
 it("normalizes backend admin controls as read-only non-activating controls", () => {
   const state = normalizeNuxeraAdminControlsResponse({
     workspaceRole: "admin",
