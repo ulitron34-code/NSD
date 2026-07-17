@@ -5,6 +5,29 @@ import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js'
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 
 const router = express.Router();
+
+function sendNuxeraError(res, error) {
+  const message = String(error?.message || '');
+
+  if (/no encontrado|sin permisos/i.test(message)) {
+    return res.status(404).json({
+      error: 'Recurso NUXERA no disponible',
+      code: 'NUXERA_RESOURCE_UNAVAILABLE'
+    });
+  }
+
+  if (/invalido|invalida/i.test(message)) {
+    return res.status(422).json({
+      error: 'Datos NUXERA invalidos',
+      code: 'NUXERA_INVALID_DATA'
+    });
+  }
+
+  return res.status(503).json({
+    error: 'Servicio NUXERA no disponible',
+    code: 'NUXERA_BACKEND_UNAVAILABLE'
+  });
+}
 router.get(
   '/nuxera/admin/controls',
   authMiddleware,
@@ -23,7 +46,7 @@ router.get(
         ]
       });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      sendNuxeraError(res, error);
     }
   }
 );
@@ -49,7 +72,7 @@ router.get(
         ]
       });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      sendNuxeraError(res, error);
     }
   }
 );
@@ -76,7 +99,7 @@ router.get(
         ]
       });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      sendNuxeraError(res, error);
     }
   }
 );
@@ -104,7 +127,7 @@ router.patch(
         state: checklist
       });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      sendNuxeraError(res, error);
     }
   }
 );

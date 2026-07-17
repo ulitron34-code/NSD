@@ -1023,3 +1023,26 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: run controlled SQL/RLS verification in a non-production Supabase environment, or continue frontend-only/admin detail work if credentials are unavailable.
+## NU-BE-ERR-001 update - 2026-07-17
+
+Added controlled NUXERA route error mapping for backend readiness.
+
+Changed backend surface:
+- NUXERA route service failures now map to sanitized route responses instead of returning raw service messages as 400 errors.
+- Ownership/permission unavailable cases return `404` with `NUXERA_RESOURCE_UNAVAILABLE`.
+- Invalid NUXERA data returns `422` with `NUXERA_INVALID_DATA`.
+- Backend/unapplied-table failures return `503` with `NUXERA_BACKEND_UNAVAILABLE`.
+- Route tests cover controlled admin backend failure, applicant access unavailability and invalid checklist payload handling.
+- Kept SQL drafts unapplied; no RLS policies, permission grants, schemas, data-room behavior or new write endpoints changed.
+
+Validation:
+- `node --check` on `backend/src/routes/nuxera.js`: passed.
+- `node --check` on `backend/src/routes/nuxera.test.js`: passed.
+- Targeted backend route test: passed, 1 file / 13 tests.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: continue backend readiness with controlled Supabase/RLS evidence when credentials are available, or keep hardening local route contracts and tests.

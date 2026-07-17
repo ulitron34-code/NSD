@@ -89,6 +89,8 @@ vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
     };
   })
 }));
+const workspaceStateService = await import('../services/nuxeraWorkspaceStateService.js');
+const adminControlService = await import('../services/nuxeraAdminControlService.js');
 const { default: nuxeraRoutes } = await import('./nuxera.js');
 
 function createApp() {
@@ -136,6 +138,22 @@ describe('nuxera routes', () => {
     expect(serviceCalls.adminControls).toHaveLength(0);
   });
 
+  it('returns controlled backend-unavailable errors for admin controls service failures', async () => {
+    adminControlService.getAdminControls.mockRejectedValueOnce(
+      new Error('relation "nuxera_admin_controls" does not exist')
+    );
+
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/controls`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: 'Servicio NUXERA no disponible',
+      code: 'NUXERA_BACKEND_UNAVAILABLE'
+    });
+  });
+
   it('returns read-only admin controls with no-automation guardrails', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/controls`, {
       headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
@@ -173,6 +191,26 @@ describe('nuxera routes', () => {
     expect(serviceCalls.get).toHaveLength(0);
   });
 
+  it('returns a controlled 404 when applicant state access is unavailable', async () => {
+    workspaceStateService.getApplicantChecklistState.mockRejectedValueOnce(
+      new Error('Expediente no encontrado o sin permisos para NUXERA')
+    );
+
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/state`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: 'Recurso NUXERA no disponible',
+      code: 'NUXERA_RESOURCE_UNAVAILABLE'
+    });
+    expect(workspaceStateService.getApplicantChecklistState).toHaveBeenCalledWith({
+      orderId: 'order-1',
+      userId: 'user-1'
+    });
+  });
+
   it('returns applicant checklist state with route guardrails', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/state`, {
       headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }
@@ -188,7 +226,10 @@ describe('nuxera routes', () => {
     expect(body.guardrails).toEqual(
       expect.arrayContaining([expect.stringContaining('applicant checklist state only')])
     );
-    expect(serviceCalls.get[0]).toEqual({ orderId: 'order-1', userId: 'user-1' });
+    expect(workspaceStateService.getApplicantChecklistState).toHaveBeenCalledWith({
+      orderId: 'order-1',
+      userId: 'user-1'
+    });
   });
 
 
@@ -249,6 +290,36 @@ describe('nuxera routes', () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({ error: 'NUXERA surface no habilitada para persistencia' });
     expect(serviceCalls.upsert).toHaveLength(0);
+  });
+
+  it('returns controlled invalid-data errors for rejected checklist payloads', async () => {
+    workspaceStateService.upsertApplicantChecklistState.mockRejectedValueOnce(
+      new Error('Estado NUXERA checklist invalido')
+    );
+
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/state/checklist`, {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json',
+        'x-test-user-id': 'user-1',
+        'x-test-permissions': 'case:own:update'
+      },
+      body: JSON.stringify({ status: 'approved_credit', payload: {} })
+    });
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({
+      error: 'Datos NUXERA invalidos',
+      code: 'NUXERA_INVALID_DATA'
+    });
+    expect(workspaceStateService.upsertApplicantChecklistState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderId: 'order-1',
+        userId: 'user-1',
+        status: 'approved_credit',
+        payload: {}
+      })
+    );
   });
 
   it('patches applicant checklist state through the service only for the allowed surface', async () => {
