@@ -757,3 +757,26 @@ Remaining gaps:
 - Manual browser screenshots remain blocked by local browser launch restrictions.
 
 Next recommended task after validation: verify/apply SQL drafts in a controlled Supabase environment, or design the first low-risk applicant checklist write UX.
+## NU-DB-VERIFY-002 update - 2026-07-17
+
+Added a consolidated local SQL guard for current NUXERA draft migrations.
+
+Changed backend/tooling surface:
+- Added `backend/scripts/check-nuxera-sql-drafts.js`.
+- Updated backend `check:nuxera-sql` to validate workspace state, evidence links and admin controls drafts together.
+- Preserved `check:nuxera-workspace-sql` for the older workspace-state-specific guard.
+- Guard checks additive table creation, FK anchors, JSON fields, active indexes, RLS, policy counts and read-only boundaries for evidence/admin controls.
+- Guard rejects destructive operations against legacy anchor tables.
+
+Validation:
+- `node --check scripts/check-nuxera-sql-drafts.js`: passed.
+- `node scripts/check-nuxera-sql-drafts.js`: passed.
+- `pnpm run check:nuxera-sql`: blocked by the local pnpm wrapper attempting a non-TTY modules purge/install; direct Node execution passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL drafts have not been applied to Supabase/production.
+- Live schema/RLS verification still requires controlled Supabase credentials/environment.
+- UI writes remain disconnected.
+
+Next recommended task after validation: run the consolidated guard in a Supabase-capable environment, then decide whether applicant checklist writes can be enabled behind a guarded UX.
