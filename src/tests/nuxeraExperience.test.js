@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -697,6 +697,31 @@ describe("NUXERA backend readiness adapter", () => {
     expect(scaffold.metadata.repoCommit).toBe("abc1234");
     expect(scaffold.markdown).toContain("Required endpoint evidence");
     expect(scaffold.guardrails.join(" ")).toContain("does not execute endpoint checks");
+  });
+
+  it("normalizes remote controlled runbooks for admin review", () => {
+    const runbook = normalizeNuxeraControlledRunbookResponse({
+      runbook: {
+        id: "nuxera-controlled-runbook",
+        status: "ready-for-controlled-supabase-run",
+        readyForRun: true,
+        sourceScaffoldId: "nuxera-controlled-evidence-scaffold",
+        sourcePlanId: "nuxera-controlled-rls-endpoint-evidence",
+        missingMetadata: [],
+        summary: { identities: 4, endpointRows: 8, noGoCriteria: 8, rollbackChecks: 5, sqlDrafts: 3, missingMetadata: 0 },
+        commands: [{ id: "generate-scaffold-markdown", command: "npm run scaffold:nuxera-evidence" }],
+        acceptanceGates: ["All four RLS identities have observed pass/fail evidence."],
+        nextDecision: "Run controlled non-production Supabase verification.",
+        guardrails: ["Runbook is read-only."],
+      },
+      guardrails: ["Route does not execute endpoint checks."],
+    });
+
+    expect(runbook.source).toBe("remote-read-only");
+    expect(runbook.readyForRun).toBe(true);
+    expect(runbook.summary.missingMetadata).toBe(0);
+    expect(runbook.commands[0].id).toBe("generate-scaffold-markdown");
+    expect(runbook.guardrails.join(" ")).toContain("does not execute endpoint checks");
   });
 
   it("turns unavailable backend readiness signals into admin health actions", () => {

@@ -7,7 +7,8 @@ const serviceCalls = {
   evidence: [],
   adminControls: [],
   readiness: [],
-  evidenceScaffold: []
+  evidenceScaffold: [],
+  runbook: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -100,7 +101,24 @@ vi.mock('../services/nuxeraControlledEvidenceScaffoldService.js', () => ({
     };
   })
 }));
-vi.mock('../services/nuxeraControlledVerificationService.js', () => ({
+vi.mock('../services/nuxeraControlledRunbookService.js', () => ({
+  getNuxeraControlledRunbook: vi.fn((input = {}) => {
+    serviceCalls.runbook.push(input);
+    return {
+      id: 'nuxera-controlled-runbook',
+      status: input.repoCommit ? 'ready-for-controlled-supabase-run' : 'blocked-by-run-metadata',
+      readyForRun: Boolean(input.repoCommit),
+      sourceScaffoldId: 'nuxera-controlled-evidence-scaffold',
+      sourcePlanId: 'nuxera-controlled-rls-endpoint-evidence',
+      missingMetadata: input.repoCommit ? [] : [{ id: 'repoCommit' }],
+      summary: { identities: 4, endpointRows: 8, noGoCriteria: 8, rollbackChecks: 5, sqlDrafts: 3, missingMetadata: input.repoCommit ? 0 : 1 },
+      commands: [{ id: 'generate-scaffold-markdown' }, { id: 'verify-local-guards' }],
+      acceptanceGates: ['All four RLS identities have observed pass/fail evidence.'],
+      nextDecision: input.repoCommit ? 'Run controlled non-production Supabase verification.' : 'Fill missing run metadata.',
+      guardrails: ['Runbook is read-only; it does not execute endpoints.']
+    };
+  })
+}));vi.mock('../services/nuxeraControlledVerificationService.js', () => ({
   getNuxeraControlledVerificationPlan: vi.fn(() => {
     serviceCalls.verificationPlan.push({ called: true });
     return {
@@ -253,6 +271,42 @@ describe('nuxera routes', () => {
     );
     expect(serviceCalls.evidenceScaffold).toEqual([
       expect.objectContaining({ repoCommit: 'abc1234', environment: 'non-production-supabase' })
+    ]);
+  });
+
+  it('requires nuxera:admin:read before reading verification runbook', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-runbook`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.runbook).toHaveLength(0);
+  });
+
+  it('returns controlled runbook without executing checks', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-runbook?commit=8e3899b&environment=non-production-supabase`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      runbook: {
+        id: 'nuxera-controlled-runbook',
+        readyForRun: true,
+        summary: { identities: 4, endpointRows: 8 }
+      }
+    });
+    expect(body.runbook.commands.map((item) => item.id)).toEqual(
+      expect.arrayContaining(['generate-scaffold-markdown', 'verify-local-guards'])
+    );
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not execute endpoint checks')])
+    );
+    expect(serviceCalls.runbook).toEqual([
+      expect.objectContaining({ repoCommit: '8e3899b', environment: 'non-production-supabase' })
     ]);
   });
 

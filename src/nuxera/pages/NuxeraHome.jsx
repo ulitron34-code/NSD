@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledEvidenceScaffold, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -441,6 +441,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled() });
   const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled() });
   const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled() });
+  const controlledRunbook = useControlledRunbook({ enabled: isNuxeraExperienceEnabled() });
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
     backendReadiness,
@@ -612,6 +613,29 @@ function AdminOperationsHome({ sectionLabel }) {
         <footer>
           <small>{controlledEvidenceScaffold.evidenceTemplate.path}</small>
           <small>{controlledEvidenceScaffold.guardrails[0]}</small>
+        </footer>
+      </section>
+      <section className="nuxera-admin-controlled-verification" aria-label="Runbook de verificacion controlada NUXERA">
+        <header>
+          <span>{controlledRunbook.status}</span>
+          <h2>Runbook controlado</h2>
+        </header>
+        <p>
+          {controlledRunbook.summary.missingMetadata} metadatos faltantes; {controlledRunbook.commands.length} comandos; {controlledRunbook.acceptanceGates.length} gates.
+        </p>
+        {controlledRunbook.loading && <small>Cargando runbook NUXERA...</small>}
+        <div>
+          {controlledRunbook.commands.map((command) => (
+            <article key={command.id}>
+              <span>{controlledRunbook.readyForRun ? "ready" : "blocked"}</span>
+              <strong>{command.id}</strong>
+              <p>{command.command}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{controlledRunbook.nextDecision}</small>
+          <small>{controlledRunbook.guardrails[0]}</small>
         </footer>
       </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">

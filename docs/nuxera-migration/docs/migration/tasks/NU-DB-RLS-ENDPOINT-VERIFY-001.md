@@ -70,3 +70,18 @@ Guardrails:
 - The scaffold is generated only; it does not execute endpoint checks.
 - No SQL, RLS, feature-flag, permission, document-grant or data-room mutation is performed.
 - Operators must fill observed results from a controlled non-production Supabase run.
+## Controlled runbook follow-up
+
+The evidence scaffold now has a read-only runbook that tells operators whether the controlled Supabase run is ready to start.
+
+Additional scope completed:
+- Added `nuxeraControlledRunbookService` to evaluate required run metadata, commands, operator steps, acceptance gates and next decision.
+- Added `GET /api/nuxera/admin/verification-runbook`, protected by `nuxera:admin:read`.
+- Added frontend API, normalizer and hook so the admin console can surface runbook readiness.
+- Added an admin `Runbook controlado` panel with metadata blockers, commands and gates.
+- Added backend and frontend tests for blocked/ready runbook states.
+
+Guardrails:
+- The runbook is advisory/read-only; it does not execute checks or apply SQL.
+- Production writes remain blocked until observed evidence is attached and reviewed.
+- Missing metadata blocks the controlled run before any Supabase operation.

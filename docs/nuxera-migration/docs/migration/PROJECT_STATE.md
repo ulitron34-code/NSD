@@ -1338,3 +1338,26 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: generate the scaffold with the actual controlled-run metadata, run the non-production Supabase verification, and paste observed evidence into the scaffold before any production write decision.
+## NUXERA controlled verification runbook
+
+Added a read-only runbook layer above the evidence scaffold so operators can see whether the controlled non-production Supabase run is ready to start.
+
+Changes made:
+- Added backend `nuxeraControlledRunbookService`.
+- Added protected endpoint `GET /api/nuxera/admin/verification-runbook`.
+- Added frontend API, normalizer, hook and admin panel for runbook readiness.
+- Runbook exposes missing metadata, commands, operator steps, acceptance gates, next decision and guardrails.
+- Added backend/frontend tests for blocked and ready runbook states.
+
+Validation:
+- Backend targeted route/service tests passed: 3 files / 26 tests.
+- Backend full suite passed: 44 files / 430 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 72 tests.
+- Frontend full suite passed: 9 files / 233 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: fill controlled-run metadata, generate the scaffold, and use the runbook gates during the non-production Supabase verification pass.

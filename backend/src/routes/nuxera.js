@@ -3,6 +3,7 @@ import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { getAdminControls } from '../services/nuxeraAdminControlService.js';
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
 import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlledEvidenceScaffoldService.js';
+import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
@@ -75,6 +76,35 @@ router.get(
           'Evidence scaffold is generated read-only and does not execute endpoint checks.',
           'No SQL, RLS, feature flag, permission, document grant or data-room mutation is performed.',
           'Operators must fill observed evidence from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/verification-runbook',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const runbook = getNuxeraControlledRunbook({
+        repoCommit: req.query?.commit,
+        environment: req.query?.environment,
+        operator: req.query?.operator,
+        reviewer: req.query?.reviewer,
+        priorKnownGoodCommit: req.query?.priorKnownGoodCommit,
+        rollbackOwner: req.query?.rollbackOwner
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        runbook,
+        guardrails: [
+          'Runbook is generated read-only and does not execute endpoint checks.',
+          'No SQL, RLS, feature flag, permission, document grant or data-room mutation is performed.',
+          'Production writes remain blocked until observed evidence is attached and reviewed.'
         ]
       });
     } catch (error) {

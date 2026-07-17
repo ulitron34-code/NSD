@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledVerificationAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -382,6 +382,76 @@ export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fall
   };
 }
 
+function buildLocalRunbook(fallbackScaffold = null) {
+  const scaffold = fallbackScaffold || buildLocalEvidenceScaffold();
+
+  return {
+    id: "nuxera-controlled-runbook",
+    status: "blocked-by-run-metadata",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    readyForRun: false,
+    sourceScaffoldId: scaffold.id,
+    sourcePlanId: scaffold.sourcePlanId,
+    missingMetadata: [
+      { id: "environment", label: "Environment" },
+      { id: "repoCommit", label: "Repo commit" },
+      { id: "operator", label: "Operator" },
+      { id: "reviewer", label: "Reviewer" },
+      { id: "priorKnownGoodCommit", label: "Prior known-good commit" },
+      { id: "rollbackOwner", label: "Rollback owner" },
+    ],
+    summary: {
+      identities: scaffold.summary.identities,
+      endpointRows: scaffold.summary.endpointRows,
+      noGoCriteria: scaffold.summary.noGoCriteria,
+      rollbackChecks: scaffold.summary.rollbackChecks,
+      sqlDrafts: scaffold.summary.sqlDrafts,
+      missingMetadata: 6,
+    },
+    commands: [
+      { id: "generate-scaffold-markdown", command: "npm run scaffold:nuxera-evidence -- --environment=<non-prod> --commit=<commit>" },
+      { id: "verify-local-guards", command: "npm run check:nuxera-verification-plan && npm run check:nuxera-sql" },
+    ],
+    acceptanceGates: ["All four RLS identities have observed pass/fail evidence."],
+    nextDecision: "Fill missing run metadata before attempting controlled Supabase verification.",
+    guardrails: ["Local runbook fallback; no ejecuta endpoints ni aplica SQL."],
+  };
+}
+
+export function normalizeNuxeraControlledRunbookResponse(response, fallbackRunbook = null) {
+  const payload = response?.runbook || response || null;
+  const fallback = fallbackRunbook || buildLocalRunbook();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-runbook-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    missingMetadata: asArray(payload.missingMetadata),
+    commands: asArray(payload.commands).length ? asArray(payload.commands) : fallback.commands,
+    acceptanceGates: asArray(payload.acceptanceGates).length ? asArray(payload.acceptanceGates) : fallback.acceptanceGates,
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
 function buildBackendReadinessHandoff(state, actions) {
   const unavailableSignals = state.signals.filter((signal) => !signal.ready);
 
@@ -633,6 +703,42 @@ export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold
   }, [enabled, fallbackScaffold]);
 
   return evidenceScaffoldState;
+}
+
+export function useControlledRunbook({ enabled = true, fallbackRunbook = null } = {}) {
+  const [runbookState, setRunbookState] = useState(fallbackRunbook || buildLocalRunbook());
+
+  useEffect(() => {
+    if (!enabled) {
+      setRunbookState(fallbackRunbook || buildLocalRunbook());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackRunbook || buildLocalRunbook();
+    setRunbookState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledRunbookAPI.getRunbook()
+      .then(({ data }) => {
+        if (!active) return;
+        setRunbookState(normalizeNuxeraControlledRunbookResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo cargar controlled runbook; usando fallback local", err);
+        setRunbookState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-runbook-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, fallbackRunbook]);
+
+  return runbookState;
 }
 
 export function useControlledVerificationPlan({ enabled = true, fallbackPackage = null } = {}) {
