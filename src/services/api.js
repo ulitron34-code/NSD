@@ -239,7 +239,9 @@ export const checklistAPI = {
 
 export const nuxeraWorkspaceStateAPI = {
   getOrderState: (orderId) =>
-    api.get(`/nuxera/orders/${orderId}/state`)
+    api.get(`/nuxera/orders/${orderId}/state`),
+  updateChecklistState: (orderId, payload) =>
+    api.patch(`/nuxera/orders/${orderId}/state/checklist`, payload)
 };
 
 export const nuxeraEvidenceAPI = {

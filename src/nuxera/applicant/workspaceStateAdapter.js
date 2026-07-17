@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { nuxeraWorkspaceStateAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
@@ -10,6 +10,9 @@ const LOCAL_FALLBACK_STATE = Object.freeze({
   version: 0,
   loading: false,
   error: null,
+  saving: false,
+  saveError: null,
+  canWrite: false,
   completedItemIds: [],
   guardrails: ["Checklist local de preparacion; no hay estado NUXERA persistido cargado."],
 });
@@ -18,8 +21,28 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function normalizeObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
 function getChecklistState(response) {
   return response?.states?.checklist || response?.state || null;
+}
+
+export function buildApplicantChecklistPatchPayload(workspaceState, itemId) {
+  const completedItemIds = [
+    ...new Set([...asArray(workspaceState?.completedItemIds), itemId].filter(Boolean)),
+  ];
+
+  return {
+    status: "in_progress",
+    payload: {
+      ...normalizeObject(workspaceState?.payload),
+      completedItemIds,
+      lastCompletedItemId: itemId,
+      source: "nuxera-applicant-checklist-ui",
+    },
+  };
 }
 
 export function normalizeNuxeraApplicantChecklistState(response) {
@@ -32,9 +55,7 @@ export function normalizeNuxeraApplicantChecklistState(response) {
     };
   }
 
-  const payload = state.payload && typeof state.payload === "object" && !Array.isArray(state.payload)
-    ? state.payload
-    : {};
+  const payload = normalizeObject(state.payload);
   const completedItemIds = asArray(payload.completedItemIds).filter(Boolean);
   const persisted = Boolean(state.persisted);
 
@@ -46,6 +67,9 @@ export function normalizeNuxeraApplicantChecklistState(response) {
     version: Number(state.version || 0),
     loading: false,
     error: null,
+    saving: false,
+    saveError: null,
+    canWrite: true,
     payload,
     completedItemIds,
     guardrails: asArray(state.guardrails).length ? state.guardrails : asArray(response?.guardrails),
@@ -117,9 +141,10 @@ export function mergeApplicantChecklistWithWorkspaceState(localChecklist, worksp
 
 export function useApplicantWorkspaceState(orderId, { enabled = true } = {}) {
   const [workspaceState, setWorkspaceState] = useState(LOCAL_FALLBACK_STATE);
+  const canUseRemoteState = enabled && Boolean(orderId);
 
   useEffect(() => {
-    if (!enabled || !orderId) {
+    if (!canUseRemoteState) {
       setWorkspaceState(LOCAL_FALLBACK_STATE);
       return undefined;
     }
@@ -153,7 +178,42 @@ export function useApplicantWorkspaceState(orderId, { enabled = true } = {}) {
     return () => {
       active = false;
     };
-  }, [enabled, orderId]);
+  }, [canUseRemoteState, orderId]);
 
-  return workspaceState;
+  const saveChecklistItem = useCallback(async (itemId) => {
+    if (!canUseRemoteState || !orderId || !itemId) {
+      return { saved: false, reason: "nuxera-checklist-write-disabled" };
+    }
+
+    const request = buildApplicantChecklistPatchPayload(workspaceState, itemId);
+    setWorkspaceState((current) => ({
+      ...current,
+      saving: true,
+      saveError: null,
+    }));
+
+    try {
+      const { data } = await nuxeraWorkspaceStateAPI.updateChecklistState(orderId, request);
+      const nextState = normalizeNuxeraApplicantChecklistState(data);
+      setWorkspaceState({
+        ...nextState,
+        canWrite: true,
+      });
+      return { saved: true, state: nextState };
+    } catch (err) {
+      warn("NUXERA", "No se pudo guardar estado applicant checklist; conservando estado local", err);
+      setWorkspaceState((current) => ({
+        ...current,
+        saving: false,
+        saveError: "nuxera-checklist-save-unavailable",
+      }));
+      return { saved: false, reason: "nuxera-checklist-save-unavailable" };
+    }
+  }, [canUseRemoteState, orderId, workspaceState]);
+
+  return {
+    ...workspaceState,
+    canWrite: canUseRemoteState && Boolean(workspaceState.canWrite),
+    saveChecklistItem,
+  };
 }

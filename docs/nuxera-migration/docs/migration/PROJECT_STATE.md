@@ -780,3 +780,28 @@ Remaining gaps:
 - UI writes remain disconnected.
 
 Next recommended task after validation: run the consolidated guard in a Supabase-capable environment, then decide whether applicant checklist writes can be enabled behind a guarded UX.
+## NU-FE-WRITE-APP-001 update - 2026-07-17
+
+Added the first guarded frontend write UX for applicant checklist progress.
+
+Changed frontend surface:
+- Added `nuxeraWorkspaceStateAPI.updateChecklistState(orderId, payload)`.
+- Added `buildApplicantChecklistPatchPayload` and `saveChecklistItem` to `workspaceStateAdapter`.
+- Applicant NUXERA home now shows disabled/enabled `Marcar listo` controls for next evidence items.
+- Write path is only available when the NUXERA flag is active, a real order exists and remote state was loaded.
+- Save failures keep local fallback behavior and show a safe unavailable message.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 57 tests.
+- Frontend lint: passed.
+- Frontend build: passed.
+- Frontend full unit suite: passed, 9 files / 218 tests.
+- `node --check` on the workspace state adapter: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+- Writes are limited to applicant checklist metadata; no document/data-room writes are connected.
+
+Next recommended task after validation: verify the write UX against a controlled Supabase environment with real `nuxera_workspace_states` RLS, or keep writes disabled in production until SQL is applied.

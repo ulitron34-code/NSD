@@ -1628,3 +1628,27 @@
 .nuxera-admin-backend-controls h2 {
   color: var(--nuxera-ink);
 }
+.nuxera-next-evidence article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nuxera-next-evidence button {
+  min-width: 7.5rem;
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  background: var(--nuxera-panel);
+  color: var(--nuxera-ink);
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+}
+
+.nuxera-next-evidence button:disabled {
+  color: var(--nuxera-muted);
+  cursor: not-allowed;
+  opacity: 0.7;
+}

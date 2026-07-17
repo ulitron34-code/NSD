@@ -118,9 +118,21 @@ function ApplicantMissionHome({ sectionLabel }) {
         <div className="nuxera-next-evidence">
           <strong>Siguiente evidencia</strong>
           {checklist.nextEvidence.map((item) => (
-            <p key={item.id}>{item.critical ? "Critico" : "Pendiente"}: {item.label}</p>
+            <article key={item.id}>
+              <p>{item.critical ? "Critico" : "Pendiente"}: {item.label}</p>
+              <button
+                type="button"
+                disabled={!workspaceState.canWrite || workspaceState.saving}
+                onClick={() => workspaceState.saveChecklistItem(item.id)}
+              >
+                {workspaceState.saving ? "Guardando..." : "Marcar listo"}
+              </button>
+            </article>
           ))}
-          <small>{checklist.guardrail} {workspaceState.persisted ? `Estado persistido: ${workspaceState.status}.` : "Sin writes desde UI."}</small>
+          <small>
+            {checklist.guardrail} {workspaceState.persisted ? `Estado persistido: ${workspaceState.status}.` : "Sin writes desde UI."}
+            {workspaceState.saveError ? " Guardado no disponible; fallback local activo." : ""}
+          </small>
         </div>
       </section>
 

@@ -5,7 +5,7 @@ import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdap
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
-import { mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
+import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
@@ -351,6 +351,22 @@ describe("NUXERA applicant guided mission", () => {
     });
   });
 
+  it("builds a guarded applicant checklist patch payload", () => {
+    const payload = buildApplicantChecklistPatchPayload({
+      payload: { completedItemIds: ["modelo_financiero"], note: "keep" },
+      completedItemIds: ["modelo_financiero"],
+    }, "plan_negocios");
+
+    expect(payload).toEqual({
+      status: "in_progress",
+      payload: {
+        completedItemIds: ["modelo_financiero", "plan_negocios"],
+        lastCompletedItemId: "plan_negocios",
+        note: "keep",
+        source: "nuxera-applicant-checklist-ui",
+      },
+    });
+  });
   it("merges persisted checklist completion without creating frontend writes", () => {
     const localChecklist = getApplicantDataRoomChecklist();
     const merged = mergeApplicantChecklistWithWorkspaceState(localChecklist, {
