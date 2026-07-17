@@ -484,7 +484,6 @@ describe("NUXERA applicant guided mission", () => {
       payload: {
         completedItemIds: ["modelo_financiero", "plan_negocios"],
         lastCompletedItemId: "plan_negocios",
-        note: "keep",
         source: "nuxera-applicant-checklist-ui",
       },
     });

@@ -12,9 +12,42 @@ const ALLOWED_CHECKLIST_STATUSES = new Set([
   'archived'
 ]);
 
+function normalizeChecklistItemId(value) {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  if (!normalized || normalized.length > 120) return null;
+  return normalized;
+}
+
 function normalizePayload(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return {};
-  return payload;
+
+  const normalized = {};
+
+  if (payload.completedItemIds !== undefined) {
+    if (!Array.isArray(payload.completedItemIds)) {
+      throw new Error('Payload NUXERA checklist invalido');
+    }
+
+    normalized.completedItemIds = [
+      ...new Set(payload.completedItemIds.map(normalizeChecklistItemId).filter(Boolean))
+    ];
+  }
+
+  if (payload.lastCompletedItemId !== undefined) {
+    const lastCompletedItemId = normalizeChecklistItemId(payload.lastCompletedItemId);
+    if (!lastCompletedItemId) throw new Error('Payload NUXERA checklist invalido');
+    normalized.lastCompletedItemId = lastCompletedItemId;
+  }
+
+  if (payload.source !== undefined) {
+    if (payload.source !== 'nuxera-applicant-checklist-ui') {
+      throw new Error('Payload NUXERA checklist invalido');
+    }
+    normalized.source = payload.source;
+  }
+
+  return normalized;
 }
 
 function normalizeStatus(status) {

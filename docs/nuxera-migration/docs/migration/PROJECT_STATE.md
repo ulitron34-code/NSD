@@ -1046,3 +1046,27 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: continue backend readiness with controlled Supabase/RLS evidence when credentials are available, or keep hardening local route contracts and tests.
+## NU-BE-PAYLOAD-001 update - 2026-07-17
+
+Constrained applicant checklist persistence payloads to approved NUXERA metadata.
+
+Changed backend/frontend contract:
+- Backend checklist writes now persist only `completedItemIds`, `lastCompletedItemId` and `source` payload keys.
+- Checklist item ids are trimmed, deduplicated and limited to valid string values.
+- Malformed checklist metadata is rejected before persistence.
+- Frontend checklist patch payloads no longer carry arbitrary previous payload keys forward.
+- Kept SQL drafts unapplied; no RLS policies, permission grants, schemas, document permissions, data-room behavior or new write endpoints changed.
+
+Validation:
+- `node --check` on `backend/src/services/nuxeraWorkspaceStateService.js`: passed.
+- `node --check` on `backend/src/services/nuxeraWorkspaceStateService.test.js`: passed.
+- `node --check` on `src/nuxera/applicant/workspaceStateAdapter.js`: passed.
+- Targeted backend service test: passed, 1 file / 7 tests.
+- Targeted frontend NUXERA test: passed, 1 file / 66 tests.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: run a broader frontend/backend test pass when time allows, or continue backend readiness around controlled Supabase/RLS evidence.

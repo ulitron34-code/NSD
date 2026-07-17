@@ -37,7 +37,6 @@ export function buildApplicantChecklistPatchPayload(workspaceState, itemId) {
   return {
     status: "in_progress",
     payload: {
-      ...normalizeObject(workspaceState?.payload),
       completedItemIds,
       lastCompletedItemId: itemId,
       source: "nuxera-applicant-checklist-ui",

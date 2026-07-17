@@ -137,6 +137,42 @@ describe('nuxeraWorkspaceStateService', () => {
     });
   });
 
+  it('normalizes applicant checklist payload to approved metadata only', async () => {
+    const result = await upsertApplicantChecklistState({
+      orderId: 'order-1',
+      userId: 'user-1',
+      status: 'in_progress',
+      payload: {
+        completedItemIds: ['doc_kyc', 'doc_kyc', '', 42, ' plan_negocios '],
+        lastCompletedItemId: ' plan_negocios ',
+        source: 'nuxera-applicant-checklist-ui',
+        unexpected: 'should-not-persist'
+      }
+    });
+
+    expect(result.payload).toEqual({
+      completedItemIds: ['doc_kyc', 'plan_negocios'],
+      lastCompletedItemId: 'plan_negocios',
+      source: 'nuxera-applicant-checklist-ui'
+    });
+    expect(result.payload.unexpected).toBeUndefined();
+  });
+
+  it('rejects malformed applicant checklist payload metadata', async () => {
+    await expect(upsertApplicantChecklistState({
+      orderId: 'order-1',
+      userId: 'user-1',
+      status: 'in_progress',
+      payload: { completedItemIds: 'doc_kyc' }
+    })).rejects.toThrow('Payload NUXERA checklist invalido');
+
+    await expect(upsertApplicantChecklistState({
+      orderId: 'order-1',
+      userId: 'user-1',
+      status: 'in_progress',
+      payload: { completedItemIds: [], source: 'external-system' }
+    })).rejects.toThrow('Payload NUXERA checklist invalido');
+  });
   it('updates applicant checklist state by incrementing version', async () => {
     await upsertApplicantChecklistState({
       orderId: 'order-1',
