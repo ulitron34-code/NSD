@@ -601,6 +601,24 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
       </section>
 
+      <section className="nuxera-admin-action-queue" aria-label="Cola de acciones admin NUXERA">
+        <header>
+          <span>Action queue</span>
+          <h2>Seguimiento humano antes de persistencia</h2>
+        </header>
+        <p>{consoleState.summary.adminActionQueue} acciones abiertas; {consoleState.summary.adminCriticalActions} en ruta critica.</p>
+        <div>
+          {consoleState.adminActionQueue.slice(0, 6).map((item) => (
+            <article key={item.id}>
+              <span>{item.priority} / {item.status}</span>
+              <strong>{item.domain}</strong>
+              <p>{item.action}</p>
+              <small>{item.owner} / {item.source}</small>
+              <em>{item.guardrail}</em>
+            </article>
+          ))}
+        </div>
+      </section>
       <div className="nuxera-admin-control-grid">
         <section aria-label="Controles de incidentes NUXERA">
           <h2>Controles de incidentes</h2>

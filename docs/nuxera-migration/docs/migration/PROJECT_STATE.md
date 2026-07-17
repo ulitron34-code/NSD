@@ -976,3 +976,27 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: continue frontend-only admin details, or pause and verify SQL/RLS before connecting real backend state.
+## NU-ADM-ACT-001 update - 2026-07-17
+
+Added a local admin action queue for human follow-up.
+
+Changed frontend surface:
+- Admin operations console now derives `adminActionQueue` from health signals and audit-package actions.
+- Admin NUXERA home shows open local actions, priority, owner, source and guardrails.
+- Queue is informational/read-only and does not execute actions.
+- Kept backend contracts, SQL/RLS, permissions, data-room access, exports and AI activation unchanged.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 66 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 227 tests.
+- `node --check` on `operationsConsole.js`: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Action queue is local/demo-derived only.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: continue frontend-only admin details, or pause and verify SQL/RLS before connecting real backend state.

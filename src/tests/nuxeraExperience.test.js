@@ -259,6 +259,19 @@ it("builds local admin health signals without changing runtime controls", () => 
   expect(consoleState.adminHealthSignals.every((signal) => signal.nextAction)).toBe(true);
   expect(consoleState.adminHealthSignals.find((signal) => signal.id === "document-visibility").nextAction).toContain("sin abrir archivos");
 });
+
+it("builds a local admin action queue from health signals and audit actions", () => {
+  const consoleState = getAdminOperationsConsole();
+
+  expect(consoleState.summary.adminActionQueue).toBe(consoleState.adminActionQueue.length);
+  expect(consoleState.summary.adminCriticalActions).toBeGreaterThan(0);
+  expect(consoleState.adminActionQueue.map((item) => item.source)).toEqual(
+    expect.arrayContaining(["admin-health-signal", "admin-audit-package"])
+  );
+  expect(consoleState.adminActionQueue.every((item) => item.status === "local-open")).toBe(true);
+  expect(consoleState.adminActionQueue.every((item) => item.guardrail.includes("no ejecuta") || item.guardrail.includes("revision humana"))).toBe(true);
+});
+
 it("normalizes backend admin controls as read-only non-activating controls", () => {
   const state = normalizeNuxeraAdminControlsResponse({
     workspaceRole: "admin",

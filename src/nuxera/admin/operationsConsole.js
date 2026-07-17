@@ -280,6 +280,38 @@ function buildAdminHealthSignals({
     },
   ];
 }
+
+function buildAdminActionQueue(adminHealthSignals, auditPackage) {
+  const severityRank = { high: 0, medium: 1, low: 2 };
+  const healthActions = adminHealthSignals
+    .filter((signal) => signal.severity !== "low")
+    .map((signal) => ({
+      id: `health-${signal.id}`,
+      domain: signal.label,
+      priority: signal.severity === "high" ? "critical-path" : "watch",
+      status: "local-open",
+      owner: signal.id === "ai-automation" ? "AI ops" : "Ops NUXERA",
+      action: signal.nextAction,
+      source: "admin-health-signal",
+      guardrail: "Seguimiento local; no ejecuta cambios ni escribe backend.",
+      sortRank: severityRank[signal.severity] ?? 3,
+    }));
+  const auditActions = auditPackage.nextActions.slice(0, 4).map((action, index) => ({
+    id: `audit-action-${index + 1}`,
+    domain: "Audit package",
+    priority: "review",
+    status: "local-open",
+    owner: "Security admin",
+    action,
+    source: "admin-audit-package",
+    guardrail: "Accion informativa; requiere revision humana antes de persistencia.",
+    sortRank: 2 + index,
+  }));
+
+  return [...healthActions, ...auditActions]
+    .sort((a, b) => a.sortRank - b.sortRank)
+    .map(({ sortRank, ...item }) => item);
+}
 export function getAdminOperationsConsole() {
   const blockedGates = releaseGates.filter((gate) => gate.state === "blocked");
   const watchLanes = operationLanes.filter((lane) => ["watch", "limited"].includes(lane.status));
@@ -329,6 +361,7 @@ export function getAdminOperationsConsole() {
     grantorDocumentReadiness,
     auditPackage,
   });
+  const adminActionQueue = buildAdminActionQueue(adminHealthSignals, auditPackage);
 
   return {
     status: blockedGates.length > 0 ? "release-gated" : "ready-for-controlled-review",
@@ -343,6 +376,7 @@ export function getAdminOperationsConsole() {
     grantorDocumentReadiness,
     auditPackage,
     adminHealthSignals,
+    adminActionQueue,
     summary: {
       lanes: operationLanes.length,
       watch: watchLanes.length,
@@ -357,6 +391,8 @@ export function getAdminOperationsConsole() {
       auditPackageActions: auditPackage.nextActions.length,
       adminHealthSignals: adminHealthSignals.length,
       adminHealthWatch: adminHealthSignals.filter((item) => item.severity !== "low").length,
+      adminActionQueue: adminActionQueue.length,
+      adminCriticalActions: adminActionQueue.filter((item) => item.priority === "critical-path").length,
       requiresHumanReview: true,
     },
     policies: [
