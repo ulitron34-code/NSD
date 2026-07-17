@@ -157,6 +157,70 @@ function buildRlsVerificationMatrix(state) {
     ],
   };
 }
+function buildControlledVerificationPackage(state, matrix) {
+  const endpointChecks = [
+    { id: "get-state-owner", method: "GET", path: "/api/nuxera/orders/:orderId/state", actor: "applicant-owner", expected: "Own applicant state only", auditLogRequired: false },
+    { id: "patch-checklist-owner", method: "PATCH", path: "/api/nuxera/orders/:orderId/state/checklist", actor: "applicant-owner", expected: "Checklist-only write after gates pass", auditLogRequired: true },
+    { id: "get-evidence-owner", method: "GET", path: "/api/nuxera/orders/:orderId/evidence", actor: "applicant-owner", expected: "Owner-visible evidence only", auditLogRequired: false },
+    { id: "get-admin-controls", method: "GET", path: "/api/nuxera/admin/controls", actor: "admin-internal", expected: "Read-only admin controls with admin-read permission", auditLogRequired: false },
+    { id: "get-admin-readiness", method: "GET", path: "/api/nuxera/admin/readiness", actor: "admin-internal", expected: "Read-only backend readiness with admin-read permission", auditLogRequired: false },
+  ];
+  const deniedChecks = [
+    { id: "state-foreign-denied", actor: "different-applicant", target: "/api/nuxera/orders/:orderId/state", expected: "403/404 without row-existence leak" },
+    { id: "admin-controls-applicant-denied", actor: "applicant-owner", target: "/api/nuxera/admin/controls", expected: "Denied without admin control details" },
+    { id: "admin-readiness-applicant-denied", actor: "applicant-owner", target: "/api/nuxera/admin/readiness", expected: "Denied without backend inventory details" },
+  ];
+  const noGoCriteria = [
+    "Any actor reads or writes a foreign order unexpectedly.",
+    "Applicant checklist writes affect grantor, admin or evidence records.",
+    "Grantor accesses owner-only evidence or hidden documents without explicit authorization.",
+    "Admin readiness or controls work without admin-read permission.",
+    "Denied responses leak restricted row existence.",
+    "Any enabled write lacks audit_logs evidence.",
+    "Feature flag off still allows NUXERA UI reads or writes.",
+    "Rollback cannot hide or archive NUXERA state without deleting audit history.",
+  ];
+  const rollbackChecks = [
+    "Feature flag off hides NUXERA UI reads/writes.",
+    "Legacy service order flow ignores nuxera_* tables.",
+    "nuxera_* records can be hidden or archived without audit deletion.",
+    "Prior known-good commit is recorded.",
+    "Rollback owner is recorded.",
+  ];
+  const blockedScenarios = matrix.scenarios.filter((scenario) => scenario.blockedBy.length > 0);
+
+  return {
+    id: "nuxera-controlled-rls-endpoint-evidence",
+    status: state.ready && blockedScenarios.length === 0 ? "ready-for-controlled-run" : "blocked-by-backend-readiness",
+    evidenceTemplate: {
+      path: "docs/nuxera-migration/docs/migration/NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md",
+      status: "template-required-before-production-decision",
+      requiredSections: ["run metadata", "RLS identities", "endpoint evidence", "no-go criteria", "rollback rehearsal", "decision"],
+    },
+    requiredIdentities: matrix.scenarios.map((scenario) => ({
+      id: scenario.id,
+      identity: scenario.identity,
+      blockedBy: scenario.blockedBy,
+    })),
+    endpointChecks,
+    deniedChecks,
+    noGoCriteria,
+    rollbackChecks,
+    summary: {
+      identities: matrix.scenarios.length,
+      endpoints: endpointChecks.length,
+      deniedChecks: deniedChecks.length,
+      noGoCriteria: noGoCriteria.length,
+      rollbackChecks: rollbackChecks.length,
+      blockedScenarios: blockedScenarios.length,
+    },
+    guardrails: [
+      "Paquete local de evidencia; no ejecuta endpoints ni aplica SQL.",
+      "Completar la plantilla en Supabase no productivo antes de habilitar writes productivos.",
+      "Cualquier no-go mantiene NUXERA en modo read-only/local fallback.",
+    ],
+  };
+}
 function buildBackendReadinessHandoff(state, actions) {
   const unavailableSignals = state.signals.filter((signal) => !signal.ready);
 
@@ -206,6 +270,35 @@ function mergeBackendReadinessIntoAuditPackage(auditPackage, handoff) {
     ],
   };
 }
+function mergeControlledVerificationIntoAuditPackage(auditPackage, verificationPackage) {
+  const existingSignals = asArray(auditPackage?.signals).filter((signal) => signal.id !== "controlled-verification-package");
+  const existingActions = asArray(auditPackage?.nextActions).filter(
+    (action) => !String(action).startsWith("Completar evidencia RLS/endpoints:")
+  );
+
+  return {
+    ...auditPackage,
+    scope: [...new Set([...asArray(auditPackage?.scope), "controlled-rls-endpoint-evidence"])],
+    signals: [
+      ...existingSignals,
+      {
+        id: "controlled-verification-package",
+        label: "Evidencia RLS/endpoints",
+        value: `${verificationPackage.summary.endpoints}/${verificationPackage.summary.identities}`,
+        status: verificationPackage.status,
+      },
+    ],
+    nextActions: [
+      ...existingActions,
+      `Completar evidencia RLS/endpoints: llenar ${verificationPackage.evidenceTemplate.path} antes de decision productiva.`,
+      ...verificationPackage.deniedChecks.map((check) => `Completar evidencia RLS/endpoints: ${check.actor} debe recibir ${check.expected}.`),
+    ],
+    guardrails: [
+      ...asArray(auditPackage?.guardrails),
+      "Evidencia RLS/endpoints en audit package es plantilla local; requiere ejecucion controlada real.",
+    ],
+  };
+}
 function mergeRlsMatrixIntoAuditPackage(auditPackage, matrix) {
   const blockedScenarios = matrix.scenarios.filter((scenario) => scenario.blockedBy.length > 0);
   const existingSignals = asArray(auditPackage?.signals).filter((signal) => signal.id !== "rls-verification-matrix");
@@ -241,10 +334,14 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
   const readinessHealthSignal = buildBackendReadinessHealthSignal(state);
   const readinessActions = buildBackendReadinessActions(state);
   const rlsVerificationMatrix = buildRlsVerificationMatrix(state);
+  const controlledVerificationPackage = buildControlledVerificationPackage(state, rlsVerificationMatrix);
   const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
-  const auditPackage = mergeRlsMatrixIntoAuditPackage(
-    mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff),
-    rlsVerificationMatrix
+  const auditPackage = mergeControlledVerificationIntoAuditPackage(
+    mergeRlsMatrixIntoAuditPackage(
+      mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff),
+      rlsVerificationMatrix
+    ),
+    controlledVerificationPackage
   );
   const adminHealthSignals = [
     ...consoleState.adminHealthSignals.filter((signal) => signal.id !== readinessHealthSignal.id),
@@ -260,6 +357,7 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
     backendReadiness: state,
     backendReadinessHandoff: readinessHandoff,
     rlsVerificationMatrix,
+    controlledVerificationPackage,
     auditPackage,
     adminHealthSignals,
     adminActionQueue,
@@ -270,6 +368,9 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
       backendReadinessActions: readinessActions.length,
       rlsVerificationScenarios: rlsVerificationMatrix.scenarios.length,
       rlsVerificationBlocked: rlsVerificationMatrix.scenarios.filter((item) => item.blockedBy.length > 0).length,
+      controlledVerificationEndpoints: controlledVerificationPackage.summary.endpoints,
+      controlledVerificationDeniedChecks: controlledVerificationPackage.summary.deniedChecks,
+      controlledVerificationNoGo: controlledVerificationPackage.summary.noGoCriteria,
       auditPackageSignals: auditPackage.signals.length,
       auditPackageActions: auditPackage.nextActions.length,
       adminHealthSignals: adminHealthSignals.length,
@@ -282,6 +383,7 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
       state.ready
         ? "Backend readiness visible; RLS aun requiere verificacion controlada."
         : "Backend readiness pendiente; mantener writes productivos bloqueados.",
+      "Paquete RLS/endpoints requiere evidencia completada antes de decision productiva.",
     ],
   };
 }

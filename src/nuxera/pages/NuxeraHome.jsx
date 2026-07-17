@@ -567,6 +567,28 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
         <footer>{consoleState.rlsVerificationMatrix.guardrails[0]}</footer>
       </section>
+      <section className="nuxera-admin-controlled-verification" aria-label="Paquete de evidencia RLS y endpoints NUXERA">
+        <header>
+          <span>{consoleState.controlledVerificationPackage.status}</span>
+          <h2>Paquete RLS/endpoints</h2>
+        </header>
+        <p>
+          {consoleState.summary.controlledVerificationEndpoints} endpoints; {consoleState.summary.controlledVerificationDeniedChecks} denegaciones; {consoleState.summary.controlledVerificationNoGo} no-go.
+        </p>
+        <div>
+          {consoleState.controlledVerificationPackage.endpointChecks.map((endpoint) => (
+            <article key={endpoint.id}>
+              <span>{endpoint.method} / {endpoint.actor}</span>
+              <strong>{endpoint.path}</strong>
+              <p>{endpoint.expected}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{consoleState.controlledVerificationPackage.evidenceTemplate.path}</small>
+          <small>{consoleState.controlledVerificationPackage.guardrails[0]}</small>
+        </footer>
+      </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
         <header>
           <span>{consoleState.backendControls.status}</span>

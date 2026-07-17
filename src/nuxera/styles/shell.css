@@ -1946,23 +1946,29 @@
   margin-top: 12px;
 }
 
-.nuxera-admin-backend-controls {
+.nuxera-admin-backend-controls,
+.nuxera-admin-controlled-verification {
   display: grid;
   gap: 0.75rem;
   margin-top: 1rem;
 }
 
 .nuxera-admin-backend-controls > header,
-.nuxera-admin-backend-controls > div {
+.nuxera-admin-backend-controls > div,
+.nuxera-admin-controlled-verification > header,
+.nuxera-admin-controlled-verification > div,
+.nuxera-admin-controlled-verification > footer {
   display: grid;
   gap: 0.75rem;
 }
 
-.nuxera-admin-backend-controls > div {
+.nuxera-admin-backend-controls > div,
+.nuxera-admin-controlled-verification > div {
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
 }
 
-.nuxera-admin-backend-controls article {
+.nuxera-admin-backend-controls article,
+.nuxera-admin-controlled-verification article {
   border: 1px solid var(--nuxera-border);
   border-radius: 8px;
   padding: 0.85rem;
@@ -1971,12 +1977,17 @@
 
 .nuxera-admin-backend-controls span,
 .nuxera-admin-backend-controls small,
-.nuxera-admin-backend-controls p {
+.nuxera-admin-backend-controls p,
+.nuxera-admin-controlled-verification span,
+.nuxera-admin-controlled-verification small,
+.nuxera-admin-controlled-verification p {
   color: var(--nuxera-muted);
 }
 
 .nuxera-admin-backend-controls strong,
-.nuxera-admin-backend-controls h2 {
+.nuxera-admin-backend-controls h2,
+.nuxera-admin-controlled-verification strong,
+.nuxera-admin-controlled-verification h2 {
   color: var(--nuxera-ink);
 }
 .nuxera-next-evidence article {

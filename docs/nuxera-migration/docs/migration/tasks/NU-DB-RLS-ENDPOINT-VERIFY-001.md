@@ -21,3 +21,14 @@ Add a local guard that confirms the controlled Supabase verification packet is c
 - Guard confirms SQL drafts and admin readiness artifacts are still present before handoff.
 - Evidence template captures run metadata, RLS scenarios, endpoint results, no-go criteria, rollback rehearsal and approval decision.
 - Direct Node execution passes locally.
+
+## Follow-up implementation
+
+The admin console now surfaces the controlled RLS/endpoint evidence package directly in the NUXERA experience.
+
+Additional scope completed:
+- `mergeBackendReadinessWithConsole` now returns `controlledVerificationPackage` with required identities, endpoint checks, denied checks, no-go criteria, rollback checks and evidence-template path.
+- The controlled package feeds the admin audit package through `controlled-rls-endpoint-evidence` scope and `controlled-verification-package` signal.
+- `NuxeraHome` admin view renders a dedicated `Paquete RLS/endpoints` section.
+- Styles were extended for the new admin evidence package panel.
+- Frontend NUXERA tests cover the package, endpoint list, template path, audit signal and next actions.

@@ -704,6 +704,31 @@ describe("NUXERA backend readiness adapter", () => {
     expect(merged.auditPackage.nextActions).toEqual(
       expect.arrayContaining([expect.stringContaining("Verificar RLS controlado:")])
     );
+    expect(merged.controlledVerificationPackage).toMatchObject({
+      id: "nuxera-controlled-rls-endpoint-evidence",
+      status: "blocked-by-backend-readiness",
+    });
+    expect(merged.controlledVerificationPackage.endpointChecks.map((endpoint) => endpoint.path)).toEqual(
+      expect.arrayContaining([
+        "/api/nuxera/orders/:orderId/state",
+        "/api/nuxera/orders/:orderId/state/checklist",
+        "/api/nuxera/orders/:orderId/evidence",
+        "/api/nuxera/admin/controls",
+        "/api/nuxera/admin/readiness",
+      ])
+    );
+    expect(merged.controlledVerificationPackage.evidenceTemplate.path).toContain("NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md");
+    expect(merged.summary.controlledVerificationEndpoints).toBe(5);
+    expect(merged.summary.controlledVerificationDeniedChecks).toBeGreaterThan(0);
+    expect(merged.auditPackage.scope).toContain("controlled-rls-endpoint-evidence");
+    expect(merged.auditPackage.signals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "controlled-verification-package", value: "5/4" }),
+      ])
+    );
+    expect(merged.auditPackage.nextActions).toEqual(
+      expect.arrayContaining([expect.stringContaining("Completar evidencia RLS/endpoints:")])
+    );
   });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();

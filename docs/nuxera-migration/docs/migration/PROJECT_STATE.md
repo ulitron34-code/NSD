@@ -1244,3 +1244,28 @@ Guardrails:
 - No production writes, data-room grants, document permissions or admin mutations were enabled.
 
 Next recommended task after validation: use the template in a controlled non-production Supabase run, attach the completed evidence to the handoff, and only then decide whether applicant checklist writes can move beyond local fallback.
+
+## NUXERA admin controlled evidence package surface
+
+Promoted the controlled RLS/endpoint evidence plan from docs/guardrail into the admin console model and UI.
+
+Changes made:
+- Extended `src/nuxera/admin/backendReadinessAdapter.js` with `controlledVerificationPackage`.
+- Package includes required identities, endpoint checks, denied checks, no-go criteria, rollback checks, template path and guardrails.
+- Merged the package into the admin audit package under `controlled-rls-endpoint-evidence` with a `controlled-verification-package` signal and human next actions.
+- Rendered a new admin section in `src/nuxera/pages/NuxeraHome.jsx` named `Paquete RLS/endpoints`.
+- Extended `src/nuxera/styles/shell.css` so the new panel follows existing admin backend-control layout.
+- Updated frontend NUXERA tests for the package, endpoint list, template link, summary counters and audit package integration.
+
+Validation:
+- `node --check src/nuxera/admin/backendReadinessAdapter.js` passed.
+- Targeted frontend NUXERA suite passed: 1 file / 69 tests.
+- Initial in-sandbox Vitest run still hit known `spawn EPERM`; rerun outside sandbox passed.
+
+Guardrails:
+- No SQL was applied.
+- No live endpoint calls were executed.
+- No production writes, permission changes, document grants or data-room mutations were enabled.
+- The UI panel is a verification/evidence surface only.
+
+Next recommended task after validation: use this admin package with the controlled evidence template in a non-production Supabase run, then attach observed RLS/endpoint results before any production write decision.
