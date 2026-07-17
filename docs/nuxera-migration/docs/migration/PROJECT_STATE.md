@@ -1361,3 +1361,29 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: fill controlled-run metadata, generate the scaffold, and use the runbook gates during the non-production Supabase verification pass.
+## NUXERA controlled evidence review
+
+Added a read-only review layer for completed controlled-run Markdown evidence before any human approval or production write decision.
+
+Changes made:
+- Added backend `nuxeraControlledEvidenceReviewService`.
+- Added protected endpoint `POST /api/nuxera/admin/verification-evidence-review`.
+- Added backend CLI alias `review:nuxera-evidence`.
+- Added frontend API, normalizer, optional hook and admin panel for evidence review status.
+- Review detects missing sections, TODO markers, missing decisions and no-go/fail indicators.
+- Added backend/frontend tests for missing, incomplete, no-go and ready states.
+
+Validation:
+- Empty evidence CLI review blocked as expected.
+- Backend targeted route/service tests passed: 3 files / 30 tests.
+- Backend full suite passed: 45 files / 436 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 73 tests.
+- Frontend full suite passed: 9 files / 234 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No submitted Markdown is persisted by the review endpoint.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: run review against a completed controlled-run evidence Markdown file and only route clean evidence to human approval review.

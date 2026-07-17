@@ -8,7 +8,8 @@ const serviceCalls = {
   adminControls: [],
   readiness: [],
   evidenceScaffold: [],
-  runbook: []
+  runbook: [],
+  evidenceReview: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -101,7 +102,24 @@ vi.mock('../services/nuxeraControlledEvidenceScaffoldService.js', () => ({
     };
   })
 }));
-vi.mock('../services/nuxeraControlledRunbookService.js', () => ({
+vi.mock('../services/nuxeraControlledEvidenceReviewService.js', () => ({
+  reviewNuxeraControlledEvidence: vi.fn((input = {}) => {
+    serviceCalls.evidenceReview.push(input);
+    const hasMarkdown = Boolean(input.markdown);
+    return {
+      id: 'nuxera-controlled-evidence-review',
+      status: hasMarkdown ? 'ready-for-human-approval-review' : 'missing-evidence-markdown',
+      readyForHumanReview: hasMarkdown,
+      sourcePlanId: 'nuxera-controlled-rls-endpoint-evidence',
+      summary: { requiredSections: 7, missingSections: hasMarkdown ? 0 : 7, todoMarkers: 0, missingDecisions: hasMarkdown ? 0 : 4, noGoIndicators: 0 },
+      missingSections: [],
+      missingDecisions: [],
+      blockers: hasMarkdown ? [] : ['Evidence Markdown payload is required before review.'],
+      nextDecision: hasMarkdown ? 'Route completed evidence to human approval review.' : 'Submit completed controlled evidence Markdown.',
+      guardrails: ['Review is read-only; it does not execute endpoints.']
+    };
+  })
+}));vi.mock('../services/nuxeraControlledRunbookService.js', () => ({
   getNuxeraControlledRunbook: vi.fn((input = {}) => {
     serviceCalls.runbook.push(input);
     return {
@@ -272,6 +290,41 @@ describe('nuxera routes', () => {
     expect(serviceCalls.evidenceScaffold).toEqual([
       expect.objectContaining({ repoCommit: 'abc1234', environment: 'non-production-supabase' })
     ]);
+  });
+
+  it('requires nuxera:admin:read before reviewing controlled evidence', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-evidence-review`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      body: JSON.stringify({ markdown: '# evidence' })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.evidenceReview).toHaveLength(0);
+  });
+
+  it('returns controlled evidence review without persisting submitted markdown', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-evidence-review`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({ markdown: '# completed evidence' })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      evidenceReview: {
+        id: 'nuxera-controlled-evidence-review',
+        readyForHumanReview: true,
+        summary: { missingSections: 0 }
+      }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not persist submitted Markdown')])
+    );
+    expect(serviceCalls.evidenceReview).toEqual([{ markdown: '# completed evidence' }]);
   });
 
   it('requires nuxera:admin:read before reading verification runbook', async () => {

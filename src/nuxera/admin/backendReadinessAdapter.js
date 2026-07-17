@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -382,6 +382,64 @@ export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fall
   };
 }
 
+function buildLocalEvidenceReview() {
+  return {
+    id: "nuxera-controlled-evidence-review",
+    status: "missing-evidence-markdown",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    readyForHumanReview: false,
+    sourcePlanId: "nuxera-controlled-rls-endpoint-evidence",
+    summary: {
+      requiredSections: 7,
+      missingSections: 7,
+      todoMarkers: 0,
+      passMarkers: 0,
+      failMarkers: 0,
+      missingDecisions: 4,
+      noGoIndicators: 0,
+    },
+    missingSections: [],
+    missingDecisions: [],
+    blockers: ["Evidence Markdown payload is required before review."],
+    nextDecision: "Submit completed controlled evidence Markdown for read-only review.",
+    guardrails: ["Local review fallback; no ejecuta endpoints ni aplica SQL."],
+  };
+}
+
+export function normalizeNuxeraControlledEvidenceReviewResponse(response, fallbackReview = null) {
+  const payload = response?.evidenceReview || response || null;
+  const fallback = fallbackReview || buildLocalEvidenceReview();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-evidence-review-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    missingSections: asArray(payload.missingSections),
+    missingDecisions: asArray(payload.missingDecisions),
+    blockers: asArray(payload.blockers),
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
 function buildLocalRunbook(fallbackScaffold = null) {
   const scaffold = fallbackScaffold || buildLocalEvidenceScaffold();
 
@@ -703,6 +761,42 @@ export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold
   }, [enabled, fallbackScaffold]);
 
   return evidenceScaffoldState;
+}
+
+export function useControlledEvidenceReview({ enabled = true, markdown = "", fallbackReview = null } = {}) {
+  const [reviewState, setReviewState] = useState(fallbackReview || buildLocalEvidenceReview());
+
+  useEffect(() => {
+    if (!enabled || !markdown) {
+      setReviewState(fallbackReview || buildLocalEvidenceReview());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackReview || buildLocalEvidenceReview();
+    setReviewState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledEvidenceReviewAPI.review(markdown)
+      .then(({ data }) => {
+        if (!active) return;
+        setReviewState(normalizeNuxeraControlledEvidenceReviewResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo revisar evidencia controlada; usando fallback local", err);
+        setReviewState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-evidence-review-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, markdown, fallbackReview]);
+
+  return reviewState;
 }
 
 export function useControlledRunbook({ enabled = true, fallbackRunbook = null } = {}) {

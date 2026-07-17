@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -722,6 +722,30 @@ describe("NUXERA backend readiness adapter", () => {
     expect(runbook.summary.missingMetadata).toBe(0);
     expect(runbook.commands[0].id).toBe("generate-scaffold-markdown");
     expect(runbook.guardrails.join(" ")).toContain("does not execute endpoint checks");
+  });
+
+  it("normalizes remote controlled evidence reviews for admin review", () => {
+    const review = normalizeNuxeraControlledEvidenceReviewResponse({
+      evidenceReview: {
+        id: "nuxera-controlled-evidence-review",
+        status: "ready-for-human-approval-review",
+        readyForHumanReview: true,
+        sourcePlanId: "nuxera-controlled-rls-endpoint-evidence",
+        summary: { requiredSections: 7, missingSections: 0, todoMarkers: 0, missingDecisions: 0, noGoIndicators: 0 },
+        missingSections: [],
+        missingDecisions: [],
+        blockers: [],
+        nextDecision: "Route completed evidence to human approval review.",
+        guardrails: ["Review is read-only."],
+      },
+      guardrails: ["Ready-for-human-review is not production approval."],
+    });
+
+    expect(review.source).toBe("remote-read-only");
+    expect(review.readyForHumanReview).toBe(true);
+    expect(review.summary.missingSections).toBe(0);
+    expect(review.blockers).toEqual([]);
+    expect(review.guardrails.join(" ")).toContain("not production approval");
   });
 
   it("turns unavailable backend readiness signals into admin health actions", () => {

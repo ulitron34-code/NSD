@@ -13,6 +13,7 @@
     "check:nuxera-sql": "node scripts/check-nuxera-sql-drafts.js",
     "check:nuxera-verification-plan": "node scripts/check-nuxera-controlled-verification-plan.js",
     "scaffold:nuxera-evidence": "node scripts/generate-nuxera-controlled-evidence-scaffold.js",
+    "review:nuxera-evidence": "node scripts/review-nuxera-controlled-evidence.js",
     "check:rbac": "node scripts/check-rbac-matrix.js",
     "check:phase7": "node scripts/check-phase7-local.js",
     "check:phase8": "node scripts/check-phase8-local.js",

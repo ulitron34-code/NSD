@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -442,6 +442,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled() });
   const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled() });
   const controlledRunbook = useControlledRunbook({ enabled: isNuxeraExperienceEnabled() });
+  const controlledEvidenceReview = useControlledEvidenceReview({ enabled: isNuxeraExperienceEnabled() });
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
     backendReadiness,
@@ -636,6 +637,29 @@ function AdminOperationsHome({ sectionLabel }) {
         <footer>
           <small>{controlledRunbook.nextDecision}</small>
           <small>{controlledRunbook.guardrails[0]}</small>
+        </footer>
+      </section>
+      <section className="nuxera-admin-controlled-verification" aria-label="Review de evidencia controlada NUXERA">
+        <header>
+          <span>{controlledEvidenceReview.status}</span>
+          <h2>Review de evidencia</h2>
+        </header>
+        <p>
+          {controlledEvidenceReview.summary.missingSections} secciones faltantes; {controlledEvidenceReview.summary.todoMarkers} TODO; {controlledEvidenceReview.summary.noGoIndicators} no-go.
+        </p>
+        {controlledEvidenceReview.loading && <small>Revisando evidencia NUXERA...</small>}
+        <div>
+          {controlledEvidenceReview.blockers.slice(0, 3).map((blocker) => (
+            <article key={blocker}>
+              <span>{controlledEvidenceReview.readyForHumanReview ? "ready" : "blocked"}</span>
+              <strong>{controlledEvidenceReview.source}</strong>
+              <p>{blocker}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{controlledEvidenceReview.nextDecision}</small>
+          <small>{controlledEvidenceReview.guardrails[0]}</small>
         </footer>
       </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">

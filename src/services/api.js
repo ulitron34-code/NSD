@@ -273,6 +273,11 @@ export const nuxeraControlledRunbookAPI = {
   getRunbook: (params = {}) =>
     api.get('/nuxera/admin/verification-runbook', { params })
 };
+
+export const nuxeraControlledEvidenceReviewAPI = {
+  review: (markdown) =>
+    api.post('/nuxera/admin/verification-evidence-review', { markdown })
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

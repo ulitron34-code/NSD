@@ -85,3 +85,19 @@ Guardrails:
 - The runbook is advisory/read-only; it does not execute checks or apply SQL.
 - Production writes remain blocked until observed evidence is attached and reviewed.
 - Missing metadata blocks the controlled run before any Supabase operation.
+## Evidence review follow-up
+
+The controlled evidence flow now includes a read-only review layer for completed Markdown evidence.
+
+Additional scope completed:
+- Added `nuxeraControlledEvidenceReviewService` to detect missing sections, TODO markers, missing decisions and no-go indicators.
+- Added `POST /api/nuxera/admin/verification-evidence-review`, protected by `nuxera:admin:read`.
+- Added backend CLI alias `review:nuxera-evidence` for local review of a completed Markdown evidence file.
+- Added frontend API, normalizer and optional hook for evidence review.
+- Added an admin `Review de evidencia` panel showing blockers and next decision.
+- Added backend and frontend tests for missing, incomplete, no-go and ready-for-human-review states.
+
+Guardrails:
+- Review is in-memory/read-only and does not persist submitted Markdown.
+- Ready-for-human-review is not production approval.
+- Any TODO, missing decision or no-go keeps NUXERA writes blocked.

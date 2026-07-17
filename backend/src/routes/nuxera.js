@@ -3,6 +3,7 @@ import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { getAdminControls } from '../services/nuxeraAdminControlService.js';
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
 import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlledEvidenceScaffoldService.js';
+import { reviewNuxeraControlledEvidence } from '../services/nuxeraControlledEvidenceReviewService.js';
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
@@ -76,6 +77,30 @@ router.get(
           'Evidence scaffold is generated read-only and does not execute endpoint checks.',
           'No SQL, RLS, feature flag, permission, document grant or data-room mutation is performed.',
           'Operators must fill observed evidence from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  '/nuxera/admin/verification-evidence-review',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const evidenceReview = reviewNuxeraControlledEvidence({
+        markdown: req.body?.markdown
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        evidenceReview,
+        guardrails: [
+          'Evidence review is read-only and does not persist submitted Markdown.',
+          'Review does not execute endpoint checks, apply SQL, change RLS or enable writes.',
+          'Ready-for-human-review is not production approval.'
         ]
       });
     } catch (error) {
