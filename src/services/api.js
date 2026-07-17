@@ -268,6 +268,10 @@ export const nuxeraControlledEvidenceScaffoldAPI = {
   getScaffold: (params = {}) =>
     api.get('/nuxera/admin/verification-evidence-scaffold', { params })
 };
+export const nuxeraControlledContinuationPackAPI = {
+  getPack: (params = {}) =>
+    api.get('/nuxera/admin/verification-continuation-pack', { params })
+};
 
 export const nuxeraControlledRunbookAPI = {
   getRunbook: (params = {}) =>

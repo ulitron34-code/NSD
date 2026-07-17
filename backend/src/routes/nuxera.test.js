@@ -7,13 +7,15 @@ const serviceCalls = {
   evidence: [],
   adminControls: [],
   readiness: [],
+  verificationPlan: [],
   evidenceScaffold: [],
   runbook: [],
   evidenceReview: [],
   approvalPackage: [],
   writeGate: [],
   changeRequest: [],
-  releaseDossier: []
+  releaseDossier: [],
+  continuationPack: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -92,7 +94,23 @@ vi.mock('../services/nuxeraBackendReadinessService.js', () => ({
     };
   })
 }));
-vi.mock('../services/nuxeraControlledEvidenceScaffoldService.js', () => ({
+vi.mock('../services/nuxeraControlledContinuationPackService.js', () => ({
+  getNuxeraControlledContinuationPack: vi.fn((input = {}) => {
+    serviceCalls.continuationPack.push(input);
+    return {
+      id: 'nuxera-controlled-continuation-pack',
+      status: 'ready-for-night-continuation',
+      progress: { percent: Number.isFinite(input.progressPercent) ? input.progressPercent : 83, label: '83% complete' },
+      resumeContext: { branch: input.branch || 'nuxera-controlled-migration', resumeFromCommit: input.resumeFromCommit || '42c4ba7' },
+      recentCommits: [{ hash: '42c4ba7', title: 'Add NUXERA controlled release dossier' }],
+      completedChain: [{ id: 'release-dossier', label: 'Release readiness dossier', status: 'implemented-read-only' }],
+      validationSnapshot: ['Backend full suite passed: 49 files / 456 tests.'],
+      nextResumeSteps: ['Start from latest clean commit and confirm git status is empty.'],
+      guardrails: ['Continuation pack is read-only; it does not persist handoff metadata.'],
+      markdown: '# NUXERA Controlled Migration Continuation Pack'
+    };
+  })
+}));vi.mock('../services/nuxeraControlledEvidenceScaffoldService.js', () => ({
   getNuxeraControlledEvidenceScaffold: vi.fn((input = {}) => {
     serviceCalls.evidenceScaffold.push(input);
     return {
@@ -319,6 +337,7 @@ describe('nuxera routes', () => {
     serviceCalls.writeGate = [];
     serviceCalls.changeRequest = [];
     serviceCalls.releaseDossier = [];
+    serviceCalls.continuationPack = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -359,6 +378,38 @@ describe('nuxera routes', () => {
       expect.arrayContaining([expect.stringContaining('does not execute endpoints')])
     );
     expect(serviceCalls.verificationPlan).toEqual([{ called: true }]);
+  });
+  it('requires nuxera:admin:read before reading continuation pack', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-continuation-pack`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.continuationPack).toHaveLength(0);
+  });
+
+  it('returns controlled continuation pack for night handoff', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-continuation-pack?progress=84&resumeFrom=42c4ba7`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      continuationPack: {
+        id: 'nuxera-controlled-continuation-pack',
+        status: 'ready-for-night-continuation',
+        progress: { percent: 84 }
+      }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not persist handoff metadata')])
+    );
+    expect(serviceCalls.continuationPack).toEqual([
+      expect.objectContaining({ progressPercent: 84, resumeFromCommit: '42c4ba7' })
+    ]);
   });
   it('requires nuxera:admin:read before generating evidence scaffold', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-evidence-scaffold`, {

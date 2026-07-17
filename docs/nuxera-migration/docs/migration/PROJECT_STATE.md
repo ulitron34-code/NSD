@@ -1494,3 +1494,30 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: use the dossier only for final release-readiness review; deployment and write enablement remain separate reviewed change-control actions.
+## NUXERA controlled continuation pack
+
+Added a read-only continuation pack to close the current workday and make the migration resumable by Codex or Claude without relying on app chat history.
+
+Changes made:
+- Added backend `nuxeraControlledContinuationPackService`.
+- Added protected endpoint `GET /api/nuxera/admin/verification-continuation-pack`.
+- Added backend CLI alias `pack:nuxera-continuation` with JSON/Markdown output.
+- Added frontend API, normalizer, hook and admin `Continuation pack` panel.
+- Added night handoff Markdown: `NUXERA_NIGHT_CONTINUATION_HANDOFF_2026-07-17.md`.
+- Added backend/frontend tests for route and normalizer coverage.
+
+Validation:
+- Syntax checks passed for continuation pack service, route, backend route tests, backend adapter, frontend NUXERA tests and CLI script.
+- Continuation pack CLI JSON generation passed.
+- Backend targeted route/service tests passed: 2 files / 36 tests.
+- Backend full suite passed: 50 files / 460 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 78 tests.
+- Frontend full suite passed: 9 files / 239 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No handoff metadata is persisted by the endpoint.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: run the first real controlled non-production Supabase verification pass and feed observed evidence back into the read-only chain.

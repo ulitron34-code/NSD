@@ -4,6 +4,7 @@ import { getAdminControls } from '../services/nuxeraAdminControlService.js';
 import { getNuxeraControlledApprovalPackage } from '../services/nuxeraControlledApprovalPackageService.js';
 import { getNuxeraControlledChangeRequest } from '../services/nuxeraControlledChangeRequestService.js';
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
+import { getNuxeraControlledContinuationPack } from '../services/nuxeraControlledContinuationPackService.js';
 import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlledEvidenceScaffoldService.js';
 import { reviewNuxeraControlledEvidence } from '../services/nuxeraControlledEvidenceReviewService.js';
 import { getNuxeraControlledReleaseDossier } from '../services/nuxeraControlledReleaseDossierService.js';
@@ -52,6 +53,34 @@ router.get(
           'NU-DB-RLS-ENDPOINT-VERIFY-001 exposes the controlled verification plan in read-only mode.',
           'Verification plan does not execute endpoints, apply SQL, change RLS or enable writes.',
           'Completed evidence must come from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/verification-continuation-pack',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const continuationPack = getNuxeraControlledContinuationPack({
+        progressPercent: Number(req.query?.progress),
+        resumeFromCommit: req.query?.resumeFrom,
+        branch: req.query?.branch,
+        localRepo: req.query?.localRepo,
+        downloadsRoot: req.query?.downloadsRoot
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        continuationPack,
+        guardrails: [
+          'Continuation pack is read-only and does not persist handoff metadata.',
+          'Continuation pack does not execute endpoint checks, apply SQL, change RLS or enable writes.',
+          'Night continuation must resume from the latest clean commit and keep write enablement separate.'
         ]
       });
     } catch (error) {

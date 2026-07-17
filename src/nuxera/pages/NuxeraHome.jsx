@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -440,6 +440,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled() });
   const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled() });
   const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled() });
+  const controlledContinuationPack = useControlledContinuationPack({ enabled: isNuxeraExperienceEnabled() });
   const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled() });
   const controlledRunbook = useControlledRunbook({ enabled: isNuxeraExperienceEnabled() });
   const controlledEvidenceReview = useControlledEvidenceReview({ enabled: isNuxeraExperienceEnabled() });
@@ -522,7 +523,29 @@ function AdminOperationsHome({ sectionLabel }) {
           ))}
         </div>
       </section>
-      <section className="nuxera-admin-backend-readiness" aria-label="Readiness backend NUXERA">
+      <section className="nuxera-admin-controlled-verification" aria-label="Paquete de continuidad NUXERA">
+        <header>
+          <span>{controlledContinuationPack.status}</span>
+          <h2>Continuation pack</h2>
+        </header>
+        <p>
+          Avance {controlledContinuationPack.progress.percent}%; retomar desde {controlledContinuationPack.resumeContext.resumeFromCommit}; {controlledContinuationPack.nextResumeSteps.length} pasos.
+        </p>
+        {controlledContinuationPack.loading && <small>Cargando continuation pack NUXERA...</small>}
+        <div>
+          {controlledContinuationPack.recentCommits.slice(0, 3).map((commit) => (
+            <article key={commit.hash}>
+              <span>{controlledContinuationPack.resumeContext.branch}</span>
+              <strong>{commit.hash}</strong>
+              <p>{commit.title}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{controlledContinuationPack.nextResumeSteps[0]}</small>
+          <small>{controlledContinuationPack.guardrails[0]}</small>
+        </footer>
+      </section>      <section className="nuxera-admin-backend-readiness" aria-label="Readiness backend NUXERA">
         <header>
           <span>{consoleState.backendReadiness.status}</span>
           <h2>Readiness backend</h2>

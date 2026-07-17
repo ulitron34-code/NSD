@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledChangeRequestAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledReleaseDossierAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledChangeRequestAPI, nuxeraControlledContinuationPackAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledReleaseDossierAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -517,6 +517,72 @@ export function normalizeNuxeraControlledChangeRequestResponse(response, fallbac
       ...fallback.summary,
       ...asObject(payload.summary),
     },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+function buildLocalContinuationPack() {
+  return {
+    id: "nuxera-controlled-continuation-pack",
+    status: "ready-for-night-continuation",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    progress: { percent: 83, label: "83% complete", confidence: "approximate-controlled-migration-progress" },
+    resumeContext: {
+      branch: "nuxera-controlled-migration",
+      resumeFromCommit: "42c4ba7",
+      localRepo: "C:/Users/usalgado/Documents/Codex/2026-07-16/h/work/NSD",
+      downloadsRoot: "C:/Users/usalgado/Downloads/NUXERA_AVANCE_LOCAL_2026-07-17",
+    },
+    recentCommits: [
+      { hash: "42c4ba7", title: "Add NUXERA controlled release dossier" },
+      { hash: "4fb98ad", title: "Add NUXERA controlled change request package" },
+      { hash: "12e2e63", title: "Add NUXERA controlled write gate" },
+    ],
+    completedChain: [
+      { id: "verification-plan", label: "Verification plan", status: "implemented-read-only" },
+      { id: "release-dossier", label: "Release readiness dossier", status: "implemented-read-only" },
+    ],
+    validationSnapshot: ["Backend full suite passed: 49 files / 456 tests.", "Frontend full suite passed: 9 files / 238 tests."],
+    nextResumeSteps: ["Start from latest clean commit and confirm git status is empty."],
+    guardrails: ["Local continuation pack fallback; no ejecuta endpoints ni habilita writes."],
+    markdown: "# NUXERA Controlled Migration Continuation Pack\n\nStatus: ready-for-night-continuation",
+  };
+}
+
+export function normalizeNuxeraControlledContinuationPackResponse(response, fallbackContinuationPack = null) {
+  const payload = response?.continuationPack || response || null;
+  const fallback = fallbackContinuationPack || buildLocalContinuationPack();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-continuation-pack-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    progress: {
+      ...fallback.progress,
+      ...asObject(payload.progress),
+    },
+    resumeContext: {
+      ...fallback.resumeContext,
+      ...asObject(payload.resumeContext),
+    },
+    recentCommits: asArray(payload.recentCommits).length ? asArray(payload.recentCommits) : fallback.recentCommits,
+    completedChain: asArray(payload.completedChain).length ? asArray(payload.completedChain) : fallback.completedChain,
+    validationSnapshot: asArray(payload.validationSnapshot).length ? asArray(payload.validationSnapshot) : fallback.validationSnapshot,
+    nextResumeSteps: asArray(payload.nextResumeSteps).length ? asArray(payload.nextResumeSteps) : fallback.nextResumeSteps,
     guardrails: [
       ...asArray(payload.guardrails),
       ...asArray(response?.guardrails),
@@ -1128,6 +1194,41 @@ export function useControlledChangeRequest({ enabled = true, payload = null, fal
   }, [enabled, payload, fallbackChangeRequest]);
 
   return changeRequestState;
+}
+export function useControlledContinuationPack({ enabled = true, fallbackContinuationPack = null } = {}) {
+  const [continuationPackState, setContinuationPackState] = useState(fallbackContinuationPack || buildLocalContinuationPack());
+
+  useEffect(() => {
+    if (!enabled) {
+      setContinuationPackState(fallbackContinuationPack || buildLocalContinuationPack());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackContinuationPack || buildLocalContinuationPack();
+    setContinuationPackState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledContinuationPackAPI.getPack()
+      .then(({ data }) => {
+        if (!active) return;
+        setContinuationPackState(normalizeNuxeraControlledContinuationPackResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo cargar continuation pack; usando fallback local", err);
+        setContinuationPackState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-continuation-pack-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, fallbackContinuationPack]);
+
+  return continuationPackState;
 }
 export function useControlledReleaseDossier({ enabled = true, payload = null, fallbackReleaseDossier = null } = {}) {
   const [releaseDossierState, setReleaseDossierState] = useState(fallbackReleaseDossier || buildLocalReleaseDossier());

@@ -165,3 +165,18 @@ Guardrails:
 - Release dossier is read-only and does not persist approvals, tickets or deployment windows.
 - Ready-for-release-readiness-review is not deployment approval.
 - Write enablement still requires a separate reviewed deploy/change-control action.
+## Controlled continuation pack follow-up
+
+The release dossier now feeds a read-only continuation pack for night handoff and cross-agent resume.
+
+Additional scope completed:
+- Added `nuxeraControlledContinuationPackService` to summarize progress, recent commits, validation snapshot and next resume steps.
+- Added `GET /api/nuxera/admin/verification-continuation-pack`, protected by `nuxera:admin:read`.
+- Added backend CLI alias `pack:nuxera-continuation` for local JSON/Markdown handoff generation.
+- Added frontend API, normalizer and admin `Continuation pack` panel.
+- Added `NUXERA_NIGHT_CONTINUATION_HANDOFF_2026-07-17.md` for Codex/Claude resume context.
+
+Guardrails:
+- Continuation pack is read-only and does not persist handoff metadata.
+- Continuation pack does not execute endpoints, apply SQL, change RLS or enable writes.
+- Night continuation must resume from the latest clean commit and keep write enablement separate.

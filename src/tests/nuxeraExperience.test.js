@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledContinuationPackResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -866,6 +866,29 @@ describe("NUXERA backend readiness adapter", () => {
     expect(releaseDossier.summary.finalReviewChecklist).toBe(8);
     expect(releaseDossier.evidenceChain[0]).toMatchObject({ id: "write-gate" });
     expect(releaseDossier.guardrails.join(" ")).toContain("not deployment approval");
+  });
+  it("normalizes remote controlled continuation packs for night handoff", () => {
+    const continuationPack = normalizeNuxeraControlledContinuationPackResponse({
+      continuationPack: {
+        id: "nuxera-controlled-continuation-pack",
+        status: "ready-for-night-continuation",
+        progress: { percent: 84, label: "84% complete" },
+        resumeContext: { branch: "nuxera-controlled-migration", resumeFromCommit: "42c4ba7" },
+        recentCommits: [{ hash: "42c4ba7", title: "Add NUXERA controlled release dossier" }],
+        completedChain: [{ id: "release-dossier", label: "Release readiness dossier", status: "implemented-read-only" }],
+        validationSnapshot: ["Backend full suite passed: 49 files / 456 tests."],
+        nextResumeSteps: ["Start from latest clean commit and confirm git status is empty."],
+        guardrails: ["Continuation pack is read-only."],
+        markdown: "# NUXERA Controlled Migration Continuation Pack",
+      },
+      guardrails: ["Night continuation must resume from the latest clean commit."],
+    });
+
+    expect(continuationPack.source).toBe("remote-read-only");
+    expect(continuationPack.progress.percent).toBe(84);
+    expect(continuationPack.resumeContext.resumeFromCommit).toBe("42c4ba7");
+    expect(continuationPack.recentCommits[0].hash).toBe("42c4ba7");
+    expect(continuationPack.guardrails.join(" ")).toContain("latest clean commit");
   });
   it("turns unavailable backend readiness signals into admin health actions", () => {
     const consoleState = getAdminOperationsConsole();

@@ -18,6 +18,7 @@
     "gate:nuxera-write": "node scripts/generate-nuxera-controlled-write-gate.js",
     "request:nuxera-change": "node scripts/generate-nuxera-controlled-change-request.js",
     "dossier:nuxera-release": "node scripts/generate-nuxera-controlled-release-dossier.js",
+    "pack:nuxera-continuation": "node scripts/generate-nuxera-controlled-continuation-pack.js",
     "check:rbac": "node scripts/check-rbac-matrix.js",
     "check:phase7": "node scripts/check-phase7-local.js",
     "check:phase8": "node scripts/check-phase8-local.js",
