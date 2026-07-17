@@ -32,3 +32,12 @@ Additional scope completed:
 - `NuxeraHome` admin view renders a dedicated `Paquete RLS/endpoints` section.
 - Styles were extended for the new admin evidence package panel.
 - Frontend NUXERA tests cover the package, endpoint list, template path, audit signal and next actions.
+## Operational signal follow-up
+
+The controlled evidence package now contributes operational admin observability.
+
+Additional scope completed:
+- Added `controlled-verification-evidence` health signal.
+- Added controlled verification action queue items for template completion, denied-path evidence and rollback rehearsal.
+- The action queue remains human-only and does not execute endpoints, apply SQL or mutate permissions.
+- Frontend NUXERA tests cover the health signal and action queue integration.

@@ -221,6 +221,51 @@ function buildControlledVerificationPackage(state, matrix) {
     ],
   };
 }
+function buildControlledVerificationHealthSignal(verificationPackage) {
+  return {
+    id: "controlled-verification-evidence",
+    label: "Evidencia RLS/endpoints",
+    status: verificationPackage.status,
+    severity: verificationPackage.status === "ready-for-controlled-run" ? "medium" : "high",
+    signal: `${verificationPackage.summary.endpoints} endpoints, ${verificationPackage.summary.deniedChecks} denegaciones y ${verificationPackage.summary.noGoCriteria} criterios no-go pendientes de evidencia.`,
+    nextAction: `Completar ${verificationPackage.evidenceTemplate.path} en Supabase no productivo antes de cualquier decision productiva.`,
+  };
+}
+
+function buildControlledVerificationActions(verificationPackage) {
+  const templateAction = {
+    id: "controlled-verification-template",
+    domain: "RLS/endpoints evidence",
+    priority: "critical-path",
+    status: "controlled-evidence-open",
+    owner: "Security admin",
+    action: `Llenar ${verificationPackage.evidenceTemplate.path} con metadata, resultados RLS, endpoints, rollback y decision.`,
+    source: "controlled-verification-package",
+    guardrail: "Accion humana; la consola no ejecuta endpoints, no aplica SQL y no cambia permisos.",
+  };
+  const deniedActions = verificationPackage.deniedChecks.map((check) => ({
+    id: `controlled-verification-${check.id}`,
+    domain: "Denied path evidence",
+    priority: "review",
+    status: "controlled-evidence-open",
+    owner: "Security admin",
+    action: `Registrar evidencia de denegacion para ${check.actor}: ${check.expected}.`,
+    source: "controlled-verification-package",
+    guardrail: "Debe probarse con identidades controladas; no usar datos productivos reales.",
+  }));
+  const rollbackAction = {
+    id: "controlled-verification-rollback",
+    domain: "Rollback rehearsal",
+    priority: "review",
+    status: "controlled-evidence-open",
+    owner: "Ops NUXERA",
+    action: `Registrar ${verificationPackage.summary.rollbackChecks} checks de rollback antes de habilitar writes fuera de fallback local.`,
+    source: "controlled-verification-package",
+    guardrail: "Rollback debe preservar auditoria y no borrar registros nuxera_* tras uso real.",
+  };
+
+  return [templateAction, ...deniedActions, rollbackAction];
+}
 function buildBackendReadinessHandoff(state, actions) {
   const unavailableSignals = state.signals.filter((signal) => !signal.ready);
 
@@ -335,6 +380,8 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
   const readinessActions = buildBackendReadinessActions(state);
   const rlsVerificationMatrix = buildRlsVerificationMatrix(state);
   const controlledVerificationPackage = buildControlledVerificationPackage(state, rlsVerificationMatrix);
+  const controlledVerificationHealthSignal = buildControlledVerificationHealthSignal(controlledVerificationPackage);
+  const controlledVerificationActions = buildControlledVerificationActions(controlledVerificationPackage);
   const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
   const auditPackage = mergeControlledVerificationIntoAuditPackage(
     mergeRlsMatrixIntoAuditPackage(
@@ -344,12 +391,18 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
     controlledVerificationPackage
   );
   const adminHealthSignals = [
-    ...consoleState.adminHealthSignals.filter((signal) => signal.id !== readinessHealthSignal.id),
+    ...consoleState.adminHealthSignals.filter(
+      (signal) => ![readinessHealthSignal.id, controlledVerificationHealthSignal.id].includes(signal.id)
+    ),
     readinessHealthSignal,
+    controlledVerificationHealthSignal,
   ];
   const adminActionQueue = [
     ...readinessActions,
-    ...consoleState.adminActionQueue.filter((item) => !item.id.startsWith("backend-readiness-")),
+    ...controlledVerificationActions,
+    ...consoleState.adminActionQueue.filter(
+      (item) => !item.id.startsWith("backend-readiness-") && !item.id.startsWith("controlled-verification-")
+    ),
   ];
 
   return {

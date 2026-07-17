@@ -729,6 +729,21 @@ describe("NUXERA backend readiness adapter", () => {
     expect(merged.auditPackage.nextActions).toEqual(
       expect.arrayContaining([expect.stringContaining("Completar evidencia RLS/endpoints:")])
     );
+    expect(merged.adminHealthSignals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "controlled-verification-evidence", severity: "high" }),
+      ])
+    );
+    expect(merged.adminActionQueue.map((item) => item.id)).toEqual(
+      expect.arrayContaining([
+        "controlled-verification-template",
+        "controlled-verification-state-foreign-denied",
+        "controlled-verification-rollback",
+      ])
+    );
+    expect(merged.adminActionQueue.map((item) => item.source)).toEqual(
+      expect.arrayContaining(["controlled-verification-package"])
+    );
   });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();

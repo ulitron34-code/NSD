@@ -1269,3 +1269,24 @@ Guardrails:
 - The UI panel is a verification/evidence surface only.
 
 Next recommended task after validation: use this admin package with the controlled evidence template in a non-production Supabase run, then attach observed RLS/endpoint results before any production write decision.
+
+## NUXERA controlled evidence operational signals
+
+Connected the admin controlled RLS/endpoint evidence package to operational observability.
+
+Changes made:
+- Added `controlled-verification-evidence` admin health signal in `backendReadinessAdapter`.
+- Added action queue items for evidence-template completion, denied-path evidence and rollback rehearsal.
+- Kept all actions human-review-only with guardrails that prevent endpoint execution, SQL application or permission mutation.
+- Extended frontend NUXERA tests to assert the health signal, controlled-verification actions and action source.
+
+Validation:
+- `node --check src/nuxera/admin/backendReadinessAdapter.js` passed.
+- Targeted frontend NUXERA suite passed: 1 file / 69 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No writes, data-room grants, document permissions or admin mutations were enabled.
+
+Next recommended task after validation: run the complete frontend suite, then use the action queue as the admin checklist for a controlled Supabase RLS/endpoint verification run.
