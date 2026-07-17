@@ -2,6 +2,7 @@ import express from 'express';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { getAdminControls } from '../services/nuxeraAdminControlService.js';
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
+import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 
@@ -29,6 +30,28 @@ function sendNuxeraError(res, error) {
     code: 'NUXERA_BACKEND_UNAVAILABLE'
   });
 }
+router.get(
+  '/nuxera/admin/verification-plan',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const verificationPlan = getNuxeraControlledVerificationPlan();
+
+      res.json({
+        workspaceRole: 'admin',
+        verificationPlan,
+        guardrails: [
+          'NU-DB-RLS-ENDPOINT-VERIFY-001 exposes the controlled verification plan in read-only mode.',
+          'Verification plan does not execute endpoints, apply SQL, change RLS or enable writes.',
+          'Completed evidence must come from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
 router.get(
   '/nuxera/admin/readiness',
   authMiddleware,

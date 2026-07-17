@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -635,6 +635,47 @@ describe("NUXERA backend readiness adapter", () => {
     expect(readiness.summary.readiness).toBe(67);
     expect(readiness.signals[1]).toMatchObject({ table: "nuxera_evidence_links", ready: false });
     expect(readiness.guardrails.join(" ")).toContain("no aplica SQL");
+  });
+
+  it("normalizes remote controlled verification plans for admin review", () => {
+    const remotePlan = normalizeNuxeraControlledVerificationPlanResponse({
+      verificationPlan: {
+        id: "nuxera-controlled-rls-endpoint-evidence",
+        status: "template-required-before-controlled-run",
+        evidenceTemplate: { path: "docs/nuxera-migration/docs/migration/NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md" },
+        requiredIdentities: [
+          { id: "applicant-owner" },
+          { id: "different-applicant" },
+          { id: "authorized-grantor" },
+          { id: "admin-internal" },
+        ],
+        endpointChecks: [
+          { id: "get-state-owner", path: "/api/nuxera/orders/:orderId/state" },
+          { id: "patch-checklist-owner", path: "/api/nuxera/orders/:orderId/state/checklist" },
+          { id: "get-evidence-owner", path: "/api/nuxera/orders/:orderId/evidence" },
+          { id: "get-admin-controls", path: "/api/nuxera/admin/controls" },
+          { id: "get-admin-readiness", path: "/api/nuxera/admin/readiness" },
+        ],
+        deniedChecks: [{ id: "state-foreign-denied" }],
+        noGoCriteria: ["No row existence leaks."],
+        rollbackChecks: ["Prior known-good commit recorded."],
+        summary: { identities: 4, endpoints: 5, deniedChecks: 1, noGoCriteria: 1, rollbackChecks: 1 },
+        guardrails: ["Read-only verification plan."],
+      },
+      guardrails: ["Route does not execute endpoints."],
+    });
+    const merged = mergeBackendReadinessWithConsole(getAdminOperationsConsole(), null, remotePlan);
+
+    expect(remotePlan.source).toBe("remote-read-only");
+    expect(remotePlan.endpointChecks).toHaveLength(5);
+    expect(remotePlan.summary.identities).toBe(4);
+    expect(remotePlan.evidenceTemplate.path).toContain("NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md");
+    expect(remotePlan.guardrails.join(" ")).toContain("does not execute endpoints");
+    expect(merged.controlledVerificationPackage.source).toBe("remote-read-only");
+    expect(merged.summary.controlledVerificationEndpoints).toBe(5);
+    expect(merged.adminActionQueue.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["controlled-verification-template", "controlled-verification-state-foreign-denied"])
+    );
   });
 
   it("turns unavailable backend readiness signals into admin health actions", () => {

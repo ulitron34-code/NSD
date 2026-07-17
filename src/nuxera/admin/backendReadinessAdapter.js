@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledVerificationAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -99,7 +99,7 @@ function buildBackendReadinessActions(state) {
       priority: signal.id === "workspace-states" ? "critical-path" : "review",
       status: "backend-preflight-open",
       owner: signal.owner || "Platform",
-      action: `Verificar ${signal.table} en Supabase controlado antes de depender de ${signal.requiredFor.join(", ") || "NUXERA backend"}.`,
+      action: `Verificar ${signal.table} en Supabase controlado antes de depender de ${asArray(signal.requiredFor).join(", ") || "NUXERA backend"}.`,
       source: "backend-readiness-preflight",
       guardrail: "Accion humana; la consola no aplica SQL ni cambia RLS.",
     }));
@@ -266,6 +266,57 @@ function buildControlledVerificationActions(verificationPackage) {
 
   return [templateAction, ...deniedActions, rollbackAction];
 }
+export function normalizeNuxeraControlledVerificationPlanResponse(response, fallbackPackage = null) {
+  const payload = response?.verificationPlan || response || null;
+  const fallback = fallbackPackage || buildControlledVerificationPackage(
+    LOCAL_BACKEND_READINESS_STATE,
+    buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE)
+  );
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-verification-plan-missing",
+    };
+  }
+
+  const endpointChecks = asArray(payload.endpointChecks);
+  const deniedChecks = asArray(payload.deniedChecks);
+  const noGoCriteria = asArray(payload.noGoCriteria);
+  const rollbackChecks = asArray(payload.rollbackChecks);
+  const requiredIdentities = asArray(payload.requiredIdentities);
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    evidenceTemplate: {
+      ...fallback.evidenceTemplate,
+      ...asObject(payload.evidenceTemplate),
+    },
+    requiredIdentities: requiredIdentities.length ? requiredIdentities : fallback.requiredIdentities,
+    endpointChecks: endpointChecks.length ? endpointChecks : fallback.endpointChecks,
+    deniedChecks: deniedChecks.length ? deniedChecks : fallback.deniedChecks,
+    noGoCriteria: noGoCriteria.length ? noGoCriteria : fallback.noGoCriteria,
+    rollbackChecks: rollbackChecks.length ? rollbackChecks : fallback.rollbackChecks,
+    summary: {
+      identities: requiredIdentities.length || fallback.summary.identities,
+      endpoints: endpointChecks.length || fallback.summary.endpoints,
+      deniedChecks: deniedChecks.length || fallback.summary.deniedChecks,
+      noGoCriteria: noGoCriteria.length || fallback.summary.noGoCriteria,
+      rollbackChecks: rollbackChecks.length || fallback.summary.rollbackChecks,
+      blockedScenarios: fallback.summary.blockedScenarios,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
 function buildBackendReadinessHandoff(state, actions) {
   const unavailableSignals = state.signals.filter((signal) => !signal.ready);
 
@@ -374,12 +425,12 @@ function mergeRlsMatrixIntoAuditPackage(auditPackage, matrix) {
   };
 }
 
-export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE) {
+export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE, verificationPlanState = null) {
   const state = readinessState || LOCAL_BACKEND_READINESS_STATE;
   const readinessHealthSignal = buildBackendReadinessHealthSignal(state);
   const readinessActions = buildBackendReadinessActions(state);
   const rlsVerificationMatrix = buildRlsVerificationMatrix(state);
-  const controlledVerificationPackage = buildControlledVerificationPackage(state, rlsVerificationMatrix);
+  const controlledVerificationPackage = verificationPlanState || buildControlledVerificationPackage(state, rlsVerificationMatrix);
   const controlledVerificationHealthSignal = buildControlledVerificationHealthSignal(controlledVerificationPackage);
   const controlledVerificationActions = buildControlledVerificationActions(controlledVerificationPackage);
   const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
@@ -480,4 +531,43 @@ export function useBackendReadiness({ enabled = true } = {}) {
   }, [enabled]);
 
   return readinessState;
+}
+export function useControlledVerificationPlan({ enabled = true, fallbackPackage = null } = {}) {
+  const [verificationPlanState, setVerificationPlanState] = useState(
+    fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE))
+  );
+
+  useEffect(() => {
+    if (!enabled) {
+      setVerificationPlanState(
+        fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE))
+      );
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE));
+    setVerificationPlanState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledVerificationAPI.getPlan()
+      .then(({ data }) => {
+        if (!active) return;
+        setVerificationPlanState(normalizeNuxeraControlledVerificationPlanResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo cargar verification plan; usando fallback local", err);
+        setVerificationPlanState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-verification-plan-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, fallbackPackage]);
+
+  return verificationPlanState;
 }

@@ -1290,3 +1290,27 @@ Guardrails:
 - No writes, data-room grants, document permissions or admin mutations were enabled.
 
 Next recommended task after validation: run the complete frontend suite, then use the action queue as the admin checklist for a controlled Supabase RLS/endpoint verification run.
+
+## NUXERA controlled verification backend contract
+
+Promoted the controlled RLS/endpoint verification package into a protected read-only backend contract while preserving the local admin fallback.
+
+Changes made:
+- Added `nuxeraControlledVerificationService` with required identities, endpoint checks, denied checks, no-go criteria, rollback checks and evidence-template metadata.
+- Added `GET /api/nuxera/admin/verification-plan` behind `nuxera:admin:read`.
+- Added frontend API and `useControlledVerificationPlan` adapter support so the admin console can consume the backend plan without enabling endpoint execution.
+- Kept `mergeBackendReadinessWithConsole` compatible with local packages and remote read-only plans.
+- Added backend and frontend tests for route permissions, plan shape, remote normalization and admin-console merge behavior.
+
+Validation:
+- Backend targeted route/service tests passed: 2 files / 19 tests.
+- Backend full suite passed: 42 files / 422 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 70 tests.
+- Frontend full suite passed: 9 files / 231 tests.
+
+Guardrails:
+- No SQL was applied.
+- No live endpoint or RLS checks were executed.
+- No production writes, permission changes, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: use the endpoint and evidence template in a controlled non-production Supabase verification pass, then attach observed RLS/endpoint results before any production write decision.

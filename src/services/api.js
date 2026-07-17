@@ -258,6 +258,11 @@ export const nuxeraBackendReadinessAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/readiness')
 };
+
+export const nuxeraControlledVerificationAPI = {
+  getPlan: () =>
+    api.get('/nuxera/admin/verification-plan')
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

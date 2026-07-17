@@ -85,6 +85,34 @@ vi.mock('../services/nuxeraBackendReadinessService.js', () => ({
     };
   })
 }));
+vi.mock('../services/nuxeraControlledVerificationService.js', () => ({
+  getNuxeraControlledVerificationPlan: vi.fn(() => {
+    serviceCalls.verificationPlan.push({ called: true });
+    return {
+      id: 'nuxera-controlled-rls-endpoint-evidence',
+      status: 'template-required-before-controlled-run',
+      evidenceTemplate: { path: 'docs/nuxera-migration/docs/migration/NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md' },
+      requiredIdentities: [
+        { id: 'applicant-owner' },
+        { id: 'different-applicant' },
+        { id: 'authorized-grantor' },
+        { id: 'admin-internal' }
+      ],
+      endpointChecks: [
+        { id: 'get-state-owner', path: '/api/nuxera/orders/:orderId/state' },
+        { id: 'patch-checklist-owner', path: '/api/nuxera/orders/:orderId/state/checklist' },
+        { id: 'get-evidence-owner', path: '/api/nuxera/orders/:orderId/evidence' },
+        { id: 'get-admin-controls', path: '/api/nuxera/admin/controls' },
+        { id: 'get-admin-readiness', path: '/api/nuxera/admin/readiness' }
+      ],
+      deniedChecks: [{ id: 'state-foreign-denied' }],
+      noGoCriteria: ['No row existence leaks.'],
+      rollbackChecks: ['Prior known-good commit recorded.'],
+      summary: { identities: 4, endpoints: 5, deniedChecks: 1, noGoCriteria: 1, rollbackChecks: 1 },
+      guardrails: ['Read-only verification plan.']
+    };
+  })
+}));
 vi.mock('../services/nuxeraAdminControlService.js', () => ({
   getAdminControls: vi.fn(async () => {
     serviceCalls.adminControls.push({ called: true });
@@ -137,6 +165,7 @@ describe('nuxera routes', () => {
     serviceCalls.evidence = [];
     serviceCalls.adminControls = [];
     serviceCalls.readiness = [];
+    serviceCalls.verificationPlan = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -147,6 +176,37 @@ describe('nuxera routes', () => {
   });
 
 
+
+  it('requires nuxera:admin:read before reading verification plan', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-plan`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.verificationPlan).toHaveLength(0);
+  });
+
+  it('returns controlled verification plan without executing checks', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-plan`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      verificationPlan: {
+        id: 'nuxera-controlled-rls-endpoint-evidence',
+        summary: { identities: 4, endpoints: 5 }
+      }
+    });
+    expect(body.verificationPlan.evidenceTemplate.path).toContain('NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md');
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not execute endpoints')])
+    );
+    expect(serviceCalls.verificationPlan).toEqual([{ called: true }]);
+  });
   it('requires nuxera:admin:read before reading backend readiness', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/readiness`, {
       headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }

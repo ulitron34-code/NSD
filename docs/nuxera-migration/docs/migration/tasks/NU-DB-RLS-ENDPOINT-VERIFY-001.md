@@ -41,3 +41,17 @@ Additional scope completed:
 - Added controlled verification action queue items for template completion, denied-path evidence and rollback rehearsal.
 - The action queue remains human-only and does not execute endpoints, apply SQL or mutate permissions.
 - Frontend NUXERA tests cover the health signal and action queue integration.
+## Backend contract follow-up
+
+The controlled verification plan now has a read-only backend/frontend contract for admin review.
+
+Additional scope completed:
+- Added `backend/src/services/nuxeraControlledVerificationService.js` as the single source for required identities, endpoint checks, denied checks, no-go criteria, rollback checks and evidence-template metadata.
+- Added `GET /api/nuxera/admin/verification-plan`, protected by `nuxera:admin:read`.
+- Added `nuxeraControlledVerificationAPI.getPlan()` and `useControlledVerificationPlan()` so the admin console can prefer the backend plan and fall back to the local package if the backend is unavailable.
+- Extended route, service and frontend adapter tests for the read-only contract.
+
+Guardrails:
+- The endpoint returns a plan only; it does not execute endpoint checks.
+- No SQL, RLS, feature-flag, permission, document-grant or data-room mutation is performed.
+- Completed evidence must still come from a controlled non-production Supabase run using the evidence template.
