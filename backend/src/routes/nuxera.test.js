@@ -6,7 +6,8 @@ const serviceCalls = {
   upsert: [],
   evidence: [],
   adminControls: [],
-  readiness: []
+  readiness: [],
+  evidenceScaffold: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -82,6 +83,20 @@ vi.mock('../services/nuxeraBackendReadinessService.js', () => ({
         { id: 'admin-controls', table: 'nuxera_admin_controls', status: 'available', ready: true }
       ],
       guardrails: ['Read-only backend readiness.']
+    };
+  })
+}));
+vi.mock('../services/nuxeraControlledEvidenceScaffoldService.js', () => ({
+  getNuxeraControlledEvidenceScaffold: vi.fn((input = {}) => {
+    serviceCalls.evidenceScaffold.push(input);
+    return {
+      id: 'nuxera-controlled-evidence-scaffold',
+      status: 'scaffold-ready-for-controlled-run',
+      sourcePlanId: 'nuxera-controlled-rls-endpoint-evidence',
+      metadata: { environment: input.environment || 'TODO', repoCommit: input.repoCommit || 'TODO' },
+      summary: { identities: 4, endpointRows: 8, noGoCriteria: 8, rollbackChecks: 5, sqlDrafts: 3 },
+      markdown: '# NUXERA Controlled RLS and Endpoint Evidence - Scaffold\n\n## Required endpoint evidence',
+      guardrails: ['Scaffold only; no endpoint execution.']
     };
   })
 }));
@@ -207,6 +222,40 @@ describe('nuxera routes', () => {
     );
     expect(serviceCalls.verificationPlan).toEqual([{ called: true }]);
   });
+  it('requires nuxera:admin:read before generating evidence scaffold', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-evidence-scaffold`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.evidenceScaffold).toHaveLength(0);
+  });
+
+  it('returns controlled evidence scaffold without executing checks', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-evidence-scaffold?commit=abc1234&environment=non-production-supabase`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      evidenceScaffold: {
+        id: 'nuxera-controlled-evidence-scaffold',
+        sourcePlanId: 'nuxera-controlled-rls-endpoint-evidence',
+        summary: { identities: 4, endpointRows: 8 }
+      }
+    });
+    expect(body.evidenceScaffold.markdown).toContain('Required endpoint evidence');
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('does not execute endpoint checks')])
+    );
+    expect(serviceCalls.evidenceScaffold).toEqual([
+      expect.objectContaining({ repoCommit: 'abc1234', environment: 'non-production-supabase' })
+    ]);
+  });
+
   it('requires nuxera:admin:read before reading backend readiness', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/readiness`, {
       headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }

@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledVerificationPlanResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -676,6 +676,27 @@ describe("NUXERA backend readiness adapter", () => {
     expect(merged.adminActionQueue.map((item) => item.id)).toEqual(
       expect.arrayContaining(["controlled-verification-template", "controlled-verification-state-foreign-denied"])
     );
+  });
+
+  it("normalizes remote controlled evidence scaffolds for admin review", () => {
+    const scaffold = normalizeNuxeraControlledEvidenceScaffoldResponse({
+      evidenceScaffold: {
+        id: "nuxera-controlled-evidence-scaffold",
+        status: "scaffold-ready-for-controlled-run",
+        sourcePlanId: "nuxera-controlled-rls-endpoint-evidence",
+        metadata: { environment: "non-production-supabase", repoCommit: "abc1234" },
+        summary: { identities: 4, endpointRows: 8, noGoCriteria: 8, rollbackChecks: 5, sqlDrafts: 3 },
+        markdown: "# NUXERA Controlled RLS and Endpoint Evidence - Scaffold\n\n## Required endpoint evidence",
+        guardrails: ["Scaffold only; no endpoint execution."],
+      },
+      guardrails: ["Route does not execute endpoint checks."],
+    });
+
+    expect(scaffold.source).toBe("remote-read-only");
+    expect(scaffold.summary.endpointRows).toBe(8);
+    expect(scaffold.metadata.repoCommit).toBe("abc1234");
+    expect(scaffold.markdown).toContain("Required endpoint evidence");
+    expect(scaffold.guardrails.join(" ")).toContain("does not execute endpoint checks");
   });
 
   it("turns unavailable backend readiness signals into admin health actions", () => {

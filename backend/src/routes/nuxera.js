@@ -2,6 +2,7 @@ import express from 'express';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { getAdminControls } from '../services/nuxeraAdminControlService.js';
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
+import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlledEvidenceScaffoldService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
@@ -45,6 +46,35 @@ router.get(
           'NU-DB-RLS-ENDPOINT-VERIFY-001 exposes the controlled verification plan in read-only mode.',
           'Verification plan does not execute endpoints, apply SQL, change RLS or enable writes.',
           'Completed evidence must come from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/verification-evidence-scaffold',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const evidenceScaffold = getNuxeraControlledEvidenceScaffold({
+        repoCommit: req.query?.commit,
+        environment: req.query?.environment,
+        operator: req.query?.operator,
+        reviewer: req.query?.reviewer,
+        priorKnownGoodCommit: req.query?.priorKnownGoodCommit,
+        rollbackOwner: req.query?.rollbackOwner
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        evidenceScaffold,
+        guardrails: [
+          'Evidence scaffold is generated read-only and does not execute endpoint checks.',
+          'No SQL, RLS, feature flag, permission, document grant or data-room mutation is performed.',
+          'Operators must fill observed evidence from a controlled non-production Supabase run.'
         ]
       });
     } catch (error) {

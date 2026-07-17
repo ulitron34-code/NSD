@@ -55,3 +55,18 @@ Guardrails:
 - The endpoint returns a plan only; it does not execute endpoint checks.
 - No SQL, RLS, feature-flag, permission, document-grant or data-room mutation is performed.
 - Completed evidence must still come from a controlled non-production Supabase run using the evidence template.
+## Evidence scaffold follow-up
+
+The controlled verification package now includes a generated evidence scaffold for the next non-production Supabase run.
+
+Additional scope completed:
+- Added `nuxeraControlledEvidenceScaffoldService` to generate Markdown evidence scaffolds from the approved verification plan.
+- Added `GET /api/nuxera/admin/verification-evidence-scaffold`, protected by `nuxera:admin:read`.
+- Added backend script alias `scaffold:nuxera-evidence` for local Markdown/JSON scaffold generation without starting the server.
+- Added frontend API, normalizer and hook so the admin console can surface scaffold readiness.
+- Added route, service and frontend adapter tests for scaffold shape and read-only guardrails.
+
+Guardrails:
+- The scaffold is generated only; it does not execute endpoint checks.
+- No SQL, RLS, feature-flag, permission, document-grant or data-room mutation is performed.
+- Operators must fill observed results from a controlled non-production Supabase run.

@@ -1314,3 +1314,27 @@ Guardrails:
 - No production writes, permission changes, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: use the endpoint and evidence template in a controlled non-production Supabase verification pass, then attach observed RLS/endpoint results before any production write decision.
+## NUXERA controlled evidence scaffold
+
+Added a generated evidence scaffold to turn the verification plan into an operator-ready Markdown package before the controlled Supabase run.
+
+Changes made:
+- Added backend `nuxeraControlledEvidenceScaffoldService`.
+- Added protected read-only endpoint `GET /api/nuxera/admin/verification-evidence-scaffold`.
+- Added backend CLI alias `scaffold:nuxera-evidence`.
+- Added frontend API, normalizer, hook and admin panel for scaffold readiness.
+- Added tests for scaffold service output, route permissions and frontend normalization.
+
+Validation:
+- Scaffold CLI JSON generation passed.
+- Backend targeted route/service tests passed: 3 files / 23 tests.
+- Backend full suite passed: 43 files / 426 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 71 tests.
+- Frontend full suite passed: 9 files / 232 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: generate the scaffold with the actual controlled-run metadata, run the non-production Supabase verification, and paste observed evidence into the scaffold before any production write decision.

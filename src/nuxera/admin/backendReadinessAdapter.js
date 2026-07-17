@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledVerificationAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledVerificationAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -317,6 +317,71 @@ export function normalizeNuxeraControlledVerificationPlanResponse(response, fall
     ].filter(Boolean),
   };
 }
+function buildLocalEvidenceScaffold(fallbackPackage = null) {
+  const verificationPackage = fallbackPackage || buildControlledVerificationPackage(
+    LOCAL_BACKEND_READINESS_STATE,
+    buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE)
+  );
+
+  return {
+    id: "nuxera-controlled-evidence-scaffold",
+    status: "local-scaffold-fallback",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    sourcePlanId: verificationPackage.id,
+    evidenceTemplate: verificationPackage.evidenceTemplate,
+    metadata: {
+      environment: "TODO: controlled non-production Supabase project",
+      repoCommit: "TODO",
+      operator: "TODO",
+      reviewer: "TODO",
+    },
+    summary: {
+      identities: verificationPackage.requiredIdentities.length,
+      endpointRows: verificationPackage.endpointChecks.length + verificationPackage.deniedChecks.length,
+      noGoCriteria: verificationPackage.noGoCriteria.length,
+      rollbackChecks: verificationPackage.rollbackChecks.length,
+      sqlDrafts: 3,
+    },
+    markdown: "# NUXERA Controlled RLS and Endpoint Evidence - Scaffold\n\nTODO: load backend scaffold before controlled run.",
+    guardrails: ["Local scaffold fallback; no ejecuta endpoints ni aplica SQL."],
+  };
+}
+
+export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fallbackScaffold = null) {
+  const payload = response?.evidenceScaffold || response || null;
+  const fallback = fallbackScaffold || buildLocalEvidenceScaffold();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-evidence-scaffold-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    metadata: {
+      ...fallback.metadata,
+      ...asObject(payload.metadata),
+    },
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
 function buildBackendReadinessHandoff(state, actions) {
   const unavailableSignals = state.signals.filter((signal) => !signal.ready);
 
@@ -532,6 +597,44 @@ export function useBackendReadiness({ enabled = true } = {}) {
 
   return readinessState;
 }
+export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold = null } = {}) {
+  const [evidenceScaffoldState, setEvidenceScaffoldState] = useState(
+    fallbackScaffold || buildLocalEvidenceScaffold()
+  );
+
+  useEffect(() => {
+    if (!enabled) {
+      setEvidenceScaffoldState(fallbackScaffold || buildLocalEvidenceScaffold());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackScaffold || buildLocalEvidenceScaffold();
+    setEvidenceScaffoldState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledEvidenceScaffoldAPI.getScaffold()
+      .then(({ data }) => {
+        if (!active) return;
+        setEvidenceScaffoldState(normalizeNuxeraControlledEvidenceScaffoldResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo cargar evidence scaffold; usando fallback local", err);
+        setEvidenceScaffoldState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-evidence-scaffold-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, fallbackScaffold]);
+
+  return evidenceScaffoldState;
+}
+
 export function useControlledVerificationPlan({ enabled = true, fallbackPackage = null } = {}) {
   const [verificationPlanState, setVerificationPlanState] = useState(
     fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE))

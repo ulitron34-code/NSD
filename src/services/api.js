@@ -263,6 +263,11 @@ export const nuxeraControlledVerificationAPI = {
   getPlan: () =>
     api.get('/nuxera/admin/verification-plan')
 };
+
+export const nuxeraControlledEvidenceScaffoldAPI = {
+  getScaffold: (params = {}) =>
+    api.get('/nuxera/admin/verification-evidence-scaffold', { params })
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

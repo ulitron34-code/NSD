@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledEvidenceScaffold, useControlledVerificationPlan } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -440,6 +440,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled() });
   const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled() });
   const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled() });
+  const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled() });
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
     backendReadiness,
@@ -589,6 +590,28 @@ function AdminOperationsHome({ sectionLabel }) {
         <footer>
           <small>{consoleState.controlledVerificationPackage.evidenceTemplate.path}</small>
           <small>{consoleState.controlledVerificationPackage.guardrails[0]}</small>
+        </footer>
+      </section>
+      <section className="nuxera-admin-controlled-verification" aria-label="Scaffold de evidencia RLS y endpoints NUXERA">
+        <header>
+          <span>{controlledEvidenceScaffold.status}</span>
+          <h2>Scaffold de evidencia</h2>
+        </header>
+        <p>
+          {controlledEvidenceScaffold.summary.endpointRows} filas de endpoint; {controlledEvidenceScaffold.summary.identities} identidades; {controlledEvidenceScaffold.summary.rollbackChecks} checks rollback.
+        </p>
+        {controlledEvidenceScaffold.loading && <small>Cargando scaffold NUXERA...</small>}
+        <div>
+          <article>
+            <span>{controlledEvidenceScaffold.source}</span>
+            <strong>{controlledEvidenceScaffold.sourcePlanId}</strong>
+            <p>{controlledEvidenceScaffold.metadata.environment}</p>
+            <small>{controlledEvidenceScaffold.metadata.repoCommit}</small>
+          </article>
+        </div>
+        <footer>
+          <small>{controlledEvidenceScaffold.evidenceTemplate.path}</small>
+          <small>{controlledEvidenceScaffold.guardrails[0]}</small>
         </footer>
       </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
