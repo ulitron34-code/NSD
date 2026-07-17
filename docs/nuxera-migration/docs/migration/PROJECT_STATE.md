@@ -1203,3 +1203,24 @@ Remaining gaps:
 - Downloads handoff must be updated after this commit.
 
 Next recommended task after validation: update Downloads handoff, then continue with controlled Supabase/RLS evidence when credentials are available.
+## NU-DB-RLS-ENDPOINT-VERIFY-001 - Controlled RLS/endpoint verification plan guard
+
+Added a local backend guard for the next controlled Supabase verification step.
+
+Changes made:
+- Added `backend/scripts/check-nuxera-controlled-verification-plan.js`.
+- Added backend script alias `check:nuxera-verification-plan`.
+- Guard verifies readiness checklist coverage, pending SQL drafts, backend readiness service and admin adapter evidence for the RLS/endpoint verification pass.
+- Updated SQL/RLS readiness checklist with `GET /api/nuxera/admin/readiness` as a required endpoint check.
+- Updated migration and QA matrices to include the controlled verification-plan guard.
+
+Validation:
+- `node --check backend/scripts/check-nuxera-controlled-verification-plan.js` passed.
+- Direct guard execution from `backend/` passed after checklist/service evidence alignment.
+
+Guardrails:
+- No SQL was applied.
+- No live RLS checks were executed.
+- No production writes, document grants, data-room permissions or admin mutations were enabled.
+
+Next recommended task after validation: run `npm run check:nuxera-verification-plan` together with `npm run check:nuxera-sql` in a Supabase-capable environment, then apply drafts only to a controlled non-production Supabase project and record RLS/endpoint evidence for the four identities.

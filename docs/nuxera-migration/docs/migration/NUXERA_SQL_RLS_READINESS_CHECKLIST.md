@@ -63,6 +63,7 @@ Use at minimum these controlled identities:
 - `PATCH /api/nuxera/orders/:orderId/state/checklist` updates applicant checklist only.
 - `GET /api/nuxera/orders/:orderId/evidence` returns owner-visible evidence only in the current slice.
 - `GET /api/nuxera/admin/controls` requires admin-read permission.
+- `GET /api/nuxera/admin/readiness` returns read-only backend readiness without applying SQL or changing RLS.
 - Every denied path must return controlled 401/403/404 behavior without leaking existence of restricted rows.
 - Every write must emit an `audit_logs` event before the UI write path is considered production-capable.
 

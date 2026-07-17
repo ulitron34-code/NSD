@@ -4,7 +4,7 @@
 |---|---:|---|---|---:|
 | Migration docs | N/A | NUXERA migration package in repo | In progress | N/A |
 | Repository baseline | N/A | Verified inventory and dependency map | Baseline complete except E2E deferred by local npm tooling | N/A |
-| Backend persistence contracts | N/A | NUXERA state contract over existing service orders/documents/audit | Applicant checklist, owner evidence-link and read-only admin control skeletons implemented; consolidated SQL guard and SQL/RLS readiness checklist local | N/A |
+| Backend persistence contracts | N/A | NUXERA state contract over existing service orders/documents/audit | Applicant checklist, owner evidence-link and read-only admin control skeletons implemented; consolidated SQL guard, controlled RLS/endpoint plan guard and SQL/RLS readiness checklist local | N/A |
 | Public landing | Yes | Outcome-led NUXERA landing | Planned | No |
 | Authentication | Yes | Reused with compatibility | Baseline mapped and validated | No |
 | View switcher | Yes | Formal feature-flag control | Feature-flagged NUXERA entry implemented | No |

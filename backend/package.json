@@ -11,6 +11,7 @@
     "check:supabase-pending": "node scripts/check-supabase-pending-sql.js",
     "check:nuxera-workspace-sql": "node scripts/check-nuxera-workspace-state-sql.js",
     "check:nuxera-sql": "node scripts/check-nuxera-sql-drafts.js",
+    "check:nuxera-verification-plan": "node scripts/check-nuxera-controlled-verification-plan.js",
     "check:rbac": "node scripts/check-rbac-matrix.js",
     "check:phase7": "node scripts/check-phase7-local.js",
     "check:phase8": "node scripts/check-phase8-local.js",
