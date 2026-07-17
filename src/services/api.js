@@ -241,6 +241,11 @@ export const nuxeraWorkspaceStateAPI = {
   getOrderState: (orderId) =>
     api.get(`/nuxera/orders/${orderId}/state`)
 };
+
+export const nuxeraEvidenceAPI = {
+  getOrderEvidence: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/evidence`)
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

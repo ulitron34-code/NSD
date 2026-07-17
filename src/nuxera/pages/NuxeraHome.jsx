@@ -5,6 +5,7 @@ import { NavLink } from "react-router-dom";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
+import { useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../grantor/caseQueue";
 
@@ -40,7 +41,11 @@ function ApplicantMissionHome({ sectionLabel }) {
     getApplicantDataRoomChecklist("es"),
     workspaceState
   );
-  const evidenceLedger = getNuxeraEvidenceLedger("applicant", "es");
+  const evidenceLedger = useOwnerEvidenceLedger(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "applicant",
+    language: "es",
+  });
   const stateDetail = ordersLoading
     ? "Buscando expediente real para lectura NUXERA."
     : !orderId || isDemo
@@ -132,6 +137,10 @@ function ApplicantMissionHome({ sectionLabel }) {
         <section className="nuxera-evidence-ledger">
           <h2>Ledger read-only</h2>
           <p>{evidenceLedger.summary.total} evidencias normalizadas / {evidenceLedger.status}</p>
+          {evidenceLedger.backendEvidence?.loading && <small>Cargando evidence_links NUXERA...</small>}
+          {evidenceLedger.backendEvidence?.source?.startsWith("remote") && (
+            <small>{evidenceLedger.backendEvidence.label}</small>
+          )}
           {evidenceLedger.items.slice(0, 4).map((item) => (
             <article key={item.id}>
               <span>{item.engine} / {item.status}</span>

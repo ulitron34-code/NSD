@@ -10,6 +10,7 @@ import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, g
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
+import { mergeNuxeraEvidenceLedger, normalizeNuxeraEvidenceResponse } from "../nuxera/evidence/evidenceBackendAdapter";
 import { getEvidenceLedgerByEngine, getNuxeraEvidenceLedger } from "../nuxera/evidence/evidenceLedger";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
@@ -347,6 +348,72 @@ describe("NUXERA evidence ledger", () => {
     expect(visibleRows.every((item) => item.visibility === "authorized-summary-only")).toBe(true);
     expect(visibleRows.every((item) => item.guardrail.includes("No") || item.guardrail.includes("no"))).toBe(true);
     expect(ledger.policies.join(" ")).toContain("no otorga acceso nuevo");
+  });
+
+  it("normalizes owner-scoped backend evidence links without granting document access", () => {
+    const state = normalizeNuxeraEvidenceResponse({
+      orderId: "order-1",
+      workspaceRole: "applicant",
+      evidence: {
+        orderId: "order-1",
+        persisted: true,
+        links: [
+          {
+            id: "evidence-1",
+            engine: "finance",
+            label: "Modelo financiero revisado",
+            visibility: "owner",
+            documentId: "doc-1",
+            provenance: {
+              source: "nuxera_evidence_links",
+              sourceType: "document-link",
+              path: "/dashboard/nuxera/finance",
+            },
+          },
+        ],
+        guardrails: ["No document access is granted."],
+      },
+    });
+
+    expect(state).toMatchObject({
+      source: "remote-persisted",
+      status: "read-only-remote",
+      persisted: true,
+      orderId: "order-1",
+    });
+    expect(state.items[0]).toMatchObject({
+      engine: "Finance",
+      visibility: "owner",
+      remoteEvidenceLink: true,
+      guardrail: expect.stringContaining("no concede acceso documental"),
+    });
+  });
+
+  it("merges persisted backend evidence ahead of the local ledger fallback", () => {
+    const localLedger = getNuxeraEvidenceLedger("applicant");
+    const remoteState = normalizeNuxeraEvidenceResponse({
+      evidence: {
+        persisted: true,
+        links: [
+          {
+            id: "evidence-remote-1",
+            engine: "intelligence",
+            label: "Resumen documental persistido",
+            visibility: "owner",
+            provenance: { source: "nuxera_evidence_links" },
+          },
+        ],
+      },
+    });
+    const merged = mergeNuxeraEvidenceLedger(localLedger, remoteState);
+
+    expect(merged.status).toBe("read-only-remote-merged");
+    expect(merged.items[0]).toMatchObject({
+      id: "evidence-remote-1",
+      engine: "Intelligence",
+    });
+    expect(merged.backendEvidence.persisted).toBe(true);
+    expect(merged.policies.join(" ")).toContain("no otorgan acceso documental");
   });
 });
 describe("NUXERA Finance adapter", () => {
