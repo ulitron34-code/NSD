@@ -6,6 +6,7 @@ import { getNuxeraControlledChangeRequest } from '../services/nuxeraControlledCh
 import { getNuxeraBackendReadiness } from '../services/nuxeraBackendReadinessService.js';
 import { getNuxeraControlledEvidenceScaffold } from '../services/nuxeraControlledEvidenceScaffoldService.js';
 import { reviewNuxeraControlledEvidence } from '../services/nuxeraControlledEvidenceReviewService.js';
+import { getNuxeraControlledReleaseDossier } from '../services/nuxeraControlledReleaseDossierService.js';
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
@@ -160,7 +161,51 @@ router.post(
       sendNuxeraError(res, error);
     }
   }
-);router.post(
+);
+router.post(
+  '/nuxera/admin/verification-release-dossier',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const releaseDossier = getNuxeraControlledReleaseDossier({
+        changeRequest: req.body?.changeRequest,
+        writeGate: req.body?.writeGate,
+        backendReadiness: req.body?.backendReadiness,
+        approvalPackage: req.body?.approvalPackage,
+        evidenceReview: req.body?.evidenceReview,
+        markdown: req.body?.markdown,
+        approver: req.body?.approver,
+        approvalDate: req.body?.approvalDate,
+        approvalScope: req.body?.approvalScope,
+        evidenceHash: req.body?.evidenceHash,
+        decision: req.body?.decision,
+        requestedScope: req.body?.requestedScope,
+        requestedEnvironment: req.body?.requestedEnvironment,
+        changeTicket: req.body?.changeTicket,
+        deploymentWindow: req.body?.deploymentWindow,
+        rollbackOwner: req.body?.rollbackOwner,
+        releaseReviewer: req.body?.releaseReviewer,
+        dossierOwner: req.body?.dossierOwner,
+        dossierDate: req.body?.dossierDate,
+        finalReviewer: req.body?.finalReviewer
+      });
+
+      res.json({
+        workspaceRole: 'admin',
+        releaseDossier,
+        guardrails: [
+          'Release dossier is read-only and does not persist approvals, tickets or deployment windows.',
+          'Release dossier does not execute endpoint checks, apply SQL, change RLS or enable writes.',
+          'Ready-for-release-readiness-review is not deployment approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
   '/nuxera/admin/verification-approval-package',
   authMiddleware,
   requirePermission('nuxera:admin:read'),

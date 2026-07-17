@@ -291,6 +291,9 @@ export const nuxeraControlledWriteGateAPI = {
 export const nuxeraControlledChangeRequestAPI = {
   build: (payload = {}) =>
     api.post('/nuxera/admin/verification-change-request', payload)
+};export const nuxeraControlledReleaseDossierAPI = {
+  build: (payload = {}) =>
+    api.post('/nuxera/admin/verification-release-dossier', payload)
 };
 export const apiKeysAPI = {
   list: () =>

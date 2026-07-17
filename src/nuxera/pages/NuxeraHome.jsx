@@ -3,7 +3,7 @@ import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
@@ -446,6 +446,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledApprovalPackage = useControlledApprovalPackage({ enabled: isNuxeraExperienceEnabled() });
   const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled() });
   const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled() });
+  const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled() });
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
     backendReadiness,
@@ -734,7 +735,29 @@ function AdminOperationsHome({ sectionLabel }) {
           <small>{controlledChangeRequest.guardrails[0]}</small>
         </footer>
       </section>
-      <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
+      <section className="nuxera-admin-controlled-verification" aria-label="Dossier de release controlado NUXERA">
+        <header>
+          <span>{controlledReleaseDossier.status}</span>
+          <h2>Release dossier</h2>
+        </header>
+        <p>
+          {controlledReleaseDossier.summary.blockers} bloqueos; cadena {controlledReleaseDossier.summary.evidenceChain}; checklist {controlledReleaseDossier.summary.finalReviewChecklist}.
+        </p>
+        {controlledReleaseDossier.loading && <small>Construyendo release dossier NUXERA...</small>}
+        <div>
+          {controlledReleaseDossier.evidenceChain.slice(0, 3).map((item) => (
+            <article key={item.id}>
+              <span>{controlledReleaseDossier.readyForReleaseReview ? "ready" : "blocked"}</span>
+              <strong>{item.label}</strong>
+              <p>{item.status}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{controlledReleaseDossier.nextDecision}</small>
+          <small>{controlledReleaseDossier.guardrails[0]}</small>
+        </footer>
+      </section>      <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
         <header>
           <span>{consoleState.backendControls.status}</span>
           <h2>Controles backend read-only</h2>

@@ -149,3 +149,19 @@ Guardrails:
 - Change request package is read-only and does not persist tickets.
 - Ready-for-separate-change-review is not deployment approval.
 - Write enablement still requires a separate reviewed deploy/change-control action.
+## Controlled release dossier follow-up
+
+The controlled change request now feeds a read-only release readiness dossier for final review preparation.
+
+Additional scope completed:
+- Added `nuxeraControlledReleaseDossierService` to require a ready change request plus dossier owner, dossier date and final reviewer.
+- Added `POST /api/nuxera/admin/verification-release-dossier`, protected by `nuxera:admin:read`.
+- Added backend CLI alias `dossier:nuxera-release` for local JSON/Markdown dossier generation.
+- Added frontend API, normalizer and optional hook for release dossier state.
+- Added an admin `Release dossier` panel showing evidence chain state and next decision.
+- Added backend and frontend tests for blocked and ready-for-release-readiness-review states.
+
+Guardrails:
+- Release dossier is read-only and does not persist approvals, tickets or deployment windows.
+- Ready-for-release-readiness-review is not deployment approval.
+- Write enablement still requires a separate reviewed deploy/change-control action.

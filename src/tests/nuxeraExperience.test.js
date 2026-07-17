@@ -3,7 +3,7 @@ import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
@@ -833,6 +833,39 @@ describe("NUXERA backend readiness adapter", () => {
     expect(changeRequest.summary.rollbackSteps).toBe(5);
     expect(changeRequest.blockers).toEqual([]);
     expect(changeRequest.guardrails.join(" ")).toContain("not deployment approval");
+  });
+  it("normalizes remote controlled release dossiers for final readiness review", () => {
+    const releaseDossier = normalizeNuxeraControlledReleaseDossierResponse({
+      releaseDossier: {
+        id: "nuxera-controlled-release-dossier",
+        status: "ready-for-release-readiness-review",
+        readyForReleaseReview: true,
+        sourceChangeRequestId: "nuxera-controlled-change-request",
+        dossierMetadata: {
+          dossierOwner: "Compliance PMO",
+          dossierDate: "2026-07-17",
+          finalReviewer: "Release board",
+          changeTicket: "CHG-NUXERA-001",
+          requestedEnvironment: "controlled-non-production",
+        },
+        missingDossierMetadata: [],
+        summary: { changeRequestReady: true, dossierMetadataMissing: 0, blockers: 0, evidenceChain: 6, finalReviewChecklist: 8 },
+        evidenceChain: [{ id: "write-gate", label: "Write gate", status: "ready" }],
+        blockers: [],
+        finalReviewChecklist: ["Final reviewer understands this dossier is not deployment approval."],
+        nextDecision: "Route dossier to final release-readiness review; deployment remains a separate change-control action.",
+        guardrails: ["Release dossier is read-only."],
+        markdown: "# NUXERA Controlled Release Readiness Dossier",
+      },
+      guardrails: ["Ready-for-release-readiness-review is not deployment approval."],
+    });
+
+    expect(releaseDossier.source).toBe("remote-read-only");
+    expect(releaseDossier.readyForReleaseReview).toBe(true);
+    expect(releaseDossier.dossierMetadata.finalReviewer).toBe("Release board");
+    expect(releaseDossier.summary.finalReviewChecklist).toBe(8);
+    expect(releaseDossier.evidenceChain[0]).toMatchObject({ id: "write-gate" });
+    expect(releaseDossier.guardrails.join(" ")).toContain("not deployment approval");
   });
   it("turns unavailable backend readiness signals into admin health actions", () => {
     const consoleState = getAdminOperationsConsole();

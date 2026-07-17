@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledChangeRequestAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
+import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledChangeRequestAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledReleaseDossierAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
@@ -513,6 +513,87 @@ export function normalizeNuxeraControlledChangeRequestResponse(response, fallbac
     blockers: asArray(payload.blockers),
     reviewChecklist: asArray(payload.reviewChecklist).length ? asArray(payload.reviewChecklist) : fallback.reviewChecklist,
     rollbackPlan: asArray(payload.rollbackPlan).length ? asArray(payload.rollbackPlan) : fallback.rollbackPlan,
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+function buildLocalReleaseDossier() {
+  return {
+    id: "nuxera-controlled-release-dossier",
+    status: "blocked-by-release-dossier-gates",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    readyForReleaseReview: false,
+    sourceChangeRequestId: "nuxera-controlled-change-request",
+    dossierMetadata: {
+      dossierOwner: "TODO",
+      dossierDate: "TODO",
+      finalReviewer: "TODO",
+      changeTicket: "TODO",
+      requestedEnvironment: "TODO",
+    },
+    missingDossierMetadata: [
+      { id: "dossierOwner", label: "Dossier owner" },
+      { id: "dossierDate", label: "Dossier date" },
+      { id: "finalReviewer", label: "Final reviewer" },
+    ],
+    summary: {
+      changeRequestReady: false,
+      dossierMetadataMissing: 3,
+      blockers: 4,
+      evidenceChain: 6,
+      finalReviewChecklist: 8,
+    },
+    evidenceChain: [
+      { id: "verification-plan", label: "Controlled verification plan", status: "required-before-run" },
+      { id: "change-request", label: "Change request package", status: "blocked-by-change-request-gates" },
+    ],
+    blockers: [
+      "Change request package is not ready for separate change-control review.",
+      "Missing dossier metadata: Dossier Owner.",
+      "Missing dossier metadata: Dossier Date.",
+      "Missing dossier metadata: Final Reviewer.",
+    ],
+    finalReviewChecklist: ["Final reviewer understands this dossier is not deployment approval."],
+    nextDecision: "Resolve release dossier blockers before final release-readiness review.",
+    guardrails: ["Local release dossier fallback; no persiste aprobaciones, tickets ni habilita writes."],
+    markdown: "# NUXERA Controlled Release Readiness Dossier\n\nStatus: blocked-by-release-dossier-gates",
+  };
+}
+
+export function normalizeNuxeraControlledReleaseDossierResponse(response, fallbackReleaseDossier = null) {
+  const payload = response?.releaseDossier || response || null;
+  const fallback = fallbackReleaseDossier || buildLocalReleaseDossier();
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-controlled-release-dossier-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: "remote-read-only",
+    loading: false,
+    error: null,
+    dossierMetadata: {
+      ...fallback.dossierMetadata,
+      ...asObject(payload.dossierMetadata),
+    },
+    missingDossierMetadata: asArray(payload.missingDossierMetadata),
+    evidenceChain: asArray(payload.evidenceChain).length ? asArray(payload.evidenceChain) : fallback.evidenceChain,
+    blockers: asArray(payload.blockers),
+    finalReviewChecklist: asArray(payload.finalReviewChecklist).length ? asArray(payload.finalReviewChecklist) : fallback.finalReviewChecklist,
     summary: {
       ...fallback.summary,
       ...asObject(payload.summary),
@@ -1047,6 +1128,41 @@ export function useControlledChangeRequest({ enabled = true, payload = null, fal
   }, [enabled, payload, fallbackChangeRequest]);
 
   return changeRequestState;
+}
+export function useControlledReleaseDossier({ enabled = true, payload = null, fallbackReleaseDossier = null } = {}) {
+  const [releaseDossierState, setReleaseDossierState] = useState(fallbackReleaseDossier || buildLocalReleaseDossier());
+
+  useEffect(() => {
+    if (!enabled || !payload) {
+      setReleaseDossierState(fallbackReleaseDossier || buildLocalReleaseDossier());
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackReleaseDossier || buildLocalReleaseDossier();
+    setReleaseDossierState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraControlledReleaseDossierAPI.build(payload)
+      .then(({ data }) => {
+        if (!active) return;
+        setReleaseDossierState(normalizeNuxeraControlledReleaseDossierResponse(data, fallback));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo construir release dossier; usando fallback local", err);
+        setReleaseDossierState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-controlled-release-dossier-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, payload, fallbackReleaseDossier]);
+
+  return releaseDossierState;
 }
 export function useControlledApprovalPackage({ enabled = true, payload = null, fallbackApprovalPackage = null } = {}) {
   const [approvalPackageState, setApprovalPackageState] = useState(fallbackApprovalPackage || buildLocalApprovalPackage());

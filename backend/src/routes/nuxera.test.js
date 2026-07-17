@@ -12,7 +12,8 @@ const serviceCalls = {
   evidenceReview: [],
   approvalPackage: [],
   writeGate: [],
-  changeRequest: []
+  changeRequest: [],
+  releaseDossier: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -149,6 +150,32 @@ vi.mock('../services/nuxeraControlledWriteGateService.js', () => ({
       nextDecision: ready ? 'Submit this package to separate change-control review; do not enable writes from this endpoint.' : 'Resolve change-request blockers before submitting to change control.',
       guardrails: ['Change request package is read-only; it does not persist tickets.'],
       markdown: '# NUXERA Controlled Change Request Package'
+    };
+  })
+}));vi.mock('../services/nuxeraControlledReleaseDossierService.js', () => ({
+  getNuxeraControlledReleaseDossier: vi.fn((input = {}) => {
+    serviceCalls.releaseDossier.push(input);
+    const ready = Boolean(input.changeRequest?.readyForChangeReview && input.dossierOwner && input.dossierDate && input.finalReviewer);
+    return {
+      id: 'nuxera-controlled-release-dossier',
+      status: ready ? 'ready-for-release-readiness-review' : 'blocked-by-release-dossier-gates',
+      readyForReleaseReview: ready,
+      sourceChangeRequestId: 'nuxera-controlled-change-request',
+      dossierMetadata: {
+        dossierOwner: input.dossierOwner || 'TODO',
+        dossierDate: input.dossierDate || 'TODO',
+        finalReviewer: input.finalReviewer || 'TODO',
+        changeTicket: input.changeTicket || input.changeRequest?.changeMetadata?.changeTicket || 'CHG-NUXERA-001',
+        requestedEnvironment: input.requestedEnvironment || input.changeRequest?.changeMetadata?.requestedEnvironment || 'controlled-non-production'
+      },
+      missingDossierMetadata: ready ? [] : [{ id: 'dossierOwner' }],
+      summary: { changeRequestReady: Boolean(input.changeRequest?.readyForChangeReview), dossierMetadataMissing: ready ? 0 : 1, blockers: ready ? 0 : 1, evidenceChain: 6, finalReviewChecklist: 8 },
+      evidenceChain: [{ id: 'change-request', label: 'Change request package', status: input.changeRequest?.status || 'unverified' }],
+      blockers: ready ? [] : ['Missing dossier metadata: Dossier Owner.'],
+      finalReviewChecklist: ['Final reviewer understands this dossier is not deployment approval.'],
+      nextDecision: ready ? 'Route dossier to final release-readiness review; deployment remains a separate change-control action.' : 'Resolve release dossier blockers before final release-readiness review.',
+      guardrails: ['Release dossier is read-only; it does not persist approvals, tickets or deployment windows.'],
+      markdown: '# NUXERA Controlled Release Readiness Dossier'
     };
   })
 }));vi.mock('../services/nuxeraControlledApprovalPackageService.js', () => ({
@@ -291,6 +318,7 @@ describe('nuxera routes', () => {
     serviceCalls.approvalPackage = [];
     serviceCalls.writeGate = [];
     serviceCalls.changeRequest = [];
+    serviceCalls.releaseDossier = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -454,6 +482,53 @@ describe('nuxera routes', () => {
     );
     expect(serviceCalls.changeRequest).toEqual([
       expect.objectContaining({ deploymentWindow: '2026-07-20T03:00Z/2026-07-20T04:00Z', rollbackOwner: 'Platform lead' })
+    ]);
+  });
+  it('requires nuxera:admin:read before building release dossier', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-release-dossier`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      body: JSON.stringify({ dossierOwner: 'Compliance PMO' })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.releaseDossier).toHaveLength(0);
+  });
+
+  it('returns controlled release dossier without deployment approval', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/verification-release-dossier`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({
+        changeRequest: {
+          id: 'nuxera-controlled-change-request',
+          status: 'ready-for-separate-change-review',
+          readyForChangeReview: true,
+          changeMetadata: { changeTicket: 'CHG-NUXERA-001', requestedEnvironment: 'controlled-non-production' },
+          blockers: []
+        },
+        dossierOwner: 'Compliance PMO',
+        dossierDate: '2026-07-17',
+        finalReviewer: 'Release board'
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: 'admin',
+      releaseDossier: {
+        id: 'nuxera-controlled-release-dossier',
+        readyForReleaseReview: true,
+        summary: { blockers: 0 }
+      }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('is not deployment approval')])
+    );
+    expect(serviceCalls.releaseDossier).toEqual([
+      expect.objectContaining({ dossierOwner: 'Compliance PMO', finalReviewer: 'Release board' })
     ]);
   });
   it('requires nuxera:admin:read before building approval package', async () => {

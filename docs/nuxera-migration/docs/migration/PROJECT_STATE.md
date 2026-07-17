@@ -1467,3 +1467,30 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: submit change request packages only to separate change-control review; write enablement remains a separate reviewed deploy/change-control action.
+## NUXERA controlled release dossier
+
+Added a read-only release readiness dossier after the change request package so the full evidence/change-control chain can be reviewed without enabling writes.
+
+Changes made:
+- Added backend `nuxeraControlledReleaseDossierService`.
+- Added protected endpoint `POST /api/nuxera/admin/verification-release-dossier`.
+- Added backend CLI alias `dossier:nuxera-release` with JSON/Markdown output.
+- Added frontend API, normalizer, optional hook and admin panel for release dossier state.
+- Release dossier requires ready change request, dossier owner, dossier date and final reviewer.
+- Added backend/frontend tests for blocked and ready states.
+
+Validation:
+- Syntax checks passed for release dossier service, route, backend adapter, route tests, service tests and CLI script.
+- Empty release dossier CLI blocked as expected.
+- Backend targeted route/service tests passed: 3 files / 38 tests.
+- Backend full suite passed: 49 files / 456 tests.
+- Frontend targeted NUXERA suite passed: 1 file / 77 tests.
+- Frontend full suite passed: 9 files / 238 tests.
+
+Guardrails:
+- No live endpoint calls were executed.
+- No SQL was applied.
+- No approvals, change tickets, deployment windows or dossier metadata are persisted by the endpoint.
+- No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
+
+Next recommended task after validation: use the dossier only for final release-readiness review; deployment and write enablement remain separate reviewed change-control actions.
