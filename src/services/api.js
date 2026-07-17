@@ -246,6 +246,11 @@ export const nuxeraEvidenceAPI = {
   getOrderEvidence: (orderId) =>
     api.get(`/nuxera/orders/${orderId}/evidence`)
 };
+
+export const nuxeraAdminControlsAPI = {
+  getControls: () =>
+    api.get('/nuxera/admin/controls')
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

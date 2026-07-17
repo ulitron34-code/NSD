@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
+import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../nuxera/applicant/guidedMission";
 import { mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
@@ -195,18 +196,79 @@ describe("NUXERA admin operations console", () => {
     );
   });
 });
-  it("maps read-only evidence coverage into admin console", () => {
-    const consoleState = getAdminOperationsConsole();
+it("maps read-only evidence coverage into admin console", () => {
+  const consoleState = getAdminOperationsConsole();
 
-    expect(consoleState.summary.evidenceSignals).toBeGreaterThan(10);
-    expect(consoleState.evidenceCoverage.map((item) => item.engine)).toEqual(
-      expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
-    );
-    expect(consoleState.evidenceCoverage.every((item) => item.visibility === "internal-review")).toBe(true);
-    expect(consoleState.evidenceCoverage.every((item) => item.policy.includes("no grants"))).toBe(true);
-    expect(consoleState.evidenceLedger.policies.join(" ")).toContain("no otorga acceso nuevo");
+  expect(consoleState.summary.evidenceSignals).toBeGreaterThan(10);
+  expect(consoleState.evidenceCoverage.map((item) => item.engine)).toEqual(
+    expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
+  );
+  expect(consoleState.evidenceCoverage.every((item) => item.visibility === "internal-review")).toBe(true);
+  expect(consoleState.evidenceCoverage.every((item) => item.policy.includes("no grants"))).toBe(true);
+  expect(consoleState.evidenceLedger.policies.join(" ")).toContain("no otorga acceso nuevo");
+});
+
+it("normalizes backend admin controls as read-only non-activating controls", () => {
+  const state = normalizeNuxeraAdminControlsResponse({
+    workspaceRole: "admin",
+    controls: {
+      persisted: true,
+      controls: [
+        {
+          id: "control-1",
+          controlType: "incident",
+          scope: "global",
+          status: "open",
+          severity: "high",
+          payload: {
+            label: "Browser blocker",
+            signal: "spawn EPERM",
+            response: "Mantener validacion por build/unit tests.",
+          },
+          guardrails: ["No activa automatizaciones."],
+        },
+      ],
+      guardrails: ["Read-only admin controls."],
+    },
   });
 
+  expect(state).toMatchObject({
+    source: "remote-persisted",
+    status: "read-only-remote",
+    persisted: true,
+  });
+  expect(state.summary).toMatchObject({ total: 1, highSeverity: 1 });
+  expect(state.controls[0]).toMatchObject({
+    typeLabel: "Incidente",
+    remoteAdminControl: true,
+    detail: "spawn EPERM",
+  });
+});
+
+it("merges backend admin controls into the local operations console without changing policies", () => {
+  const localConsole = getAdminOperationsConsole();
+  const remoteState = normalizeNuxeraAdminControlsResponse({
+    controls: {
+      persisted: true,
+      controls: [
+        {
+          id: "gate-1",
+          controlType: "release_gate",
+          scope: "global",
+          status: "blocked_until_review",
+          severity: "medium",
+          payload: { label: "SQL review", requirement: "Verificar RLS antes de writes." },
+        },
+      ],
+    },
+  });
+  const merged = mergeAdminControlsWithConsole(localConsole, remoteState);
+
+  expect(merged.backendControls.persisted).toBe(true);
+  expect(merged.summary.backendControls).toBe(1);
+  expect(merged.releaseGates).toBe(localConsole.releaseGates);
+  expect(merged.policies.join(" ")).toContain("read-only");
+});
 describe("NUXERA applicant guided mission", () => {
   it("builds a financing readiness mission with engine-linked steps", () => {
     const mission = getApplicantGuidedMission("applicant");

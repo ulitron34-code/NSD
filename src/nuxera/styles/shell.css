@@ -1595,3 +1595,36 @@
   font-size: 0.82rem;
   line-height: 1.45;
 }
+.nuxera-admin-backend-controls {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.nuxera-admin-backend-controls > header,
+.nuxera-admin-backend-controls > div {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.nuxera-admin-backend-controls > div {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.nuxera-admin-backend-controls article {
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: var(--nuxera-panel);
+}
+
+.nuxera-admin-backend-controls span,
+.nuxera-admin-backend-controls small,
+.nuxera-admin-backend-controls p {
+  color: var(--nuxera-muted);
+}
+
+.nuxera-admin-backend-controls strong,
+.nuxera-admin-backend-controls h2 {
+  color: var(--nuxera-ink);
+}

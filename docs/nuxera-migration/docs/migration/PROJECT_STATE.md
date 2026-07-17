@@ -732,3 +732,28 @@ Remaining gaps:
 - Manual browser screenshots remain blocked by local browser launch restrictions.
 
 Next recommended task after validation: add frontend read-only admin controls adapter, or verify/apply SQL drafts in a controlled Supabase environment.
+## NU-FE-BE-ADM-CTRL-001 update - 2026-07-17
+
+Connected the admin console to the read-only NUXERA admin controls backend adapter.
+
+Changed frontend surface:
+- Added `nuxeraAdminControlsAPI.getControls()` to the shared API client.
+- Added `adminControlsAdapter` to normalize backend controls and merge them into the local operations console.
+- Admin NUXERA home now shows backend/default controls when the NUXERA flag is active, with local fallback on unavailable backend/auth.
+- Kept local admin gates, incident controls and policies intact.
+- Kept frontend writes disabled; no automation, permissions, feature flag or market data activation was introduced.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 56 tests.
+- Frontend lint: passed.
+- Frontend build: passed.
+- Frontend full unit suite: passed, 9 files / 217 tests.
+- `node --check` on the new adapter: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- SQL drafts have not been applied to Supabase/production.
+- Admin control writes remain disabled.
+- Manual browser screenshots remain blocked by local browser launch restrictions.
+
+Next recommended task after validation: verify/apply SQL drafts in a controlled Supabase environment, or design the first low-risk applicant checklist write UX.

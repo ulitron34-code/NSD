@@ -2,6 +2,7 @@ import React from "react";
 import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { NavLink } from "react-router-dom";
+import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness } from "../applicant/guidedMission";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
@@ -317,7 +318,8 @@ function GrantorQueueHome({ sectionLabel }) {
 
 
 function AdminOperationsHome({ sectionLabel }) {
-  const consoleState = getAdminOperationsConsole();
+  const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled() });
+  const consoleState = mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls);
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -384,6 +386,24 @@ function AdminOperationsHome({ sectionLabel }) {
               <h3>{item.label}</h3>
               <p>{item.evidence}</p>
               <small>{item.gap}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
+        <header>
+          <span>{consoleState.backendControls.status}</span>
+          <h2>Controles backend read-only</h2>
+        </header>
+        <p>{consoleState.backendControls.label}: {consoleState.summary.backendControls} controles visibles.</p>
+        {consoleState.backendControls.loading && <small>Cargando controles NUXERA...</small>}
+        <div>
+          {consoleState.backendControls.controls.slice(0, 4).map((control) => (
+            <article key={control.id}>
+              <span>{control.typeLabel} / {control.scope}</span>
+              <strong>{control.label}</strong>
+              <p>{control.detail}</p>
+              <small>{control.guardrails[0]}</small>
             </article>
           ))}
         </div>
