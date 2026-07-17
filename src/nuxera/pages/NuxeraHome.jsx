@@ -10,7 +10,7 @@ import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspa
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
-import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../grantor/caseQueue";
+import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary } from "../grantor/caseQueue";
 
 const roleCopy = {
   applicant: {
@@ -263,6 +263,7 @@ function GrantorQueueHome({ sectionLabel }) {
   const summary = getGrantorQueueSummary();
   const workbench = getGrantorCaseWorkbench(queue.cases[0]?.id);
   const memo = getGrantorDecisionMemo(workbench.case.id);
+  const grantorDocumentSummary = getGrantorDocumentSummary(workbench.case.id);
   const grantorEvidenceLedger = getNuxeraEvidenceLedger("grantor", "es");
 
   return (
@@ -354,6 +355,25 @@ function GrantorQueueHome({ sectionLabel }) {
         </div>
       </section>
 
+      <section className="nuxera-grantor-document-summary" aria-label="Resumen documental autorizado para otorgante">
+        <header>
+          <div>
+            <span>{grantorDocumentSummary.status}</span>
+            <h2>Resumen documental autorizado</h2>
+          </div>
+          <strong>{grantorDocumentSummary.summary.visible}/{grantorDocumentSummary.summary.total} visibles</strong>
+        </header>
+        <div>
+          {grantorDocumentSummary.folders.map((folder) => (
+            <article key={folder.id}>
+              <span>{folder.status}</span>
+              <strong>{folder.label}</strong>
+              <p>{folder.evidence.length || 0} senales documentales resumidas.</p>
+            </article>
+          ))}
+        </div>
+        <footer>{grantorDocumentSummary.nextAction} {grantorDocumentSummary.guardrails[0]}</footer>
+      </section>
       <section className="nuxera-grantor-evidence-ledger" aria-label="Ledger read-only de evidencia otorgante">
         <header>
           <div>

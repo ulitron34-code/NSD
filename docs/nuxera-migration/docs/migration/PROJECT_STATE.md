@@ -878,3 +878,27 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: either add grantor-safe document summary panels, or verify/apply SQL/RLS before connecting real document-center reads/writes.
+## NU-GRA-DOC-001 update - 2026-07-17
+
+Added a grantor-safe authorized document summary foundation.
+
+Changed frontend surface:
+- Added `getGrantorDocumentSummary` to summarize workbench required evidence without opening files.
+- Grantor NUXERA home now shows identity/KYB, project/structure and risk request summary folders before the read-only ledger.
+- Summary exposes visible/pending counts and next action only as authorized-summary metadata.
+- Kept data-room permissions, document access, downloads, uploads, shares and backend contracts unchanged.
+
+Validation:
+- Targeted NUXERA frontend test: passed, 1 file / 62 tests.
+- Frontend lint: passed.
+- Frontend build: passed; Vite emitted the existing large chunk warning.
+- Frontend full unit suite: passed, 9 files / 223 tests.
+- `node --check` on `caseQueue.js`: passed.
+- `git diff --check`: passed.
+
+Remaining gaps:
+- Summary is local and derived from demo/workbench metadata only.
+- SQL drafts have not been applied to Supabase/production.
+- Browser/manual screenshot verification remains blocked in this environment.
+
+Next recommended task after validation: add admin visibility for grantor document review readiness, or verify SQL/RLS before connecting real document permission reads.

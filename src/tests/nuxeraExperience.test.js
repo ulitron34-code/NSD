@@ -9,7 +9,7 @@ import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantM
 import { getApplicantCompanyProjectWorkspace, normalizeApplicantProjectProfile } from "../nuxera/applicant/projectWorkspace";
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
-import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
+import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
@@ -613,6 +613,19 @@ describe("NUXERA grantor case queue", () => {
     );
   });
 
+  it("builds a grantor-safe document summary without changing data-room permissions", () => {
+    const queue = getGrantorCaseQueue();
+    const summary = getGrantorDocumentSummary(queue.cases[0].id);
+
+    expect(summary.status).toContain("authorized-summary");
+    expect(summary.summary.total).toBeGreaterThan(0);
+    expect(summary.folders.map((folder) => folder.id)).toEqual(
+      expect.arrayContaining(["identity-kyb", "project-file", "risk-requests"])
+    );
+    expect(summary.guardrails.join(" ")).toContain("no abre archivos");
+    expect(summary.guardrails.join(" ")).toContain("no concede acceso nuevo");
+    expect(summary.guardrails.join(" ")).toContain("No permite descarga");
+  });
   it("builds a non-binding local decision memo for grantor review", () => {
     const queue = getGrantorCaseQueue();
     const memo = getGrantorDecisionMemo(queue.cases[0].id);

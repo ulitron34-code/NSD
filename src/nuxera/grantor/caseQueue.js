@@ -199,6 +199,58 @@ function getMemoRecommendation(caseItem) {
   return "Mantener en observacion hasta recibir nueva evidencia o cambio de apetito.";
 }
 
+export function getGrantorDocumentSummary(caseId) {
+  const workbench = getGrantorCaseWorkbench(caseId);
+  const caseItem = workbench.case;
+  const visible = workbench.requiredEvidence.filter((item) => item.status === "visible");
+  const verify = workbench.requiredEvidence.filter((item) => item.status !== "visible");
+  const folders = [
+    {
+      id: "identity-kyb",
+      label: "Identidad y KYB",
+      status: visible.some((item) => item.label.includes("KYC") || item.label.includes("KYB")) ? "summary-visible" : "verify-required",
+      evidence: workbench.requiredEvidence.filter((item) => item.label.includes("KYC") || item.label.includes("KYB")),
+    },
+    {
+      id: "project-file",
+      label: "Proyecto y estructura",
+      status: "summary-visible",
+      evidence: workbench.requiredEvidence.filter((item) => !item.label.includes("KYC") && !item.label.includes("KYB")).slice(0, 3),
+    },
+    {
+      id: "risk-requests",
+      label: "Faltantes y requests",
+      status: caseItem.infoRequests?.some((request) => request.status === "open") ? "needs-information" : "ready-for-review",
+      evidence: (caseItem.infoRequests || []).map((request) => ({
+        id: request.id,
+        label: request.title,
+        status: request.status === "open" ? "verify" : "visible",
+      })),
+    },
+  ];
+  const pending = [...verify, ...folders.flatMap((folder) => folder.evidence).filter((item) => item.status !== "visible")];
+
+  return {
+    id: `${caseItem.id}-document-summary-local`,
+    caseId: caseItem.id,
+    status: pending.length > 0 ? "authorized-summary-needs-review" : "authorized-summary-ready",
+    summary: {
+      visible: visible.length,
+      pending: pending.length,
+      total: workbench.requiredEvidence.length,
+      folders: folders.length,
+    },
+    folders,
+    nextAction: pending.length > 0
+      ? `Confirmar ${pending[0].label} antes de comite o condiciones.`
+      : "Mantener revision documental dentro de permisos existentes.",
+    guardrails: [
+      "Resumen documental para otorgante; no abre archivos y no concede acceso nuevo.",
+      "La disponibilidad real depende de permisos vigentes del data room.",
+      "No permite descarga, share, upload ni cambios de visibilidad.",
+    ],
+  };
+}
 export function getGrantorDecisionMemo(caseId) {
   const workbench = getGrantorCaseWorkbench(caseId);
   const caseItem = workbench.case;
