@@ -1117,3 +1117,24 @@ Remaining gaps:
 - Browser/manual screenshot verification remains blocked in this environment.
 
 Next recommended task after validation: run full frontend test pass if time allows, or continue backend readiness/RLS evidence work.
+## NU-ADM-BE-HANDOFF-001 update - 2026-07-17
+
+Added a local backend readiness handoff package for admin review.
+
+Changed admin surface:
+- Backend readiness now builds `backendReadinessHandoff` with summary, unavailable tables, required capabilities, next actions and guardrails.
+- Admin NUXERA console displays the handoff package next to backend readiness signals.
+- Handoff remains local/informational; it does not export files, apply SQL, change RLS or execute admin actions.
+
+Validation:
+- `node --check` on `src/nuxera/admin/backendReadinessAdapter.js`: passed.
+- Targeted frontend NUXERA test: passed, 1 file / 69 tests.
+- Frontend full suite: passed, 9 files / 230 tests.
+
+Remaining gaps:
+- Controlled Supabase apply/RLS verification has not been executed.
+- SQL drafts remain pending and unapplied to production.
+- Browser/manual screenshot verification remains blocked in this environment.
+- Handoff package is displayed in-app but not yet written to Downloads as a portable artifact.
+
+Next recommended task after validation: run full frontend test pass, then update Downloads handoff if requested.

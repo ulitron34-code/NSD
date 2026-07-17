@@ -530,7 +530,26 @@ function AdminOperationsHome({ sectionLabel }) {
             </article>
           ))}
         </div>
-      </section>      <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
+      </section>
+      <section className="nuxera-admin-backend-handoff" aria-label="Handoff readiness backend NUXERA">
+        <header>
+          <span>{consoleState.backendReadinessHandoff.status}</span>
+          <h2>Handoff backend readiness</h2>
+        </header>
+        <p>{consoleState.backendReadinessHandoff.unavailableTables.length} tablas pendientes; {consoleState.summary.backendReadinessActions} acciones sugeridas.</p>
+        <div>
+          {consoleState.backendReadinessHandoff.unavailableTables.map((item) => (
+            <article key={item.table}>
+              <span>{item.status}</span>
+              <strong>{item.table}</strong>
+              <p>{item.requiredFor.join(", ") || "NUXERA backend"}</p>
+              <small>{item.owner}</small>
+            </article>
+          ))}
+        </div>
+        <footer>{consoleState.backendReadinessHandoff.guardrails[0]}</footer>
+      </section>
+      <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
         <header>
           <span>{consoleState.backendControls.status}</span>
           <h2>Controles backend read-only</h2>

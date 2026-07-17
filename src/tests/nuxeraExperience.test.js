@@ -661,6 +661,15 @@ describe("NUXERA backend readiness adapter", () => {
       expect.arrayContaining(["backend-readiness-workspace-states", "backend-readiness-admin-controls"])
     );
     expect(merged.adminActionQueue[0]).toMatchObject({ priority: "critical-path" });
+    expect(merged.backendReadinessHandoff).toMatchObject({
+      id: "nuxera-backend-readiness-handoff",
+      status: "blocked-by-backend-readiness",
+      summary: { readiness: 33 },
+    });
+    expect(merged.backendReadinessHandoff.unavailableTables.map((item) => item.table)).toEqual(
+      expect.arrayContaining(["nuxera_workspace_states", "nuxera_admin_controls"])
+    );
+    expect(merged.backendReadinessHandoff.nextActions.length).toBe(2);
   });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();

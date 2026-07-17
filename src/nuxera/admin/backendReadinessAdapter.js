@@ -104,11 +104,33 @@ function buildBackendReadinessActions(state) {
       guardrail: "Accion humana; la consola no aplica SQL ni cambia RLS.",
     }));
 }
+function buildBackendReadinessHandoff(state, actions) {
+  const unavailableSignals = state.signals.filter((signal) => !signal.ready);
+
+  return {
+    id: "nuxera-backend-readiness-handoff",
+    status: state.ready ? "ready-for-rls-verification" : "blocked-by-backend-readiness",
+    generatedFor: "controlled-supabase-verification",
+    summary: state.summary,
+    unavailableTables: unavailableSignals.map((signal) => ({
+      table: signal.table,
+      owner: signal.owner,
+      requiredFor: signal.requiredFor,
+      status: signal.status,
+    })),
+    nextActions: actions.map((action) => action.action),
+    guardrails: [
+      ...state.guardrails,
+      "Handoff local; no aplica SQL, no cambia RLS y no sustituye pruebas con identidades reales.",
+    ],
+  };
+}
 
 export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE) {
   const state = readinessState || LOCAL_BACKEND_READINESS_STATE;
   const readinessHealthSignal = buildBackendReadinessHealthSignal(state);
   const readinessActions = buildBackendReadinessActions(state);
+  const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
   const adminHealthSignals = [
     ...consoleState.adminHealthSignals.filter((signal) => signal.id !== readinessHealthSignal.id),
     readinessHealthSignal,
@@ -121,12 +143,14 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
   return {
     ...consoleState,
     backendReadiness: state,
+    backendReadinessHandoff: readinessHandoff,
     adminHealthSignals,
     adminActionQueue,
     summary: {
       ...consoleState.summary,
       backendReadiness: state.summary.readiness,
       backendReadinessUnavailable: state.summary.unavailable,
+      backendReadinessActions: readinessActions.length,
       adminHealthSignals: adminHealthSignals.length,
       adminHealthWatch: adminHealthSignals.filter((item) => item.severity !== "low").length,
       adminActionQueue: adminActionQueue.length,
