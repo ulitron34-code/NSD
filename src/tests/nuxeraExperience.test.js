@@ -680,6 +680,21 @@ describe("NUXERA backend readiness adapter", () => {
       expect.arrayContaining([expect.stringContaining("Verificar backend readiness:")])
     );
     expect(merged.summary.auditPackageSignals).toBe(merged.auditPackage.signals.length);
+    expect(merged.rlsVerificationMatrix).toMatchObject({
+      id: "nuxera-rls-verification-matrix",
+      status: "blocked-by-backend-readiness",
+    });
+    expect(merged.rlsVerificationMatrix.scenarios.map((scenario) => scenario.id)).toEqual([
+      "applicant-owner",
+      "different-applicant",
+      "grantor-authorized",
+      "admin-internal",
+    ]);
+    expect(merged.rlsVerificationMatrix.scenarios.find((scenario) => scenario.id === "applicant-owner").blockedBy).toEqual(
+      expect.arrayContaining(["nuxera_workspace_states"])
+    );
+    expect(merged.summary.rlsVerificationScenarios).toBe(4);
+    expect(merged.summary.rlsVerificationBlocked).toBeGreaterThan(0);
   });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();

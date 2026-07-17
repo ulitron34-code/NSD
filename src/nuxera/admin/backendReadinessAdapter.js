@@ -104,6 +104,59 @@ function buildBackendReadinessActions(state) {
       guardrail: "Accion humana; la consola no aplica SQL ni cambia RLS.",
     }));
 }
+function buildRlsVerificationMatrix(state) {
+  const signalById = new Map(state.signals.map((signal) => [signal.id, signal]));
+  const workspaceReady = Boolean(signalById.get("workspace-states")?.ready);
+  const evidenceReady = Boolean(signalById.get("evidence-links")?.ready);
+  const adminReady = Boolean(signalById.get("admin-controls")?.ready);
+
+  return {
+    id: "nuxera-rls-verification-matrix",
+    status: state.ready ? "ready-for-controlled-identities" : "blocked-by-backend-readiness",
+    scenarios: [
+      {
+        id: "applicant-owner",
+        identity: "Applicant owner",
+        mustRead: ["own applicant/checklist state", "own owner evidence links"],
+        mustWrite: ["own applicant checklist state only"],
+        mustDeny: ["foreign orders", "grantor/admin state", "document visibility changes"],
+        blockedBy: [
+          ...(!workspaceReady ? ["nuxera_workspace_states"] : []),
+          ...(!evidenceReady ? ["nuxera_evidence_links"] : []),
+        ],
+      },
+      {
+        id: "different-applicant",
+        identity: "Different applicant",
+        mustRead: [],
+        mustWrite: [],
+        mustDeny: ["all rows for foreign orders", "row existence leaks"],
+        blockedBy: !workspaceReady ? ["nuxera_workspace_states"] : [],
+      },
+      {
+        id: "grantor-authorized",
+        identity: "Grantor authorized",
+        mustRead: ["authorized summaries only after existing data-room checks"],
+        mustWrite: [],
+        mustDeny: ["owner-only evidence", "hidden documents", "data-room permission changes"],
+        blockedBy: !evidenceReady ? ["nuxera_evidence_links"] : [],
+      },
+      {
+        id: "admin-internal",
+        identity: "Admin/internal",
+        mustRead: ["admin controls when permitted", "backend readiness signals"],
+        mustWrite: [],
+        mustDeny: ["feature flag mutation", "automation activation", "document grants"],
+        blockedBy: !adminReady ? ["nuxera_admin_controls"] : [],
+      },
+    ],
+    guardrails: [
+      "Matriz local de verificacion; no ejecuta consultas Supabase.",
+      "Cada escenario requiere usuarios controlados antes de produccion.",
+      "Denegaciones deben evitar filtrar existencia de filas restringidas.",
+    ],
+  };
+}
 function buildBackendReadinessHandoff(state, actions) {
   const unavailableSignals = state.signals.filter((signal) => !signal.ready);
 
@@ -158,6 +211,7 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
   const state = readinessState || LOCAL_BACKEND_READINESS_STATE;
   const readinessHealthSignal = buildBackendReadinessHealthSignal(state);
   const readinessActions = buildBackendReadinessActions(state);
+  const rlsVerificationMatrix = buildRlsVerificationMatrix(state);
   const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
   const auditPackage = mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff);
   const adminHealthSignals = [
@@ -173,6 +227,7 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
     ...consoleState,
     backendReadiness: state,
     backendReadinessHandoff: readinessHandoff,
+    rlsVerificationMatrix,
     auditPackage,
     adminHealthSignals,
     adminActionQueue,
@@ -181,6 +236,8 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
       backendReadiness: state.summary.readiness,
       backendReadinessUnavailable: state.summary.unavailable,
       backendReadinessActions: readinessActions.length,
+      rlsVerificationScenarios: rlsVerificationMatrix.scenarios.length,
+      rlsVerificationBlocked: rlsVerificationMatrix.scenarios.filter((item) => item.blockedBy.length > 0).length,
       auditPackageSignals: auditPackage.signals.length,
       auditPackageActions: auditPackage.nextActions.length,
       adminHealthSignals: adminHealthSignals.length,

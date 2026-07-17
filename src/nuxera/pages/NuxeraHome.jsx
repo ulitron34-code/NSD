@@ -549,6 +549,24 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
         <footer>{consoleState.backendReadinessHandoff.guardrails[0]}</footer>
       </section>
+      <section className="nuxera-admin-rls-matrix" aria-label="Matriz RLS NUXERA">
+        <header>
+          <span>{consoleState.rlsVerificationMatrix.status}</span>
+          <h2>Matriz RLS controlada</h2>
+        </header>
+        <p>{consoleState.summary.rlsVerificationScenarios} escenarios; {consoleState.summary.rlsVerificationBlocked} bloqueados por readiness.</p>
+        <div>
+          {consoleState.rlsVerificationMatrix.scenarios.map((scenario) => (
+            <article key={scenario.id}>
+              <span>{scenario.blockedBy.length ? "blocked" : "ready"}</span>
+              <strong>{scenario.identity}</strong>
+              <p>Debe negar: {scenario.mustDeny.join(", ")}</p>
+              <small>{scenario.blockedBy.length ? `Pendiente: ${scenario.blockedBy.join(", ")}` : scenario.mustRead.join(", ")}</small>
+            </article>
+          ))}
+        </div>
+        <footer>{consoleState.rlsVerificationMatrix.guardrails[0]}</footer>
+      </section>
       <section className="nuxera-admin-backend-controls" aria-label="Controles admin NUXERA backend read-only">
         <header>
           <span>{consoleState.backendControls.status}</span>
