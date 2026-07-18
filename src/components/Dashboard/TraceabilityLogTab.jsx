@@ -4,11 +4,12 @@ import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
 import { adminAPI } from "../../services/api";
+import { BRAND } from "../../config/brand";
 
 const controls = [
   ["Auditoria", "Eventos clave con usuario, hora, tipo y resultado."],
   ["Evidencia", "Cada accion relevante debe apuntar a documento, expediente o requerimiento."],
-  ["Permisos", "Las vistas dependen del rol: solicitante, otorgante, NEXUS Admin."],
+  ["Permisos", `Las vistas dependen del rol: solicitante, otorgante, ${BRAND.name} Admin.`],
   ["Privacidad", "Biometricos y datos sensibles requieren consentimiento y proveedor especializado."],
 ];
 

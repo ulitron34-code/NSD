@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../../utils/constants";
 import { scoringAPI } from "../../services/api";
+import { BRAND } from "../../config/brand";
 
 export default function ExecutiveReportPanel({ order }) {
   const [report, setReport] = useState(null);
@@ -121,7 +122,7 @@ export default function ExecutiveReportPanel({ order }) {
       <div style={{ background: "white", padding: "3rem", textAlign: "center", borderRadius: "12px", border: `1px solid ${COLORS.border}` }}>
         <div style={{ animation: "pulse 1.5s infinite" }}>
           <h3 style={{ color: COLORS.navy }}>Analizando Expediente Completo...</h3>
-          <p style={{ color: COLORS.textMuted }}>NEXUS esta cruzando documentos, revisiones IA y matriz de requisitos.</p>
+          <p style={{ color: COLORS.textMuted }}>{`${BRAND.name} esta cruzando documentos, revisiones IA y matriz de requisitos.`}</p>
         </div>
       </div>
     );
@@ -142,7 +143,7 @@ export default function ExecutiveReportPanel({ order }) {
               Dictamen Expediente #{order.id.slice(0,8)}
             </h2>
             <p style={{ margin: 0, opacity: 0.8, fontSize: "0.95rem" }}>
-              Generado automaticamente por NEXUS Scoring Engine
+              {`Generado automaticamente por ${BRAND.name} Scoring Engine`}
             </p>
             {report.memo?.content && (
               <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1rem" }}>

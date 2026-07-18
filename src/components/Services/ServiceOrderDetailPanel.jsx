@@ -9,6 +9,7 @@ import DocumentMatrixPanel from "./DocumentMatrixPanel";
 import RemediationPlanPanel from "./RemediationPlanPanel";
 import RedFlagsPanel from "./RedFlagsPanel";
 import { DOCUMENT_STATUSES, DOCUMENT_TYPES, formatDocumentStatus, formatDocumentType } from "../../utils/institutional";
+import { BRAND } from "../../config/brand";
 
 const demoPanelDocuments = [
   { id: "demo-doc-1", filename: "Acta constitutiva.pdf", uploaded_at: "2026-05-24T17:10:00.000Z", document_type: "corporativo_legal", review_status: "approved" },
@@ -133,7 +134,7 @@ function formatAuditAction(action = "") {
 
 function buildAuditMarkdown(order, auditLogs = [], auditSummary = null) {
   const lines = [
-    "# Bitacora de auditoria NEXUS",
+    `# Bitacora de auditoria ${BRAND.name}`,
     "",
     `- Expediente: ${order.caseNumber || order.id}`,
     `- Proyecto: ${order.projectName || "Sin nombre"}`,
@@ -150,7 +151,7 @@ function buildAuditMarkdown(order, auditLogs = [], auditSummary = null) {
       : ["Sin eventos registrados."]),
     "",
     "## Nota",
-    "Esta bitacora resume acciones registradas en NEXUS para trazabilidad operativa y de cumplimiento."
+    `Esta bitacora resume acciones registradas en ${BRAND.name} para trazabilidad operativa y de cumplimiento.`
   ];
 
   return lines.join("\n");
@@ -468,7 +469,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
       const { data } = await otorganteAPI.updateContactRequest(request.id, {
         status,
         notes: status === "approved"
-          ? "Contacto autorizado por solicitante/NEXUS."
+          ? `Contacto autorizado por solicitante/${BRAND.name}.`
           : "Contacto rechazado o pendiente de condiciones adicionales."
       });
       setContactRequests((prev) => prev.map((item) => item.id === request.id ? data : item));
@@ -889,7 +890,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
     try {
       if (order.demo) {
         const markdown = [
-          "# Memo institucional NEXUS",
+          `# Memo institucional ${BRAND.name}`,
           "",
           `- Expediente: ${order.caseNumber || order.id}`,
           `- Proyecto: ${order.projectName || "Proyecto demo"}`,
@@ -1122,7 +1123,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
               Data room del expediente
             </h3>
             <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", lineHeight: 1.45 }}>
-              Carga documentos para revision, IA y seguimiento con NEXUS.
+              {`Carga documentos para revision, IA y seguimiento con ${BRAND.name}.`}
             </p>
           </div>
           <label style={{
@@ -2006,7 +2007,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
           Contacto autorizado
         </h3>
         <p style={{ color: COLORS.textMuted, fontSize: "0.82rem", lineHeight: 1.45, marginBottom: "1rem" }}>
-          Solicitudes de entidades financieras para avanzar de revision documental a contacto formal con trazabilidad NEXUS.
+          {`Solicitudes de entidades financieras para avanzar de revision documental a contacto formal con trazabilidad ${BRAND.name}.`}
         </p>
 
         {contactRequestsLoading ? (

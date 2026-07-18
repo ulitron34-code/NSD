@@ -19,6 +19,7 @@ import { demoServiceOrders } from "../data/demoServiceOrders";
 import { buildOtorganteAnalytics, buildOtorgantePipeline, buildOtorgantePipelineFromEntries } from "../data/otorgantePipeline";
 import { buildInternationalLaunchPlan } from "../utils/localization";
 import { uiText, translateCopy } from "../utils/runtimeCopy";
+import { BRAND } from "../config/brand";
 
 const MiPerfilTab = lazy(() => import("../components/Dashboard/Solicitante/MiPerfilTab"));
 const FundingReadinessTab = lazy(() => import("../components/Dashboard/Solicitante/FundingReadinessTab"));
@@ -580,7 +581,7 @@ export default function DashboardPage() {
         }}>
           {!sidebarCollapsed && (
             <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.68rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              NEXUS
+              {BRAND.name}
             </span>
           )}
           <button
@@ -634,7 +635,7 @@ export default function DashboardPage() {
           {!sidebarCollapsed && (
             <>
               <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NEXUS Admin"}
+                {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : `${BRAND.name} Admin`}
               </p>
               <p style={{ color: "white", fontWeight: 600, fontSize: "0.82rem", wordBreak: "break-word" }}>{user?.email}</p>
             </>
@@ -720,7 +721,7 @@ export default function DashboardPage() {
             {[
               ["solicitante", L("Solicitante", "Applicant"), "S"],
               ["otorgante", L("Otorgante", "Funding Provider"), "O"],
-              ["nsd_admin", "NEXUS Admin", "N"],
+              ["nsd_admin", `${BRAND.name} Admin`, "N"],
             ].map(([mode, label, initial]) => (
               <button
                 key={mode}

@@ -27,7 +27,7 @@ const checks = [
   {
     name: 'Landing operating model',
     file: resolve(frontendRoot, 'src/components/Landing/OperatingModelSection.jsx'),
-    patterns: ['Modelo operativo NEXUS', 'De solicitud dispersa', 'Data room', 'No aprueba creditos']
+    patterns: ['Modelo operativo ${BRAND.name}', 'De solicitud dispersa', 'Data room', 'No aprueba creditos']
   },
   {
     name: 'Landing operating model wired',

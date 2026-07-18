@@ -1,5 +1,6 @@
 import React from "react";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 function cleanText(value = "") {
   return String(value)
@@ -70,7 +71,7 @@ function buildMarkdown(actions, scoring, shareReadiness) {
   const score = shareReadiness?.finalScore || scoring?.finalScore || 0;
   const status = shareReadiness?.canPublish ? "Listo para presentacion" : "Pendiente de subsanacion";
   const lines = [
-    "# Plan de subsanacion NEXUS",
+    `# Plan de subsanacion ${BRAND.name}`,
     "",
     `- Estado: ${status}`,
     `- Grado: ${grade}`,
