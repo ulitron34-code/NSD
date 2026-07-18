@@ -5,6 +5,8 @@
 // bypass — siempre aceptaba cualquier password porque comparaba contra el
 // literal 'DEMO_ONLY' que se le asignaba a todos los usuarios.)
 
+import { BRAND } from "../config/brand";
+
 export const ROLES = {
   SOLICITANTE: 'solicitante',
   OTORGANTE: 'otorgante',
@@ -31,9 +33,9 @@ export function createDemoUsers() {
     {
       id: 'user-admin-001',
       email: 'admin@nsd.mx',
-      name: 'Admin NEXUS',
+      name: `Admin ${BRAND.name}`,
       role: ROLES.ADMIN,
-      company: 'NEXUS',
+      company: BRAND.name,
     }
   ];
 }

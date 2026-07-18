@@ -19,11 +19,11 @@ const resources = {
         industries: "Industrias",
         integrations: "Integraciones",
         modalities: "Modalidades",
-        knowNsd: "Conocer NEXUS",
+        knowNsd: "Conocer {{brand}}",
       },
 
       hero: {
-        badge: "NEXUS, Plataforma Global de Cumplimiento y Riesgo",
+        badge: "{{brand}}, Plataforma Global de Cumplimiento y Riesgo",
         title: "Cumplimiento global.",
         titleHighlight: "Decisiones con evidencia.",
         description:
@@ -51,7 +51,7 @@ const resources = {
       },
 
       differentiators: {
-        eyebrow: "POR QUÉ NEXUS",
+        eyebrow: "POR QUÉ {{brand}}",
         title: "Nuestros Diferenciadores",
         subtitle:
           "Combinamos tecnología de punta con experiencia humana para llevar tu proyecto al siguiente nivel.",
@@ -67,9 +67,9 @@ const resources = {
         title: "Tecnología, experiencia y gobierno",
         whoTitle: "¿Quiénes somos?",
         whoText1:
-          "NEXUS Secure Due-Diligence Unit es una firma tecnológica independiente que desarrolla soluciones de cumplimiento, riesgo y análisis inteligente de expedientes para organizaciones que operan en entornos regulados o toman decisiones financieras, corporativas y de inversión de alta relevancia.",
+          "{{legalName}} es una firma tecnológica independiente que desarrolla soluciones de cumplimiento, riesgo y análisis inteligente de expedientes para organizaciones que operan en entornos regulados o toman decisiones financieras, corporativas y de inversión de alta relevancia.",
         whoText2:
-          "A través de la plataforma NEXUS, integramos información fiscal, corporativa, legal, financiera y reputacional en un entorno seguro y trazable. La plataforma ayuda a identificar personas y empresas, comprender estructuras de propiedad y control, detectar inconsistencias, gestionar alertas y preparar expedientes sólidos.",
+          "A través de la plataforma {{brand}}, integramos información fiscal, corporativa, legal, financiera y reputacional en un entorno seguro y trazable. La plataforma ayuda a identificar personas y empresas, comprender estructuras de propiedad y control, detectar inconsistencias, gestionar alertas y preparar expedientes sólidos.",
         missionTitle: "Nuestra Misión",
         missionText:
           "Facilitar que organizaciones de cualquier tamaño integren procesos de conocimiento del cliente, validación empresarial, prevención de riesgos, revisión financiera y monitoreo mediante una tecnología flexible, explicable y adaptable a cada jurisdicción, sector y política interna.",
@@ -81,14 +81,14 @@ const resources = {
       },
 
       history: {
-        title: "Historia de NEXUS Secure Due-Diligence Unit",
+        title: "Historia de {{legalName}}",
         teamTitle: "Nuestro Equipo",
         timeline: [
-          { year: 2022, title: "Fundación",         desc: "NEXUS nace con la misión de preparar proyectos para inversionistas internacionales" },
+          { year: 2022, title: "Fundación",         desc: "{{brand}} nace con la misión de preparar proyectos para inversionistas internacionales" },
           { year: 2023, title: "Primer Millón",      desc: "Financiamos primer proyecto por $1M USD con family office europeo" },
           { year: 2024, title: "Expansión Regional", desc: "Extensión a Latinoamérica con oficinas en Colombia y Perú" },
           { year: 2025, title: "Plataforma Digital", desc: "Lanzamiento de plataforma SaaS para análisis automatizado" },
-          { year: 2026, title: "Hoy",                desc: "NEXUS acompaña +100 proyectos con acceso a capital privado global" },
+          { year: 2026, title: "Hoy",                desc: "{{brand}} acompaña +100 proyectos con acceso a capital privado global" },
         ],
         team: [
           { name: "Ulises Salgado", role: "Fundador & CEO",       bio: "15+ años en finanzas corporativas y SOFOM" },
@@ -148,10 +148,10 @@ const resources = {
           {
             category: "Plataforma",
             questions: [
-              { q: "¿Qué es la plataforma NEXUS?", a: "Una plataforma SaaS global de cumplimiento, riesgo y revisión inteligente de expedientes. Centraliza KYC, KYB, beneficiario final, validación fiscal, sanciones, riesgo y monitoreo en un expediente único, configurable por jurisdicción y sector." },
-              { q: "¿NEXUS es exclusiva para México?", a: "No. NEXUS opera con un núcleo tecnológico común y activa paquetes jurisdiccionales para México, Latinoamérica, Estados Unidos, Canadá, Emiratos Árabes Unidos y futuras jurisdicciones." },
+              { q: "¿Qué es la plataforma {{brand}}?", a: "Una plataforma SaaS global de cumplimiento, riesgo y revisión inteligente de expedientes. Centraliza KYC, KYB, beneficiario final, validación fiscal, sanciones, riesgo y monitoreo en un expediente único, configurable por jurisdicción y sector." },
+              { q: "¿{{brand}} es exclusiva para México?", a: "No. {{brand}} opera con un núcleo tecnológico común y activa paquetes jurisdiccionales para México, Latinoamérica, Estados Unidos, Canadá, Emiratos Árabes Unidos y futuras jurisdicciones." },
               { q: "¿Es segura mi información?", a: "Sí. La plataforma utiliza cifrado en tránsito y en reposo, autenticación multifactor, roles y segregación de funciones, bitácora de auditoría y políticas de privacidad desde el diseño." },
-              { q: "¿La plataforma garantiza el cumplimiento legal?", a: "No. NEXUS ayuda a configurar, ejecutar, documentar y monitorear procesos. La organización usuaria conserva la responsabilidad de determinar sus obligaciones con asesoría local." },
+              { q: "¿La plataforma garantiza el cumplimiento legal?", a: "No. {{brand}} ayuda a configurar, ejecutar, documentar y monitorear procesos. La organización usuaria conserva la responsabilidad de determinar sus obligaciones con asesoría local." },
             ],
           },
           {
@@ -165,7 +165,7 @@ const resources = {
           {
             category: "Decisiones e IA",
             questions: [
-              { q: "¿La inteligencia artificial toma decisiones?", a: "No. Los agentes de NEXUS apoyan la lectura, clasificación, comparación y síntesis de información. La aprobación, rechazo, escalamiento o excepción corresponde a las personas autorizadas por la organización." },
+              { q: "¿La inteligencia artificial toma decisiones?", a: "No. Los agentes de {{brand}} apoyan la lectura, clasificación, comparación y síntesis de información. La aprobación, rechazo, escalamiento o excepción corresponde a las personas autorizadas por la organización." },
               { q: "¿Puede usarse para inversiones y crédito?", a: "Sí. Los módulos de revisión financiera e investor due diligence organizan información, riesgos, garantías, contratos, beneficiarios y pendientes para que el cliente final tome la decisión." },
               { q: "¿Cómo se define la implementación?", a: "Mediante un diagnóstico de procesos, jurisdicciones, volumen, módulos, usuarios, integraciones, seguridad, soporte y gobierno. Cada organización recibe una configuración específica." },
             ],
@@ -173,7 +173,7 @@ const resources = {
           {
             category: "Seguridad y privacidad",
             questions: [
-              { q: "¿Quién puede ver mis datos?", a: "Solo el personal autorizado de su organización. NEXUS no comparte información sin consentimiento y aplica controles de acceso, segregación de funciones y bitácora de auditoría." },
+              { q: "¿Quién puede ver mis datos?", a: "Solo el personal autorizado de su organización. {{brand}} no comparte información sin consentimiento y aplica controles de acceso, segregación de funciones y bitácora de auditoría." },
               { q: "¿Cómo reclamo mis derechos ARCO?", a: "Contacta a privacidad@nsd.com para ejercer tus derechos de Acceso, Rectificación, Cancelación y Oposición." },
               { q: "¿Qué sucede si cambia una regulación?", a: "Los paquetes jurisdiccionales se mantienen versionados. Los cambios se analizan, configuran, prueban y documentan antes de su publicación en la plataforma." },
             ],
@@ -185,7 +185,7 @@ const resources = {
         eyebrow: "DISEÑA TU IMPLEMENTACIÓN",
         title: "Una plataforma global para decisiones\ninstitucionales mejor documentadas.",
         subtitle:
-          "Conozca cómo NEXUS puede adaptar expedientes, documentos, reglas, riesgos e integraciones a la estructura de su organización y a los países en los que opera.",
+          "Conozca cómo {{brand}} puede adaptar expedientes, documentos, reglas, riesgos e integraciones a la estructura de su organización y a los países en los que opera.",
         cta1: "Conocer la plataforma",
         cta2: "Solicitar diagnóstico institucional",
         trust1: "Cifrado y trazabilidad",
@@ -194,7 +194,7 @@ const resources = {
       },
 
       footer: {
-        companyName: "NEXUS Secure Due-Diligence Unit",
+        companyName: "{{legalName}}",
         companyDesc: "Preparamos empresas y proyectos para inversionistas globales.",
         navTitle: "Navegación",
         nav: {
@@ -411,11 +411,11 @@ const resources = {
         industries: "Industries",
         integrations: "Integrations",
         modalities: "Implementation",
-        knowNsd: "Know NEXUS",
+        knowNsd: "Know {{brand}}",
       },
 
       hero: {
-        badge: "NEXUS, Global Compliance and Risk Platform",
+        badge: "{{brand}}, Global Compliance and Risk Platform",
         title: "Global compliance.",
         titleHighlight: "Decisions with evidence.",
         description:
@@ -443,7 +443,7 @@ const resources = {
       },
 
       differentiators: {
-        eyebrow: "WHY NEXUS",
+        eyebrow: "WHY {{brand}}",
         title: "Our Differentiators",
         subtitle:
           "We combine cutting-edge technology with human expertise to take your project to the next level.",
@@ -456,10 +456,10 @@ const resources = {
       },
 
       about: {
-        title: "About NEXUS Secure Due-Diligence Unit",
+        title: "About {{legalName}}",
         whoTitle: "Who We Are",
         whoText1:
-          "NEXUS Secure Due-Diligence Unit is an independent boutique firm that helps convert projects, companies, and investment opportunities into financially presentable, documented, and defensible dossiers for national and international capital sources.",
+          "{{legalName}} is an independent boutique firm that helps convert projects, companies, and investment opportunities into financially presentable, documented, and defensible dossiers for national and international capital sources.",
         whoText2:
           "Our team combines expertise in corporate finance, capital structuring, regulatory compliance, and international business.",
         missionTitle: "Our Mission",
@@ -473,14 +473,14 @@ const resources = {
       },
 
       history: {
-        title: "History of NEXUS Secure Due-Diligence Unit",
+        title: "History of {{legalName}}",
         teamTitle: "Our Team",
         timeline: [
-          { year: 2022, title: "Founded",            desc: "NEXUS is born with the mission of preparing projects for international investors" },
+          { year: 2022, title: "Founded",            desc: "{{brand}} is born with the mission of preparing projects for international investors" },
           { year: 2023, title: "First Million",      desc: "We financed the first project for $1M USD with a European family office" },
           { year: 2024, title: "Regional Expansion", desc: "Expansion to Latin America with offices in Colombia and Peru" },
           { year: 2025, title: "Digital Platform",   desc: "Launch of SaaS platform for automated analysis" },
-          { year: 2026, title: "Today",              desc: "NEXUS supports 100+ projects with access to global private capital" },
+          { year: 2026, title: "Today",              desc: "{{brand}} supports 100+ projects with access to global private capital" },
         ],
         team: [
           { name: "Ulises Salgado", role: "Founder & CEO",             bio: "15+ years in corporate finance and SOFOM" },
@@ -546,7 +546,7 @@ const resources = {
           {
             category: "Platform",
             questions: [
-              { q: "What is NEXUS Secure Due-Diligence Unit?", a: "A boutique platform that prepares projects for international investors" },
+              { q: "What is {{legalName}}?", a: "A boutique platform that prepares projects for international investors" },
               { q: "Is my information secure?",          a: "Yes, we use SSL/TLS encryption and comply with LGPD/GDPR" },
               { q: "How much does it cost?",             a: "Plans from $99 USD/month. Contact us for a custom quote" },
             ],
@@ -583,7 +583,7 @@ const resources = {
       },
 
       footer: {
-        companyName: "NEXUS Secure Due-Diligence Unit",
+        companyName: "{{legalName}}",
         companyDesc: "We prepare companies and projects for global investors.",
         navTitle: "Navigation",
         nav: {

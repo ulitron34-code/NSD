@@ -13,6 +13,7 @@ import {
 import { ordersAPI, paymentsAPI } from '../services/api';
 import { COLORS } from '../utils/constants';
 import { error, info, warn } from '../utils/logger';
+import { BRAND } from '../config/brand';
 
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY || '';
 const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
@@ -181,7 +182,7 @@ function CheckoutForm({ orderId, amount, onSuccess, onError }) {
         </p>
         <h2 style={{ color: COLORS.navy, marginBottom: '0.5rem' }}>Pagar ${amount} USD</h2>
         <p style={{ color: COLORS.textMuted, fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-          Ingresa los datos de tarjeta de prueba. El pago se procesa con Stripe y después se confirma la orden en NEXUS.
+          Ingresa los datos de tarjeta de prueba. El pago se procesa con Stripe y después se confirma la orden en {BRAND.name}.
         </p>
 
         {/* Express Checkout (Google Pay, PayPal) */}
@@ -568,7 +569,7 @@ export default function CheckoutPage() {
             ¡Tu orden está en proceso!
           </h1>
           <p style={{ color: COLORS.textMuted, lineHeight: 1.7, marginBottom: '1.5rem' }}>
-            Stripe aceptó el pago y NEXUS actualizó la orden. Ya puedes verla en tus servicios y expedientes.
+            Stripe aceptó el pago y {BRAND.name} actualizó la orden. Ya puedes verla en tus servicios y expedientes.
           </p>
           <div style={{ background: COLORS.bg, borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem', textAlign: 'left' }}>
             <p style={{ color: COLORS.textMuted, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Orden</p>

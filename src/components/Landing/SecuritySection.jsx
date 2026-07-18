@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import Icon from "../common/icons";
+import { BRAND } from "../../config/brand";
 
 export default function SecuritySection() {
   const { t } = useTranslation();
@@ -77,7 +78,7 @@ export default function SecuritySection() {
         <div style={{ marginTop: "4rem", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
           <img 
             src="/img-dashboard.jpg" 
-            alt="NEXUS Security Dashboard"
+            alt={`${BRAND.name} Security Dashboard`}
             style={{ width: "100%", height: "auto", display: "block" }} 
           />
         </div>

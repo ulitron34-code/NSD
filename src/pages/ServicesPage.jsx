@@ -7,6 +7,7 @@ import ServiceCard from "../components/Services/ServiceCard";
 import ServiceRequestModal from "../components/Services/ServiceRequestModal";
 import Footer from "../components/Landing/Footer";
 import { translateCopy, uiText } from "../utils/runtimeCopy";
+import { BRAND } from "../config/brand";
 
 // Helper components for icons to replace lucide-react and avoid npm install overhead
 const BriefcaseIcon = ({ size, color, strokeWidth }) => (
@@ -59,7 +60,7 @@ const SERVICES = [
     features: [
       "DCF modelado profesional",
       "Analisis de sensibilidad",
-      "Scoring crediticio NEXUS",
+      `Scoring crediticio ${BRAND.name}`,
       "Metricas de rentabilidad",
       "Mapeo de riesgos",
       "Observaciones para revision de credito"
@@ -154,7 +155,7 @@ export default function ServicesPage() {
             marginBottom: "1rem",
             lineHeight: 1.2,
           }}>
-            {copy("Servicios profesionales NEXUS")}
+            {copy(`Servicios profesionales ${BRAND.name}`)}
           </h1>
           <p style={{
             fontSize: "1.2rem",

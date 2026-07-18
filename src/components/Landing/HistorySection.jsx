@@ -1,10 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 export default function HistorySection() {
   const { t } = useTranslation();
-  const timeline = t("history.timeline", { returnObjects: true });
+  const timeline = t("history.timeline", { returnObjects: true, brand: BRAND.name });
   const team = t("history.team", { returnObjects: true });
 
   return (
@@ -17,7 +18,7 @@ export default function HistorySection() {
           borderLeft: `4px solid ${COLORS.gold}`,
           paddingLeft: "1rem",
         }}>
-          {t("history.title")}
+          {t("history.title", { legalName: BRAND.legalName })}
         </h2>
 
         <div style={{ marginTop: "3rem", marginBottom: "3rem" }}>

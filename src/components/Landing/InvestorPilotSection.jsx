@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 export default function InvestorPilotSection() {
   const { i18n } = useTranslation();
@@ -14,7 +15,7 @@ export default function InvestorPilotSection() {
     ],
     [
       L("Flujo vertical", "Vertical workflow"),
-      L("NEXUS conecta preparacion, IA, data room, requerimientos, scoring y memo de decision.", "NEXUS connects readiness, AI, data room, requests, scoring and decision memo."),
+      L(`${BRAND.name} conecta preparacion, IA, data room, requerimientos, scoring y memo de decision.`, `${BRAND.name} connects readiness, AI, data room, requests, scoring and decision memo.`),
     ],
     [
       L("Piloto medible", "Measurable pilot"),
@@ -42,8 +43,8 @@ export default function InvestorPilotSection() {
             </h2>
             <p style={{ color: COLORS.textMuted, lineHeight: 1.75, fontSize: "0.96rem", marginBottom: "1.2rem" }}>
               {L(
-                "NEXUS no se presenta solo como consultoria ni como data room generico: es una infraestructura SaaS para preparar solicitudes financieras, reducir friccion documental y dar a los otorgantes una lectura mas ordenada del riesgo.",
-                "NEXUS is not presented only as consulting or a generic data room: it is SaaS infrastructure to prepare financing requests, reduce document friction and give funders a more organized risk readout."
+                `${BRAND.name} no se presenta solo como consultoria ni como data room generico: es una infraestructura SaaS para preparar solicitudes financieras, reducir friccion documental y dar a los otorgantes una lectura mas ordenada del riesgo.`,
+                `${BRAND.name} is not presented only as consulting or a generic data room: it is SaaS infrastructure to prepare financing requests, reduce document friction and give funders a more organized risk readout.`
               )}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "0.75rem" }}>
@@ -65,8 +66,8 @@ export default function InvestorPilotSection() {
             </h3>
             <p style={{ color: "rgba(255,255,255,0.76)", lineHeight: 1.65, fontSize: "0.88rem", marginBottom: "1rem" }}>
               {L(
-                "La siguiente meta no es prometer automatizacion total. Es demostrar que NEXUS reduce ciclos de revision y mejora la calidad del expediente.",
-                "The next goal is not to promise total automation. It is to prove NEXUS reduces review cycles and improves file quality."
+                `La siguiente meta no es prometer automatizacion total. Es demostrar que ${BRAND.name} reduce ciclos de revision y mejora la calidad del expediente.`,
+                `The next goal is not to promise total automation. It is to prove ${BRAND.name} reduces review cycles and improves file quality.`
               )}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>

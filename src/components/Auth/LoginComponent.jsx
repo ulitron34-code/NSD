@@ -7,6 +7,7 @@ import { validateEmail, validatePassword } from "../../utils/validators";
 import { COLORS } from "../../utils/constants";
 import { useTranslation } from "react-i18next";
 import { uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 export default function LoginComponent() {
   const navigate = useNavigate();
@@ -124,7 +125,7 @@ export default function LoginComponent() {
           marginBottom: "0.5rem",
           textAlign: "center",
         }}>
-          {uiText(i18n, "Acceso a NEXUS Platform", "Access NEXUS Platform")}
+          {uiText(i18n, `Acceso a ${BRAND.productName}`, `Access ${BRAND.productName}`)}
         </h1>
         <p style={{
           color: COLORS.textMuted,

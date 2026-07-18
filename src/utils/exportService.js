@@ -6,6 +6,7 @@
 import { uiText } from './runtimeCopy';
 import { apiLogger } from './logger';
 import { escapeHtml as esc } from './htmlEscape';
+import { BRAND } from '../config/brand';
 
 /**
  * Convert data to CSV format
@@ -68,7 +69,7 @@ export function exportToJSON(data, filename) {
  */
 export function exportToPDF(reportData, filename, options = {}) {
   const {
-    title = 'NEXUS Report',
+    title = `${BRAND.name} Report`,
     subtitle = '',
     dateFormat = 'long'
   } = options;
@@ -142,7 +143,7 @@ export function exportToPDF(reportData, filename, options = {}) {
       ` : ''}
       
       <div class="footer">
-        <p>NEXUS Platform - Compliance as a Service | NEXUS.com</p>
+        <p>${BRAND.productName} - Compliance as a Service | ${BRAND.name}.com</p>
         <p>Este documento es confidencial y esta protegido por medidas de seguridad.</p>
       </div>
     </body>

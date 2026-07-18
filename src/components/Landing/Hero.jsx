@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -89,7 +90,7 @@ export default function Hero() {
           letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "2rem",
         }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4CAF50", display: "inline-block" }} />
-          {t("hero.badge")}
+          {t("hero.badge", { brand: BRAND.name })}
         </div>
 
         <h1 style={{

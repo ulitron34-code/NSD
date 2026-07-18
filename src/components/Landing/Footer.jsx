@@ -29,7 +29,7 @@ export default function Footer({ onNavigate }) {
           {/* Empresa */}
           <div>
             <h4 style={{ color: COLORS.gold, marginBottom: "1rem", fontWeight: "600" }}>
-              {t("footer.companyName")}
+              {t("footer.companyName", { legalName: BRAND.legalName })}
             </h4>
             <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", lineHeight: "1.6" }}>
               {t("footer.companyDesc")}
