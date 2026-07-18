@@ -36,6 +36,10 @@ const ComplianceIntelPage    = lazy(() => import("./pages/ComplianceIntelligence
 const IntegracionesPage      = lazy(() => import("./pages/IntegracionesPage"));
 const IndustriasPage         = lazy(() => import("./pages/IndustriasPage"));
 const RecursosPage           = lazy(() => import("./pages/RecursosPage"));
+const ForApplicantsPage      = lazy(() => import("./pages/ForApplicantsPage"));
+const ForFundersPage         = lazy(() => import("./pages/ForFundersPage"));
+const InternationalPage      = lazy(() => import("./pages/InternationalPage"));
+const SecurityTraceabilityPage = lazy(() => import("./pages/SecurityTraceabilityPage"));
 
 const Loader = () => (
   <div style={{
@@ -77,6 +81,10 @@ function AppContent() {
           <Route path="/industrias"       element={<><Header isLanding={true} /><IndustriasPage /></>} />
           <Route path="/industrias/:sector" element={<><Header isLanding={true} /><IndustriasPage /></>} />
           <Route path="/recursos"         element={<><Header isLanding={true} /><RecursosPage /></>} />
+          <Route path="/for-applicants"   element={<><Header isLanding={true} /><ForApplicantsPage /></>} />
+          <Route path="/for-funders"      element={<><Header isLanding={true} /><ForFundersPage /></>} />
+          <Route path="/international"    element={<><Header isLanding={true} /><InternationalPage /></>} />
+          <Route path="/security"         element={<><Header isLanding={true} /><SecurityTraceabilityPage /></>} />
 
           {/* Redirects de URLs anteriores */}
           <Route path="/pricing" element={<Navigate to="/modalidades" replace />} />

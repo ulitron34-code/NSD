@@ -47,16 +47,14 @@ NU-BASE-001 - Repository baseline and dependency map.
 - Created verified baseline inventory at `docs/nuxera-migration/docs/migration/NU_BASE_001_BASELINE_INVENTORY.md`.
 
 ## Validation status
-Not green yet. The local checkout has no `node_modules` or `backend/node_modules`, and global `node`/`npm` are not on PATH. Bundled Node exists at `C:\Users\usalgado\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe`, but npm is not available from that bundle path.
+Local structural validation is green as of 2026-07-17:
+- Frontend and backend dependencies installed.
+- Frontend lint, production build and full test suite pass.
+- Backend full test suite passes.
+- Local phase checks, RBAC matrix and NUXERA SQL guardrails pass.
+- Public applicant, funder, international and security pages are routed and linked.
 
-Required before NU-BASE-001 completion:
-- Install frontend dependencies.
-- Install backend dependencies.
-- Run `npm run build`.
-- Run `npm run lint`.
-- Run `npm run test:run`.
-- Run relevant E2E or document why unavailable.
-- Run backend tests/checks where feasible.
+Production closure still requires controlled Supabase execution and verification evidence, followed by GitHub publication and Vercel deployment with real environment variables. No production write or deployment has been performed from this workspace.
 
 ## Handoff
 Next action: install dependencies for this checkout or use an environment with npm available, then run the baseline validation commands and update `NU_BASE_001_BASELINE_INVENTORY.md` with results. Do not start runtime shell changes until this baseline is validated or explicitly accepted as documentation-only partial baseline.
@@ -1521,3 +1519,30 @@ Guardrails:
 - No writes, RLS changes, permissions, document grants or data-room mutations were enabled.
 
 Next recommended task after validation: run the first real controlled non-production Supabase verification pass and feed observed evidence back into the read-only chain.
+
+## NUXERA controlled run metadata hardening
+
+The recovered `66769b9` continuation was validated locally before attempting the first controlled Supabase run.
+
+- Verification-plan, SQL-draft and workspace-state SQL guards passed.
+- The evidence scaffold was generated for commit `66769b9` with prior known-good commit `3ac37a4`.
+- The runbook now rejects provisional metadata such as pending, TBD, unknown and unassigned values.
+- Production/prod environments are rejected; the target must explicitly identify a non-production environment.
+- No SQL, RLS, endpoint, permission, document-grant, data-room or production write action was executed.
+
+Next recommended task: assign the isolated Supabase project, operator, reviewer, rollback owner and four controlled identities, regenerate the scaffold with real metadata, then execute the non-production evidence run.
+
+## NUXERA recovered environment validation
+
+Dependencies were installed locally with an isolated npm cache and the recovered workspace passed its current code validation gates.
+
+- Controlled-runbook focused suite: 1 file / 3 tests passed.
+- Backend full suite: 50 files / 461 tests passed.
+- Frontend full suite: 9 files / 239 tests passed.
+- Frontend lint passed with zero warnings.
+- Frontend production build passed; existing large-chunk warnings remain non-blocking.
+- RBAC matrix passed.
+- Evidence review, approval package, write gate, change request and release dossier all blocked as designed without observed Supabase evidence and human metadata.
+- Continuation pack generation passed from `66769b9`.
+
+Legacy predeploy/go-no-go remains blocked by missing environment credentials and historical SQL/page artifacts outside this NUXERA change. No placeholder credentials or files were created to bypass those checks.

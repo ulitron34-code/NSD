@@ -1,15 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const frontendRoot = 'E:\\CODEX\\ulitron34-code-nsd-https-github-com';
-const codexRoot = 'E:\\CODEX';
+const frontendRoot = resolve(process.cwd(), '..');
 
 const checks = [
-  {
-    name: 'Implementation2 i18n guide reviewed',
-    file: resolve(codexRoot, '_revision_imlementacion2\\35_GUIA_IMPLEMENTACION_i18n.md'),
-    patterns: ['Checklist', 'public/locales', 'Testing']
-  },
   {
     name: 'Local international formatter exists',
     file: resolve(frontendRoot, 'src/utils/localization.js'),
@@ -18,7 +12,7 @@ const checks = [
   {
     name: 'Public international page exists',
     file: resolve(frontendRoot, 'src/pages/InternationalPage.jsx'),
-    patterns: ['NSD IF internacional', 'Mexico + USA', 'Mercados preparados localmente', 'Matriz de control transfronterizo', 'Checklist antes de publicar internacional']
+    patterns: ['internationalPage.launchPlan', 'internationalPage.crossBorder', 'internationalPage.checklist', 'SUPPORTED_MARKETS']
   },
   {
     name: 'International route wired',
@@ -29,11 +23,6 @@ const checks = [
     name: 'Otorgante pipeline uses country fields',
     file: resolve(frontendRoot, 'src/data/demoServiceOrders.js'),
     patterns: ['country: "MX"', 'country: "US"', 'structure', 'targetEntity']
-  },
-  {
-    name: 'International local brief exists',
-    file: resolve(codexRoot, 'implementacion_internacional_local_010626.md'),
-    patterns: ['Mexico + USA', 'No se copio', 'i18n', 'formatos por mercado']
   }
 ];
 

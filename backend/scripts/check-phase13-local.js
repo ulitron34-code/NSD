@@ -1,45 +1,26 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const codexRoot = 'E:\\CODEX';
-const frontendRoot = 'E:\\CODEX\\ulitron34-code-nsd-https-github-com';
+const frontendRoot = resolve(process.cwd(), '..');
 
 const checks = [
   {
-    name: 'Fase 13 copy source exists',
-    file: resolve(codexRoot, 'REESTRUCTURACIONNSDIF\\FASE 13\\NSD_Fase_13_Copy_Web_Publica.md'),
+    name: 'Landing includes responsible AI disclaimers',
+    file: resolve(frontendRoot, 'src/components/Landing/ResponsibleAISection.jsx'),
     patterns: [
-      'Financiamiento empresarial mejor preparado',
-      'Solicitantes',
-      'Otorgantes'
+      'Decision humana',
+      'no aprueba credito',
+      'ni reemplaza'
     ]
   },
   {
-    name: 'Local phase 13 web brief exists',
-    file: resolve(codexRoot, 'fase13_web_publica_copy_local_010626.md'),
+    name: 'Footer exposes public trust routes',
+    file: resolve(frontendRoot, 'src/components/Landing/Footer.jsx'),
     patterns: [
-      'Home page',
-      'Solicitantes',
-      'Otorgantes',
-      'Seguridad',
-      'Disclaimers'
-    ]
-  },
-  {
-    name: 'Landing FAQ includes institutional disclaimers',
-    file: resolve(frontendRoot, 'src/components/Landing/FAQSection.jsx'),
-    patterns: [
-      'NSD IF',
-      'revision con IA',
-      'La plataforma reemplaza al oficial de cumplimiento?'
-    ]
-  },
-  {
-    name: 'Header exposes security route',
-    file: resolve(frontendRoot, 'src/components/Layout/Header.jsx'),
-    patterns: [
-      'Seguridad',
-      '/security'
+      '/security',
+      '/international',
+      '/for-applicants',
+      '/for-funders'
     ]
   }
 ];

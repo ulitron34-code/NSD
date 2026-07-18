@@ -49,4 +49,25 @@ describe('nuxeraControlledRunbookService', () => {
       expect.arrayContaining([expect.stringContaining('All four RLS identities')])
     );
   });
+
+  it('blocks placeholder assignments and production environments', () => {
+    const runbook = getNuxeraControlledRunbook({
+      generatedAt: '2026-07-17T20:00:00.000Z',
+      environment: 'production',
+      repoCommit: '66769b9',
+      operator: 'pending-assignment',
+      reviewer: 'TBD',
+      priorKnownGoodCommit: '3ac37a4',
+      rollbackOwner: 'unassigned'
+    });
+
+    expect(runbook.status).toBe('blocked-by-run-metadata');
+    expect(runbook.readyForRun).toBe(false);
+    expect(runbook.missingMetadata.map((item) => item.id)).toEqual([
+      'environment',
+      'operator',
+      'reviewer',
+      'rollbackOwner'
+    ]);
+  });
 });

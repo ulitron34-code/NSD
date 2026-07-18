@@ -62,6 +62,10 @@ export default function Footer({ onNavigate }) {
                   {t("footer.nav.access")}
                 </a>
               </li>
+              <li style={{ marginTop: "0.5rem" }}><a onClick={() => navigate("/for-applicants")} style={{ color: "rgba(255,255,255,0.8)", textDecoration: "none", cursor: "pointer" }}>Solicitantes</a></li>
+              <li style={{ marginTop: "0.5rem" }}><a onClick={() => navigate("/for-funders")} style={{ color: "rgba(255,255,255,0.8)", textDecoration: "none", cursor: "pointer" }}>Otorgantes</a></li>
+              <li style={{ marginTop: "0.5rem" }}><a onClick={() => navigate("/international")} style={{ color: "rgba(255,255,255,0.8)", textDecoration: "none", cursor: "pointer" }}>Cobertura internacional</a></li>
+              <li style={{ marginTop: "0.5rem" }}><a onClick={() => navigate("/security")} style={{ color: "rgba(255,255,255,0.8)", textDecoration: "none", cursor: "pointer" }}>Seguridad</a></li>
             </ul>
           </div>
 

@@ -10,6 +10,8 @@ import PricingSection from "../components/Landing/PricingSection";
 import FAQSection from "../components/Landing/FAQSection";
 import CTASection from "../components/Landing/CTASection";
 import Footer from "../components/Landing/Footer";
+import OperatingModelSection from "../components/Landing/OperatingModelSection";
+import ResponsibleAISection from "../components/Landing/ResponsibleAISection";
 
 export default function LandingPage() {
   const location = useLocation();
@@ -28,6 +30,8 @@ export default function LandingPage() {
       <div id="inicio"><Hero /></div>
 
       <HowItWorksSection />
+
+      <OperatingModelSection />
 
       <ClientsSection />
 
@@ -55,6 +59,7 @@ export default function LandingPage() {
         <FAQSection />
       </div>
 
+      <ResponsibleAISection />
       <CTASection />
       <Footer />
     </div>

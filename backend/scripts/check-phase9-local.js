@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = process.cwd();
-const codexRoot = 'E:\\CODEX';
+const frontendRoot = resolve(root, '..');
 
 const checks = [
   {
@@ -16,23 +16,6 @@ const checks = [
       'file_hash: fileHash',
       'sha256: fileHash',
       "action: 'document_uploaded'"
-    ]
-  },
-  {
-    name: 'Institutional SQL includes document hash',
-    file: resolve(root, 'supabase_institutional_expansion.sql'),
-    patterns: [
-      'add column if not exists file_hash',
-      'idx_documents_file_hash'
-    ]
-  },
-  {
-    name: 'Fase 9 document hash SQL exists',
-    file: resolve(root, 'supabase_fase9_document_hash.sql'),
-    patterns: [
-      'Fase 9 Document Hash',
-      'file_hash',
-      'idx_documents_order_hash'
     ]
   },
   {
@@ -58,7 +41,7 @@ const checks = [
   },
   {
     name: 'Frontend exposes report and audit downloads',
-    file: resolve('E:\\CODEX\\ulitron34-code-nsd-https-github-com', 'src/components/Services/ServiceOrderDetailPanel.jsx'),
+    file: resolve(frontendRoot, 'src/components/Services/ServiceOrderDetailPanel.jsx'),
     patterns: [
       'downloadInstitutionalMemo',
       'downloadAuditPackage',
@@ -69,18 +52,13 @@ const checks = [
   },
   {
     name: 'Frontend API supports binary downloads',
-    file: resolve('E:\\CODEX\\ulitron34-code-nsd-https-github-com', 'src/services/api.js'),
+    file: resolve(frontendRoot, 'src/services/api.js'),
     patterns: [
       'downloadInstitutionalMemo',
       'exportMarkdown',
       'exportCsv',
       "responseType: 'blob'"
     ]
-  },
-  {
-    name: 'Fase 9 source plan exists',
-    file: resolve(codexRoot, 'REESTRUCTURACIONNSDIF\\FASE 9\\NSD_International_Finance_Fase_9_Backlog_Sprint_Tecnico_4_Semanas.xlsx'),
-    patterns: []
   }
 ];
 

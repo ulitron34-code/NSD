@@ -10,12 +10,35 @@ const REQUIRED_METADATA = Object.freeze([
 ]);
 
 function isMissingValue(value) {
-  return typeof value !== 'string' || !value.trim() || value.trim().startsWith('TODO');
+  if (typeof value !== 'string') return true;
+
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return true;
+
+  return [
+    'todo',
+    'pending',
+    'tbd',
+    'unknown',
+    'not-assigned',
+    'not_assigned',
+    'unassigned'
+  ].some((placeholder) => normalized.includes(placeholder));
+}
+
+function isInvalidMetadata(key, value) {
+  if (isMissingValue(value)) return true;
+  if (key !== 'environment') return false;
+
+  const normalized = value.trim().toLowerCase();
+  return normalized === 'production'
+    || normalized === 'prod'
+    || (!normalized.includes('non-production') && !normalized.includes('nonproduction'));
 }
 
 function buildMissingMetadata(metadata) {
   return REQUIRED_METADATA
-    .filter((key) => isMissingValue(metadata[key]))
+    .filter((key) => isInvalidMetadata(key, metadata[key]))
     .map((key) => ({
       id: key,
       label: key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase()),

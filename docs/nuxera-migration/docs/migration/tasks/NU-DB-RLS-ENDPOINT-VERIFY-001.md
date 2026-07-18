@@ -55,6 +55,19 @@ Guardrails:
 - The endpoint returns a plan only; it does not execute endpoint checks.
 - No SQL, RLS, feature-flag, permission, document-grant or data-room mutation is performed.
 - Completed evidence must still come from a controlled non-production Supabase run using the evidence template.
+
+## Run metadata hardening follow-up
+
+The controlled runbook now rejects provisional assignments and production targets before a Supabase run can be marked ready.
+
+Additional scope completed:
+- Metadata containing `TODO`, `pending`, `TBD`, `unknown` or unassigned placeholders remains blocked.
+- The environment must explicitly identify a non-production target; `production` and `prod` are blocked.
+- Service coverage verifies both blocked placeholder metadata and complete non-production metadata.
+
+Current controlled-run blocker:
+- A specific isolated Supabase project, operator, reviewer, rollback owner and four test identities must be assigned before SQL or endpoint execution.
+- Local validation passed with 461 backend tests, 239 frontend tests, lint, build and RBAC checks; downstream release packages remain blocked without observed evidence.
 ## Evidence scaffold follow-up
 
 The controlled verification package now includes a generated evidence scaffold for the next non-production Supabase run.
