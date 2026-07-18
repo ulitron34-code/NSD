@@ -297,10 +297,10 @@ const resources = {
       forApplicants: {
         eyebrow: "PARA SOLICITANTES",
         title: "Prepara tu expediente antes de tocar la puerta de un otorgante.",
-        description: "NEXUS organiza tu proyecto, documentos y cumplimiento en un expediente institucional, con IA que detecta faltantes antes de compartirlo con inversionistas o instituciones financieras.",
+        description: "{{brand}} organiza tu proyecto, documentos y cumplimiento en un expediente institucional, con IA que detecta faltantes antes de compartirlo con inversionistas o instituciones financieras.",
         steps: [
           ["1. Registro del proyecto", "Captura monto, uso de fondos, sector, etapa y datos base del proyecto o empresa."],
-          ["2. Checklist dinamico", "NEXUS genera el listado de requisitos documentales y de cumplimiento segun tu sector y jurisdiccion."],
+          ["2. Checklist dinamico", "Se genera el listado de requisitos documentales y de cumplimiento segun tu sector y jurisdiccion."],
           ["3. Revision con IA", "Los agentes validan vigencia, consistencia y autenticidad, y marcan lo que falta antes de compartir nada."],
           ["4. Plan de subsanacion", "Recibes brechas priorizadas y pasos concretos para completar el expediente."],
         ],
@@ -312,25 +312,25 @@ const resources = {
         ],
         next: "SIGUIENTE PASO",
         ctaTitle: "Empieza tu expediente hoy",
-        ctaText: "Sube tu proyecto y deja que NEXUS te diga exactamente que falta antes de buscar financiamiento.",
+        ctaText: "Sube tu proyecto y deja que {{brand}} te diga exactamente que falta antes de buscar financiamiento.",
         ctaButton: "Ver servicios",
       },
       forFunders: {
         eyebrow: "PARA OTORGANTES",
         title: "Revisa oportunidades con expedientes ya ordenados, no carpetas sueltas.",
-        description: "NEXUS entrega a instituciones financieras e inversionistas expedientes con score, riesgos, evidencia y data room controlado, para que el comite decida con informacion, no con promesas.",
+        description: "{{brand}} entrega a instituciones financieras e inversionistas expedientes con score, riesgos, evidencia y data room controlado, para que el comite decida con informacion, no con promesas.",
         controls: [
           ["Score y semaforo", "Cada expediente llega con una lectura de riesgo y completitud generada por los agentes de IA."],
           ["Evidencia trazable", "Cada documento y hallazgo tiene fuente, fecha y responsable de revision."],
           ["Acceso controlado", "Tu institucion decide que ve, cuando y con que permisos, con bitacora de cada acceso."],
         ],
-        flowTitle: "Como opera tu equipo dentro de NEXUS",
+        flowTitle: "Como opera tu equipo dentro de {{brand}}",
         flow: [
           ["1. Pipeline", "Revisas oportunidades filtradas por apetito, sector, ticket y jurisdiccion."],
           ["2. Data room", "Solicitas informacion adicional y sigues el estatus de cada requerimiento."],
-          ["3. Memo y comite", "NEXUS prepara un memo ejecutivo con hallazgos, riesgos y pendientes para tu comite interno."],
+          ["3. Memo y comite", "Se prepara un memo ejecutivo con hallazgos, riesgos y pendientes para tu comite interno."],
         ],
-        signalsTitle: "Senales de riesgo que NEXUS destaca",
+        signalsTitle: "Senales de riesgo que {{brand}} destaca",
         signalsText: "La plataforma no decide por tu institucion; organiza las senales para que tu equipo de riesgo y cumplimiento tome la decision final.",
         signals: [
           ["Documentacion vencida o inconsistente", "Se marca automaticamente antes de llegar a tu bandeja de revision."],
@@ -338,14 +338,14 @@ const resources = {
           ["Coincidencias en listas de sanciones", "Se reportan con evidencia y fuente para revision humana obligatoria."],
         ],
         institutionalView: "VISTA INSTITUCIONAL",
-        ctaTitle: "Conecta tu equipo de riesgo a NEXUS",
+        ctaTitle: "Conecta tu equipo de riesgo a {{brand}}",
         ctaText: "Revisa el pipeline de oportunidades y el data room controlado desde un solo lugar.",
         ctaButton: "Entrar a la plataforma",
       },
       internationalPage: {
         eyebrow: "COBERTURA INTERNACIONAL",
         title: "Un nucleo tecnologico, paquetes regulatorios por mercado.",
-        description: "NEXUS activa paquetes jurisdiccionales por pais: identificadores fiscales, listas de sanciones, formatos y requisitos documentales especificos, sin duplicar la plataforma por region.",
+        description: "{{brand}} activa paquetes jurisdiccionales por pais: identificadores fiscales, listas de sanciones, formatos y requisitos documentales especificos, sin duplicar la plataforma por region.",
         routeTitle: "Ruta de expansion",
         launchPlan: [
           { phase: "MVP internacional", markets: "Mexico + Estados Unidos", status: "Recomendado", scope: "Copy, formatos, data room, disclaimers y scoring explicable para pilotos controlados." },
@@ -354,7 +354,7 @@ const resources = {
         ],
         marketsTitle: "Mercados soportados hoy",
         crossTitle: "Controles de operacion transfronteriza",
-        crossText: "Cada mercado tiene un estatus explicito. NEXUS no activa un pais sin fuente de validacion o cobertura regulatoria confirmada.",
+        crossText: "Cada mercado tiene un estatus explicito. {{brand}} no activa un pais sin fuente de validacion o cobertura regulatoria confirmada.",
         crossBorder: [
           ["Mexico", "Activo", "Nucleo de la plataforma: RFC, CURP, SAT, UIF y catalogo documental completo."],
           ["Estados Unidos", "Activo", "EIN, SSN/ITIN, OFAC y FinCEN integrados para validacion y sanciones."],
@@ -374,7 +374,7 @@ const resources = {
       securityPage: {
         eyebrow: "SEGURIDAD Y TRAZABILIDAD",
         title: "Controles de seguridad pensados para expedientes financieros.",
-        description: "NEXUS trata cada expediente como informacion sensible: cifrado, control de acceso por rol y bitacora auditable en cada accion.",
+        description: "{{brand}} trata cada expediente como informacion sensible: cifrado, control de acceso por rol y bitacora auditable en cada accion.",
         controls: [
           { title: "Cifrado en transito y en reposo", text: "Toda la informacion viaja y se almacena cifrada, incluyendo documentos y datos personales." },
           { title: "Permisos por rol", text: "Solicitante, otorgante, analista y administrador ven solo lo que su rol autoriza." },
@@ -686,10 +686,10 @@ const resources = {
       forApplicants: {
         eyebrow: "FOR APPLICANTS",
         title: "Prepare your file before you knock on a funder's door.",
-        description: "NEXUS organizes your project, documents and compliance into an institutional file, with AI that flags gaps before you share it with investors or financial institutions.",
+        description: "{{brand}} organizes your project, documents and compliance into an institutional file, with AI that flags gaps before you share it with investors or financial institutions.",
         steps: [
           ["1. Project intake", "Capture amount, use of funds, sector, stage and base data for your project or company."],
-          ["2. Dynamic checklist", "NEXUS generates the list of documentary and compliance requirements for your sector and jurisdiction."],
+          ["2. Dynamic checklist", "The list of documentary and compliance requirements is generated for your sector and jurisdiction."],
           ["3. AI review", "Agents validate expiration, consistency and authenticity, and flag what is missing before you share anything."],
           ["4. Remediation plan", "You get prioritized gaps and concrete steps to complete the file."],
         ],
@@ -701,25 +701,25 @@ const resources = {
         ],
         next: "NEXT STEP",
         ctaTitle: "Start your file today",
-        ctaText: "Upload your project and let NEXUS tell you exactly what is missing before you seek financing.",
+        ctaText: "Upload your project and let {{brand}} tell you exactly what is missing before you seek financing.",
         ctaButton: "View services",
       },
       forFunders: {
         eyebrow: "FOR FUNDERS",
         title: "Review opportunities with files that are already organized, not loose folders.",
-        description: "NEXUS delivers financial institutions and investors files with score, risks, evidence and a controlled data room, so the committee decides with information, not promises.",
+        description: "{{brand}} delivers financial institutions and investors files with score, risks, evidence and a controlled data room, so the committee decides with information, not promises.",
         controls: [
           ["Score and traffic light", "Every file arrives with a risk and completeness read generated by the AI agents."],
           ["Traceable evidence", "Every document and finding has a source, date and reviewer of record."],
           ["Controlled access", "Your institution decides what it sees, when, and with what permissions, with a log of every access."],
         ],
-        flowTitle: "How your team operates inside NEXUS",
+        flowTitle: "How your team operates inside {{brand}}",
         flow: [
           ["1. Pipeline", "Review opportunities filtered by appetite, sector, ticket size and jurisdiction."],
           ["2. Data room", "Request additional information and track the status of every request."],
-          ["3. Memo and committee", "NEXUS prepares an executive memo with findings, risks and open items for your internal committee."],
+          ["3. Memo and committee", "An executive memo is prepared with findings, risks and open items for your internal committee."],
         ],
-        signalsTitle: "Risk signals NEXUS surfaces",
+        signalsTitle: "Risk signals {{brand}} surfaces",
         signalsText: "The platform does not decide for your institution; it organizes the signals so your risk and compliance team makes the final call.",
         signals: [
           ["Expired or inconsistent documentation", "Flagged automatically before it reaches your review queue."],
@@ -727,14 +727,14 @@ const resources = {
           ["Sanctions list matches", "Reported with evidence and source for mandatory human review."],
         ],
         institutionalView: "INSTITUTIONAL VIEW",
-        ctaTitle: "Connect your risk team to NEXUS",
+        ctaTitle: "Connect your risk team to {{brand}}",
         ctaText: "Review the opportunity pipeline and the controlled data room from one place.",
         ctaButton: "Enter the platform",
       },
       internationalPage: {
         eyebrow: "INTERNATIONAL COVERAGE",
         title: "One technology core, regulatory packages per market.",
-        description: "NEXUS activates jurisdictional packages by country: tax identifiers, sanctions lists, formats and specific documentary requirements, without duplicating the platform per region.",
+        description: "{{brand}} activates jurisdictional packages by country: tax identifiers, sanctions lists, formats and specific documentary requirements, without duplicating the platform per region.",
         routeTitle: "Expansion route",
         launchPlan: [
           { phase: "International MVP", markets: "Mexico + United States", status: "Recommended", scope: "Copy, formats, data room, disclaimers and explainable scoring for controlled pilots." },
@@ -743,7 +743,7 @@ const resources = {
         ],
         marketsTitle: "Markets supported today",
         crossTitle: "Cross-border operating controls",
-        crossText: "Every market has an explicit status. NEXUS does not activate a country without a confirmed validation source or regulatory coverage.",
+        crossText: "Every market has an explicit status. {{brand}} does not activate a country without a confirmed validation source or regulatory coverage.",
         crossBorder: [
           ["Mexico", "Active", "Platform core: RFC, CURP, SAT, UIF and full document catalog."],
           ["United States", "Active", "EIN, SSN/ITIN, OFAC and FinCEN integrated for validation and sanctions."],
@@ -763,7 +763,7 @@ const resources = {
       securityPage: {
         eyebrow: "SECURITY AND TRACEABILITY",
         title: "Security controls built for financial files.",
-        description: "NEXUS treats every file as sensitive information: encryption, role-based access control and an auditable log on every action.",
+        description: "{{brand}} treats every file as sensitive information: encryption, role-based access control and an auditable log on every action.",
         controls: [
           { title: "Encryption in transit and at rest", text: "All information travels and is stored encrypted, including documents and personal data." },
           { title: "Role-based permissions", text: "Applicant, funder, analyst and administrator each see only what their role authorizes." },

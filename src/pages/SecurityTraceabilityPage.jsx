@@ -1,11 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../utils/constants";
+import { BRAND } from "../config/brand";
 
 export default function SecurityTraceabilityPage() {
   const { t } = useTranslation();
   const controlBlocks = t("securityPage.controls", { returnObjects: true });
   const operatingPrinciples = t("securityPage.principles", { returnObjects: true });
+  const brand = { brand: BRAND.name };
 
   return (
     <main style={{ background: COLORS.bg, minHeight: "100vh" }}>
@@ -13,7 +15,7 @@ export default function SecurityTraceabilityPage() {
         <div style={{ maxWidth: "1120px", margin: "0 auto" }}>
           <p style={{ color: COLORS.gold, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700 }}>{t("securityPage.eyebrow")}</p>
           <h1 style={{ color: COLORS.navy, fontSize: "clamp(2rem, 4vw, 3.6rem)", margin: "1rem 0", lineHeight: 1.1 }}>{t("securityPage.title")}</h1>
-          <p style={{ color: COLORS.textMuted, maxWidth: "760px", lineHeight: 1.7, fontSize: "1.08rem" }}>{t("securityPage.description")}</p>
+          <p style={{ color: COLORS.textMuted, maxWidth: "760px", lineHeight: 1.7, fontSize: "1.08rem" }}>{t("securityPage.description", brand)}</p>
         </div>
       </section>
       <section style={{ padding: "3rem 2rem" }}><div style={{ maxWidth: "1120px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>{controlBlocks.map((block) => <article key={block.title} style={{ background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "8px", padding: "1.5rem" }}><h2 style={{ color: COLORS.navy, fontSize: "1.2rem", marginBottom: "0.75rem" }}>{block.title}</h2><p style={{ color: COLORS.textMuted, lineHeight: 1.6 }}>{block.text}</p></article>)}</div></section>

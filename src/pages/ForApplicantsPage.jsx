@@ -2,12 +2,14 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../utils/constants";
+import { BRAND } from "../config/brand";
 
 export default function ForApplicantsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const steps = t("forApplicants.steps", { returnObjects: true });
   const deliverables = t("forApplicants.deliverables", { returnObjects: true });
+  const brand = { brand: BRAND.name };
 
   return (
     <main style={{ minHeight: "100vh", background: COLORS.bg }}>
@@ -15,7 +17,7 @@ export default function ForApplicantsPage() {
         <div style={{ maxWidth: "1120px", margin: "0 auto" }}>
           <p style={{ color: COLORS.gold, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, marginBottom: "0.75rem" }}>{t("forApplicants.eyebrow")}</p>
           <h1 style={{ color: COLORS.navy, fontSize: "clamp(2rem, 4vw, 3.4rem)", lineHeight: 1.1, marginBottom: "1rem" }}>{t("forApplicants.title")}</h1>
-          <p style={{ color: COLORS.textMuted, maxWidth: "780px", lineHeight: 1.7, fontSize: "1rem" }}>{t("forApplicants.description")}</p>
+          <p style={{ color: COLORS.textMuted, maxWidth: "780px", lineHeight: 1.7, fontSize: "1rem" }}>{t("forApplicants.description", brand)}</p>
         </div>
       </section>
       <section style={{ padding: "3rem 2rem" }}>
@@ -33,7 +35,7 @@ export default function ForApplicantsPage() {
       </section>
       <section style={{ padding: "0 2rem 5rem" }}>
         <div style={{ maxWidth: "1120px", margin: "0 auto", background: COLORS.navy, color: COLORS.white, borderRadius: "8px", padding: "1.5rem", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
-          <div><p style={{ color: COLORS.gold, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.35rem" }}>{t("forApplicants.next")}</p><h2 style={{ fontSize: "1.35rem", marginBottom: "0.35rem" }}>{t("forApplicants.ctaTitle")}</h2><p style={{ color: "rgba(255,255,255,0.78)", lineHeight: 1.55, maxWidth: "680px" }}>{t("forApplicants.ctaText")}</p></div>
+          <div><p style={{ color: COLORS.gold, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.35rem" }}>{t("forApplicants.next")}</p><h2 style={{ fontSize: "1.35rem", marginBottom: "0.35rem" }}>{t("forApplicants.ctaTitle")}</h2><p style={{ color: "rgba(255,255,255,0.78)", lineHeight: 1.55, maxWidth: "680px" }}>{t("forApplicants.ctaText", brand)}</p></div>
           <button onClick={() => navigate("/services")} style={{ background: COLORS.gold, color: COLORS.navy, border: 0, borderRadius: "8px", padding: "0.85rem 1rem", fontWeight: 900, cursor: "pointer" }}>{t("forApplicants.ctaButton")}</button>
         </div>
       </section>

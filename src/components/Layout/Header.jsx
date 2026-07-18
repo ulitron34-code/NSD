@@ -81,7 +81,7 @@ export default function Header({ isLanding = false }) {
           onClick={() => { navigate("/"); setShowMobileNav(false); }}
         >
           <img
-            src="/logo-nexus.png"
+            src={BRAND.logoSrc}
             alt={BRAND.logoAlt}
             style={{ height: "68px", width: "auto", display: "block" }}
           />
