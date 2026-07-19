@@ -29,6 +29,7 @@ const NUXERA_BRAND = {
   location: "Ciudad de Mexico",
   logoAlt: "NUXERA",
   logoSrc: "/logo-nuxera.png",
+  logoMarkSrc: "/logo-nuxera-mark.png",
 };
 
 export const BRAND = isNuxeraExperienceEnabled() ? NUXERA_BRAND : NEXUS_BRAND;

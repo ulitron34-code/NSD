@@ -77,14 +77,44 @@ export default function Header({ isLanding = false }) {
       }}>
         {/* Logo */}
         <div
-          style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: "0.7rem", cursor: "pointer" }}
           onClick={() => { navigate("/"); setShowMobileNav(false); }}
         >
-          <img
-            src={BRAND.logoSrc}
-            alt={BRAND.logoAlt}
-            style={{ height: "68px", width: "auto", display: "block" }}
-          />
+          {BRAND.logoMarkSrc ? (
+            <>
+              <img
+                src={BRAND.logoMarkSrc}
+                alt={BRAND.logoAlt}
+                style={{ height: "52px", width: "auto", display: "block" }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.05 }}>
+                <span style={{
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontSize: "1.5rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  color: "#D9BB6B",
+                }}>
+                  {BRAND.name}
+                </span>
+                <span style={{
+                  fontSize: "0.56rem",
+                  fontWeight: 500,
+                  letterSpacing: "0.16em",
+                  color: "rgba(217,187,107,0.75)",
+                  textTransform: "uppercase",
+                }}>
+                  {BRAND.tagline}
+                </span>
+              </div>
+            </>
+          ) : (
+            <img
+              src={BRAND.logoSrc}
+              alt={BRAND.logoAlt}
+              style={{ height: "68px", width: "auto", display: "block" }}
+            />
+          )}
         </div>
 
         {/* Nav links — desktop only */}

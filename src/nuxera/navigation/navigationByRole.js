@@ -2,22 +2,38 @@ import { getNuxeraEngineNavigationItems } from "../engines/engineRegistry";
 
 const sharedEngines = getNuxeraEngineNavigationItems();
 
-export const navigationByRole = {
+const navigationByRoleSource = {
   applicant: [
-    { id: "home", label: "Inicio", path: "/dashboard" },
+    { id: "home", label: { es: "Inicio", en: "Home" }, path: "/dashboard" },
     ...sharedEngines,
-    { id: "followup", label: "Seguimiento", path: "/dashboard/nuxera/followup" },
+    { id: "followup", label: { es: "Seguimiento", en: "Follow-up" }, path: "/dashboard/nuxera/followup" },
   ],
   grantor: [
-    { id: "home", label: "Mesa de decision", path: "/dashboard" },
-    { id: "queue", label: "Cola de casos", path: "/dashboard/nuxera/queue" },
+    { id: "home", label: { es: "Mesa de decision", en: "Decision desk" }, path: "/dashboard" },
+    { id: "queue", label: { es: "Cola de casos", en: "Case queue" }, path: "/dashboard/nuxera/queue" },
     ...sharedEngines,
   ],
   admin: [
-    { id: "home", label: "Consola", path: "/dashboard" },
-    { id: "operations", label: "Operacion", path: "/dashboard/nuxera/operations" },
-    { id: "security", label: "Seguridad", path: "/dashboard/nuxera/security" },
-    { id: "ai", label: "IA y agentes", path: "/dashboard/nuxera/ai" },
-    { id: "system", label: "Sistema", path: "/dashboard/nuxera/system" },
+    { id: "home", label: { es: "Consola", en: "Console" }, path: "/dashboard" },
+    { id: "operations", label: { es: "Operacion", en: "Operations" }, path: "/dashboard/nuxera/operations" },
+    { id: "security", label: { es: "Seguridad", en: "Security" }, path: "/dashboard/nuxera/security" },
+    { id: "ai", label: { es: "IA y agentes", en: "AI & agents" }, path: "/dashboard/nuxera/ai" },
+    { id: "system", label: { es: "Sistema", en: "System" }, path: "/dashboard/nuxera/system" },
   ],
+};
+
+function localizeLabel(label, isEnglish) {
+  return typeof label === "object" && label !== null ? (isEnglish ? label.en : label.es) : label;
+}
+
+export function getNavigationByRole(role, isEnglish = false) {
+  const items = navigationByRoleSource[role] || navigationByRoleSource.applicant;
+  return items.map((item) => ({ ...item, label: localizeLabel(item.label, isEnglish) }));
+}
+
+// Backwards-compatible default export (Spanish) for call sites not yet passing a language.
+export const navigationByRole = {
+  applicant: getNavigationByRole("applicant", false),
+  grantor: getNavigationByRole("grantor", false),
+  admin: getNavigationByRole("admin", false),
 };

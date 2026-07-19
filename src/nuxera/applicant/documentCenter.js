@@ -1,6 +1,7 @@
-import { demoDocuments } from "../../data/demoDocuments";
+import { getDemoDocuments } from "../../data/demoDocuments";
 import { getApplicantDataRoomChecklist } from "./guidedMission";
 import { getApplicantCompanyProjectWorkspace } from "./projectWorkspace";
+import { pickLang } from "../../data/requisitosMinimos";
 
 const statusMap = {
   approved: "ready",
@@ -14,7 +15,7 @@ const statusMap = {
 const folderDefinitions = [
   {
     id: "identity-kyb",
-    label: "Identidad y KYB",
+    label: { es: "Identidad y KYB", en: "Identity & KYB" },
     scope: "owner-only",
     requirementIds: ["doc_corporativa", "identificacion_oficial", "doc_kyc"],
     documentKeywords: ["fiscal", "identificacion", "domicilio", "acta", "ubo", "accionaria"],
@@ -22,7 +23,7 @@ const folderDefinitions = [
   },
   {
     id: "project-file",
-    label: "Proyecto y uso de fondos",
+    label: { es: "Proyecto y uso de fondos", en: "Project & use of funds" },
     scope: "preparation-only",
     requirementIds: ["estudio_viabilidad", "estudio_mercado", "plan_negocios"],
     documentKeywords: ["plan", "proyecto", "viabilidad", "mercado"],
@@ -30,7 +31,7 @@ const folderDefinitions = [
   },
   {
     id: "financial-file",
-    label: "Finanzas y transparencia",
+    label: { es: "Finanzas y transparencia", en: "Finance & transparency" },
     scope: "owner-plus-authorized-review",
     requirementIds: ["modelo_financiero", "viabilidad_financiera", "transparencia_documental"],
     documentKeywords: ["financieros", "modelo", "proyecciones", "auditoria"],
@@ -38,7 +39,7 @@ const folderDefinitions = [
   },
   {
     id: "impact-risk",
-    label: "Riesgo, impacto y ESG",
+    label: { es: "Riesgo, impacto y ESG", en: "Risk, impact & ESG" },
     scope: "human-review-required",
     requirementIds: ["marco_riesgos", "ods", "esg", "esia"],
     documentKeywords: ["riesgo", "impacto", "esg", "esia"],
@@ -55,8 +56,13 @@ function matchesKeyword(document, keywords) {
   return keywords.some((keyword) => haystack.includes(keyword));
 }
 
-function buildDocumentRows(folder, requirements) {
-  const matchedDemoDocuments = demoDocuments
+function buildDocumentRows(folder, requirements, language) {
+  const applicantLabel = pickLang({ es: "Solicitante", en: "Applicant" }, language);
+  const criticalLabel = pickLang({ es: "Critico", en: "Critical" }, language);
+  const normalLabel = pickLang({ es: "Normal", en: "Normal" }, language);
+  const toValidateLabel = pickLang({ es: "Por validar", en: "To validate" }, language);
+
+  const matchedDemoDocuments = getDemoDocuments(language)
     .filter((document) => matchesKeyword(document, folder.documentKeywords))
     .map((document) => ({
       id: `demo-document-${document.id}`,
@@ -75,11 +81,11 @@ function buildDocumentRows(folder, requirements) {
     label: requirement.label,
     status: requirement.status === "missing" ? "missing" : normalizeDocumentStatus(requirement.status),
     source: "minimum-requirement",
-    owner: "Solicitante",
+    owner: applicantLabel,
     version: "local",
     detail: requirement.detail,
-    risk: requirement.critical ? "Critico" : "Normal",
-    expires: "Por validar",
+    risk: requirement.critical ? criticalLabel : normalLabel,
+    expires: toValidateLabel,
   }));
 
   const rowsById = new Map([...matchedDemoDocuments, ...requirementRows].map((row) => [row.id, row]));
@@ -102,19 +108,21 @@ export function getApplicantDocumentCenter(order = null, language = "es") {
   const requirementsById = new Map(
     checklist.categories.flatMap((category) => category.items).map((item) => [item.id, item])
   );
+  const humanReviewLabel = pickLang({ es: "Revision humana", en: "Human review" }, language);
   const folders = folderDefinitions.map((folder) => {
     const requirements = folder.requirementIds
       .map((requirementId) => requirementsById.get(requirementId))
       .filter(Boolean);
-    const rows = buildDocumentRows(folder, requirements);
+    const rows = buildDocumentRows(folder, requirements, language);
     const summary = summarizeRows(rows);
 
     return {
       ...folder,
+      label: pickLang(folder.label, language),
       rows,
       summary,
       status: summary.missing > 0 || summary.needsAttention > 0 ? "needs-document-work" : "ready-for-review",
-      nextDocument: rows.find((row) => ["missing", "needs-attention"].includes(row.status))?.label || "Revision humana",
+      nextDocument: rows.find((row) => ["missing", "needs-attention"].includes(row.status))?.label || humanReviewLabel,
     };
   });
   const activeFolder = folders.find((folder) => folder.status === "needs-document-work") || folders[0];
@@ -133,11 +141,14 @@ export function getApplicantDocumentCenter(order = null, language = "es") {
     },
     folders,
     activeFolder,
-    nextAction: `Revisar ${activeFolder.nextDocument} en ${activeFolder.label}.`,
+    nextAction: pickLang(
+      { es: `Revisar ${activeFolder.nextDocument} en ${activeFolder.label}.`, en: `Review ${activeFolder.nextDocument} in ${activeFolder.label}.` },
+      language
+    ),
     guardrails: [
-      "Centro documental local/read-only; no sube, elimina ni comparte archivos.",
-      "No cambia permisos de data room ni concede acceso a otorgantes.",
-      "La vigencia y suficiencia documental requieren revision humana.",
-    ],
+      { es: "Centro documental local/read-only; no sube, elimina ni comparte archivos.", en: "Local, read-only document center; it does not upload, delete or share files." },
+      { es: "No cambia permisos de data room ni concede acceso a otorgantes.", en: "It does not change data room permissions or grant grantor access." },
+      { es: "La vigencia y suficiencia documental requieren revision humana.", en: "Document validity and sufficiency require human review." },
+    ].map((guardrail) => pickLang(guardrail, language)),
   };
 }

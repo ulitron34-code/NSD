@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { navigationByRole } from "../navigation/navigationByRole";
+import { getNavigationByRole } from "../navigation/navigationByRole";
 import "../styles/tokens.css";
 import "../styles/shell.css";
 
@@ -11,9 +11,9 @@ export default function NuxeraShell({ workspaceRole, onExit }) {
   const { i18n } = useTranslation();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const items = navigationByRole[workspaceRole] || navigationByRole.applicant;
-  const current = items.find((item) => item.path === location.pathname) || items[0];
   const isEnglish = i18n.language?.startsWith("en");
+  const items = getNavigationByRole(workspaceRole, isEnglish);
+  const current = items.find((item) => item.path === location.pathname) || items[0];
   const roleLabel = {
     applicant: isEnglish ? "Applicant" : "Solicitante",
     grantor: isEnglish ? "Funding provider" : "Otorgante",
