@@ -495,21 +495,22 @@ function GrantorQueueHome({ sectionLabel }) {
 function AdminOperationsHome({ sectionLabel }) {
   const { L, language } = useNuxeraLanguage();
   const operationalSnapshot = useAdminOperationalSnapshot({ enabled: isNuxeraExperienceEnabled(), language });
-  const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled() });
-  const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled() });
-  const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled() });
-  const controlledContinuationPack = useControlledContinuationPack({ enabled: isNuxeraExperienceEnabled() });
-  const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled() });
-  const controlledRunbook = useControlledRunbook({ enabled: isNuxeraExperienceEnabled() });
-  const controlledEvidenceReview = useControlledEvidenceReview({ enabled: isNuxeraExperienceEnabled() });
-  const controlledApprovalPackage = useControlledApprovalPackage({ enabled: isNuxeraExperienceEnabled() });
-  const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled() });
-  const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled() });
-  const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled() });
+  const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled(), language });
+  const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledContinuationPack = useControlledContinuationPack({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledRunbook = useControlledRunbook({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledEvidenceReview = useControlledEvidenceReview({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledApprovalPackage = useControlledApprovalPackage({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled(), language });
+  const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled(), language });
   const consoleState = mergeBackendReadinessWithConsole(
-    mergeAdminControlsWithConsole(getAdminOperationsConsole(), adminControls),
+    mergeAdminControlsWithConsole(getAdminOperationsConsole(language), adminControls, language),
     backendReadiness,
-    controlledVerificationPlan
+    controlledVerificationPlan,
+    language
   );
 
   return (

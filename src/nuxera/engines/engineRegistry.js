@@ -1,3 +1,5 @@
+import { isNuxeraEngineEnabled } from "../../experience/experienceFlags";
+
 export const NUXERA_ENGINE_IDS = Object.freeze({
   FINANCE: "finance",
   INTELLIGENCE: "intelligence",
@@ -52,7 +54,9 @@ export const nuxeraEngineOrder = Object.freeze([
 ]);
 
 export function getNuxeraEngines() {
-  return nuxeraEngineOrder.map((id) => nuxeraEngineRegistry[id]);
+  return nuxeraEngineOrder
+    .map((id) => nuxeraEngineRegistry[id])
+    .filter((engine) => isNuxeraEngineEnabled(engine.id));
 }
 
 export function getNuxeraEngine(id) {

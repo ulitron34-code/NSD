@@ -14,7 +14,7 @@ test.describe('NUXERA controlled experience', () => {
     await page.goto('/');
     await expect(page).toHaveTitle(/NUXERA Financial Intelligence/);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'NUXERA Financial Intelligence');
-    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', '/og-image.svg');
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', '/social-preview.png');
   });
 
   test('demo applicant opens the NUXERA applicant workspace', async ({ page }) => {

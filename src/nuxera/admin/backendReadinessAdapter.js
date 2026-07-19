@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { nuxeraBackendReadinessAPI, nuxeraControlledApprovalPackageAPI, nuxeraControlledChangeRequestAPI, nuxeraControlledContinuationPackAPI, nuxeraControlledEvidenceReviewAPI, nuxeraControlledEvidenceScaffoldAPI, nuxeraControlledReleaseDossierAPI, nuxeraControlledRunbookAPI, nuxeraControlledVerificationAPI, nuxeraControlledWriteGateAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
+import { pickLang } from "../../data/requisitosMinimos";
 
 const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
   source: "local-fallback",
-  label: "Readiness backend local",
+  label: "Local backend readiness",
   status: "readiness-unverified",
   ready: false,
   loading: false,
@@ -15,7 +16,7 @@ const LOCAL_BACKEND_READINESS_STATE = Object.freeze({
     { id: "evidence-links", table: "nuxera_evidence_links", label: "Owner evidence links", status: "unverified", ready: false },
     { id: "admin-controls", table: "nuxera_admin_controls", label: "Admin controls", status: "unverified", ready: false },
   ],
-  guardrails: ["Readiness local; no aplica SQL ni confirma RLS."],
+  guardrails: ["Local readiness; it does not apply SQL or confirm RLS."],
 });
 
 function asArray(value) {
@@ -37,11 +38,11 @@ function normalizeSignal(signal) {
     ready: Boolean(value.ready),
     count: Number.isFinite(value.count) ? value.count : null,
     requiredFor: asArray(value.requiredFor),
-    guardrail: value.guardrail || "Read-only readiness signal; no cambia permisos.",
+    guardrail: value.guardrail || "Read-only readiness signal; it does not change permissions.",
   };
 }
 
-export function normalizeNuxeraBackendReadinessResponse(response) {
+export function normalizeNuxeraBackendReadinessResponse(response, language = "es") {
   const payload = response?.readiness || response || null;
 
   if (!payload || typeof payload !== "object") {
@@ -63,7 +64,9 @@ export function normalizeNuxeraBackendReadinessResponse(response) {
 
   return {
     source: payload.ready ? "remote-ready" : "remote-blocked",
-    label: payload.ready ? "Backend NUXERA visible" : "Backend NUXERA pendiente",
+    label: payload.ready
+      ? pickLang({ es: "Backend NUXERA visible", en: "NUXERA backend visible" }, language)
+      : pickLang({ es: "Backend NUXERA pendiente", en: "NUXERA backend pending" }, language),
     status: payload.status || (payload.ready ? "backend-readiness-visible" : "blocked-by-backend-readiness"),
     ready: Boolean(payload.ready),
     loading: false,
@@ -77,20 +80,23 @@ export function normalizeNuxeraBackendReadinessResponse(response) {
   };
 }
 
-function buildBackendReadinessHealthSignal(state) {
+function buildBackendReadinessHealthSignal(state, language) {
   return {
     id: "backend-readiness-preflight",
     label: "Backend readiness",
     status: state.ready ? "backend-visible" : "backend-blocked",
     severity: state.ready ? "low" : "high",
-    signal: `${state.summary.unavailable}/${state.summary.total} tablas NUXERA pendientes o no visibles.`,
+    signal: pickLang(
+      { es: `${state.summary.unavailable}/${state.summary.total} tablas NUXERA pendientes o no visibles.`, en: `${state.summary.unavailable}/${state.summary.total} NUXERA tables pending or not visible.` },
+      language
+    ),
     nextAction: state.ready
-      ? "Mantener verificacion RLS controlada antes de produccion."
-      : "Verificar SQL/RLS en Supabase controlado antes de habilitar writes productivos.",
+      ? pickLang({ es: "Mantener verificacion RLS controlada antes de produccion.", en: "Keep controlled RLS verification before production." }, language)
+      : pickLang({ es: "Verificar SQL/RLS en Supabase controlado antes de habilitar writes productivos.", en: "Verify SQL/RLS in controlled Supabase before enabling production writes." }, language),
   };
 }
 
-function buildBackendReadinessActions(state) {
+function buildBackendReadinessActions(state, language) {
   return state.signals
     .filter((signal) => !signal.ready)
     .map((signal) => ({
@@ -99,12 +105,15 @@ function buildBackendReadinessActions(state) {
       priority: signal.id === "workspace-states" ? "critical-path" : "review",
       status: "backend-preflight-open",
       owner: signal.owner || "Platform",
-      action: `Verificar ${signal.table} en Supabase controlado antes de depender de ${asArray(signal.requiredFor).join(", ") || "NUXERA backend"}.`,
+      action: pickLang(
+        { es: `Verificar ${signal.table} en Supabase controlado antes de depender de ${asArray(signal.requiredFor).join(", ") || "NUXERA backend"}.`, en: `Verify ${signal.table} in controlled Supabase before depending on ${asArray(signal.requiredFor).join(", ") || "NUXERA backend"}.` },
+        language
+      ),
       source: "backend-readiness-preflight",
-      guardrail: "Accion humana; la consola no aplica SQL ni cambia RLS.",
+      guardrail: pickLang({ es: "Accion humana; la consola no aplica SQL ni cambia RLS.", en: "Human action; the console does not apply SQL or change RLS." }, language),
     }));
 }
-function buildRlsVerificationMatrix(state) {
+function buildRlsVerificationMatrix(state, language) {
   const signalById = new Map(state.signals.map((signal) => [signal.id, signal]));
   const workspaceReady = Boolean(signalById.get("workspace-states")?.ready);
   const evidenceReady = Boolean(signalById.get("evidence-links")?.ready);
@@ -151,13 +160,13 @@ function buildRlsVerificationMatrix(state) {
       },
     ],
     guardrails: [
-      "Matriz local de verificacion; no ejecuta consultas Supabase.",
-      "Cada escenario requiere usuarios controlados antes de produccion.",
-      "Denegaciones deben evitar filtrar existencia de filas restringidas.",
-    ],
+      { es: "Matriz local de verificacion; no ejecuta consultas Supabase.", en: "Local verification matrix; it does not execute Supabase queries." },
+      { es: "Cada escenario requiere usuarios controlados antes de produccion.", en: "Each scenario requires controlled users before production." },
+      { es: "Denegaciones deben evitar filtrar existencia de filas restringidas.", en: "Denials must avoid leaking the existence of restricted rows." },
+    ].map((guardrail) => pickLang(guardrail, language)),
   };
 }
-function buildControlledVerificationPackage(state, matrix) {
+function buildControlledVerificationPackage(state, matrix, language) {
   const endpointChecks = [
     { id: "get-state-owner", method: "GET", path: "/api/nuxera/orders/:orderId/state", actor: "applicant-owner", expected: "Own applicant state only", auditLogRequired: false },
     { id: "patch-checklist-owner", method: "PATCH", path: "/api/nuxera/orders/:orderId/state/checklist", actor: "applicant-owner", expected: "Checklist-only write after gates pass", auditLogRequired: true },
@@ -215,62 +224,78 @@ function buildControlledVerificationPackage(state, matrix) {
       blockedScenarios: blockedScenarios.length,
     },
     guardrails: [
-      "Paquete local de evidencia; no ejecuta endpoints ni aplica SQL.",
-      "Completar la plantilla en Supabase no productivo antes de habilitar writes productivos.",
-      "Cualquier no-go mantiene NUXERA en modo read-only/local fallback.",
-    ],
+      { es: "Paquete local de evidencia; no ejecuta endpoints ni aplica SQL.", en: "Local evidence package; it does not execute endpoints or apply SQL." },
+      { es: "Completar la plantilla en Supabase no productivo antes de habilitar writes productivos.", en: "Complete the template in non-production Supabase before enabling production writes." },
+      { es: "Cualquier no-go mantiene NUXERA en modo read-only/local fallback.", en: "Any no-go keeps NUXERA in read-only/local fallback mode." },
+    ].map((guardrail) => pickLang(guardrail, language)),
   };
 }
-function buildControlledVerificationHealthSignal(verificationPackage) {
+function buildControlledVerificationHealthSignal(verificationPackage, language) {
   return {
     id: "controlled-verification-evidence",
-    label: "Evidencia RLS/endpoints",
+    label: pickLang({ es: "Evidencia RLS/endpoints", en: "RLS/endpoint evidence" }, language),
     status: verificationPackage.status,
     severity: verificationPackage.status === "ready-for-controlled-run" ? "medium" : "high",
-    signal: `${verificationPackage.summary.endpoints} endpoints, ${verificationPackage.summary.deniedChecks} denegaciones y ${verificationPackage.summary.noGoCriteria} criterios no-go pendientes de evidencia.`,
-    nextAction: `Completar ${verificationPackage.evidenceTemplate.path} en Supabase no productivo antes de cualquier decision productiva.`,
+    signal: pickLang(
+      { es: `${verificationPackage.summary.endpoints} endpoints, ${verificationPackage.summary.deniedChecks} denegaciones y ${verificationPackage.summary.noGoCriteria} criterios no-go pendientes de evidencia.`, en: `${verificationPackage.summary.endpoints} endpoints, ${verificationPackage.summary.deniedChecks} denials and ${verificationPackage.summary.noGoCriteria} no-go criteria pending evidence.` },
+      language
+    ),
+    nextAction: pickLang(
+      { es: `Completar ${verificationPackage.evidenceTemplate.path} en Supabase no productivo antes de cualquier decision productiva.`, en: `Complete ${verificationPackage.evidenceTemplate.path} in non-production Supabase before any production decision.` },
+      language
+    ),
   };
 }
 
-function buildControlledVerificationActions(verificationPackage) {
+function buildControlledVerificationActions(verificationPackage, language) {
   const templateAction = {
     id: "controlled-verification-template",
-    domain: "RLS/endpoints evidence",
+    domain: pickLang({ es: "Evidencia RLS/endpoints", en: "RLS/endpoint evidence" }, language),
     priority: "critical-path",
     status: "controlled-evidence-open",
     owner: "Security admin",
-    action: `Llenar ${verificationPackage.evidenceTemplate.path} con metadata, resultados RLS, endpoints, rollback y decision.`,
+    action: pickLang(
+      { es: `Llenar ${verificationPackage.evidenceTemplate.path} con metadata, resultados RLS, endpoints, rollback y decision.`, en: `Fill in ${verificationPackage.evidenceTemplate.path} with metadata, RLS results, endpoints, rollback and decision.` },
+      language
+    ),
     source: "controlled-verification-package",
-    guardrail: "Accion humana; la consola no ejecuta endpoints, no aplica SQL y no cambia permisos.",
+    guardrail: pickLang({ es: "Accion humana; la consola no ejecuta endpoints, no aplica SQL y no cambia permisos.", en: "Human action; the console does not execute endpoints, apply SQL, or change permissions." }, language),
   };
   const deniedActions = verificationPackage.deniedChecks.map((check) => ({
     id: `controlled-verification-${check.id}`,
-    domain: "Denied path evidence",
+    domain: pickLang({ es: "Evidencia de denegacion", en: "Denied path evidence" }, language),
     priority: "review",
     status: "controlled-evidence-open",
     owner: "Security admin",
-    action: `Registrar evidencia de denegacion para ${check.actor}: ${check.expected}.`,
+    action: pickLang(
+      { es: `Registrar evidencia de denegacion para ${check.actor}: ${check.expected}.`, en: `Record denial evidence for ${check.actor}: ${check.expected}.` },
+      language
+    ),
     source: "controlled-verification-package",
-    guardrail: "Debe probarse con identidades controladas; no usar datos productivos reales.",
+    guardrail: pickLang({ es: "Debe probarse con identidades controladas; no usar datos productivos reales.", en: "Must be tested with controlled identities; do not use real production data." }, language),
   }));
   const rollbackAction = {
     id: "controlled-verification-rollback",
-    domain: "Rollback rehearsal",
+    domain: pickLang({ es: "Ensayo de rollback", en: "Rollback rehearsal" }, language),
     priority: "review",
     status: "controlled-evidence-open",
     owner: "Ops NUXERA",
-    action: `Registrar ${verificationPackage.summary.rollbackChecks} checks de rollback antes de habilitar writes fuera de fallback local.`,
+    action: pickLang(
+      { es: `Registrar ${verificationPackage.summary.rollbackChecks} checks de rollback antes de habilitar writes fuera de fallback local.`, en: `Record ${verificationPackage.summary.rollbackChecks} rollback checks before enabling writes outside local fallback.` },
+      language
+    ),
     source: "controlled-verification-package",
-    guardrail: "Rollback debe preservar auditoria y no borrar registros nuxera_* tras uso real.",
+    guardrail: pickLang({ es: "Rollback debe preservar auditoria y no borrar registros nuxera_* tras uso real.", en: "Rollback must preserve audit history and not delete nuxera_* records after real use." }, language),
   };
 
   return [templateAction, ...deniedActions, rollbackAction];
 }
-export function normalizeNuxeraControlledVerificationPlanResponse(response, fallbackPackage = null) {
+export function normalizeNuxeraControlledVerificationPlanResponse(response, fallbackPackage = null, language = "es") {
   const payload = response?.verificationPlan || response || null;
   const fallback = fallbackPackage || buildControlledVerificationPackage(
     LOCAL_BACKEND_READINESS_STATE,
-    buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE)
+    buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE, language),
+    language
   );
 
   if (!payload || typeof payload !== "object") {
@@ -317,10 +342,11 @@ export function normalizeNuxeraControlledVerificationPlanResponse(response, fall
     ].filter(Boolean),
   };
 }
-function buildLocalEvidenceScaffold(fallbackPackage = null) {
+function buildLocalEvidenceScaffold(fallbackPackage = null, language = "es") {
   const verificationPackage = fallbackPackage || buildControlledVerificationPackage(
     LOCAL_BACKEND_READINESS_STATE,
-    buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE)
+    buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE, language),
+    language
   );
 
   return {
@@ -345,13 +371,13 @@ function buildLocalEvidenceScaffold(fallbackPackage = null) {
       sqlDrafts: 3,
     },
     markdown: "# NUXERA Controlled RLS and Endpoint Evidence - Scaffold\n\nTODO: load backend scaffold before controlled run.",
-    guardrails: ["Local scaffold fallback; no ejecuta endpoints ni aplica SQL."],
+    guardrails: [pickLang({ es: "Local scaffold fallback; no ejecuta endpoints ni aplica SQL.", en: "Local scaffold fallback; it does not execute endpoints or apply SQL." }, language)],
   };
 }
 
-export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fallbackScaffold = null) {
+export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fallbackScaffold = null, language = "es") {
   const payload = response?.evidenceScaffold || response || null;
-  const fallback = fallbackScaffold || buildLocalEvidenceScaffold();
+  const fallback = fallbackScaffold || buildLocalEvidenceScaffold(null, language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -382,7 +408,7 @@ export function normalizeNuxeraControlledEvidenceScaffoldResponse(response, fall
   };
 }
 
-function buildLocalWriteGate() {
+function buildLocalWriteGate(language = "es") {
   return {
     id: "nuxera-controlled-write-gate",
     status: "blocked-by-write-gates",
@@ -409,13 +435,13 @@ function buildLocalWriteGate() {
     ],
     releaseChecklist: ["Write enablement requires a separate deploy/change-control action."],
     nextDecision: "Resolve write gate blockers before any controlled write change request.",
-    guardrails: ["Local write gate fallback; no habilita writes ni cambia feature flags."],
+    guardrails: [pickLang({ es: "Local write gate fallback; no habilita writes ni cambia feature flags.", en: "Local write gate fallback; it does not enable writes or change feature flags." }, language)],
   };
 }
 
-export function normalizeNuxeraControlledWriteGateResponse(response, fallbackWriteGate = null) {
+export function normalizeNuxeraControlledWriteGateResponse(response, fallbackWriteGate = null, language = "es") {
   const payload = response?.writeGate || response || null;
-  const fallback = fallbackWriteGate || buildLocalWriteGate();
+  const fallback = fallbackWriteGate || buildLocalWriteGate(language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -444,7 +470,7 @@ export function normalizeNuxeraControlledWriteGateResponse(response, fallbackWri
   };
 }
 
-function buildLocalChangeRequest() {
+function buildLocalChangeRequest(language = "es") {
   return {
     id: "nuxera-controlled-change-request",
     status: "blocked-by-change-request-gates",
@@ -482,14 +508,14 @@ function buildLocalChangeRequest() {
     reviewChecklist: ["Change ticket references completed evidence review, approval package and write gate output."],
     rollbackPlan: ["Disable NUXERA experience flag if UI behavior degrades."],
     nextDecision: "Resolve change-request blockers before submitting to change control.",
-    guardrails: ["Local change request fallback; no persiste tickets ni habilita writes."],
+    guardrails: [pickLang({ es: "Local change request fallback; no persiste tickets ni habilita writes.", en: "Local change request fallback; it does not persist tickets or enable writes." }, language)],
     markdown: "# NUXERA Controlled Change Request Package\n\nStatus: blocked-by-change-request-gates",
   };
 }
 
-export function normalizeNuxeraControlledChangeRequestResponse(response, fallbackChangeRequest = null) {
+export function normalizeNuxeraControlledChangeRequestResponse(response, fallbackChangeRequest = null, language = "es") {
   const payload = response?.changeRequest || response || null;
-  const fallback = fallbackChangeRequest || buildLocalChangeRequest();
+  const fallback = fallbackChangeRequest || buildLocalChangeRequest(language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -523,7 +549,7 @@ export function normalizeNuxeraControlledChangeRequestResponse(response, fallbac
     ].filter(Boolean),
   };
 }
-function buildLocalContinuationPack() {
+function buildLocalContinuationPack(language = "es") {
   return {
     id: "nuxera-controlled-continuation-pack",
     status: "ready-for-night-continuation",
@@ -548,14 +574,14 @@ function buildLocalContinuationPack() {
     ],
     validationSnapshot: ["Backend full suite passed: 49 files / 456 tests.", "Frontend full suite passed: 9 files / 238 tests."],
     nextResumeSteps: ["Start from latest clean commit and confirm git status is empty."],
-    guardrails: ["Local continuation pack fallback; no ejecuta endpoints ni habilita writes."],
+    guardrails: [pickLang({ es: "Local continuation pack fallback; no ejecuta endpoints ni habilita writes.", en: "Local continuation pack fallback; it does not execute endpoints or enable writes." }, language)],
     markdown: "# NUXERA Controlled Migration Continuation Pack\n\nStatus: ready-for-night-continuation",
   };
 }
 
-export function normalizeNuxeraControlledContinuationPackResponse(response, fallbackContinuationPack = null) {
+export function normalizeNuxeraControlledContinuationPackResponse(response, fallbackContinuationPack = null, language = "es") {
   const payload = response?.continuationPack || response || null;
-  const fallback = fallbackContinuationPack || buildLocalContinuationPack();
+  const fallback = fallbackContinuationPack || buildLocalContinuationPack(language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -589,7 +615,7 @@ export function normalizeNuxeraControlledContinuationPackResponse(response, fall
     ].filter(Boolean),
   };
 }
-function buildLocalReleaseDossier() {
+function buildLocalReleaseDossier(language = "es") {
   return {
     id: "nuxera-controlled-release-dossier",
     status: "blocked-by-release-dossier-gates",
@@ -629,14 +655,14 @@ function buildLocalReleaseDossier() {
     ],
     finalReviewChecklist: ["Final reviewer understands this dossier is not deployment approval."],
     nextDecision: "Resolve release dossier blockers before final release-readiness review.",
-    guardrails: ["Local release dossier fallback; no persiste aprobaciones, tickets ni habilita writes."],
+    guardrails: [pickLang({ es: "Local release dossier fallback; no persiste aprobaciones, tickets ni habilita writes.", en: "Local release dossier fallback; it does not persist approvals, tickets, or enable writes." }, language)],
     markdown: "# NUXERA Controlled Release Readiness Dossier\n\nStatus: blocked-by-release-dossier-gates",
   };
 }
 
-export function normalizeNuxeraControlledReleaseDossierResponse(response, fallbackReleaseDossier = null) {
+export function normalizeNuxeraControlledReleaseDossierResponse(response, fallbackReleaseDossier = null, language = "es") {
   const payload = response?.releaseDossier || response || null;
-  const fallback = fallbackReleaseDossier || buildLocalReleaseDossier();
+  const fallback = fallbackReleaseDossier || buildLocalReleaseDossier(language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -670,7 +696,7 @@ export function normalizeNuxeraControlledReleaseDossierResponse(response, fallba
     ].filter(Boolean),
   };
 }
-function buildLocalApprovalPackage() {
+function buildLocalApprovalPackage(language = "es") {
   return {
     id: "nuxera-controlled-approval-package",
     status: "blocked-by-approval-gates",
@@ -703,13 +729,13 @@ function buildLocalApprovalPackage() {
     blockers: ["Evidence review is not ready for human approval review."],
     releaseChecklist: ["Human approver reviewed completed controlled evidence."],
     nextDecision: "Resolve approval blockers before any release decision.",
-    guardrails: ["Local approval package fallback; no persiste aprobaciones ni habilita writes."],
+    guardrails: [pickLang({ es: "Local approval package fallback; no persiste aprobaciones ni habilita writes.", en: "Local approval package fallback; it does not persist approvals or enable writes." }, language)],
   };
 }
 
-export function normalizeNuxeraControlledApprovalPackageResponse(response, fallbackApprovalPackage = null) {
+export function normalizeNuxeraControlledApprovalPackageResponse(response, fallbackApprovalPackage = null, language = "es") {
   const payload = response?.approvalPackage || response || null;
-  const fallback = fallbackApprovalPackage || buildLocalApprovalPackage();
+  const fallback = fallbackApprovalPackage || buildLocalApprovalPackage(language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -743,7 +769,7 @@ export function normalizeNuxeraControlledApprovalPackageResponse(response, fallb
   };
 }
 
-function buildLocalEvidenceReview() {
+function buildLocalEvidenceReview(language = "es") {
   return {
     id: "nuxera-controlled-evidence-review",
     status: "missing-evidence-markdown",
@@ -765,13 +791,13 @@ function buildLocalEvidenceReview() {
     missingDecisions: [],
     blockers: ["Evidence Markdown payload is required before review."],
     nextDecision: "Submit completed controlled evidence Markdown for read-only review.",
-    guardrails: ["Local review fallback; no ejecuta endpoints ni aplica SQL."],
+    guardrails: [pickLang({ es: "Local review fallback; no ejecuta endpoints ni aplica SQL.", en: "Local review fallback; it does not execute endpoints or apply SQL." }, language)],
   };
 }
 
-export function normalizeNuxeraControlledEvidenceReviewResponse(response, fallbackReview = null) {
+export function normalizeNuxeraControlledEvidenceReviewResponse(response, fallbackReview = null, language = "es") {
   const payload = response?.evidenceReview || response || null;
-  const fallback = fallbackReview || buildLocalEvidenceReview();
+  const fallback = fallbackReview || buildLocalEvidenceReview(language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -801,8 +827,8 @@ export function normalizeNuxeraControlledEvidenceReviewResponse(response, fallba
   };
 }
 
-function buildLocalRunbook(fallbackScaffold = null) {
-  const scaffold = fallbackScaffold || buildLocalEvidenceScaffold();
+function buildLocalRunbook(fallbackScaffold = null, language = "es") {
+  const scaffold = fallbackScaffold || buildLocalEvidenceScaffold(null, language);
 
   return {
     id: "nuxera-controlled-runbook",
@@ -835,13 +861,13 @@ function buildLocalRunbook(fallbackScaffold = null) {
     ],
     acceptanceGates: ["All four RLS identities have observed pass/fail evidence."],
     nextDecision: "Fill missing run metadata before attempting controlled Supabase verification.",
-    guardrails: ["Local runbook fallback; no ejecuta endpoints ni aplica SQL."],
+    guardrails: [pickLang({ es: "Local runbook fallback; no ejecuta endpoints ni aplica SQL.", en: "Local runbook fallback; it does not execute endpoints or apply SQL." }, language)],
   };
 }
 
-export function normalizeNuxeraControlledRunbookResponse(response, fallbackRunbook = null) {
+export function normalizeNuxeraControlledRunbookResponse(response, fallbackRunbook = null, language = "es") {
   const payload = response?.runbook || response || null;
-  const fallback = fallbackRunbook || buildLocalRunbook();
+  const fallback = fallbackRunbook || buildLocalRunbook(null, language);
 
   if (!payload || typeof payload !== "object") {
     return {
@@ -871,7 +897,7 @@ export function normalizeNuxeraControlledRunbookResponse(response, fallbackRunbo
   };
 }
 
-function buildBackendReadinessHandoff(state, actions) {
+function buildBackendReadinessHandoff(state, actions, language) {
   const unavailableSignals = state.signals.filter((signal) => !signal.ready);
 
   return {
@@ -888,14 +914,14 @@ function buildBackendReadinessHandoff(state, actions) {
     nextActions: actions.map((action) => action.action),
     guardrails: [
       ...state.guardrails,
-      "Handoff local; no aplica SQL, no cambia RLS y no sustituye pruebas con identidades reales.",
+      pickLang({ es: "Handoff local; no aplica SQL, no cambia RLS y no sustituye pruebas con identidades reales.", en: "Local handoff; it does not apply SQL, change RLS, or replace testing with real identities." }, language),
     ],
   };
 }
-function mergeBackendReadinessIntoAuditPackage(auditPackage, handoff) {
+function mergeBackendReadinessIntoAuditPackage(auditPackage, handoff, language) {
   const existingSignals = asArray(auditPackage?.signals).filter((signal) => signal.id !== "backend-readiness");
   const existingActions = asArray(auditPackage?.nextActions).filter(
-    (action) => !String(action).startsWith("Verificar backend readiness:")
+    (action) => !String(action).startsWith("Verificar backend readiness:") && !String(action).startsWith("Verify backend readiness:")
   );
 
   return {
@@ -905,25 +931,25 @@ function mergeBackendReadinessIntoAuditPackage(auditPackage, handoff) {
       ...existingSignals,
       {
         id: "backend-readiness",
-        label: "Readiness backend",
+        label: pickLang({ es: "Readiness backend", en: "Backend readiness" }, language),
         value: `${handoff.summary.readiness}%`,
         status: handoff.status,
       },
     ],
     nextActions: [
       ...existingActions,
-      ...handoff.nextActions.map((action) => `Verificar backend readiness: ${action}`),
+      ...handoff.nextActions.map((action) => pickLang({ es: `Verificar backend readiness: ${action}`, en: `Verify backend readiness: ${action}` }, language)),
     ],
     guardrails: [
       ...asArray(auditPackage?.guardrails),
-      "Backend readiness en audit package es evidencia local; no aplica SQL ni valida RLS por si sola.",
+      pickLang({ es: "Backend readiness en audit package es evidencia local; no aplica SQL ni valida RLS por si sola.", en: "Backend readiness in the audit package is local evidence; it does not apply SQL or validate RLS on its own." }, language),
     ],
   };
 }
-function mergeControlledVerificationIntoAuditPackage(auditPackage, verificationPackage) {
+function mergeControlledVerificationIntoAuditPackage(auditPackage, verificationPackage, language) {
   const existingSignals = asArray(auditPackage?.signals).filter((signal) => signal.id !== "controlled-verification-package");
   const existingActions = asArray(auditPackage?.nextActions).filter(
-    (action) => !String(action).startsWith("Completar evidencia RLS/endpoints:")
+    (action) => !String(action).startsWith("Completar evidencia RLS/endpoints:") && !String(action).startsWith("Complete RLS/endpoint evidence:")
   );
 
   return {
@@ -933,27 +959,33 @@ function mergeControlledVerificationIntoAuditPackage(auditPackage, verificationP
       ...existingSignals,
       {
         id: "controlled-verification-package",
-        label: "Evidencia RLS/endpoints",
+        label: pickLang({ es: "Evidencia RLS/endpoints", en: "RLS/endpoint evidence" }, language),
         value: `${verificationPackage.summary.endpoints}/${verificationPackage.summary.identities}`,
         status: verificationPackage.status,
       },
     ],
     nextActions: [
       ...existingActions,
-      `Completar evidencia RLS/endpoints: llenar ${verificationPackage.evidenceTemplate.path} antes de decision productiva.`,
-      ...verificationPackage.deniedChecks.map((check) => `Completar evidencia RLS/endpoints: ${check.actor} debe recibir ${check.expected}.`),
+      pickLang(
+        { es: `Completar evidencia RLS/endpoints: llenar ${verificationPackage.evidenceTemplate.path} antes de decision productiva.`, en: `Complete RLS/endpoint evidence: fill in ${verificationPackage.evidenceTemplate.path} before a production decision.` },
+        language
+      ),
+      ...verificationPackage.deniedChecks.map((check) => pickLang(
+        { es: `Completar evidencia RLS/endpoints: ${check.actor} debe recibir ${check.expected}.`, en: `Complete RLS/endpoint evidence: ${check.actor} must receive ${check.expected}.` },
+        language
+      )),
     ],
     guardrails: [
       ...asArray(auditPackage?.guardrails),
-      "Evidencia RLS/endpoints en audit package es plantilla local; requiere ejecucion controlada real.",
+      pickLang({ es: "Evidencia RLS/endpoints en audit package es plantilla local; requiere ejecucion controlada real.", en: "RLS/endpoint evidence in the audit package is a local template; it requires a real controlled run." }, language),
     ],
   };
 }
-function mergeRlsMatrixIntoAuditPackage(auditPackage, matrix) {
+function mergeRlsMatrixIntoAuditPackage(auditPackage, matrix, language) {
   const blockedScenarios = matrix.scenarios.filter((scenario) => scenario.blockedBy.length > 0);
   const existingSignals = asArray(auditPackage?.signals).filter((signal) => signal.id !== "rls-verification-matrix");
   const existingActions = asArray(auditPackage?.nextActions).filter(
-    (action) => !String(action).startsWith("Verificar RLS controlado:")
+    (action) => !String(action).startsWith("Verificar RLS controlado:") && !String(action).startsWith("Verify controlled RLS:")
   );
 
   return {
@@ -963,37 +995,42 @@ function mergeRlsMatrixIntoAuditPackage(auditPackage, matrix) {
       ...existingSignals,
       {
         id: "rls-verification-matrix",
-        label: "Matriz RLS controlada",
+        label: pickLang({ es: "Matriz RLS controlada", en: "Controlled RLS matrix" }, language),
         value: `${blockedScenarios.length}/${matrix.scenarios.length}`,
         status: matrix.status,
       },
     ],
     nextActions: [
       ...existingActions,
-      ...blockedScenarios.map((scenario) => `Verificar RLS controlado: ${scenario.identity} bloqueado por ${scenario.blockedBy.join(", ")}.`),
+      ...blockedScenarios.map((scenario) => pickLang(
+        { es: `Verificar RLS controlado: ${scenario.identity} bloqueado por ${scenario.blockedBy.join(", ")}.`, en: `Verify controlled RLS: ${scenario.identity} blocked by ${scenario.blockedBy.join(", ")}.` },
+        language
+      )),
     ],
     guardrails: [
       ...asArray(auditPackage?.guardrails),
-      "Matriz RLS en audit package es planeacion local; requiere pruebas con identidades controladas.",
+      pickLang({ es: "Matriz RLS en audit package es planeacion local; requiere pruebas con identidades controladas.", en: "RLS matrix in the audit package is local planning; it requires testing with controlled identities." }, language),
     ],
   };
 }
 
-export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE, verificationPlanState = null) {
+export function mergeBackendReadinessWithConsole(consoleState, readinessState = LOCAL_BACKEND_READINESS_STATE, verificationPlanState = null, language = "es") {
   const state = readinessState || LOCAL_BACKEND_READINESS_STATE;
-  const readinessHealthSignal = buildBackendReadinessHealthSignal(state);
-  const readinessActions = buildBackendReadinessActions(state);
-  const rlsVerificationMatrix = buildRlsVerificationMatrix(state);
-  const controlledVerificationPackage = verificationPlanState || buildControlledVerificationPackage(state, rlsVerificationMatrix);
-  const controlledVerificationHealthSignal = buildControlledVerificationHealthSignal(controlledVerificationPackage);
-  const controlledVerificationActions = buildControlledVerificationActions(controlledVerificationPackage);
-  const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions);
+  const readinessHealthSignal = buildBackendReadinessHealthSignal(state, language);
+  const readinessActions = buildBackendReadinessActions(state, language);
+  const rlsVerificationMatrix = buildRlsVerificationMatrix(state, language);
+  const controlledVerificationPackage = verificationPlanState || buildControlledVerificationPackage(state, rlsVerificationMatrix, language);
+  const controlledVerificationHealthSignal = buildControlledVerificationHealthSignal(controlledVerificationPackage, language);
+  const controlledVerificationActions = buildControlledVerificationActions(controlledVerificationPackage, language);
+  const readinessHandoff = buildBackendReadinessHandoff(state, readinessActions, language);
   const auditPackage = mergeControlledVerificationIntoAuditPackage(
     mergeRlsMatrixIntoAuditPackage(
-      mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff),
-      rlsVerificationMatrix
+      mergeBackendReadinessIntoAuditPackage(consoleState.auditPackage, readinessHandoff, language),
+      rlsVerificationMatrix,
+      language
     ),
-    controlledVerificationPackage
+    controlledVerificationPackage,
+    language
   );
   const adminHealthSignals = [
     ...consoleState.adminHealthSignals.filter(
@@ -1039,14 +1076,14 @@ export function mergeBackendReadinessWithConsole(consoleState, readinessState = 
     policies: [
       ...consoleState.policies,
       state.ready
-        ? "Backend readiness visible; RLS aun requiere verificacion controlada."
-        : "Backend readiness pendiente; mantener writes productivos bloqueados.",
-      "Paquete RLS/endpoints requiere evidencia completada antes de decision productiva.",
+        ? pickLang({ es: "Backend readiness visible; RLS aun requiere verificacion controlada.", en: "Backend readiness visible; RLS still requires controlled verification." }, language)
+        : pickLang({ es: "Backend readiness pendiente; mantener writes productivos bloqueados.", en: "Backend readiness pending; keep production writes blocked." }, language),
+      pickLang({ es: "Paquete RLS/endpoints requiere evidencia completada antes de decision productiva.", en: "RLS/endpoint package requires completed evidence before a production decision." }, language),
     ],
   };
 }
 
-export function useBackendReadiness({ enabled = true } = {}) {
+export function useBackendReadiness({ enabled = true, language = "es" } = {}) {
   const [readinessState, setReadinessState] = useState(LOCAL_BACKEND_READINESS_STATE);
 
   useEffect(() => {
@@ -1059,14 +1096,14 @@ export function useBackendReadiness({ enabled = true } = {}) {
     setReadinessState({
       ...LOCAL_BACKEND_READINESS_STATE,
       source: "remote-loading",
-      label: "Cargando readiness backend NUXERA",
+      label: pickLang({ es: "Cargando readiness backend NUXERA", en: "Loading NUXERA backend readiness" }, language),
       loading: true,
     });
 
     nuxeraBackendReadinessAPI.getReadiness()
       .then(({ data }) => {
         if (!active) return;
-        setReadinessState(normalizeNuxeraBackendReadinessResponse(data));
+        setReadinessState(normalizeNuxeraBackendReadinessResponse(data, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1074,7 +1111,7 @@ export function useBackendReadiness({ enabled = true } = {}) {
         setReadinessState({
           ...LOCAL_BACKEND_READINESS_STATE,
           source: "remote-error-fallback",
-          label: "Fallback readiness local",
+          label: pickLang({ es: "Fallback readiness local", en: "Local readiness fallback" }, language),
           error: "nuxera-backend-readiness-unavailable",
         });
       });
@@ -1082,29 +1119,29 @@ export function useBackendReadiness({ enabled = true } = {}) {
     return () => {
       active = false;
     };
-  }, [enabled]);
+  }, [enabled, language]);
 
   return readinessState;
 }
-export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold = null } = {}) {
+export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold = null, language = "es" } = {}) {
   const [evidenceScaffoldState, setEvidenceScaffoldState] = useState(
-    fallbackScaffold || buildLocalEvidenceScaffold()
+    fallbackScaffold || buildLocalEvidenceScaffold(null, language)
   );
 
   useEffect(() => {
     if (!enabled) {
-      setEvidenceScaffoldState(fallbackScaffold || buildLocalEvidenceScaffold());
+      setEvidenceScaffoldState(fallbackScaffold || buildLocalEvidenceScaffold(null, language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackScaffold || buildLocalEvidenceScaffold();
+    const fallback = fallbackScaffold || buildLocalEvidenceScaffold(null, language);
     setEvidenceScaffoldState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledEvidenceScaffoldAPI.getScaffold()
       .then(({ data }) => {
         if (!active) return;
-        setEvidenceScaffoldState(normalizeNuxeraControlledEvidenceScaffoldResponse(data, fallback));
+        setEvidenceScaffoldState(normalizeNuxeraControlledEvidenceScaffoldResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1119,28 +1156,28 @@ export function useControlledEvidenceScaffold({ enabled = true, fallbackScaffold
     return () => {
       active = false;
     };
-  }, [enabled, fallbackScaffold]);
+  }, [enabled, fallbackScaffold, language]);
 
   return evidenceScaffoldState;
 }
 
-export function useControlledWriteGate({ enabled = true, payload = null, fallbackWriteGate = null } = {}) {
-  const [writeGateState, setWriteGateState] = useState(fallbackWriteGate || buildLocalWriteGate());
+export function useControlledWriteGate({ enabled = true, payload = null, fallbackWriteGate = null, language = "es" } = {}) {
+  const [writeGateState, setWriteGateState] = useState(fallbackWriteGate || buildLocalWriteGate(language));
 
   useEffect(() => {
     if (!enabled || !payload) {
-      setWriteGateState(fallbackWriteGate || buildLocalWriteGate());
+      setWriteGateState(fallbackWriteGate || buildLocalWriteGate(language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackWriteGate || buildLocalWriteGate();
+    const fallback = fallbackWriteGate || buildLocalWriteGate(language);
     setWriteGateState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledWriteGateAPI.evaluate(payload)
       .then(({ data }) => {
         if (!active) return;
-        setWriteGateState(normalizeNuxeraControlledWriteGateResponse(data, fallback));
+        setWriteGateState(normalizeNuxeraControlledWriteGateResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1155,28 +1192,28 @@ export function useControlledWriteGate({ enabled = true, payload = null, fallbac
     return () => {
       active = false;
     };
-  }, [enabled, payload, fallbackWriteGate]);
+  }, [enabled, payload, fallbackWriteGate, language]);
 
   return writeGateState;
 }
 
-export function useControlledChangeRequest({ enabled = true, payload = null, fallbackChangeRequest = null } = {}) {
-  const [changeRequestState, setChangeRequestState] = useState(fallbackChangeRequest || buildLocalChangeRequest());
+export function useControlledChangeRequest({ enabled = true, payload = null, fallbackChangeRequest = null, language = "es" } = {}) {
+  const [changeRequestState, setChangeRequestState] = useState(fallbackChangeRequest || buildLocalChangeRequest(language));
 
   useEffect(() => {
     if (!enabled || !payload) {
-      setChangeRequestState(fallbackChangeRequest || buildLocalChangeRequest());
+      setChangeRequestState(fallbackChangeRequest || buildLocalChangeRequest(language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackChangeRequest || buildLocalChangeRequest();
+    const fallback = fallbackChangeRequest || buildLocalChangeRequest(language);
     setChangeRequestState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledChangeRequestAPI.build(payload)
       .then(({ data }) => {
         if (!active) return;
-        setChangeRequestState(normalizeNuxeraControlledChangeRequestResponse(data, fallback));
+        setChangeRequestState(normalizeNuxeraControlledChangeRequestResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1191,27 +1228,27 @@ export function useControlledChangeRequest({ enabled = true, payload = null, fal
     return () => {
       active = false;
     };
-  }, [enabled, payload, fallbackChangeRequest]);
+  }, [enabled, payload, fallbackChangeRequest, language]);
 
   return changeRequestState;
 }
-export function useControlledContinuationPack({ enabled = true, fallbackContinuationPack = null } = {}) {
-  const [continuationPackState, setContinuationPackState] = useState(fallbackContinuationPack || buildLocalContinuationPack());
+export function useControlledContinuationPack({ enabled = true, fallbackContinuationPack = null, language = "es" } = {}) {
+  const [continuationPackState, setContinuationPackState] = useState(fallbackContinuationPack || buildLocalContinuationPack(language));
 
   useEffect(() => {
     if (!enabled) {
-      setContinuationPackState(fallbackContinuationPack || buildLocalContinuationPack());
+      setContinuationPackState(fallbackContinuationPack || buildLocalContinuationPack(language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackContinuationPack || buildLocalContinuationPack();
+    const fallback = fallbackContinuationPack || buildLocalContinuationPack(language);
     setContinuationPackState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledContinuationPackAPI.getPack()
       .then(({ data }) => {
         if (!active) return;
-        setContinuationPackState(normalizeNuxeraControlledContinuationPackResponse(data, fallback));
+        setContinuationPackState(normalizeNuxeraControlledContinuationPackResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1226,27 +1263,27 @@ export function useControlledContinuationPack({ enabled = true, fallbackContinua
     return () => {
       active = false;
     };
-  }, [enabled, fallbackContinuationPack]);
+  }, [enabled, fallbackContinuationPack, language]);
 
   return continuationPackState;
 }
-export function useControlledReleaseDossier({ enabled = true, payload = null, fallbackReleaseDossier = null } = {}) {
-  const [releaseDossierState, setReleaseDossierState] = useState(fallbackReleaseDossier || buildLocalReleaseDossier());
+export function useControlledReleaseDossier({ enabled = true, payload = null, fallbackReleaseDossier = null, language = "es" } = {}) {
+  const [releaseDossierState, setReleaseDossierState] = useState(fallbackReleaseDossier || buildLocalReleaseDossier(language));
 
   useEffect(() => {
     if (!enabled || !payload) {
-      setReleaseDossierState(fallbackReleaseDossier || buildLocalReleaseDossier());
+      setReleaseDossierState(fallbackReleaseDossier || buildLocalReleaseDossier(language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackReleaseDossier || buildLocalReleaseDossier();
+    const fallback = fallbackReleaseDossier || buildLocalReleaseDossier(language);
     setReleaseDossierState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledReleaseDossierAPI.build(payload)
       .then(({ data }) => {
         if (!active) return;
-        setReleaseDossierState(normalizeNuxeraControlledReleaseDossierResponse(data, fallback));
+        setReleaseDossierState(normalizeNuxeraControlledReleaseDossierResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1261,27 +1298,27 @@ export function useControlledReleaseDossier({ enabled = true, payload = null, fa
     return () => {
       active = false;
     };
-  }, [enabled, payload, fallbackReleaseDossier]);
+  }, [enabled, payload, fallbackReleaseDossier, language]);
 
   return releaseDossierState;
 }
-export function useControlledApprovalPackage({ enabled = true, payload = null, fallbackApprovalPackage = null } = {}) {
-  const [approvalPackageState, setApprovalPackageState] = useState(fallbackApprovalPackage || buildLocalApprovalPackage());
+export function useControlledApprovalPackage({ enabled = true, payload = null, fallbackApprovalPackage = null, language = "es" } = {}) {
+  const [approvalPackageState, setApprovalPackageState] = useState(fallbackApprovalPackage || buildLocalApprovalPackage(language));
 
   useEffect(() => {
     if (!enabled || !payload) {
-      setApprovalPackageState(fallbackApprovalPackage || buildLocalApprovalPackage());
+      setApprovalPackageState(fallbackApprovalPackage || buildLocalApprovalPackage(language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackApprovalPackage || buildLocalApprovalPackage();
+    const fallback = fallbackApprovalPackage || buildLocalApprovalPackage(language);
     setApprovalPackageState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledApprovalPackageAPI.build(payload)
       .then(({ data }) => {
         if (!active) return;
-        setApprovalPackageState(normalizeNuxeraControlledApprovalPackageResponse(data, fallback));
+        setApprovalPackageState(normalizeNuxeraControlledApprovalPackageResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1296,28 +1333,28 @@ export function useControlledApprovalPackage({ enabled = true, payload = null, f
     return () => {
       active = false;
     };
-  }, [enabled, payload, fallbackApprovalPackage]);
+  }, [enabled, payload, fallbackApprovalPackage, language]);
 
   return approvalPackageState;
 }
 
-export function useControlledEvidenceReview({ enabled = true, markdown = "", fallbackReview = null } = {}) {
-  const [reviewState, setReviewState] = useState(fallbackReview || buildLocalEvidenceReview());
+export function useControlledEvidenceReview({ enabled = true, markdown = "", fallbackReview = null, language = "es" } = {}) {
+  const [reviewState, setReviewState] = useState(fallbackReview || buildLocalEvidenceReview(language));
 
   useEffect(() => {
     if (!enabled || !markdown) {
-      setReviewState(fallbackReview || buildLocalEvidenceReview());
+      setReviewState(fallbackReview || buildLocalEvidenceReview(language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackReview || buildLocalEvidenceReview();
+    const fallback = fallbackReview || buildLocalEvidenceReview(language);
     setReviewState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledEvidenceReviewAPI.review(markdown)
       .then(({ data }) => {
         if (!active) return;
-        setReviewState(normalizeNuxeraControlledEvidenceReviewResponse(data, fallback));
+        setReviewState(normalizeNuxeraControlledEvidenceReviewResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1332,28 +1369,28 @@ export function useControlledEvidenceReview({ enabled = true, markdown = "", fal
     return () => {
       active = false;
     };
-  }, [enabled, markdown, fallbackReview]);
+  }, [enabled, markdown, fallbackReview, language]);
 
   return reviewState;
 }
 
-export function useControlledRunbook({ enabled = true, fallbackRunbook = null } = {}) {
-  const [runbookState, setRunbookState] = useState(fallbackRunbook || buildLocalRunbook());
+export function useControlledRunbook({ enabled = true, fallbackRunbook = null, language = "es" } = {}) {
+  const [runbookState, setRunbookState] = useState(fallbackRunbook || buildLocalRunbook(null, language));
 
   useEffect(() => {
     if (!enabled) {
-      setRunbookState(fallbackRunbook || buildLocalRunbook());
+      setRunbookState(fallbackRunbook || buildLocalRunbook(null, language));
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackRunbook || buildLocalRunbook();
+    const fallback = fallbackRunbook || buildLocalRunbook(null, language);
     setRunbookState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledRunbookAPI.getRunbook()
       .then(({ data }) => {
         if (!active) return;
-        setRunbookState(normalizeNuxeraControlledRunbookResponse(data, fallback));
+        setRunbookState(normalizeNuxeraControlledRunbookResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1368,32 +1405,32 @@ export function useControlledRunbook({ enabled = true, fallbackRunbook = null } 
     return () => {
       active = false;
     };
-  }, [enabled, fallbackRunbook]);
+  }, [enabled, fallbackRunbook, language]);
 
   return runbookState;
 }
 
-export function useControlledVerificationPlan({ enabled = true, fallbackPackage = null } = {}) {
+export function useControlledVerificationPlan({ enabled = true, fallbackPackage = null, language = "es" } = {}) {
   const [verificationPlanState, setVerificationPlanState] = useState(
-    fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE))
+    fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE, language), language)
   );
 
   useEffect(() => {
     if (!enabled) {
       setVerificationPlanState(
-        fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE))
+        fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE, language), language)
       );
       return undefined;
     }
 
     let active = true;
-    const fallback = fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE));
+    const fallback = fallbackPackage || buildControlledVerificationPackage(LOCAL_BACKEND_READINESS_STATE, buildRlsVerificationMatrix(LOCAL_BACKEND_READINESS_STATE, language), language);
     setVerificationPlanState({ ...fallback, source: "remote-loading", loading: true });
 
     nuxeraControlledVerificationAPI.getPlan()
       .then(({ data }) => {
         if (!active) return;
-        setVerificationPlanState(normalizeNuxeraControlledVerificationPlanResponse(data, fallback));
+        setVerificationPlanState(normalizeNuxeraControlledVerificationPlanResponse(data, fallback, language));
       })
       .catch((err) => {
         if (!active) return;
@@ -1408,7 +1445,7 @@ export function useControlledVerificationPlan({ enabled = true, fallbackPackage 
     return () => {
       active = false;
     };
-  }, [enabled, fallbackPackage]);
+  }, [enabled, fallbackPackage, language]);
 
   return verificationPlanState;
 }

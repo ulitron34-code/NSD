@@ -1,4 +1,5 @@
 import { getNuxeraEngine } from "../engines/engineRegistry";
+import { isNuxeraEngineEnabled } from "../../experience/experienceFlags";
 
 export const NUXERA_SECTION_TYPES = Object.freeze({
   LEGACY_ADAPTER: "legacy-adapter",
@@ -9,7 +10,7 @@ export function resolveNuxeraSection(section) {
   if (!section || section === "home") return null;
 
   const engine = getNuxeraEngine(section);
-  if (engine) {
+  if (engine && isNuxeraEngineEnabled(engine.id)) {
     return {
       id: engine.id,
       type: NUXERA_SECTION_TYPES.LEGACY_ADAPTER,
