@@ -73,6 +73,16 @@
   padding: 28px;
 }
 
+.nuxera-workspace-header { max-width: 1180px; margin: 0 auto 22px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--nuxera-panel); border: 1px solid var(--nuxera-border); border-radius: 8px; }
+.nuxera-header-primary, .nuxera-header-actions { display: flex; align-items: center; gap: 10px; }
+.nuxera-header-primary > div { display: grid; gap: 2px; }
+.nuxera-breadcrumb { color: var(--nuxera-muted); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+.nuxera-header-actions button, .nuxera-help { border: 1px solid var(--nuxera-border); border-radius: 7px; padding: 7px 9px; background: transparent; color: var(--nuxera-ink); font: inherit; font-size: 0.78rem; font-weight: 850; text-decoration: none; cursor: pointer; }
+.nuxera-agent-status { color: var(--nuxera-muted); font-size: 0.76rem; font-weight: 800; }
+.nuxera-agent-status i { width: 8px; height: 8px; margin-right: 6px; display: inline-block; border-radius: 50%; background: #2f855a; }
+.nuxera-profile { max-width: 180px; overflow: hidden; color: var(--nuxera-muted); font-size: 0.76rem; text-overflow: ellipsis; white-space: nowrap; }
+.nuxera-mobile-menu, .nuxera-mobile-backdrop { display: none; }
+
 .nuxera-home {
   max-width: 1180px;
   margin: 0 auto;
@@ -782,6 +792,7 @@
 }
 
 .nuxera-admin-summary,
+.nuxera-admin-operational-modules,
 .nuxera-admin-lanes,
 .nuxera-admin-panels {
   display: grid;
@@ -791,6 +802,133 @@
 
 .nuxera-admin-summary {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nuxera-context-selector {
+  margin-bottom: 16px;
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-context-selector button {
+  padding: 8px 12px;
+  color: var(--nuxera-ink);
+  background: transparent;
+  border: 1px solid var(--nuxera-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.nuxera-context-selector button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--nuxera-ink);
+}
+
+.nuxera-agent-orchestration {
+  margin-bottom: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-agent-orchestration > header,
+.nuxera-agent-orchestration > div:not(.nuxera-admin-summary) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nuxera-agent-orchestration > div > article {
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-agent-orchestration span,
+.nuxera-agent-orchestration small,
+.nuxera-agent-orchestration footer {
+  color: var(--nuxera-muted);
+  font-size: 0.76rem;
+}
+
+.nuxera-agent-orchestration p,
+.nuxera-agent-orchestration h2 {
+  margin: 0;
+}
+
+.nuxera-agent-orchestration em {
+  color: var(--nuxera-gold);
+  font-size: 0.7rem;
+  font-style: normal;
+}
+
+.nuxera-admin-workspace-modules {
+  display: grid;
+  gap: 16px;
+}
+
+.nuxera-admin-workspace-modules > section {
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-admin-workspace-modules > section > header {
+  margin-bottom: 12px;
+}
+
+.nuxera-admin-workspace-modules > section > header span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-admin-workspace-modules > section > header h2 {
+  margin: 4px 0 0;
+}
+
+.nuxera-admin-operational-modules {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nuxera-admin-operational-modules > article {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-admin-operational-modules span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-admin-operational-modules h2,
+.nuxera-admin-operational-modules p {
+  margin: 0;
+}
+
+.nuxera-admin-operational-modules p,
+.nuxera-admin-operational-modules small {
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .nuxera-admin-lanes {
@@ -1673,12 +1811,50 @@
   }
 
   .nuxera-sidebar {
-    position: static;
-    height: auto;
+    position: fixed;
+    z-index: 40;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(82vw, 300px);
+    height: 100vh;
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+  }
+
+  .nuxera-sidebar.is-open {
+    transform: translateX(0);
   }
 
   .nuxera-main {
     padding: 20px;
+  }
+
+  .nuxera-mobile-menu {
+    display: inline-flex;
+  }
+
+  .nuxera-mobile-backdrop {
+    position: fixed;
+    z-index: 30;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(4, 10, 18, 0.62);
+  }
+
+  .nuxera-workspace-header {
+    align-items: flex-start;
+  }
+
+  .nuxera-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .nuxera-agent-status,
+  .nuxera-profile {
+    display: none;
   }
 
   .nuxera-hero-row,
@@ -1700,6 +1876,7 @@
   .nuxera-memo-grid,
   .nuxera-grantor-document-summary > div,
   .nuxera-admin-summary,
+  .nuxera-admin-operational-modules,
   .nuxera-admin-lanes,
   .nuxera-admin-gates > div,
   .nuxera-admin-panels,
@@ -1708,6 +1885,8 @@
   .nuxera-admin-audit-package > div,
   .nuxera-admin-health-signals > div,
   .nuxera-admin-action-queue > div,
+  .nuxera-agent-orchestration > header,
+  .nuxera-agent-orchestration > div:not(.nuxera-admin-summary),
   .nuxera-admin-control-grid,
   .nuxera-decision-flow > div {
     grid-template-columns: 1fr;

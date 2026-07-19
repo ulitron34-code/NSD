@@ -6,12 +6,13 @@ import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
+import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
-import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary } from "../grantor/caseQueue";
+import { buildGrantorCaseQueueFromPipeline, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 
 const roleCopy = {
   applicant: {
@@ -38,9 +39,10 @@ function ApplicantMissionHome({ sectionLabel }) {
   const mission = getApplicantGuidedMission("applicant");
   const readiness = getApplicantMissionReadiness("applicant");
   const onboardingWizard = getApplicantOnboardingWizard("es");
-  const { orders, orderId, isDemo, loading: ordersLoading } = useMyOrders();
-  const projectWorkspace = getApplicantCompanyProjectWorkspace(orders[0], "es");
-  const documentCenter = getApplicantDocumentCenter(orders[0], "es");
+  const { orders, selectedOrder, orderId, selectOrder, isDemo, loading: ordersLoading } = useMyOrders();
+  const projectWorkspace = getApplicantCompanyProjectWorkspace(selectedOrder, "es");
+  const documentCenter = getApplicantDocumentCenter(selectedOrder, "es");
+  const displayedProgress = !isDemo && orderId ? projectWorkspace.summary.readiness : readiness.progress;
   const workspaceState = useApplicantWorkspaceState(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
   });
@@ -68,13 +70,25 @@ function ApplicantMissionHome({ sectionLabel }) {
         <div>
           <h1 id="nuxera-home-title">{mission.title}</h1>
           <p>{mission.summary}</p>
+          {!isDemo && selectedOrder && <small>Expediente real: {selectedOrder.project_name || selectedOrder.projectName || selectedOrder.id}</small>}
         </div>
         <div className="nuxera-status-panel">
           <span>{readiness.status}</span>
-          <strong>{readiness.progress}% listo</strong>
+          <strong>{displayedProgress}% listo</strong>
           <small>{sectionLabel}</small>
         </div>
       </div>
+
+      {!isDemo && orders.length > 1 && (
+        <section aria-label="Selector de expediente del solicitante">
+          <h2>Seleccionar expediente</h2>
+          {orders.map((order) => (
+            <button key={order.id} type="button" onClick={() => selectOrder(order.id)} aria-pressed={order.id === orderId}>
+              {order.project_name || order.projectName || order.case_number || order.id}
+            </button>
+          ))}
+        </section>
+      )}
 
       <section className="nuxera-mission-next" aria-label="Siguiente accion del solicitante">
         <div>
@@ -260,12 +274,13 @@ function ApplicantMissionHome({ sectionLabel }) {
 }
 
 function GrantorQueueHome({ sectionLabel }) {
-  const queue = getGrantorCaseQueue();
-  const summary = getGrantorQueueSummary();
-  const workbench = getGrantorCaseWorkbench(queue.cases[0]?.id);
-  const memo = getGrantorDecisionMemo(workbench.case.id);
-  const grantorDocumentSummary = getGrantorDocumentSummary(workbench.case.id);
-  const { orderId, isDemo } = useMyGrantorPipeline();
+  const { pipeline, authorizedOrder, orderId, selectOrder, isDemo, loading } = useMyGrantorPipeline();
+  const queue = isDemo ? getGrantorCaseQueue() : buildGrantorCaseQueueFromPipeline(pipeline);
+  const summary = getGrantorQueueSummary(queue);
+  const selectedCase = resolveSelectedGrantorCase(queue, orderId);
+  const workbench = selectedCase ? getGrantorCaseWorkbench(selectedCase.id, queue) : null;
+  const memo = selectedCase ? getGrantorDecisionMemo(selectedCase.id, queue) : null;
+  const grantorDocumentSummary = selectedCase ? getGrantorDocumentSummary(selectedCase.id, queue) : null;
   const grantorEvidenceLedger = useAuthorizedGrantorEvidenceLedger(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
     role: "grantor",
@@ -295,6 +310,9 @@ function GrantorQueueHome({ sectionLabel }) {
       </div>
 
       <div className="nuxera-grantor-queue">
+        <small>{isDemo ? "Modelo local de preparacion para cuenta demo." : "Pipeline real limitado a expedientes autorizados por data room."}</small>
+        {loading && <p>Cargando pipeline autorizado...</p>}
+        {!loading && !isDemo && queue.cases.length === 0 && <p>No hay expedientes autorizados disponibles.</p>}
         {queue.cases.map((item) => (
           <article key={item.id}>
             <header>
@@ -310,6 +328,7 @@ function GrantorQueueHome({ sectionLabel }) {
             </div>
             <p>{item.nextAction}</p>
             <footer>
+              {!isDemo && <button type="button" onClick={() => selectOrder(item.id)} aria-pressed={item.id === selectedCase?.id}>Revisar expediente</button>}
               {item.evidenceLinks.map((link) => (
                 <NavLink key={link.engine} to={link.path}>{link.engine}</NavLink>
               ))}
@@ -318,7 +337,7 @@ function GrantorQueueHome({ sectionLabel }) {
         ))}
       </div>
 
-      <section className="nuxera-grantor-workbench" aria-label="Workbench del caso prioritario">
+      {workbench && <section className="nuxera-grantor-workbench" aria-label="Workbench del caso prioritario">
         <header>
           <div>
             <span>{workbench.status}</span>
@@ -359,9 +378,9 @@ function GrantorQueueHome({ sectionLabel }) {
         <div className="nuxera-workbench-audit">
           {workbench.auditTrail.map((entry) => <p key={entry}>{entry}</p>)}
         </div>
-      </section>
+      </section>}
 
-      <section className="nuxera-grantor-document-summary" aria-label="Resumen documental autorizado para otorgante">
+      {grantorDocumentSummary && <section className="nuxera-grantor-document-summary" aria-label="Resumen documental autorizado para otorgante">
         <header>
           <div>
             <span>{grantorDocumentSummary.status}</span>
@@ -379,15 +398,17 @@ function GrantorQueueHome({ sectionLabel }) {
           ))}
         </div>
         <footer>{grantorDocumentSummary.nextAction} {grantorDocumentSummary.guardrails[0]}</footer>
-      </section>
+      </section>}
       <section className="nuxera-grantor-evidence-ledger" aria-label="Ledger read-only de evidencia otorgante">
         <header>
           <div>
             <span>{grantorEvidenceLedger.status}</span>
-            <h2>Evidencia visible resumida</h2>
+            <h2>{isDemo ? "Evidencia demo resumida" : "Evidencia real del expediente autorizado"}</h2>
           </div>
           <strong>{grantorEvidenceLedger.summary.total} senales</strong>
         </header>
+        {orderId && <small>Expediente: {authorizedOrder?.name || authorizedOrder?.project_name || orderId} ({orderId})</small>}
+        {!orderId && !isDemo && <small>No hay un expediente real autorizado seleccionado.</small>}
         {grantorEvidenceLedger.backendEvidence?.loading && <small>Cargando evidence_links NUXERA autorizados...</small>}
         {grantorEvidenceLedger.backendEvidence?.source?.startsWith("remote") && (
           <small>{grantorEvidenceLedger.backendEvidence.label}</small>
@@ -402,9 +423,9 @@ function GrantorQueueHome({ sectionLabel }) {
             </article>
           ))}
         </div>
-        <footer>{grantorEvidenceLedger.policies[1]}</footer>
+        <footer>{grantorEvidenceLedger.policies[0]}</footer>
       </section>
-            <section className="nuxera-grantor-memo" aria-label="Memo local no vinculante del otorgante">
+      {memo && <section className="nuxera-grantor-memo" aria-label="Memo local no vinculante del otorgante">
         <header>
           <div>
             <span>{memo.status}</span>
@@ -435,7 +456,7 @@ function GrantorQueueHome({ sectionLabel }) {
         <div className="nuxera-memo-guardrails">
           {memo.guardrails.map((guardrail) => <p key={guardrail}>{guardrail}</p>)}
         </div>
-      </section>
+      </section>}
 <section className="nuxera-grantor-policies" aria-label="Politicas de revision otorgante">
         <h2>Politicas de cola</h2>
         {queue.policies.map((policy) => <p key={policy}>{policy}</p>)}
@@ -446,6 +467,7 @@ function GrantorQueueHome({ sectionLabel }) {
 
 
 function AdminOperationsHome({ sectionLabel }) {
+  const operationalSnapshot = useAdminOperationalSnapshot({ enabled: isNuxeraExperienceEnabled() });
   const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled() });
   const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled() });
   const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled() });
@@ -485,6 +507,66 @@ function AdminOperationsHome({ sectionLabel }) {
         <article><span>Readiness</span><strong>{consoleState.summary.readiness}%</strong></article>
       </div>
 
+      <section className="nuxera-admin-operational-snapshot" aria-label="Snapshot operativo real NUXERA">
+        <header>
+          <span>{operationalSnapshot.status}</span>
+          <h2>Operacion autenticada en tiempo real</h2>
+        </header>
+        {operationalSnapshot.loading && <p>Cargando fuentes administrativas protegidas...</p>}
+        <div className="nuxera-admin-summary">
+          <article><span>Usuarios</span><strong>{operationalSnapshot.summary.users}</strong></article>
+          <article><span>Eventos auditables</span><strong>{operationalSnapshot.summary.auditEvents}</strong></article>
+          <article><span>Revision humana</span><strong>{operationalSnapshot.summary.humanReviews}</strong></article>
+          <article><span>Fuentes fallidas</span><strong>{operationalSnapshot.summary.failedSources}</strong></article>
+        </div>
+        {operationalSnapshot.failedSources.length > 0 && (
+          <p>No disponibles: {operationalSnapshot.failedSources.join(", ")}. No se muestran datos demo como reemplazo.</p>
+        )}
+        <div>
+          {operationalSnapshot.auditLogs.slice(0, 5).map((event) => (
+            <article key={event.id}>
+              <span>{event.action || "audit"}</span>
+              <strong>{event.entity_type || event.entityType || "evento"}</strong>
+              <p>{event.created_at || event.createdAt || "sin fecha"}</p>
+            </article>
+          ))}
+        </div>
+        <footer>Lectura protegida por rol administrador; esta superficie no cambia usuarios, permisos ni datos.</footer>
+      </section>
+      <section className="nuxera-admin-operational-modules" aria-label="Modulos administrativos reales NUXERA">
+        <article>
+          <span>Usuarios y permisos</span>
+          <h2>Distribucion por rol</h2>
+          {operationalSnapshot.modules.users.byRole.length === 0 && <p>Sin usuarios disponibles.</p>}
+          {operationalSnapshot.modules.users.byRole.map((item) => (
+            <p key={item.role}><strong>{item.total}</strong> {item.role}</p>
+          ))}
+        </article>
+        <article>
+          <span>Revision humana</span>
+          <h2>{operationalSnapshot.modules.reviews.highPriority} prioridades altas</h2>
+          {operationalSnapshot.modules.reviews.items.slice(0, 5).map((review) => (
+            <p key={review.id}><strong>{review.projectName}</strong> / {review.documentName} / {review.priority}</p>
+          ))}
+          {operationalSnapshot.modules.reviews.items.length === 0 && <p>Sin revisiones pendientes disponibles.</p>}
+        </article>
+        <article>
+          <span>Metricas de readiness</span>
+          <h2>{operationalSnapshot.modules.metrics.available} indicadores disponibles</h2>
+          {operationalSnapshot.modules.metrics.cards.filter((metric) => metric.available).slice(0, 6).map((metric) => (
+            <p key={metric.key}><strong>{metric.value}</strong> {metric.label}</p>
+          ))}
+          {operationalSnapshot.modules.metrics.note && <small>{operationalSnapshot.modules.metrics.note}</small>}
+        </article>
+        <article>
+          <span>Auditoria global</span>
+          <h2>Acciones recientes</h2>
+          {operationalSnapshot.modules.audit.byAction.slice(0, 6).map((item) => (
+            <p key={item.action}><strong>{item.total}</strong> {item.action}</p>
+          ))}
+          {operationalSnapshot.modules.audit.byAction.length === 0 && <p>Sin eventos auditables disponibles.</p>}
+        </article>
+      </section>
       <div className="nuxera-admin-lanes">
         {consoleState.lanes.map((lane) => (
           <article key={lane.id}>

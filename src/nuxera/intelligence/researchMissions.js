@@ -104,3 +104,35 @@ export function getEvidenceByFinding(findingId) {
   if (!finding) return [];
   return sourcePlan.filter((source) => finding.evidenceIds.includes(source.id));
 }
+
+export function buildResearchMissionForExpedient(context, missionId = "company-diligence") {
+  const base = getResearchMission(context?.role, missionId);
+  const order = context?.order;
+  if (!order || context?.isDemo) return base;
+
+  const metadata = order.metadata || {};
+  const subjectValue = metadata.companyName || metadata.legalName || order.project_name || order.projectName || order.case_number || order.id;
+  const risk = order.risk_level || order.riskLevel || "por validar";
+  const sector = metadata.sector || "sector no especificado";
+
+  return {
+    ...base,
+    subject: {
+      label: "Expediente seleccionado",
+      value: subjectValue,
+      status: "contexto real autorizado",
+    },
+    findings: base.findings.map((finding) => ({
+      ...finding,
+      claim: finding.id === "document-gap"
+        ? `${subjectValue} requiere trazabilidad documental antes de avanzar; riesgo actual ${risk}.`
+        : `El contexto de ${sector} puede modificar costo financiero, margen o covenants de ${subjectValue}.`,
+    })),
+    report: {
+      ...base.report,
+      title: `Reporte borrador - ${subjectValue}`,
+      status: "borrador contextual no persistido",
+      expedientId: order.id,
+    },
+  };
+}

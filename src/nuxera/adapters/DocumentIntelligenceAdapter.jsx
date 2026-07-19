@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from "react";
-import { getResearchMission } from "../intelligence/researchMissions";
+import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
+import { buildResearchMissionForExpedient } from "../intelligence/researchMissions";
 
 const DocumentIntelligenceTab = lazy(() => import("../../components/Dashboard/DocumentIntelligenceTab"));
 
@@ -12,7 +13,8 @@ function AdapterLoading() {
 }
 
 export default function DocumentIntelligenceAdapter({ role }) {
-  const research = getResearchMission(role);
+  const context = useNuxeraExpedient();
+  const research = buildResearchMissionForExpedient({ ...context, role });
 
   return (
     <section className="nuxera-adapter" aria-labelledby="nuxera-intelligence-title">
@@ -31,6 +33,14 @@ export default function DocumentIntelligenceAdapter({ role }) {
           <small>Evidence required</small>
         </div>
       </header>
+
+      {context.options.length > 1 && (
+        <div className="nuxera-context-selector" aria-label="Selector de expediente para Intelligence">
+          {context.options.map((option) => (
+            <button type="button" key={option.id} onClick={() => context.selectExpedient(option.id)} aria-pressed={option.id === context.selectedId}>{option.label}</button>
+          ))}
+        </div>
+      )}
 
       <section className="nuxera-intel-mission" aria-label="Mision de investigacion">
         <div className="nuxera-intel-subject">

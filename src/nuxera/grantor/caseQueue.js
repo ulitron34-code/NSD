@@ -1,4 +1,4 @@
-import { buildOtorganteAnalytics, buildOtorgantePipeline } from "../../data/otorgantePipeline";
+import { buildOtorganteAnalytics, buildOtorgantePipeline, buildOtorgantePipelineFromEntries } from "../../data/otorgantePipeline";
 
 const grantorDemoOrders = [
   {
@@ -90,8 +90,8 @@ function buildDecisionSignals(opportunity) {
   ];
 }
 
-export function getGrantorCaseQueue() {
-  const opportunities = buildOtorgantePipeline(grantorDemoOrders)
+function buildCaseQueue(opportunities, source) {
+  const cases = opportunities
     .map((opportunity) => ({
       ...opportunity,
       priority: getPriority(opportunity),
@@ -110,8 +110,9 @@ export function getGrantorCaseQueue() {
     .sort((a, b) => (riskWeight[b.risk] - riskWeight[a.risk]) || (b.averageScore - a.averageScore));
 
   return {
-    cases: opportunities,
-    analytics: buildOtorganteAnalytics(opportunities),
+    source,
+    cases,
+    analytics: buildOtorganteAnalytics(cases),
     policies: [
       "La cola no aprueba credito ni emite term sheets automaticamente.",
       "Cada caso requiere revision humana antes de contacto, comite o decision vinculante.",
@@ -121,8 +122,20 @@ export function getGrantorCaseQueue() {
   };
 }
 
-export function getGrantorQueueSummary() {
-  const queue = getGrantorCaseQueue();
+export function getGrantorCaseQueue() {
+  return buildCaseQueue(buildOtorgantePipeline(grantorDemoOrders), "demo-local");
+}
+
+export function buildGrantorCaseQueueFromPipeline(entries = []) {
+  return buildCaseQueue(buildOtorgantePipelineFromEntries(entries), "authorized-pipeline");
+}
+
+export function resolveSelectedGrantorCase(queue, selectedCaseId) {
+  const cases = Array.isArray(queue?.cases) ? queue.cases : [];
+  return cases.find((item) => item.id === selectedCaseId) || cases[0] || null;
+}
+
+export function getGrantorQueueSummary(queue = getGrantorCaseQueue()) {
   const committeeReady = queue.cases.filter((item) => item.priority === "committee-ready").length;
   const needsInformation = queue.cases.filter((item) => item.priority === "needs-information").length;
 
@@ -166,8 +179,7 @@ function getWorkbenchConditions(caseItem) {
   ];
 }
 
-export function getGrantorCaseWorkbench(caseId) {
-  const queue = getGrantorCaseQueue();
+export function getGrantorCaseWorkbench(caseId, queue = getGrantorCaseQueue()) {
   const selectedCase = queue.cases.find((item) => item.id === caseId) || queue.cases[0];
 
   return {
@@ -199,8 +211,8 @@ function getMemoRecommendation(caseItem) {
   return "Mantener en observacion hasta recibir nueva evidencia o cambio de apetito.";
 }
 
-export function getGrantorDocumentSummary(caseId) {
-  const workbench = getGrantorCaseWorkbench(caseId);
+export function getGrantorDocumentSummary(caseId, queue = getGrantorCaseQueue()) {
+  const workbench = getGrantorCaseWorkbench(caseId, queue);
   const caseItem = workbench.case;
   const visible = workbench.requiredEvidence.filter((item) => item.status === "visible");
   const verify = workbench.requiredEvidence.filter((item) => item.status !== "visible");
@@ -251,8 +263,8 @@ export function getGrantorDocumentSummary(caseId) {
     ],
   };
 }
-export function getGrantorDecisionMemo(caseId) {
-  const workbench = getGrantorCaseWorkbench(caseId);
+export function getGrantorDecisionMemo(caseId, queue = getGrantorCaseQueue()) {
+  const workbench = getGrantorCaseWorkbench(caseId, queue);
   const caseItem = workbench.case;
   const visibleEvidence = workbench.requiredEvidence.filter((item) => item.status === "visible");
   const pendingEvidence = workbench.requiredEvidence.filter((item) => item.status !== "visible");

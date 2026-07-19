@@ -151,10 +151,39 @@ export function getStrategyWorkspace(role = "applicant") {
   };
 }
 
-export function getStrategyDecisionPackage(role = "applicant") {
-  const workspace = getStrategyWorkspace(role);
-  const blockedCriteria = workspace.decisionReadinessCriteria.filter((criterion) => criterion.state === "required");
+export function buildStrategyWorkspaceForExpedient(context) {
+  const base = getStrategyWorkspace(context?.role);
+  const order = context?.order;
+  if (!order || context?.isDemo) return base;
 
+  const metadata = order.metadata || {};
+  const expedient = context.expedient || order;
+  const scoring = expedient.scoring || {};
+  const projectName = order.project_name || order.projectName || order.case_number || order.id;
+  const score = scoring.finalScore ?? expedient.averageScore ?? metadata.financialScore ?? null;
+  const risk = order.risk_level || order.riskLevel || expedient.risk || "por validar";
+  const highRisk = String(risk).toLowerCase() === "alto" || (score !== null && Number(score) < 60);
+
+  return {
+    ...base,
+    expedientId: order.id,
+    focus: `Soporte de decision para ${projectName}; score ${score ?? "no disponible"}, riesgo ${risk}.`,
+    scenarios: base.scenarios.map((scenario) => ({
+      ...scenario,
+      action: `${scenario.action} Aplicar al expediente ${projectName}.`,
+    })),
+    recommendation: {
+      ...base.recommendation,
+      summary: highRisk
+        ? `Pausar avance de ${projectName} y cerrar mitigantes antes de comite.`
+        : `Avanzar ${projectName} en modo controlado, sujeto a evidencia y revision humana.`,
+      auditState: `Borrador contextual para ${order.id}; no persistido y no vinculante.`,
+    },
+  };
+}
+
+export function buildStrategyDecisionPackageForWorkspace(workspace) {
+  const blockedCriteria = workspace.decisionReadinessCriteria.filter((criterion) => criterion.state === "required");
   return {
     status: blockedCriteria.length > 0 ? "human-review-required" : "ready-for-record",
     decisionType: "controlled-advance",
@@ -162,11 +191,16 @@ export function getStrategyDecisionPackage(role = "applicant") {
     requiredEvidenceIds: [...new Set(workspace.decisionFlowStages.flatMap((stage) => stage.evidenceIds))],
     rollbackConditions: workspace.decisionFlowStages.map((stage) => stage.rollback),
     auditTrail: [
-      "Decision package generado localmente en NUXERA Strategy.",
+      `Decision package generado para ${workspace.expedientId || "contexto local"}.`,
       "No ejecuta aprobaciones automaticas ni cambios de contrato.",
       "Persistencia formal pendiente de tarea aprobada.",
     ],
   };
+}
+
+export function getStrategyDecisionPackage(role = "applicant") {
+  const workspace = getStrategyWorkspace(role);
+  return buildStrategyDecisionPackageForWorkspace(workspace);
 }
 
 export function getStrategyActionPlan() {

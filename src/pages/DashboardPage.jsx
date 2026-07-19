@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
 import { useExperience } from "../experience/ExperienceContext";
 import { EXPERIENCE_VALUES } from "../experience/experienceStorage";
-import NuxeraWorkspaceRouter from "../nuxera/NuxeraWorkspaceRouter";
 import { COLORS } from "../utils/constants";
 import NotificationCenter from "../components/NotificationCenter";
 import DashboardStats from "../components/Dashboard/DashboardStats";
@@ -22,6 +21,7 @@ import { uiText, translateCopy } from "../utils/runtimeCopy";
 import { BRAND } from "../config/brand";
 
 const MiPerfilTab = lazy(() => import("../components/Dashboard/Solicitante/MiPerfilTab"));
+const NuxeraWorkspaceRouter = lazy(() => import("../nuxera/NuxeraWorkspaceRouter"));
 const FundingReadinessTab = lazy(() => import("../components/Dashboard/Solicitante/FundingReadinessTab"));
 const MatchesTab = lazy(() => import("../components/Dashboard/Solicitante/MatchesTab"));
 const SubirProyectoTab = lazy(() => import("../components/Dashboard/Solicitante/SubirProyectoTab"));
@@ -512,7 +512,7 @@ export default function DashboardPage() {
   };
 
   if (experience === EXPERIENCE_VALUES.NUXERA) {
-    return <NuxeraWorkspaceRouter demoMode={userMode} onExit={exitNuxeraExperience} />;
+    return <NuxeraWorkspaceRouter demoMode={user?.demo ? userMode : null} onExit={exitNuxeraExperience} />;
   }
 
   const railWidth = "76px";

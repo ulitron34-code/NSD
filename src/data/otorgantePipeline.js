@@ -44,7 +44,7 @@ export function formatCurrency(amount = 0) {
 export function mapOrderToOpportunity(order) {
   const metadata = order.metadata || {};
   const normalizedStatus = order.status === "paid" ? "in_progress" : order.status;
-  const amount = normalizeAmount(order.amount);
+  const amount = normalizeAmount(order.requested_amount ?? order.amount);
   const sector = metadata.sector || "No especificado";
   const targetEntity = metadata.targetEntity || metadata.target_entity || "Otorgante por definir";
   const structure = metadata.structure || metadata.fundingStructure || serviceLabels[order.service_type] || "Estructura por definir";
@@ -60,8 +60,8 @@ export function mapOrderToOpportunity(order) {
   return {
     id: order.id,
     order,
-    name: order.projectName || metadata.projectName || `Expediente ${String(order.id).slice(0, 8)}`,
-    applicant: metadata.companyName || metadata.email || `Solicitante ${BRAND.name}`,
+    name: order.project_name || order.projectName || metadata.projectName || `Expediente ${String(order.id).slice(0, 8)}`,
+    applicant: metadata.companyName || metadata.email || order.applicant_type || `Solicitante ${BRAND.name}`,
     sector,
     country: metadata.country || "MX",
     amount,
@@ -71,11 +71,11 @@ export function mapOrderToOpportunity(order) {
     financialScore,
     complianceScore,
     averageScore,
-    risk,
+    risk: order.risk_level || risk,
     guarantee: metadata.guarantee || "Soporte documental por validar",
     targetEntity,
     structure,
-    readinessLevel: metadata.readinessLevel || metadata.readiness_level || inferReadinessLevel(averageScore, normalizedStatus),
+    readinessLevel: order.readiness_grade || metadata.readinessLevel || metadata.readiness_level || inferReadinessLevel(averageScore, normalizedStatus),
     documents,
     status: statusLabels[normalizedStatus] || normalizedStatus || "Nuevo",
     rawStatus: normalizedStatus,

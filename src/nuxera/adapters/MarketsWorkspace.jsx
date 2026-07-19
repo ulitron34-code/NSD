@@ -1,5 +1,6 @@
 import React from "react";
-import { getMarketWatchlist, getMonitoringPolicies } from "../markets/marketDataProvider";
+import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
+import { buildMarketWatchlistForExpedient, getMonitoringPolicies } from "../markets/marketDataProvider";
 
 const riskClass = {
   Bajo: "is-low",
@@ -8,7 +9,8 @@ const riskClass = {
 };
 
 export default function MarketsWorkspace({ role }) {
-  const watchlist = getMarketWatchlist(role);
+  const context = useNuxeraExpedient();
+  const watchlist = buildMarketWatchlistForExpedient({ ...context, role });
   const policies = getMonitoringPolicies();
 
   return (
@@ -25,6 +27,14 @@ export default function MarketsWorkspace({ role }) {
           <small>{watchlist.status.provider}</small>
         </div>
       </header>
+
+      {context.options.length > 1 && (
+        <div className="nuxera-context-selector" aria-label="Selector de expediente para Markets">
+          {context.options.map((option) => (
+            <button type="button" key={option.id} onClick={() => context.selectExpedient(option.id)} aria-pressed={option.id === context.selectedId}>{option.label}</button>
+          ))}
+        </div>
+      )}
 
       <div className="nuxera-market-disclaimer">
         <strong>Procedencia:</strong> {watchlist.status.provenance}

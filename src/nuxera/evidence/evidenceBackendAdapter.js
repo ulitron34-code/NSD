@@ -159,11 +159,12 @@ export function useOwnerEvidenceLedger(orderId, { enabled = true, role = "applic
       })
       .catch((err) => {
         if (!active) return;
-        warn("NUXERA", "No se pudo cargar evidence ledger; usando fallback local", err);
+        warn("NUXERA", "No se pudo cargar evidence ledger del expediente real; ocultando evidencia local", err);
         setRemoteState({
           ...LOCAL_EVIDENCE_STATE,
-          source: "remote-error-fallback",
-          label: "Fallback local",
+          source: "remote-error-empty",
+          label: "Evidencia remota no disponible",
+          status: "read-only-remote-error",
           error: "nuxera-evidence-unavailable",
           orderId,
         });
@@ -175,6 +176,24 @@ export function useOwnerEvidenceLedger(orderId, { enabled = true, role = "applic
   }, [enabled, orderId]);
 
   return mergeNuxeraEvidenceLedger(localLedger, remoteState);
+}
+
+export function buildRemoteOnlyEvidenceLedger(localLedger, remoteState = LOCAL_EVIDENCE_STATE) {
+  const state = remoteState || LOCAL_EVIDENCE_STATE;
+  const items = state.persisted ? asArray(state.items) : [];
+
+  return {
+    ...localLedger,
+    status: state.status,
+    summary: summarizeEvidence(items),
+    items,
+    backendEvidence: state,
+    policies: [
+      "Ledger remoto autorizado: nunca mezcla evidencia demo con expedientes reales.",
+      "Si el backend falla o no devuelve filas, la interfaz muestra cero evidencia.",
+      "Los enlaces persistidos no otorgan acceso documental ni cambian permisos.",
+    ],
+  };
 }
 
 export function useAuthorizedGrantorEvidenceLedger(orderId, { enabled = true, role = "grantor", language = "es" } = {}) {
@@ -203,11 +222,12 @@ export function useAuthorizedGrantorEvidenceLedger(orderId, { enabled = true, ro
       })
       .catch((err) => {
         if (!active) return;
-        warn("NUXERA", "No se pudo cargar evidence ledger autorizado; usando fallback local", err);
+        warn("NUXERA", "No se pudo cargar evidence ledger autorizado; ocultando evidencia local", err);
         setRemoteState({
           ...LOCAL_EVIDENCE_STATE,
-          source: "remote-error-fallback",
-          label: "Fallback local",
+          source: "remote-error-empty",
+          label: "Evidencia remota no disponible",
+          status: "read-only-remote-error",
           error: "nuxera-grantor-evidence-unavailable",
           orderId,
         });
@@ -217,6 +237,14 @@ export function useAuthorizedGrantorEvidenceLedger(orderId, { enabled = true, ro
       active = false;
     };
   }, [enabled, orderId]);
+
+  if (enabled && orderId) {
+    return buildRemoteOnlyEvidenceLedger(localLedger, remoteState);
+  }
+
+  if (enabled && orderId) {
+    return buildRemoteOnlyEvidenceLedger(localLedger, remoteState);
+  }
 
   return mergeNuxeraEvidenceLedger(localLedger, remoteState);
 }

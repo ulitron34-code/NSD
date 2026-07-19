@@ -1,11 +1,15 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../strategy/strategyWorkspace";
+import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
+import { buildCaseOrchestration } from "../orchestration/caseOrchestration";
+import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan } from "../strategy/strategyWorkspace";
 
 export default function StrategyWorkspace({ role }) {
-  const workspace = getStrategyWorkspace(role);
+  const context = useNuxeraExpedient();
+  const workspace = buildStrategyWorkspaceForExpedient({ ...context, role });
   const actionPlan = getStrategyActionPlan();
-  const decisionPackage = getStrategyDecisionPackage(role);
+  const decisionPackage = buildStrategyDecisionPackageForWorkspace(workspace);
+  const orchestration = buildCaseOrchestration({ ...context, role });
 
   return (
     <section className="nuxera-adapter" aria-labelledby="nuxera-strategy-title">
@@ -22,10 +26,47 @@ export default function StrategyWorkspace({ role }) {
         </div>
       </header>
 
+      {context.options.length > 1 && (
+        <div className="nuxera-context-selector" aria-label="Selector de expediente para Strategy">
+          {context.options.map((option) => (
+            <button type="button" key={option.id} onClick={() => context.selectExpedient(option.id)} aria-pressed={option.id === context.selectedId}>{option.label}</button>
+          ))}
+        </div>
+      )}
+
       <div className="nuxera-strategy-notice">
         <strong>{workspace.recommendation.summary}</strong>
         <span>{workspace.recommendation.uncertainty}</span>
       </div>
+
+      <section className="nuxera-agent-orchestration" aria-label="Orquestacion multiagente segura">
+        <header>
+          <div>
+            <span>{orchestration.status}</span>
+            <h2>Orquestacion auditable del expediente</h2>
+          </div>
+          <strong>{orchestration.summary.ready}/{orchestration.summary.agents} agentes listos</strong>
+        </header>
+        <div className="nuxera-admin-summary">
+          <article><span>Agentes</span><strong>{orchestration.summary.agents}</strong></article>
+          <article><span>Listos</span><strong>{orchestration.summary.ready}</strong></article>
+          <article><span>Esperan evidencia</span><strong>{orchestration.summary.waitingEvidence}</strong></article>
+          <article><span>Revision humana</span><strong>{orchestration.summary.humanReview}</strong></article>
+        </div>
+        {!orchestration.access.allowed && <p>Bloqueado: no existe un contexto real autorizado y seleccionado para este rol.</p>}
+        <div>
+          {orchestration.agents.map((agent) => (
+            <article key={agent.id}>
+              <span>{agent.status}</span>
+              <strong>{agent.label}</strong>
+              <p>{agent.objective}</p>
+              <small>{agent.engine} / confianza {agent.confidence} / costo estimado ${agent.estimatedCostUsd}</small>
+              <em>{agent.traceId}</em>
+            </article>
+          ))}
+        </div>
+        <footer>{orchestration.access.guardrails.join(" ")}</footer>
+      </section>
 
       <section className="nuxera-decision-flow" aria-label="Flujo de decision Strategy">
         <header>

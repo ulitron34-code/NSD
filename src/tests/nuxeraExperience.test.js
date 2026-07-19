@@ -2,24 +2,80 @@ import { describe, expect, it, vi } from "vitest";
 import { getAllowedExperiences, isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperience } from "../experience/experienceStorage";
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
+import { getAdminWorkspaceConfig } from "../nuxera/adapters/AdminWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledContinuationPackResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
+import { buildAdminOperationalModules, normalizeAdminOperationalSnapshot } from "../nuxera/admin/operationalSnapshotAdapter";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace, normalizeApplicantProjectProfile } from "../nuxera/applicant/projectWorkspace";
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
-import { getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
-import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary } from "../nuxera/grantor/caseQueue";
-import { MARKET_PROVIDER_STATES, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
-import { getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
+import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
+import { readSelectedExpedienteId, subscribeSelectedExpediente, writeSelectedExpedienteId } from "../hooks/useSelectedExpediente";
+import { buildGrantorCaseQueueFromPipeline, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../nuxera/grantor/caseQueue";
+import { MARKET_PROVIDER_STATES, buildMarketWatchlistForExpedient, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
+import { buildResearchMissionForExpedient, getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
-import { mergeNuxeraEvidenceLedger, normalizeNuxeraEvidenceResponse } from "../nuxera/evidence/evidenceBackendAdapter";
+import { buildRemoteOnlyEvidenceLedger, mergeNuxeraEvidenceLedger, normalizeNuxeraEvidenceResponse } from "../nuxera/evidence/evidenceBackendAdapter";
 import { getEvidenceLedgerByEngine, getNuxeraEvidenceLedger } from "../nuxera/evidence/evidenceLedger";
 import { navigationByRole } from "../nuxera/navigation/navigationByRole";
 import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
-import { getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
+import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
+import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
+
+describe("NUXERA admin operational snapshot", () => {
+  it("maps each admin navigation lane to a specialized protected workspace", () => {
+    expect(getAdminWorkspaceConfig("operations").modules.map(([id]) => id)).toEqual(["users", "human-review", "metrics", "sources", "rubrics"]);
+    expect(getAdminWorkspaceConfig("security").modules[0][0]).toBe("traceability");
+    expect(getAdminWorkspaceConfig("ai").modules[0][0]).toBe("ai-ops");
+    expect(getAdminWorkspaceConfig("system").modules[0][0]).toBe("predeploy");
+  });
+
+  it("normalizes protected admin sources without inventing fallback records", () => {
+    const snapshot = normalizeAdminOperationalSnapshot({
+      users: { users: [{ id: "user-1", profile_type: "administrador" }], total: 12 },
+      audit: { logs: [{ id: "audit-1", action: "nuxera_state_created" }], total: 31 },
+      reviews: { items: [{ id: "review-1", status: "pending" }], total: 4 },
+      metrics: { totalOrders: 9, avgGlobalScore: 74 },
+      failedSources: ["metrics"],
+    });
+
+    expect(snapshot.status).toBe("partial");
+    expect(snapshot.summary).toMatchObject({ users: 12, auditEvents: 31, humanReviews: 4, failedSources: 1 });
+    expect(snapshot.users[0].id).toBe("user-1");
+    expect(snapshot.auditLogs[0].action).toBe("nuxera_state_created");
+    expect(snapshot.modules.users.byRole).toEqual([{ role: "administrador", total: 1 }]);
+    expect(snapshot.modules.metrics.available).toBe(2);
+  });
+
+  it("returns explicit empty collections when every protected source is unavailable", () => {
+    const snapshot = normalizeAdminOperationalSnapshot({ failedSources: ["users", "audit", "reviews", "metrics"] });
+
+    expect(snapshot.users).toEqual([]);
+    expect(snapshot.auditLogs).toEqual([]);
+    expect(snapshot.humanReviews).toEqual([]);
+    expect(snapshot.summary.failedSources).toBe(4);
+  });
+
+  it("builds review priorities and audit groupings from protected records", () => {
+    const modules = buildAdminOperationalModules({
+      auditLogs: [
+        { id: "a-1", action: "document_reviewed" },
+        { id: "a-2", action: "document_reviewed" },
+      ],
+      humanReviews: [
+        { documentId: "d-1", projectName: "Solar Norte", filename: "modelo.xlsx", reviewScore: 42 },
+        { documentId: "d-2", caseNumber: "NU-02", documentType: "READY_LEGAL", reviewScore: 82 },
+      ],
+    });
+
+    expect(modules.reviews.highPriority).toBe(1);
+    expect(modules.reviews.items[0]).toMatchObject({ id: "d-1", projectName: "Solar Norte", priority: "alta" });
+    expect(modules.audit.byAction).toEqual([{ action: "document_reviewed", total: 2 }]);
+  });
+});
 
 describe("NUXERA experience controls", () => {
   it("keeps NUXERA hidden unless the feature flag is enabled", () => {
@@ -615,6 +671,176 @@ describe("NUXERA evidence ledger", () => {
     expect(merged.backendEvidence.persisted).toBe(true);
     expect(merged.policies.join(" ")).toContain("no otorgan acceso documental");
   });
+
+  it("never mixes demo evidence into an authorized real grantor ledger", () => {
+    const localLedger = getNuxeraEvidenceLedger("grantor");
+    const remoteState = normalizeNuxeraEvidenceResponse({
+      orderId: "real-order-1",
+      workspaceRole: "grantor",
+      evidence: {
+        orderId: "real-order-1",
+        persisted: true,
+        links: [{
+          id: "real-evidence-1",
+          engine: "finance",
+          label: "Evidencia autorizada real",
+          visibility: "authorized_grantor",
+        }],
+      },
+    });
+    const ledger = buildRemoteOnlyEvidenceLedger(localLedger, remoteState);
+
+    expect(ledger.items).toHaveLength(1);
+    expect(ledger.items[0].id).toBe("real-evidence-1");
+    expect(ledger.items.some((item) => item.id.startsWith("document-"))).toBe(false);
+    expect(ledger.policies.join(" ")).toContain("nunca mezcla evidencia demo");
+  });
+
+  it("shows zero grantor evidence when the authorized remote ledger fails", () => {
+    const localLedger = getNuxeraEvidenceLedger("grantor");
+    const ledger = buildRemoteOnlyEvidenceLedger(localLedger, {
+      source: "remote-error-empty",
+      status: "read-only-remote-error",
+      persisted: false,
+      items: [],
+      error: "nuxera-grantor-evidence-unavailable",
+    });
+
+    expect(ledger.items).toEqual([]);
+    expect(ledger.summary.total).toBe(0);
+    expect(ledger.backendEvidence.error).toBe("nuxera-grantor-evidence-unavailable");
+  });
+});
+
+describe("NUXERA Finance real expedient journey", () => {
+  it("derives grantor finance status from the authorized pipeline entry", () => {
+    const journey = buildFinanceJourneyFromExpedient({
+      order: { id: "order-1", project_name: "Parque Solar", risk_level: "Medio" },
+      scoring: { finalScore: 78 },
+      documentsCount: 6,
+    }, "grantor");
+
+    expect(journey).toMatchObject({
+      source: "real-expedient",
+      expedientId: "order-1",
+      projectName: "Parque Solar",
+      progress: 78,
+    });
+    expect(journey.effort).toContain("6 documentos");
+  });
+
+  it("uses the persisted readiness grade when detailed scoring is unavailable", () => {
+    const journey = buildFinanceJourneyFromExpedient({ id: "order-2", readiness_grade: "B" }, "applicant");
+
+    expect(journey.progress).toBe(75);
+    expect(journey.alerts).toContain("El score financiero detallado aun no esta disponible.");
+  });
+
+  it("notifies all workspaces when the selected expedient changes", () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeSelectedExpediente(listener);
+
+    writeSelectedExpedienteId("order-shared");
+
+    expect(readSelectedExpedienteId()).toBe("order-shared");
+    expect(listener).toHaveBeenCalledWith("order-shared");
+    unsubscribe();
+  });
+});
+
+describe("NUXERA cross-engine expedient context", () => {
+  const context = {
+    role: "grantor",
+    source: "authorized-grantor-entry",
+    isDemo: false,
+    order: {
+      id: "order-godzilla",
+      project_name: "Infraestructura Delta",
+      risk_level: "Alto",
+      metadata: { companyName: "Delta SA", sector: "Infraestructura", country: "MX" },
+    },
+    expedient: { scoring: { finalScore: 54 } },
+  };
+
+  it("binds Intelligence subject and report to the selected real expedient", () => {
+    const mission = buildResearchMissionForExpedient(context);
+
+    expect(mission.subject).toMatchObject({ value: "Delta SA", status: "contexto real autorizado" });
+    expect(mission.report.expedientId).toBe("order-godzilla");
+    expect(mission.findings[0].claim).toContain("Alto");
+  });
+
+  it("adds an expedient-specific market risk event without claiming realtime data", () => {
+    const watchlist = buildMarketWatchlistForExpedient(context);
+
+    expect(watchlist.expedientId).toBe("order-godzilla");
+    expect(watchlist.events[0]).toMatchObject({ id: "selected-expedient-risk", severity: "caution" });
+    expect(watchlist.status.realtimeAvailable).toBe(false);
+  });
+
+  it("pauses a high-risk Strategy case and preserves human review", () => {
+    const workspace = buildStrategyWorkspaceForExpedient(context);
+    const decisionPackage = buildStrategyDecisionPackageForWorkspace(workspace);
+
+    expect(workspace.recommendation.summary).toContain("Pausar avance");
+    expect(workspace.recommendation.auditState).toContain("order-godzilla");
+    expect(decisionPackage.status).toBe("human-review-required");
+  });
+
+  it("keeps demo engines on isolated local models", () => {
+    const demoContext = { ...context, isDemo: true };
+
+    expect(buildResearchMissionForExpedient(demoContext).subject.status).toBe("pendiente de seleccion real");
+    expect(buildMarketWatchlistForExpedient(demoContext).expedientId).toBeUndefined();
+    expect(buildStrategyWorkspaceForExpedient(demoContext).expedientId).toBeUndefined();
+  });
+});
+
+describe("NUXERA secure multi-agent orchestration", () => {
+  const authorizedContext = {
+    role: "grantor",
+    source: "authorized-grantor-entry",
+    selectedId: "order-agent",
+    isDemo: false,
+    order: { id: "order-agent", project_name: "Puerto Verde", risk_level: "Medio" },
+    expedient: { documentsCount: 4, scoring: { finalScore: 77 } },
+  };
+
+  it("creates all planned agents with traceability and mandatory human review", () => {
+    const orchestration = buildCaseOrchestration(authorizedContext);
+
+    expect(orchestration.status).toBe("ready-for-controlled-human-trigger");
+    expect(orchestration.agents).toHaveLength(11);
+    expect(orchestration.summary.humanReview).toBe(11);
+    expect(orchestration.agents.every((agent) => agent.traceId.startsWith("order-agent:"))).toBe(true);
+    expect(orchestration.agents.every((agent) => agent.model === "not-selected" && agent.estimatedCostUsd === 0)).toBe(true);
+  });
+
+  it("gates dependent agents when documents and scoring are missing", () => {
+    const orchestration = buildCaseOrchestration({
+      ...authorizedContext,
+      expedient: { documentsCount: 0, scoring: {} },
+    });
+
+    expect(orchestration.status).toBe("evidence-gated");
+    expect(orchestration.summary.waitingEvidence).toBeGreaterThan(0);
+    expect(orchestration.evidencePackage.items.filter((item) => item.status === "missing").map((item) => item.id)).toEqual(
+      expect.arrayContaining(["documents", "score"])
+    );
+  });
+
+  it("blocks a grantor context that was not produced by the authorized pipeline", () => {
+    const access = buildContextAccessEnvelope({ ...authorizedContext, source: "applicant-order" });
+    const orchestration = buildCaseOrchestration({ ...authorizedContext, source: "applicant-order" });
+
+    expect(access.allowed).toBe(false);
+    expect(orchestration.agents).toEqual([]);
+  });
+
+  it("blocks mismatched selections and demo identities", () => {
+    expect(buildContextAccessEnvelope({ ...authorizedContext, selectedId: "another-order" }).allowed).toBe(false);
+    expect(buildContextAccessEnvelope({ ...authorizedContext, isDemo: true }).allowed).toBe(false);
+  });
 });
 describe("NUXERA backend readiness adapter", () => {
   it("normalizes backend readiness responses for admin review", () => {
@@ -1045,6 +1271,46 @@ describe("NUXERA Finance adapter", () => {
 
 
 describe("NUXERA grantor case queue", () => {
+  it("keeps the selected authorized case consistent across the grantor workspace", () => {
+    const queue = { cases: [{ id: "order-1" }, { id: "order-2" }] };
+
+    expect(resolveSelectedGrantorCase(queue, "order-2").id).toBe("order-2");
+    expect(resolveSelectedGrantorCase(queue, "missing").id).toBe("order-1");
+    expect(resolveSelectedGrantorCase({ cases: [] }, "missing")).toBeNull();
+  });
+
+  it("maps authorized backend pipeline entries into the real NUXERA queue", () => {
+    const queue = buildGrantorCaseQueueFromPipeline([{
+      share: { id: "share-1", status: "accepted" },
+      order: {
+        id: "order-real-1",
+        project_name: "Expansion industrial",
+        service_type: "combo-complete",
+        status: "in_progress",
+        requested_amount: 12000000,
+        metadata: { companyName: "Empresa Real", sector: "Manufactura", country: "MX" },
+      },
+      documentsCount: 7,
+      latestReview: { status: "reviewed" },
+      scoring: { finalScore: 79, regulatoryValidation: { status: "clear" } },
+      interest: { status: "under_review" },
+      contactRequest: null,
+    }]);
+
+    expect(queue.source).toBe("authorized-pipeline");
+    expect(queue.cases).toHaveLength(1);
+    expect(queue.cases[0]).toMatchObject({
+      id: "order-real-1",
+      applicant: "Empresa Real",
+      documentsCount: 7,
+      invitationStatus: "accepted",
+      averageScore: 79,
+    });
+    expect(getGrantorCaseWorkbench("order-real-1", queue).case.id).toBe("order-real-1");
+    expect(getGrantorDocumentSummary("order-real-1", queue).caseId).toBe("order-real-1");
+    expect(getGrantorDecisionMemo("order-real-1", queue).case.id).toBe("order-real-1");
+  });
+
   it("builds a local case queue with analytics and priorities", () => {
     const queue = getGrantorCaseQueue();
     const summary = getGrantorQueueSummary();

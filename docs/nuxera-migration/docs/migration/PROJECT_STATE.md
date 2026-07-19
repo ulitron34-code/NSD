@@ -1601,3 +1601,152 @@ What was explicitly NOT done:
 - `VITE_NUXERA_EXPERIENCE_ENABLED` remains `false`; none of this is visible to real users yet.
 
 Next recommended task: decide whether to point a local/staging frontend at the local backend with a real authenticated admin login to verify the readiness panel end-to-end, or move straight to filling real controlled-run metadata (operator, reviewer, rollback owner, isolated identities) into the evidence scaffold now that the backend tables it depends on actually exist.
+
+## Real applicant-to-grantor integration block - 2026-07-18
+
+Implemented the first large product-completion block from the Spanish NUXERA master restructuring plan, focused on phases 5 and 6 without changing backend contracts.
+
+- Applicant real sessions now expose the latest real order identity and derive displayed readiness from the real project adapter.
+- Applicant and grantor real evidence ledgers no longer merge persisted/failed remote state with demo evidence.
+- Grantor real sessions now map `GET /otorgante/pipeline` into the NUXERA case queue.
+- Real pipeline scoring, document count, share status, interest and contact state flow into queue prioritization.
+- Workbench, authorized document summary and non-binding memo accept the real queue and stay bound to the same selected order.
+- Demo queues and evidence remain available only for demo sessions.
+- Legacy/current experiences and API contracts remain unchanged.
+
+Validation for this block:
+- Targeted NUXERA suite passed: 1 file / 82 tests before final full-suite closure.
+- Frontend lint passed.
+- Frontend production build passed.
+
+Remaining acceptance gap:
+- Exercise the grantor pipeline and `grantor-evidence` endpoint through HTTP with a real authenticated grantor and accepted `data_room_shares` row.
+
+## Authenticated admin operational snapshot - 2026-07-18
+
+Continued the large phases 5-7 completion block by connecting the NUXERA admin home to existing protected backend contracts.
+
+- Added `operationalSnapshotAdapter` with parallel read-only requests for users, global audit logs, human-review queue and readiness metrics.
+- Every source remains protected by the existing backend `requireAdmin` middleware.
+- Partial endpoint failures are reported by source; the adapter never substitutes demo users, audit events or reviews.
+- Added an authenticated-operation panel to the NUXERA admin home with aggregate counts and recent audit events.
+- No role update, source mutation, rubric mutation or production write was added.
+- Added tests for mixed real/failed sources and complete remote unavailability.
+
+Validation:
+- Targeted NUXERA suite: 1 file / 84 tests passed.
+- Frontend lint passed.
+- Frontend production build passed.
+
+Remaining admin gaps:
+- Verify all four protected sources through HTTP with a real administrator session.
+- Add focused pages for user/permission management, human-review operations and audit filtering instead of only the home snapshot.
+- Replace remaining static health/incident narrative where a real telemetry contract exists.
+
+## Explicit real-order selection - 2026-07-18
+
+- Added stable selected-order state to applicant and grantor data hooks.
+- Applicant users with multiple real orders can select the expediente that drives project, readiness, checklist and evidence panels.
+- Grantor users can select any authorized pipeline case; workbench, document summary, memo and evidence stay bound to that same order.
+- Invalid or removed selections fall back safely to the first currently authorized record.
+- Demo users remain on isolated local fixtures.
+
+## Phase 7 operational modules and selector regression fix - 2026-07-18
+
+- Corrected the applicant order selector placement so it renders only inside the applicant workspace, not the admin console.
+- Expanded the protected admin snapshot into grouped real-data modules for users/roles, human review, readiness metrics and global audit activity.
+- Human-review items now expose deterministic priority from the backend score without mutating review state.
+- Readiness metrics use the exact backend contract (`avgGlobalScore`, costs, document gaps, illegibility and downloads).
+- Empty and partial remote states remain explicit and never receive demo replacements.
+
+Validation:
+- Frontend: 9 files / 247 tests passed.
+- Backend: 50 files / 469 tests passed.
+- Go/no-go local: 22/22 checks in GO.
+- ESLint, production build and `git diff --check` passed.
+
+## Phases 16-17 administration, E2E and controlled rollout - 2026-07-18
+
+- Split the NUXERA administrator workspace into operations, security, AI and system routes backed by existing protected modules.
+- Fixed authenticated-role preservation so the demo profile selector cannot override a real administrator or grantor session.
+- Added current public, applicant, grantor and administrator Chromium journeys; the complete Chromium suite passes 34/34.
+- Added Chromium E2E to local go/no-go and predeploy checks.
+- Added a credential-safe GET-only HTTP readiness harness for applicant, grantor and administrator preview verification.
+- Published the deployment/HTTP runbook and a conservative weighted restructuring assessment of 90%.
+
+Validation:
+- Frontend: 9 files / 259 tests passed.
+- Backend: 50 files / 469 tests passed.
+- Chromium E2E: 34/34 passed.
+- Go/no-go local: 25/25 checks in GO.
+- ESLint, production build, HTTP plan and `git diff --check` passed.
+
+## Final local hardening audit - 2026-07-18
+
+- Completed the responsive NUXERA workspace header with breadcrumbs, language control, help, profile identity and guarded-agent status.
+- Replaced the static mobile sidebar with an accessible menu using `aria-expanded`, keyboard activation, backdrop close and route-close behavior.
+- Lazy-loaded the complete NUXERA workspace away from the legacy dashboard bundle.
+- Reduced the NUXERA chunk to approximately 169 kB and the legacy dashboard chunk to approximately 410 kB, eliminating the build warning above 500 kB.
+- Expanded Chromium E2E to 35/35, including mobile keyboard navigation and language switching.
+- Final assessment: 96% local restructuring/release preparation and 93% complete master-plan fulfillment; remaining work requires controlled external acceptance.
+
+## Phase 8 real-expedient Finance journey - 2026-07-18
+
+- Replaced fixed applicant/grantor Finance percentages with a journey derived from the selected real order or authorized pipeline entry.
+- Finance now exposes project identity, score/readiness, visible document count and current risk without inventing missing scoring data.
+- Added a shared selected-expedient event store so Home, Finance and reused legacy modules stay synchronized in the same browser session.
+- Applicant and grantor Finance selectors only expose orders already returned by their role-protected APIs.
+- Demo sessions retain the isolated local Finance journey.
+
+Validation:
+- Frontend: 9 files / 250 tests passed.
+- Backend: 50 files / 469 tests passed.
+- Go/no-go local: 22/22 checks in GO.
+- ESLint, production build and `git diff --check` passed.
+
+## Godzilla block: phases 9-11 shared real-expedient context - 2026-07-18
+
+- Added one role-aware `NuxeraExpedientProvider` for Finance, Intelligence, Markets and Strategy.
+- Applicant engines receive only owner orders; grantor engines receive only entries returned by the authorized pipeline API.
+- Intelligence binds subject, findings and draft report identity to the selected real expediente.
+- Markets adds expediente-specific risk context while preserving the unlicensed/delayed provider gate and never claiming realtime data.
+- Strategy derives its recommendation from selected case risk and score, preserves human review and emits a non-binding contextual audit state.
+- All four engine selectors now update one shared browser-session selection without duplicate engine-level API loads.
+- Demo sessions remain isolated on local models.
+
+Validation:
+- Frontend: 9 files / 254 tests passed.
+- Backend: 50 files / 469 tests passed.
+- Go/no-go local: 22/22 checks in GO.
+- ESLint, production build and `git diff --check` passed.
+
+## Phases 12-14 secure orchestration foundation - 2026-07-18
+
+- Added an auditable 11-agent orchestration plan matching the rector plan agent catalog.
+- Every agent records objective, input, output, sources, model state, version, estimated cost/time, confidence, error, human-review requirement and trace id.
+- Added a role/source/selection access envelope that blocks demo, mismatched orders and grantor contexts not produced by the authorized pipeline.
+- Document, score, risk and delayed-market evidence are summarized without opening files or extending data-room access.
+- Missing documents or scoring gate dependent agents instead of fabricating outputs.
+- Mounted the read-only orchestration and security guardrails inside Strategy; no agent execution or persistence was enabled.
+
+Validation:
+- Frontend: 9 files / 258 tests passed.
+- Backend: 50 files / 469 tests passed.
+- Go/no-go local: 22/22 checks in GO.
+- ESLint, production build and `git diff --check` passed.
+
+## Phase 15 public identity and deploy gate - 2026-07-18
+
+- Updated static HTML metadata and the Open Graph image from NEXUS/NSD visible identity to NUXERA Financial Intelligence.
+- Removed the environment-specific Vercel hostname from static social metadata; OG assets now use deployment-relative paths.
+- Added `check:nuxera-public-identity` to block reintroduction of legacy visible names in primary public metadata and social assets.
+- Added the identity and public-page checks to predeploy and the local go/no-go matrix.
+- Renamed go/no-go and predeploy console headings to NUXERA Financial Intelligence.
+
+Validation:
+- NUXERA public identity gate passed.
+- Public routes/narrative gate passed.
+- Frontend: 9 files / 258 tests passed.
+- Backend rerun: 50 files / 469 tests passed after one transient Vitest worker exit.
+- Go/no-go local: 23/23 checks in GO.
+- ESLint, production build and `git diff --check` passed.

@@ -7,25 +7,24 @@ test.describe('Landing Page', () => {
 
   test('should load the landing page', async ({ page }) => {
     // Check page title
-    await expect(page).toHaveTitle(/NSD/);
+    await expect(page).toHaveTitle(/NUXERA/);
     
     // Check main elements are visible
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
   test('should have working navigation', async ({ page }) => {
-    // Click on Services link
-    await page.getByRole('link', { name: /servicios/i }).first().click();
-    await expect(page).toHaveURL(/\/services/);
+    await page.getByText(/plataforma/i, { exact: true }).first().click();
+    await expect(page).toHaveURL(/\/plataforma/);
   });
 
   test('should have working login link', async ({ page }) => {
-    await page.getByRole('link', { name: /iniciar sesión/i }).first().click();
+    await page.getByRole('button', { name: /acceder|iniciar sesión/i }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 
   test('should have working signup link', async ({ page }) => {
-    await page.getByRole('link', { name: /registro|crear cuenta/i }).first().click();
+    await page.getByRole('button', { name: /crear cuenta|registro/i }).click();
     await expect(page).toHaveURL(/\/signup/);
   });
 
@@ -40,24 +39,24 @@ test.describe('Authentication Flow', () => {
   test('should show login form', async ({ page }) => {
     await page.goto('/login');
     
-    await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/contraseña/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /entrar|iniciar sesión/i })).toBeVisible();
+    await expect(page.locator('input[name="email"]')).toBeVisible();
+    await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 
   test('should show signup form', async ({ page }) => {
     await page.goto('/signup');
     
-    await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/contraseña/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /registrar|crear cuenta/i })).toBeVisible();
+    await expect(page.locator('input[name="email"]')).toBeVisible();
+    await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 
   test('should validate empty email on login', async ({ page }) => {
     await page.goto('/login');
     
     // Try to submit without email
-    await page.getByRole('button', { name: /entrar|iniciar sesión/i }).click();
+    await page.locator('button[type="submit"]').click();
     
     // Should show validation error
     await expect(page.getByText(/requerido|obligatorio/i)).toBeVisible();
@@ -79,14 +78,13 @@ test.describe('Page Transitions', () => {
     expect(scrollY).toBe(0);
   });
 
-  test('should have smooth page transitions', async ({ page }) => {
+  test('should complete client-side page transitions', async ({ page }) => {
     await page.goto('/');
     
     // Start navigation
-    await page.getByRole('link', { name: /servicios/i }).first().click();
-    
-    // Check that transition class is applied
-    await expect(page.locator('.page-transition')).toBeVisible();
+    await page.getByText(/plataforma/i, { exact: true }).first().click();
+    await expect(page).toHaveURL(/\/plataforma/);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 });
 
@@ -94,14 +92,14 @@ test.describe('404 Page', () => {
   test('should show 404 page for unknown routes', async ({ page }) => {
     await page.goto('/this-does-not-exist');
     
-    await expect(page.getByText(/404|página no encontrada/i)).toBeVisible();
-    await expect(page.getByRole('link', { name: /inicio/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /página no encontrada/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /volver al inicio/i })).toBeVisible();
   });
 
   test('should navigate home from 404', async ({ page }) => {
     await page.goto('/this-does-not-exist');
     
-    await page.getByRole('link', { name: /inicio/i }).click();
+    await page.getByRole('button', { name: /volver al inicio/i }).click();
     await expect(page).toHaveURL('/');
   });
 });

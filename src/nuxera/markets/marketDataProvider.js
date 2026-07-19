@@ -175,6 +175,36 @@ export function getMarketWatchlist(role = "applicant", providerState = MARKET_PR
   };
 }
 
+export function buildMarketWatchlistForExpedient(context, providerState = MARKET_PROVIDER_STATES.LOCAL_DELAYED) {
+  const base = getMarketWatchlist(context?.role, providerState);
+  const order = context?.order;
+  if (!order || context?.isDemo) return base;
+
+  const metadata = order.metadata || {};
+  const projectName = order.project_name || order.projectName || order.case_number || order.id;
+  const country = metadata.country || "MX";
+  const sector = metadata.sector || "sector no especificado";
+  const risk = order.risk_level || order.riskLevel || "por validar";
+  const relevantRows = base.rows.filter((row) => row.region === country || row.region === "Global" || country === "MX");
+
+  return {
+    ...base,
+    source: "expedient-context",
+    expedientId: order.id,
+    scope: `Monitoreo contextual para ${projectName}: ${sector}, ${country}, riesgo ${risk}.`,
+    rows: relevantRows,
+    events: [
+      {
+        id: "selected-expedient-risk",
+        title: `Riesgo declarado del expediente: ${risk}`,
+        severity: String(risk).toLowerCase() === "alto" ? "caution" : "watch",
+        impact: `Validar sensibilidad de ${projectName} a tasas, FX e insumos antes de una decision humana.`,
+      },
+      ...base.events,
+    ],
+  };
+}
+
 export function getMonitoringPolicies() {
   return [
     "Mostrar procedencia y retraso antes de cualquier lectura de mercado.",

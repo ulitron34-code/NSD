@@ -16,11 +16,12 @@ function hasEnv(name) {
   return Boolean(process.env[name]?.trim());
 }
 
-function runCommand(name, command, args) {
+function runCommand(name, command, args, cwd = process.cwd()) {
   try {
     const output = execFileSync(command, args, {
       encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe']
+      stdio: ['ignore', 'pipe', 'pipe'],
+      cwd
     });
 
     return { name, code: 0, output: output.trim() };
@@ -139,8 +140,23 @@ async function checkRegulators() {
   addCheck(result.name, result.code === 0 ? 'pass' : 'fail', result.code === 0 ? 'format checks ok; optional providers may be skipped' : result.output.split('\n').slice(-4).join(' '));
 }
 
+async function checkPublicIdentity() {
+  const identity = runCommand('NUXERA public identity', process.execPath, ['scripts/check-nuxera-public-identity.js']);
+  addCheck(identity.name, identity.code === 0 ? 'pass' : 'fail', identity.code === 0 ? 'public metadata and OG identity aligned' : identity.output);
+
+  const pages = runCommand('Public pages package', process.execPath, ['scripts/check-public-pages-local.js']);
+  addCheck(pages.name, pages.code === 0 ? 'pass' : 'fail', pages.code === 0 ? 'public routes and narrative structurally ready' : pages.output);
+}
+
+async function checkFrontendE2E() {
+  const frontendRoot = new URL('../..', import.meta.url).pathname.replace(/^\/(?:([A-Za-z]:))/, '$1');
+  const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const result = runCommand('Frontend Chromium E2E', command, ['run', 'test:e2e:chromium'], frontendRoot);
+  addCheck(result.name, result.code === 0 ? 'pass' : 'fail', result.code === 0 ? '34 browser journeys passed' : result.output.split('\n').slice(-8).join(' '));
+}
+
 async function main() {
-  console.log('NSD predeploy check');
+  console.log('NUXERA Financial Intelligence predeploy check');
   console.log(`Started: ${new Date().toISOString()}`);
   console.log(`API_URL: ${API_URL}\n`);
 
@@ -152,6 +168,8 @@ async function main() {
   await checkPhase9();
   await checkSupabase();
   await checkRegulators();
+  await checkPublicIdentity();
+  await checkFrontendE2E();
   await checkHealth();
 
   const fail = checks.filter((item) => item.status === 'fail').length;
