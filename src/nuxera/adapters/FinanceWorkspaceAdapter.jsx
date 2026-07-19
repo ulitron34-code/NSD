@@ -1,58 +1,61 @@
 import React, { Suspense, lazy } from "react";
 import { NavLink } from "react-router-dom";
 import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
+import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../finance/financeJourney";
+import { pickLang } from "../../data/requisitosMinimos";
 
 const FundingReadinessTab = lazy(() => import("../../components/Dashboard/Solicitante/FundingReadinessTab"));
 const PipelineTab = lazy(() => import("../../components/Dashboard/Otorgante/PipelineTab"));
 const ServiceOrdersPage = lazy(() => import("../../pages/ServiceOrdersPage"));
 
-const roleContent = {
+const roleContentSource = {
   applicant: {
-    title: "Preparacion financiera",
-    body: "Readiness, documentos, requisitos y reporte para que el solicitante llegue a revision institucional con evidencia organizada.",
+    title: { es: "Preparacion financiera", en: "Financial preparation" },
+    body: { es: "Readiness, documentos, requisitos y reporte para que el solicitante llegue a revision institucional con evidencia organizada.", en: "Readiness, documents, requirements and report so the applicant reaches institutional review with organized evidence." },
     component: FundingReadinessTab,
   },
   grantor: {
-    title: "Pipeline financiero",
-    body: "Oportunidades, data room, score, riesgo y acciones institucionales para el otorgante.",
+    title: { es: "Pipeline financiero", en: "Financial pipeline" },
+    body: { es: "Oportunidades, data room, score, riesgo y acciones institucionales para el otorgante.", en: "Opportunities, data room, score, risk and institutional actions for the grantor." },
     component: PipelineTab,
   },
   admin: {
-    title: "Operacion financiera",
-    body: "Expedientes, estado operativo y seguimiento administrativo sin retirar la consola heredada.",
+    title: { es: "Operacion financiera", en: "Financial operations" },
+    body: { es: "Expedientes, estado operativo y seguimiento administrativo sin retirar la consola heredada.", en: "Files, operational status and administrative follow-up without retiring the legacy console." },
     component: ServiceOrdersPage,
   },
 };
 
-function AdapterLoading() {
+function AdapterLoading({ L }) {
   return (
     <div className="nuxera-adapter-loading">
-      Cargando workspace financiero...
+      {L("Cargando workspace financiero...", "Loading financial workspace...")}
     </div>
   );
 }
 
-export function getFinanceAdapterConfig(role) {
-  return roleContent[role] || roleContent.applicant;
+export function getFinanceAdapterConfig(role, language = "es") {
+  const config = roleContentSource[role] || roleContentSource.applicant;
+  return { ...config, title: pickLang(config.title, language), body: pickLang(config.body, language) };
 }
 
-function FinanceJourneyPanel({ journey, options = [], selectedId, onSelect }) {
-  const evidenceLinks = getFinanceJourneyEvidenceLinks();
+function FinanceJourneyPanel({ journey, options = [], selectedId, onSelect, L, language }) {
+  const evidenceLinks = getFinanceJourneyEvidenceLinks(language);
 
   return (
-    <section className="nuxera-finance-journey" aria-label="Resumen financiero guiado">
+    <section className="nuxera-finance-journey" aria-label={L("Resumen financiero guiado", "Guided financial summary")}>
       <div className="nuxera-finance-next-action">
-        <span>{journey.source === "real-expedient" ? "Expediente real" : "Siguiente accion"}</span>
+        <span>{journey.source === "real-expedient" ? L("Expediente real", "Real file") : L("Siguiente accion", "Next action")}</span>
         <h2>{journey.headline}</h2>
         <p>{journey.nextAction}</p>
-        <div className="nuxera-progress-track" aria-label={`${journey.progress}% completado`}>
+        <div className="nuxera-progress-track" aria-label={`${journey.progress}% ${L("completado", "complete")}`}>
           <i style={{ width: `${journey.progress}%` }} />
         </div>
       </div>
 
       {options.length > 1 && (
-        <div className="nuxera-finance-goals" aria-label="Selector financiero de expediente">
+        <div className="nuxera-finance-goals" aria-label={L("Selector financiero de expediente", "Financial file selector")}>
           {options.map((option) => (
             <button type="button" key={option.id} onClick={() => onSelect(option.id)} aria-pressed={option.id === selectedId}>
               {option.label}
@@ -62,12 +65,12 @@ function FinanceJourneyPanel({ journey, options = [], selectedId, onSelect }) {
       )}
 
       <div className="nuxera-finance-alerts">
-        <h2>Alertas de decision</h2>
+        <h2>{L("Alertas de decision", "Decision alerts")}</h2>
         {journey.alerts.map((alert) => <p key={alert}>{alert}</p>)}
       </div>
 
       <div className="nuxera-finance-evidence">
-        <h2>Evidencia conectada</h2>
+        <h2>{L("Evidencia conectada", "Connected evidence")}</h2>
         {evidenceLinks.map((link) => (
           <NavLink key={link.id} to={link.path}>
             <strong>{link.label}</strong>
@@ -79,23 +82,26 @@ function FinanceJourneyPanel({ journey, options = [], selectedId, onSelect }) {
   );
 }
 
-function RoleFinanceJourney({ role }) {
+function RoleFinanceJourney({ role, L, language }) {
   const context = useNuxeraExpedient();
   const journey = context.isDemo || !context.expedient
-    ? getFinanceJourney(role)
-    : buildFinanceJourneyFromExpedient(context.expedient, role);
+    ? getFinanceJourney(role, language)
+    : buildFinanceJourneyFromExpedient(context.expedient, role, language);
   return (
     <FinanceJourneyPanel
       journey={journey}
       options={context.options}
       selectedId={context.selectedId}
       onSelect={context.selectExpedient}
+      L={L}
+      language={language}
     />
   );
 }
 
 export default function FinanceWorkspaceAdapter({ role }) {
-  const config = getFinanceAdapterConfig(role);
+  const { L, language } = useNuxeraLanguage();
+  const config = getFinanceAdapterConfig(role, language);
   const FinanceComponent = config.component;
 
   return (
@@ -107,16 +113,16 @@ export default function FinanceWorkspaceAdapter({ role }) {
           <p>{config.body}</p>
         </div>
         <div className="nuxera-adapter-status">
-          <span>Workspace financiero</span>
+          <span>{L("Workspace financiero", "Financial workspace")}</span>
           <strong>{role}</strong>
-          <small>Lectura contextual por expediente</small>
+          <small>{L("Lectura contextual por expediente", "Contextual read by file")}</small>
         </div>
       </header>
 
-      <RoleFinanceJourney role={role} />
+      <RoleFinanceJourney role={role} L={L} language={language} />
 
       <div className="nuxera-adapter-body">
-        <Suspense fallback={<AdapterLoading />}>
+        <Suspense fallback={<AdapterLoading L={L} />}>
           <FinanceComponent />
         </Suspense>
       </div>

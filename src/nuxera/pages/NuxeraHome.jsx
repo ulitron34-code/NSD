@@ -1,10 +1,9 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { useMyGrantorPipeline } from "../../hooks/useMyGrantorPipeline";
 import { NavLink } from "react-router-dom";
-import { uiText } from "../../utils/runtimeCopy";
+import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
@@ -51,13 +50,6 @@ const roleCopy = {
     ],
   },
 };
-
-function useNuxeraLanguage() {
-  const { i18n } = useTranslation();
-  const L = (es, en) => uiText(i18n, es, en);
-  const language = String(i18n.language || "es").toLowerCase().startsWith("en") ? "en" : "es";
-  return { L, language };
-}
 
 function ApplicantMissionHome({ sectionLabel }) {
   const { L, language } = useNuxeraLanguage();

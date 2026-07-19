@@ -1,4 +1,6 @@
 import { lazy, Suspense } from "react";
+import { pickLang } from "../../data/requisitosMinimos";
+import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 
 const AdminUsersTab = lazy(() => import("../../components/Dashboard/Admin/AdminUsersTab"));
 const AdminHumanReviewTab = lazy(() => import("../../components/Dashboard/Admin/AdminHumanReviewTab"));
@@ -9,45 +11,51 @@ const TraceabilityLogTab = lazy(() => import("../../components/Dashboard/Traceab
 const AIAgentOpsTab = lazy(() => import("../../components/Dashboard/AIAgentOpsTab"));
 const PredeployGoNoGoTab = lazy(() => import("../../components/Dashboard/PredeployGoNoGoTab"));
 
-const ADMIN_WORKSPACES = Object.freeze({
+const ADMIN_WORKSPACES_SOURCE = Object.freeze({
   operations: {
-    title: "Operacion administrativa",
-    description: "Usuarios, revision humana, metricas, fuentes y rubricas desde contratos administrativos protegidos.",
+    title: { es: "Operacion administrativa", en: "Administrative operations" },
+    description: { es: "Usuarios, revision humana, metricas, fuentes y rubricas desde contratos administrativos protegidos.", en: "Users, human review, metrics, sources and rubrics through protected administrative contracts." },
     modules: [
-      ["users", "Usuarios y permisos", AdminUsersTab],
-      ["human-review", "Revision humana", AdminHumanReviewTab],
-      ["metrics", "Metricas", AdminMetricsTab],
-      ["sources", "Fuentes", AdminReferenceSourcesTab],
-      ["rubrics", "Rubricas", AdminRubricsTab],
+      ["users", { es: "Usuarios y permisos", en: "Users & permissions" }, AdminUsersTab],
+      ["human-review", { es: "Revision humana", en: "Human review" }, AdminHumanReviewTab],
+      ["metrics", { es: "Metricas", en: "Metrics" }, AdminMetricsTab],
+      ["sources", { es: "Fuentes", en: "Sources" }, AdminReferenceSourcesTab],
+      ["rubrics", { es: "Rubricas", en: "Rubrics" }, AdminRubricsTab],
     ],
   },
   security: {
-    title: "Seguridad y trazabilidad",
-    description: "Bitacora global, segregacion y evidencia operativa sin ampliar permisos.",
-    modules: [["traceability", "Trazabilidad", TraceabilityLogTab]],
+    title: { es: "Seguridad y trazabilidad", en: "Security & traceability" },
+    description: { es: "Bitacora global, segregacion y evidencia operativa sin ampliar permisos.", en: "Global log, segregation and operational evidence without expanding permissions." },
+    modules: [["traceability", { es: "Trazabilidad", en: "Traceability" }, TraceabilityLogTab]],
   },
   ai: {
-    title: "IA y agentes",
-    description: "Supervision de agentes, costos, errores y revision humana; no activa ejecucion automatica.",
-    modules: [["ai-ops", "Operaciones de IA", AIAgentOpsTab]],
+    title: { es: "IA y agentes", en: "AI & agents" },
+    description: { es: "Supervision de agentes, costos, errores y revision humana; no activa ejecucion automatica.", en: "Oversight of agents, costs, errors and human review; it does not activate automated execution." },
+    modules: [["ai-ops", { es: "Operaciones de IA", en: "AI operations" }, AIAgentOpsTab]],
   },
   system: {
-    title: "Sistema y despliegue",
-    description: "Controles go/no-go, salud y preparacion de despliegue.",
-    modules: [["predeploy", "Predeploy", PredeployGoNoGoTab]],
+    title: { es: "Sistema y despliegue", en: "System & deployment" },
+    description: { es: "Controles go/no-go, salud y preparacion de despliegue.", en: "Go/no-go controls, health and deployment readiness." },
+    modules: [["predeploy", { es: "Predeploy", en: "Predeploy" }, PredeployGoNoGoTab]],
   },
 });
 
-export function getAdminWorkspaceConfig(section) {
-  return ADMIN_WORKSPACES[section] || ADMIN_WORKSPACES.operations;
+export function getAdminWorkspaceConfig(section, language = "es") {
+  const config = ADMIN_WORKSPACES_SOURCE[section] || ADMIN_WORKSPACES_SOURCE.operations;
+  return {
+    title: pickLang(config.title, language),
+    description: pickLang(config.description, language),
+    modules: config.modules.map(([id, label, Module]) => [id, pickLang(label, language), Module]),
+  };
 }
 
-function AdminModuleLoading() {
-  return <div className="nuxera-adapter-loading">Cargando modulo administrativo protegido...</div>;
+function AdminModuleLoading({ L }) {
+  return <div className="nuxera-adapter-loading">{L("Cargando modulo administrativo protegido...", "Loading protected administrative module...")}</div>;
 }
 
 export default function AdminWorkspaceAdapter({ section }) {
-  const config = getAdminWorkspaceConfig(section);
+  const { L, language } = useNuxeraLanguage();
+  const config = getAdminWorkspaceConfig(section, language);
 
   return (
     <section className="nuxera-adapter" aria-labelledby="nuxera-admin-workspace-title">
@@ -58,17 +66,17 @@ export default function AdminWorkspaceAdapter({ section }) {
           <p>{config.description}</p>
         </div>
         <div className="nuxera-adapter-status">
-          <span>Acceso</span>
-          <strong>Administrador</strong>
-          <small>Autorizacion aplicada por backend</small>
+          <span>{L("Acceso", "Access")}</span>
+          <strong>{L("Administrador", "Administrator")}</strong>
+          <small>{L("Autorizacion aplicada por backend", "Authorization enforced by the backend")}</small>
         </div>
       </header>
 
       <div className="nuxera-admin-workspace-modules">
         {config.modules.map(([id, label, Module]) => (
           <section key={id} aria-label={label}>
-            <header><span>Modulo protegido</span><h2>{label}</h2></header>
-            <Suspense fallback={<AdminModuleLoading />}><Module /></Suspense>
+            <header><span>{L("Modulo protegido", "Protected module")}</span><h2>{label}</h2></header>
+            <Suspense fallback={<AdminModuleLoading L={L} />}><Module /></Suspense>
           </section>
         ))}
       </div>

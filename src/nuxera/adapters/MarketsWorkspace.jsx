@@ -1,24 +1,26 @@
 import React from "react";
 import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
+import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { buildMarketWatchlistForExpedient, getMonitoringPolicies } from "../markets/marketDataProvider";
 
 const riskClass = {
-  Bajo: "is-low",
-  Medio: "is-medium",
-  Alto: "is-high",
+  low: "is-low",
+  medium: "is-medium",
+  high: "is-high",
 };
 
 export default function MarketsWorkspace({ role }) {
+  const { L, language } = useNuxeraLanguage();
   const context = useNuxeraExpedient();
-  const watchlist = buildMarketWatchlistForExpedient({ ...context, role });
-  const policies = getMonitoringPolicies();
+  const watchlist = buildMarketWatchlistForExpedient({ ...context, role }, undefined, language);
+  const policies = getMonitoringPolicies(language);
 
   return (
     <section className="nuxera-adapter" aria-labelledby="nuxera-markets-title">
       <header className="nuxera-adapter-header">
         <div>
           <p className="nuxera-eyebrow">NUXERA Markets / Foundation</p>
-          <h1 id="nuxera-markets-title">Monitoreo de mercado</h1>
+          <h1 id="nuxera-markets-title">{L("Monitoreo de mercado", "Market monitoring")}</h1>
           <p>{watchlist.scope}</p>
         </div>
         <div className="nuxera-adapter-status">
@@ -29,7 +31,7 @@ export default function MarketsWorkspace({ role }) {
       </header>
 
       {context.options.length > 1 && (
-        <div className="nuxera-context-selector" aria-label="Selector de expediente para Markets">
+        <div className="nuxera-context-selector" aria-label={L("Selector de expediente para Markets", "File selector for Markets")}>
           {context.options.map((option) => (
             <button type="button" key={option.id} onClick={() => context.selectExpedient(option.id)} aria-pressed={option.id === context.selectedId}>{option.label}</button>
           ))}
@@ -37,11 +39,11 @@ export default function MarketsWorkspace({ role }) {
       )}
 
       <div className="nuxera-market-disclaimer">
-        <strong>Procedencia:</strong> {watchlist.status.provenance}
+        <strong>{L("Procedencia:", "Provenance:")}</strong> {watchlist.status.provenance}
         <span>{watchlist.status.disclaimer}</span>
       </div>
 
-      <section className="nuxera-market-provider" aria-label="Estado del proveedor de mercado">
+      <section className="nuxera-market-provider" aria-label={L("Estado del proveedor de mercado", "Market provider status")}>
         <div>
           <span>{watchlist.degradationPlan.health}</span>
           <strong>{watchlist.degradationPlan.label}</strong>
@@ -49,7 +51,7 @@ export default function MarketsWorkspace({ role }) {
         </div>
         <div>
           <span>Realtime</span>
-          <strong>{watchlist.degradationPlan.realtimeAvailable ? "Disponible" : "No disponible"}</strong>
+          <strong>{watchlist.degradationPlan.realtimeAvailable ? L("Disponible", "Available") : L("No disponible", "Not available")}</strong>
           <p>{watchlist.status.asOf}</p>
         </div>
         <ul>
@@ -72,14 +74,14 @@ export default function MarketsWorkspace({ role }) {
               <small>{row.change}</small>
             </div>
             <p>{row.driver}</p>
-            <em className={riskClass[row.risk] || ""}>Riesgo {row.risk}</em>
+            <em className={riskClass[row.riskLevel] || ""}>{L("Riesgo", "Risk")} {row.risk}</em>
           </article>
         ))}
       </div>
 
       <div className="nuxera-market-panels">
         <section>
-          <h2>Eventos vigilados</h2>
+          <h2>{L("Eventos vigilados", "Monitored events")}</h2>
           {watchlist.events.map((event) => (
             <article key={event.id}>
               <span>{event.severity}</span>
@@ -89,7 +91,7 @@ export default function MarketsWorkspace({ role }) {
           ))}
         </section>
         <section>
-          <h2>Politicas de monitoreo</h2>
+          <h2>{L("Politicas de monitoreo", "Monitoring policies")}</h2>
           {policies.map((policy) => (
             <p key={policy}>{policy}</p>
           ))}

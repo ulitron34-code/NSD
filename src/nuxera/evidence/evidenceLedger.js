@@ -50,12 +50,12 @@ function buildDocumentEvidence(role, language) {
 }
 
 function buildResearchEvidence(role, language) {
-  const mission = getResearchMission(role);
+  const mission = getResearchMission(role, undefined, language);
   return mission.sources.map((source) => ({
     id: `source-${source.id}`,
     engine: "Intelligence",
     label: source.source,
-    status: source.reliability.includes("Alta") || source.reliability.includes("High") ? "ready" : "watch",
+    status: source.reliabilityLevel === "high" ? "ready" : "watch",
     visibility: visibilityByRole[role] || visibilityByRole.applicant,
     provenance: source.provenance,
     sourceType: "research-source",
@@ -66,7 +66,7 @@ function buildResearchEvidence(role, language) {
 }
 
 function buildStrategyEvidence(role, language) {
-  const strategy = getStrategyWorkspace(role);
+  const strategy = getStrategyWorkspace(role, language);
   return strategy.evidenceLinks.map((link) => ({
     id: `strategy-${link.id}`,
     engine: "Strategy",
@@ -82,7 +82,7 @@ function buildStrategyEvidence(role, language) {
 }
 
 function buildFinanceLinks(role, language) {
-  return getFinanceJourneyEvidenceLinks().map((link) => ({
+  return getFinanceJourneyEvidenceLinks(language).map((link) => ({
     id: `finance-${link.id}`,
     engine: "Finance",
     label: link.label,
