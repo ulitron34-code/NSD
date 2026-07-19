@@ -1546,3 +1546,58 @@ Dependencies were installed locally with an isolated npm cache and the recovered
 - Continuation pack generation passed from `66769b9`.
 
 Legacy predeploy/go-no-go remains blocked by missing environment credentials and historical SQL/page artifacts outside this NUXERA change. No placeholder credentials or files were created to bypass those checks.
+
+## Admin console crash fix - 2026-07-18
+
+The manual browser verification deferred by every prior handoff (blocked by `spawn EPERM` in the office/Codex sandbox) was finally run with real Chrome on the home machine. Applicant and grantor NUXERA views loaded cleanly, but the admin NUXERA console crashed to a blank screen on every load.
+
+Root cause:
+- `LOCAL_BACKEND_READINESS_STATE` (the local fallback used before the backend readiness endpoint resolves, and whenever it fails) ships signal objects without a `requiredFor` field.
+- `buildBackendReadinessHandoff` in `src/nuxera/admin/backendReadinessAdapter.js` copied `signal.requiredFor` into `unavailableTables` unnormalized.
+- `AdminOperationsHome` in `src/nuxera/pages/NuxeraHome.jsx` calls `item.requiredFor.join(", ")` on each `unavailableTables` row, which threw `TypeError: Cannot read properties of undefined (reading 'join')` with no error boundary above it, so the whole admin route went blank.
+- This reproduced on every admin NUXERA load in this environment because the backend server was not running, so the readiness fetch always fell back to the broken local shape; it would also hit the same crash on first paint before any fetch resolves, backend up or not.
+
+Fix:
+- `buildBackendReadinessHandoff` now wraps `signal.requiredFor` in the existing `asArray()` helper before returning it, matching the safety already used in `normalizeSignal`.
+- Added a regression test in `src/tests/nuxeraExperience.test.js` ("keeps backend readiness handoff safe when signals arrive without requiredFor (local fallback shape)") that exercises the exact local-fallback signal shape and asserts `.join()` does not throw.
+- Also closed a real gap noted in the 07-18 handoff's brand-toggle claim: `document.title` was still hardcoded to the NEXUS legal name in `index.html` and never updated at runtime. Added a `useEffect` in `src/App.jsx` that sets `document.title` from `BRAND.legalName`, verified in Chrome with the flag both on (NUXERA) and off (NEXUS).
+
+Validation:
+- Manual Chrome verification: applicant, grantor and admin NUXERA views all load without console errors or exceptions, flag on and off, `VITE_NUXERA_EXPERIENCE_ENABLED` toggled via dev server env (not committed to `.env`).
+- Frontend full suite: 9 files / 240 tests passed (239 previous + 1 new regression test).
+- Frontend lint: passed with zero warnings.
+- Frontend production build: passed; existing large-chunk warning remains non-blocking.
+
+Guardrails:
+- No SQL, backend routes, permissions, or Supabase state touched.
+- No production `.env` values changed; the flag was only enabled via a local dev-server environment override to verify visually.
+
+Next recommended task: still blocked on a real non-production Supabase project — `backend/.env` currently points at a `placeholder-local-smoke-test.supabase.co` host that does not resolve, so `npm run check:supabase` fails with `fetch failed` for every table. The controlled RLS/endpoint verification pass cannot start until real non-production Supabase credentials are provided.
+
+## Route sweep and scope finding - 2026-07-18
+
+With the admin crash fixed, every NUXERA route was walked in Chrome for all three roles (applicant: home/finance/intelligence/markets/strategy/followup; grantor: home/queue/finance/intelligence/markets/strategy; admin: home/operations/security/ai/system/finance/intelligence/markets/strategy). No further crashes or console exceptions found; only expected `Network Error` noise from legacy components calling a backend that is not running in this dev session.
+
+Scope finding (not a regression, not fixed): the entire NUXERA guided workspace (`src/nuxera/pages/NuxeraHome.jsx` and the Finance/Markets/Strategy/Intelligence adapters) is hardcoded Spanish text with no `useTranslation`/`t()` calls. Switching the site language to English has zero effect inside `/dashboard/nuxera/*` — it only affects the legacy dashboard and the public site (which do use i18next and were verified working correctly in English, including the four new public pages). This has been true since the shell was first built on 2026-07-16 and was never claimed otherwise in any handoff; flagging it now because an English-speaking demo of the new NUXERA workspace would look untranslated today.
+
+## First controlled Supabase application - 2026-07-18
+
+The user provided direct links to the actual Supabase org/project, GitHub repo and Vercel deployment. Inspecting the Supabase dashboard showed only one project exists in the org (`ulitron34-code's ProjectNSD IF`, ref `iafwnrootbtlsdqfioiu`), explicitly labeled `main` / **PRODUCTION** in the dashboard chrome — there is no separate non-production project. This was flagged to the user before touching anything; the user explicitly chose to apply the three additive NUXERA tables directly to this production project rather than provision a separate non-prod project first.
+
+What was done:
+- Retrieved the real `SUPABASE_URL`, legacy `anon` key and `service_role` key from the Supabase dashboard (Project Settings → API Keys → Legacy anon/service_role) and wrote them into `backend/.env` (gitignored, confirmed with `git check-ignore` before writing).
+- Ran `npm run check:supabase` first to confirm connectivity and that all 12 existing production tables were reachable and unaffected — baseline was green before any change.
+- Ran `npm run check:nuxera-sql` to reconfirm the three draft migrations are additive, RLS-gated and free of destructive operations.
+- Applied the three SQL drafts directly in the Supabase SQL Editor, in dependency order: `2026-07-16_nuxera_workspace_states.sql`, then `2026-07-17_nuxera_evidence_links.sql` (has an FK to workspace_states), then `2026-07-17_nuxera_admin_controls.sql`. Each ran with "Success. No rows returned".
+- Verified the result with a direct `pg_class`/`pg_policies` query: all three tables exist with `relrowsecurity = true`, and policy counts match the source files exactly (`nuxera_workspace_states`: 3 policies, `nuxera_evidence_links`: 1, `nuxera_admin_controls`: 1).
+- Started the local backend (`npm run dev` in `backend/`) against the real credentials; it boots cleanly.
+
+Known gap, not chased further: the frontend backend-readiness panel in the admin NUXERA console still shows all three tables as `unverified`/local-fallback when checked in the browser. This is expected, not a bug — the frontend dev server's `VITE_API_URL` points at the deployed Render backend (`codex-backendnsd.onrender.com`), not the local backend just started, and the NUXERA readiness endpoint requires a real authenticated admin session (`nuxera:admin:read`), which the localStorage demo-role flags used for UI verification do not provide. The tables' existence and RLS were confirmed directly at the database level instead; live end-to-end readiness through the deployed backend has not been checked.
+
+What was explicitly NOT done:
+- No existing production table, column, row or policy was modified — only new, additive `CREATE TABLE IF NOT EXISTS` objects.
+- No commit, no push to `https://github.com/ulitron34-code/NSD`, no Vercel deployment.
+- No production `.env` on Render/Vercel was touched — only this machine's local `backend/.env`.
+- `VITE_NUXERA_EXPERIENCE_ENABLED` remains `false`; none of this is visible to real users yet.
+
+Next recommended task: decide whether to point a local/staging frontend at the local backend with a real authenticated admin login to verify the readiness panel end-to-end, or move straight to filling real controlled-run metadata (operator, reviewer, rollback owner, isolated identities) into the evidence scaffold now that the backend tables it depends on actually exist.

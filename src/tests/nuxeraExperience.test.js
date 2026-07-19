@@ -998,6 +998,23 @@ describe("NUXERA backend readiness adapter", () => {
       expect.arrayContaining(["controlled-verification-package"])
     );
   });
+
+  it("keeps backend readiness handoff safe when signals arrive without requiredFor (local fallback shape)", () => {
+    const consoleState = getAdminOperationsConsole();
+    const readiness = normalizeNuxeraBackendReadinessResponse({
+      readiness: {
+        ready: false,
+        summary: { total: 1, available: 0, unavailable: 1, readiness: 0 },
+        signals: [
+          { id: "workspace-states", table: "nuxera_workspace_states", label: "Workspace states", status: "unverified", ready: false },
+        ],
+      },
+    });
+    const merged = mergeBackendReadinessWithConsole(consoleState, readiness);
+
+    expect(merged.backendReadinessHandoff.unavailableTables[0].requiredFor).toEqual([]);
+    expect(() => merged.backendReadinessHandoff.unavailableTables[0].requiredFor.join(", ")).not.toThrow();
+  });
   it("merges backend readiness into the admin console without enabling writes", () => {
     const consoleState = getAdminOperationsConsole();
     const readiness = normalizeNuxeraBackendReadinessResponse({

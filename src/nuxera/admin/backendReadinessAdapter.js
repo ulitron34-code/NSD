@@ -882,7 +882,7 @@ function buildBackendReadinessHandoff(state, actions) {
     unavailableTables: unavailableSignals.map((signal) => ({
       table: signal.table,
       owner: signal.owner,
-      requiredFor: signal.requiredFor,
+      requiredFor: asArray(signal.requiredFor),
       status: signal.status,
     })),
     nextActions: actions.map((action) => action.action),

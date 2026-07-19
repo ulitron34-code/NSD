@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -6,6 +6,7 @@ import { ExperienceProvider } from "./experience/ExperienceContext";
 import ProtectedRoute from "./components/Layout/ProtectedRoute";
 import Header from "./components/Layout/Header";
 import Toast from "./components/Shared/Toast";
+import { BRAND } from "./config/brand";
 import "./App.css";
 import "./utils/i18n";
 
@@ -51,6 +52,10 @@ const Loader = () => (
 );
 
 function AppContent() {
+  useEffect(() => {
+    document.title = `${BRAND.legalName} — Plataforma Global de Cumplimiento y Riesgo`;
+  }, []);
+
   return (
     <Router>
       <Suspense fallback={<Loader />}>

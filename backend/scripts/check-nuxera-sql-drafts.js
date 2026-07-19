@@ -74,6 +74,20 @@ const drafts = [
     policyCount: 1,
     forbiddenPolicyVerbs: ['for insert', 'for update', 'for delete'],
   },
+  {
+    label: 'evidence links grantor policy',
+    path: 'sql_migrations_pendientes/2026-07-18_nuxera_evidence_links_grantor_policy.sql',
+    requiredSnippets: [
+      ['grantor select policy', 'authorized_grantor_select_nuxera_evidence_links'],
+      ['grantor visibility gate', "visibility = 'authorized_grantor'"],
+      ['data room share anchor', 'FROM data_room_shares drs'],
+      ['order match', 'drs.order_id = nuxera_evidence_links.order_id'],
+      ['recipient match', 'drs.recipient_user_id = auth.uid()'],
+      ['accepted or shared status', "drs.status IN ('accepted', 'shared')"],
+    ],
+    policyCount: 1,
+    forbiddenPolicyVerbs: ['for insert', 'for update', 'for delete'],
+  },
 ];
 
 const forbiddenPatterns = [

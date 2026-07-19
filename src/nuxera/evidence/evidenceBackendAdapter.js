@@ -176,3 +176,47 @@ export function useOwnerEvidenceLedger(orderId, { enabled = true, role = "applic
 
   return mergeNuxeraEvidenceLedger(localLedger, remoteState);
 }
+
+export function useAuthorizedGrantorEvidenceLedger(orderId, { enabled = true, role = "grantor", language = "es" } = {}) {
+  const localLedger = getNuxeraEvidenceLedger(role, language);
+  const [remoteState, setRemoteState] = useState(LOCAL_EVIDENCE_STATE);
+
+  useEffect(() => {
+    if (!enabled || !orderId) {
+      setRemoteState(LOCAL_EVIDENCE_STATE);
+      return undefined;
+    }
+
+    let active = true;
+    setRemoteState({
+      ...LOCAL_EVIDENCE_STATE,
+      source: "remote-loading",
+      label: "Cargando evidence_links NUXERA autorizados",
+      loading: true,
+      orderId,
+    });
+
+    nuxeraEvidenceAPI.getGrantorOrderEvidence(orderId)
+      .then(({ data }) => {
+        if (!active) return;
+        setRemoteState(normalizeNuxeraEvidenceResponse(data));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo cargar evidence ledger autorizado; usando fallback local", err);
+        setRemoteState({
+          ...LOCAL_EVIDENCE_STATE,
+          source: "remote-error-fallback",
+          label: "Fallback local",
+          error: "nuxera-grantor-evidence-unavailable",
+          orderId,
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, orderId]);
+
+  return mergeNuxeraEvidenceLedger(localLedger, remoteState);
+}

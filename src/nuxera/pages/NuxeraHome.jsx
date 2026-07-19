@@ -1,6 +1,7 @@
 import React from "react";
 import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
+import { useMyGrantorPipeline } from "../../hooks/useMyGrantorPipeline";
 import { NavLink } from "react-router-dom";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
@@ -9,8 +10,7 @@ import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
-import { useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
-import { getNuxeraEvidenceLedger } from "../evidence/evidenceLedger";
+import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary } from "../grantor/caseQueue";
 
 const roleCopy = {
@@ -265,7 +265,12 @@ function GrantorQueueHome({ sectionLabel }) {
   const workbench = getGrantorCaseWorkbench(queue.cases[0]?.id);
   const memo = getGrantorDecisionMemo(workbench.case.id);
   const grantorDocumentSummary = getGrantorDocumentSummary(workbench.case.id);
-  const grantorEvidenceLedger = getNuxeraEvidenceLedger("grantor", "es");
+  const { orderId, isDemo } = useMyGrantorPipeline();
+  const grantorEvidenceLedger = useAuthorizedGrantorEvidenceLedger(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "grantor",
+    language: "es",
+  });
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -383,6 +388,10 @@ function GrantorQueueHome({ sectionLabel }) {
           </div>
           <strong>{grantorEvidenceLedger.summary.total} senales</strong>
         </header>
+        {grantorEvidenceLedger.backendEvidence?.loading && <small>Cargando evidence_links NUXERA autorizados...</small>}
+        {grantorEvidenceLedger.backendEvidence?.source?.startsWith("remote") && (
+          <small>{grantorEvidenceLedger.backendEvidence.label}</small>
+        )}
         <div>
           {grantorEvidenceLedger.items.slice(0, 6).map((item) => (
             <article key={item.id}>

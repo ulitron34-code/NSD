@@ -11,7 +11,7 @@ import { getNuxeraControlledReleaseDossier } from '../services/nuxeraControlledR
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
-import { getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
+import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 
 const router = express.Router();
@@ -405,6 +405,34 @@ router.get(
         evidence,
         guardrails: [
           'NU-BE-EVID-001 exposes owner-scoped evidence links only.',
+          'Evidence links do not grant document access or data-room visibility.',
+          'No write endpoint is exposed for evidence links.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/orders/:orderId/grantor-evidence',
+  authMiddleware,
+  requirePermission('data_room:authorized:read'),
+  async (req, res) => {
+    try {
+      const evidence = await getAuthorizedGrantorEvidenceLinks({
+        orderId: req.params.orderId,
+        userId: req.userId,
+        email: req.user?.email
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'grantor',
+        evidence,
+        guardrails: [
+          'NU-GRA-EVID-002 exposes authorized-grantor-scoped evidence links only.',
+          'Requires an accepted data_room_shares record for this order and requester.',
           'Evidence links do not grant document access or data-room visibility.',
           'No write endpoint is exposed for evidence links.'
         ]

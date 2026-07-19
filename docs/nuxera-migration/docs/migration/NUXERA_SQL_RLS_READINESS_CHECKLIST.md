@@ -12,9 +12,11 @@ Pending NUXERA SQL drafts currently covered by the local guard:
 
 | Draft | Purpose | Current application status |
 |---|---|---|
-| `backend/sql_migrations_pendientes/2026-07-16_nuxera_workspace_states.sql` | Applicant checklist state container. | Draft only; not applied to Supabase/production. |
-| `backend/sql_migrations_pendientes/2026-07-17_nuxera_evidence_links.sql` | Owner-visible evidence-link references. | Draft only; not applied to Supabase/production. |
-| `backend/sql_migrations_pendientes/2026-07-17_nuxera_admin_controls.sql` | Admin read-only control state. | Draft only; not applied to Supabase/production. |
+| `backend/sql_migrations_pendientes/2026-07-16_nuxera_workspace_states.sql` | Applicant checklist state container. | **Applied to production Supabase (`iafwnrootbtlsdqfioiu`) on 2026-07-18** by explicit user authorization. RLS enabled, 3 policies confirmed. |
+| `backend/sql_migrations_pendientes/2026-07-17_nuxera_evidence_links.sql` | Owner-visible evidence-link references. | **Applied to production Supabase on 2026-07-18.** RLS enabled, 1 policy confirmed. |
+| `backend/sql_migrations_pendientes/2026-07-17_nuxera_admin_controls.sql` | Admin read-only control state. | **Applied to production Supabase on 2026-07-18.** RLS enabled, 1 policy confirmed. |
+
+Note: the original plan below assumed a non-production Supabase project for this pass. No separate non-production project existed in the org (single-project org, free tier); the user was told this explicitly before proceeding and chose to apply directly to production rather than provision a separate project first. See `PROJECT_STATE.md`, "First controlled Supabase application - 2026-07-18" for the full record.
 
 ## Required local checks before live application
 
@@ -46,7 +48,17 @@ Before applying to production, use a non-production Supabase project or isolated
 - Confirm indexes are present and active predicates match the local guard.
 - Confirm `archived_at`/soft-hiding semantics exist before enabling UI writes.
 
+**Done 2026-07-18:** all three tables applied in dependency order against production; `service_orders`/`documents`/`document_reviews` FK anchors accepted without error (confirming column names matched); `pg_class`/`pg_policies` query confirmed `relrowsecurity = true` and correct policy counts (3/1/1) for the three tables; `node backend/scripts/check-nuxera-sql-drafts.js` and `npm run check:supabase` (12 pre-existing tables) both passed immediately before applying. `getNuxeraBackendReadiness()` was called directly (bypassing HTTP/auth) and returned `ready: true`, `readiness: 100%`, all three signals `available` with `count: 0`.
+
 ### RLS verification
+
+**Done at the RLS/database layer, 2026-07-18.** All four identities tested against production with real, pre-existing ids (no fabricated data), entirely inside `BEGIN...ROLLBACK` transactions so nothing was ever committed:
+- `nuxera_workspace_states`: real order owner sees own row (`count = 1`); a different real user sees nothing for that order (`count = 0`).
+- `nuxera_evidence_links` (`authorized_grantor` visibility): after implementing the previously contract-only grantor policy (new SQL draft `2026-07-18_nuxera_evidence_links_grantor_policy.sql`, reusing the existing `data_room_shares` authorization), a real user with an accepted share sees the row (`count = 1`); a real user with no share for that order sees nothing (`count = 0`).
+- `nuxera_admin_controls`: the one real `administrador` user in production sees the row (`count = 1`); a real non-admin user sees nothing (`count = 0`).
+- Every table confirmed back at `count(*) = 0` immediately after each rollback — zero permanent rows left by any of these tests.
+
+This confirms all four rows of the identity matrix below at the RLS/database layer. **Still not tested:** the HTTP-level permission middleware (`requirePermission(...)`) with a real authenticated session for any of these routes, and no write-path RLS test has been run.
 
 Use at minimum these controlled identities:
 
@@ -76,15 +88,15 @@ Use at minimum these controlled identities:
 
 ## Go/no-go checklist
 
-| Gate | Required evidence | Status before live SQL |
+| Gate | Required evidence | Status |
 |---|---|---|
-| Local SQL guard | Guard output attached to handoff. | Required. |
-| Controlled DB apply | Non-production Supabase apply log. | Required. |
-| RLS matrix | Applicant, different applicant, grantor and admin checks. | Required. |
-| Endpoint tests | Backend service/route tests and controlled API calls. | Required. |
-| Audit writes | `audit_logs` rows verified for writes. | Required before any write UI. |
-| Rollback rehearsal | Feature flag off and soft-archive/hide behavior verified. | Required. |
-| Production approval | Human approval with commit, SQL hash and rollback owner. | Required. |
+| Local SQL guard | Guard output attached to handoff. | **Done** — `check-nuxera-sql-drafts.js` passed 2026-07-18. |
+| Controlled DB apply | Apply log with schema/RLS confirmation. | **Done, but applied directly to production** (no separate non-prod project existed; user explicitly authorized). See `pg_class`/`pg_policies` verification above. |
+| RLS matrix | Applicant, different applicant, grantor and admin checks. | **Done at the RLS/database layer (2026-07-18).** All 4 identities confirmed by real behavioral tests against production (`nuxera_workspace_states`, `nuxera_evidence_links`, `nuxera_admin_controls`), all PASS. HTTP-level permission-middleware checks still pending — see `NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md`. |
+| Endpoint tests | Backend service/route tests and controlled API calls. | **Done for all read routes (2026-07-18).** Mocked route/service tests pass (469 total backend tests, all green). Real HTTP calls made against the local backend (running with real production Supabase credentials) using real Supabase sessions obtained via admin-generated magic links for two real users (no passwords touched): admin sees own data and admin routes (200), non-admin is cleanly denied (403/404, no row-existence leak), no-token is rejected (401). Only the `PATCH` write route and the `authorized-grantor` evidence route remain untested over HTTP — see `NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md`. |
+| Audit writes | `audit_logs` rows verified for writes. | Not applicable yet — no write path has been exercised against these tables. |
+| Rollback rehearsal | Feature flag off and soft-archive/hide behavior verified. | **Done (2026-07-18), 5/5 checks pass.** Flag off confirmed live (zero `/api/nuxera/*` network calls navigating the real legacy dashboard); legacy code has zero coupling to the 3 tables (verified by repo grep); soft-archive verified in production inside a rolled-back transaction (archived row hidden from active queries, still exists, then rolled back — zero permanent footprint). See `NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md`. |
+| Production approval | Human approval with commit, SQL hash and rollback owner. | Informal — explicit user authorization in chat to apply directly to production, given after being told no non-prod project existed. Not routed through the formal change-request/dossier chain (`request:nuxera-change`, `dossier:nuxera-release`). |
 
 ## Rollback expectations
 
@@ -96,4 +108,4 @@ Use at minimum these controlled identities:
 
 ## Current recommendation
 
-Do not apply these SQL drafts directly to production yet. The next safe backend step is a controlled Supabase verification task that records schema/RLS evidence without enabling additional UI writes.
+Updated 2026-07-18: the SQL drafts are applied. The next safe backend step is the RLS behavioral matrix (four controlled identities) against the now-live tables, and/or filling real controlled-run metadata into the evidence scaffold — both still require human-provided identities/metadata and should not be fabricated. UI writes against these tables remain gated behind that verification regardless of the feature flag state.

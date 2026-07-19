@@ -5,6 +5,7 @@ const serviceCalls = {
   get: [],
   upsert: [],
   evidence: [],
+  grantorEvidence: [],
   adminControls: [],
   readiness: [],
   verificationPlan: [],
@@ -296,6 +297,15 @@ vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
       links: [],
       guardrails: ['No persisted evidence links.']
     };
+  }),
+  getAuthorizedGrantorEvidenceLinks: vi.fn(async (input) => {
+    serviceCalls.grantorEvidence.push(input);
+    return {
+      orderId: input.orderId,
+      persisted: false,
+      links: [],
+      guardrails: ['No persisted evidence links.']
+    };
   })
 }));
 const workspaceStateService = await import('../services/nuxeraWorkspaceStateService.js');
@@ -327,6 +337,7 @@ describe('nuxera routes', () => {
     serviceCalls.get = [];
     serviceCalls.upsert = [];
     serviceCalls.evidence = [];
+    serviceCalls.grantorEvidence = [];
     serviceCalls.adminControls = [];
     serviceCalls.readiness = [];
     serviceCalls.verificationPlan = [];
@@ -874,6 +885,43 @@ describe('nuxera routes', () => {
     );
     expect(serviceCalls.evidence[0]).toEqual({ orderId: 'order-1', userId: 'user-1' });
   });
+
+  it('requires data_room:authorized:read before reading grantor evidence links', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-evidence`, {
+      headers: { 'x-test-user-id': 'grantor-1', 'x-test-permissions': 'funder:interest:create' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'data_room:authorized:read' });
+    expect(serviceCalls.grantorEvidence).toHaveLength(0);
+  });
+
+  it('returns authorized-grantor evidence links with no-access guardrails', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-evidence`, {
+      headers: {
+        'x-test-user-id': 'grantor-1',
+        'x-test-permissions': 'data_room:authorized:read',
+        'x-test-email': 'grantor@example.com'
+      }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      orderId: 'order-1',
+      workspaceRole: 'grantor',
+      evidence: { persisted: false, links: [] }
+    });
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('data_room_shares')])
+    );
+    expect(serviceCalls.grantorEvidence[0]).toEqual({
+      orderId: 'order-1',
+      userId: 'grantor-1',
+      email: 'grantor@example.com'
+    });
+  });
+
   it('requires case:own:update before patching checklist state', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/state/checklist`, {
       method: 'PATCH',

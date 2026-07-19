@@ -288,3 +288,25 @@ The first backend skeleton for NUXERA admin controls now exists in read-only mod
 - Tests: `backend/src/services/nuxeraAdminControlService.test.js` and `backend/src/routes/nuxera.test.js`.
 
 This is not a production-applied schema and does not expose writes. Controls do not activate automations, permissions, feature flags or licensed market data.
+
+## NU-GRA-EVID-002 implementation note
+
+Grantor-authorized evidence reading is now implemented, closing the `authorized_grantor` gap this contract left open in NU-BE-EVID-001:
+
+- SQL draft: `backend/sql_migrations_pendientes/2026-07-18_nuxera_evidence_links_grantor_policy.sql` (applied to production 2026-07-18). Adds one additional `SELECT` policy on the existing `nuxera_evidence_links` table; does not alter the table or the existing owner policy.
+- Service: `assertEvidenceGrantorAuthorized` and `getAuthorizedGrantorEvidenceLinks` in `backend/src/services/nuxeraEvidenceLinkService.js`. Authorization reuses the exact `data_room_shares` check already used by the legacy `GET /otorgante/pipeline` route (`recipient_user_id` or `recipient_email` match, `status IN ('accepted','shared')`) instead of inventing a new authorization path, per this contract's non-negotiable constraint to preserve existing data-room authorization.
+- Route: `GET /api/nuxera/orders/:orderId/grantor-evidence`, guarded by the existing `data_room:authorized:read` permission (already granted to `otorgante`/`inversionista` roles; no new permission was added).
+- RLS: new policy `authorized_grantor_select_nuxera_evidence_links` mirrors the same `data_room_shares` check at the database layer as a defense-in-depth backstop to the backend service-role check.
+- Tests: `backend/src/services/nuxeraEvidenceLinkService.test.js` (6 new cases) and `backend/src/routes/nuxera.test.js` (2 new cases), plus a new guard entry in `backend/scripts/check-nuxera-sql-drafts.js`.
+- Behavioral RLS verification: run directly against production inside `BEGIN...ROLLBACK` transactions using real order/user ids — authorized identity saw the test row (`count = 1`), a different real user with no accepted share for that order did not (`count = 0`). See `NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md` for full evidence.
+
+## NU-FE-BE-GRA-EVID-001 implementation note
+
+Connected the grantor NUXERA home to the new endpoint the same session:
+
+- Hook: `useAuthorizedGrantorEvidenceLedger` added to `src/nuxera/evidence/evidenceBackendAdapter.js`, reusing the exact same `normalizeNuxeraEvidenceResponse`/`mergeNuxeraEvidenceLedger` pure functions already covered by tests for the applicant/owner path (no new pure logic to test).
+- New hook `src/hooks/useMyGrantorPipeline.js` resolves a real authorized `orderId` via the existing `otorganteAPI.pipeline()` (same `data_room_shares` pipeline already used by legacy `PipelineTab.jsx`/`AnalyticsTab.jsx`/etc.), mirroring `useMyOrders.js`'s pattern for applicants. Neither hook is unit-tested directly, consistent with `useMyOrders.js` (also untested) — the tested logic lives in the pure functions/services these hooks call.
+- `GrantorQueueHome` in `NuxeraHome.jsx` now merges backend evidence into the local ledger the same way the applicant home already does, only when the NUXERA flag is active, the user is not in demo mode, and a real authorized order id was resolved. Demo mode and unauthenticated/no-pipeline cases fall back to local-only exactly as before.
+- Verified in Chrome: grantor NUXERA home still renders without console errors in demo mode (where the new hook stays disabled and falls back to local, as designed).
+
+Remaining gaps: no HTTP-level test of `GET /api/nuxera/orders/:orderId/grantor-evidence` with a real authenticated non-demo session (only RLS-layer and backend-service-layer verified against production so far — see `NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md`); `nuxera_review_artifacts` (grantor memo persistence) and any write path remain contract-only, unchanged by this note.

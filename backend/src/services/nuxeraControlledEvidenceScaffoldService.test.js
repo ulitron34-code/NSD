@@ -23,7 +23,7 @@ describe('nuxeraControlledEvidenceScaffoldService', () => {
       },
       summary: {
         identities: 4,
-        endpointRows: 8,
+        endpointRows: 9,
         noGoCriteria: 8,
         rollbackChecks: 5,
         sqlDrafts: 3

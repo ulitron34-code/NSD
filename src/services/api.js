@@ -246,7 +246,9 @@ export const nuxeraWorkspaceStateAPI = {
 
 export const nuxeraEvidenceAPI = {
   getOrderEvidence: (orderId) =>
-    api.get(`/nuxera/orders/${orderId}/evidence`)
+    api.get(`/nuxera/orders/${orderId}/evidence`),
+  getGrantorOrderEvidence: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-evidence`)
 };
 
 export const nuxeraAdminControlsAPI = {
