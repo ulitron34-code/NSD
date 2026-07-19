@@ -301,12 +301,12 @@ function ApplicantMissionHome({ sectionLabel }) {
 function GrantorQueueHome({ sectionLabel }) {
   const { L, language } = useNuxeraLanguage();
   const { pipeline, authorizedOrder, orderId, selectOrder, isDemo, loading } = useMyGrantorPipeline();
-  const queue = isDemo ? getGrantorCaseQueue() : buildGrantorCaseQueueFromPipeline(pipeline);
+  const queue = isDemo ? getGrantorCaseQueue(language) : buildGrantorCaseQueueFromPipeline(pipeline, language);
   const summary = getGrantorQueueSummary(queue);
   const selectedCase = resolveSelectedGrantorCase(queue, orderId);
-  const workbench = selectedCase ? getGrantorCaseWorkbench(selectedCase.id, queue) : null;
-  const memo = selectedCase ? getGrantorDecisionMemo(selectedCase.id, queue) : null;
-  const grantorDocumentSummary = selectedCase ? getGrantorDocumentSummary(selectedCase.id, queue) : null;
+  const workbench = selectedCase ? getGrantorCaseWorkbench(selectedCase.id, queue, language) : null;
+  const memo = selectedCase ? getGrantorDecisionMemo(selectedCase.id, queue, language) : null;
+  const grantorDocumentSummary = selectedCase ? getGrantorDocumentSummary(selectedCase.id, queue, language) : null;
   const grantorEvidenceLedger = useAuthorizedGrantorEvidenceLedger(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
     role: "grantor",
@@ -493,8 +493,8 @@ function GrantorQueueHome({ sectionLabel }) {
 
 
 function AdminOperationsHome({ sectionLabel }) {
-  const { L } = useNuxeraLanguage();
-  const operationalSnapshot = useAdminOperationalSnapshot({ enabled: isNuxeraExperienceEnabled() });
+  const { L, language } = useNuxeraLanguage();
+  const operationalSnapshot = useAdminOperationalSnapshot({ enabled: isNuxeraExperienceEnabled(), language });
   const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled() });
   const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled() });
   const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled() });

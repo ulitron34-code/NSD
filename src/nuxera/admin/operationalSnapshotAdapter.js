@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { adminAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
+import { pickLang } from "../../data/requisitosMinimos";
 
 const EMPTY_SNAPSHOT = Object.freeze({
   source: "remote-not-loaded",
@@ -36,40 +37,47 @@ function countBy(rows, key, fallback = "sin-clasificar") {
   }, {});
 }
 
-function buildMetricCards(metrics) {
+function buildMetricCards(metrics, language) {
   const definitions = [
-    ["totalOrders", "Expedientes evaluados", "count"],
-    ["avgGlobalScore", "Readiness promedio", "percent"],
-    ["readyOrdersPercentage", "Expedientes listos", "percent"],
-    ["avgMissingDocuments", "Documentos faltantes", "decimal"],
-    ["illegibleDocumentRate", "Documentos ilegibles", "percent"],
-    ["avgEvaluationSeconds", "Tiempo de evaluacion", "seconds"],
-    ["avgCostUsdPerOrder", "Costo por expediente", "currency"],
-    ["totalReportDownloads", "Reportes descargados", "count"],
+    ["totalOrders", { es: "Expedientes evaluados", en: "Files evaluated" }, "count"],
+    ["avgGlobalScore", { es: "Readiness promedio", en: "Average readiness" }, "percent"],
+    ["readyOrdersPercentage", { es: "Expedientes listos", en: "Ready files" }, "percent"],
+    ["avgMissingDocuments", { es: "Documentos faltantes", en: "Missing documents" }, "decimal"],
+    ["illegibleDocumentRate", { es: "Documentos ilegibles", en: "Illegible documents" }, "percent"],
+    ["avgEvaluationSeconds", { es: "Tiempo de evaluacion", en: "Evaluation time" }, "seconds"],
+    ["avgCostUsdPerOrder", { es: "Costo por expediente", en: "Cost per file" }, "currency"],
+    ["totalReportDownloads", { es: "Reportes descargados", en: "Reports downloaded" }, "count"],
   ];
 
   return definitions.map(([key, label, format]) => ({
     key,
-    label,
+    label: pickLang(label, language),
     format,
     value: metrics[key] ?? null,
     available: metrics[key] !== null && metrics[key] !== undefined,
   }));
 }
 
-export function buildAdminOperationalModules({ users = [], auditLogs = [], humanReviews = [], metrics = {} } = {}) {
+export function buildAdminOperationalModules({ users = [], auditLogs = [], humanReviews = [], metrics = {} } = {}, language = "es") {
   const roleCounts = countBy(users, "profile_type");
   const auditActionCounts = countBy(auditLogs, "action");
-  const pendingReviews = humanReviews.map((review) => ({
-    id: review.id || review.documentId,
-    orderId: review.orderId || review.order_id,
-    projectName: review.projectName || review.project_name || review.caseNumber || review.case_number || "Expediente",
-    documentName: review.filename || review.documentType || review.document_type || "Documento",
-    score: review.reviewScore ?? review.score ?? null,
-    confidence: review.confidence ?? null,
-    reviewedAt: review.reviewedAt || review.reviewed_at || review.created_at || null,
-    priority: Number(review.reviewScore ?? review.score ?? 100) < 60 ? "alta" : "normal",
-  }));
+  const fileLabel = pickLang({ es: "Expediente", en: "File" }, language);
+  const documentLabel = pickLang({ es: "Documento", en: "Document" }, language);
+  const priorityLabels = { high: pickLang({ es: "alta", en: "high" }, language), normal: pickLang({ es: "normal", en: "normal" }, language) };
+  const pendingReviews = humanReviews.map((review) => {
+    const priorityLevel = Number(review.reviewScore ?? review.score ?? 100) < 60 ? "high" : "normal";
+    return {
+      id: review.id || review.documentId,
+      orderId: review.orderId || review.order_id,
+      projectName: review.projectName || review.project_name || review.caseNumber || review.case_number || fileLabel,
+      documentName: review.filename || review.documentType || review.document_type || documentLabel,
+      score: review.reviewScore ?? review.score ?? null,
+      confidence: review.confidence ?? null,
+      reviewedAt: review.reviewedAt || review.reviewed_at || review.created_at || null,
+      priorityLevel,
+      priority: priorityLabels[priorityLevel],
+    };
+  });
 
   return {
     users: {
@@ -79,12 +87,12 @@ export function buildAdminOperationalModules({ users = [], auditLogs = [], human
     },
     reviews: {
       total: pendingReviews.length,
-      highPriority: pendingReviews.filter((review) => review.priority === "alta").length,
+      highPriority: pendingReviews.filter((review) => review.priorityLevel === "high").length,
       items: pendingReviews,
     },
     metrics: {
-      cards: buildMetricCards(metrics),
-      available: buildMetricCards(metrics).filter((metric) => metric.available).length,
+      cards: buildMetricCards(metrics, language),
+      available: buildMetricCards(metrics, language).filter((metric) => metric.available).length,
       redFlags: asArray(metrics.topRedFlags),
       inconsistencies: asArray(metrics.topInconsistencies),
       note: metrics.avgEvaluationNote || null,
@@ -97,7 +105,7 @@ export function buildAdminOperationalModules({ users = [], auditLogs = [], human
   };
 }
 
-export function normalizeAdminOperationalSnapshot({ users, audit, reviews, metrics, failedSources = [] } = {}) {
+export function normalizeAdminOperationalSnapshot({ users, audit, reviews, metrics, failedSources = [], language = "es" } = {}) {
   const userRows = asArray(users?.users || users);
   const auditRows = asArray(audit?.logs || audit);
   const reviewRows = asArray(reviews?.items || reviews?.reviews || reviews?.queue || reviews);
@@ -108,7 +116,7 @@ export function normalizeAdminOperationalSnapshot({ users, audit, reviews, metri
     auditLogs: auditRows,
     humanReviews: reviewRows,
     metrics: metricValues,
-  });
+  }, language);
 
   return {
     source: "remote-admin-read-only",
@@ -130,7 +138,7 @@ export function normalizeAdminOperationalSnapshot({ users, audit, reviews, metri
   };
 }
 
-export function useAdminOperationalSnapshot({ enabled = true } = {}) {
+export function useAdminOperationalSnapshot({ enabled = true, language = "es" } = {}) {
   const [snapshot, setSnapshot] = useState(EMPTY_SNAPSHOT);
 
   useEffect(() => {
@@ -160,11 +168,12 @@ export function useAdminOperationalSnapshot({ enabled = true } = {}) {
         reviews: results[2].status === "fulfilled" ? results[2].value.data : null,
         metrics: results[3].status === "fulfilled" ? results[3].value.data : null,
         failedSources,
+        language,
       }));
     });
 
     return () => { active = false; };
-  }, [enabled]);
+  }, [enabled, language]);
 
   return snapshot;
 }

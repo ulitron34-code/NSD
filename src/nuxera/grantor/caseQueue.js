@@ -1,31 +1,37 @@
 import { buildOtorganteAnalytics, buildOtorgantePipeline, buildOtorgantePipelineFromEntries } from "../../data/otorgantePipeline";
+import { pickLang } from "../../data/requisitosMinimos";
 
-const grantorDemoOrders = [
+const grantorDemoOrdersSource = [
   {
     id: "nuxera-gra-001",
-    projectName: "Expansion agroindustrial Bajio",
+    projectName: { es: "Expansion agroindustrial Bajio", en: "Bajio agribusiness expansion" },
     service_type: "combo-complete",
     status: "paid",
     amount: 18000000,
     created_at: "2026-07-10T15:30:00.000Z",
     metadata: {
       companyName: "AgroNova MX",
-      sector: "Agroindustria",
+      sector: { es: "Agroindustria", en: "Agribusiness" },
       country: "MX",
-      description: "Capital para linea de empaque, certificaciones y contratos de exportacion.",
-      targetEntity: "Banco de desarrollo",
-      structure: "Credito senior con garantia mobiliaria",
+      description: { es: "Capital para linea de empaque, certificaciones y contratos de exportacion.", en: "Capital for a packaging line, certifications and export contracts." },
+      targetEntity: { es: "Banco de desarrollo", en: "Development bank" },
+      structure: { es: "Credito senior con garantia mobiliaria", en: "Senior credit with chattel collateral" },
       complianceScore: 84,
       financialScore: 78,
-      readinessLevel: "Subsanable",
       documentsCount: 11,
-      documents: ["Business plan", "Estados financieros", "KYC/KYB", "Contratos", "Permisos"],
-      infoRequests: [{ id: "req-risk", status: "open", title: "Matriz de riesgos actualizada" }],
+      documents: [
+        { es: "Business plan", en: "Business plan" },
+        { es: "Estados financieros", en: "Financial statements" },
+        { es: "KYC/KYB", en: "KYC/KYB" },
+        { es: "Contratos", en: "Contracts" },
+        { es: "Permisos", en: "Permits" },
+      ],
+      infoRequests: [{ id: "req-risk", status: "open", title: { es: "Matriz de riesgos actualizada", en: "Updated risk matrix" } }],
     },
   },
   {
     id: "nuxera-gra-002",
-    projectName: "Plataforma SaaS compliance",
+    projectName: { es: "Plataforma SaaS compliance", en: "Compliance SaaS platform" },
     service_type: "financial-analysis",
     status: "in_progress",
     amount: 9500000,
@@ -34,100 +40,132 @@ const grantorDemoOrders = [
       companyName: "RegTech Andes",
       sector: "SaaS B2B",
       country: "CO",
-      description: "Financiamiento para ventas enterprise, seguridad y localizacion regional.",
-      targetEntity: "Fondo growth",
-      structure: "Deuda venture con covenants operativos",
+      description: { es: "Financiamiento para ventas enterprise, seguridad y localizacion regional.", en: "Funding for enterprise sales, security and regional localization." },
+      targetEntity: { es: "Fondo growth", en: "Growth fund" },
+      structure: { es: "Deuda venture con covenants operativos", en: "Venture debt with operating covenants" },
       complianceScore: 88,
       financialScore: 82,
-      readinessLevel: "Listo para comite",
       documentsCount: 14,
-      documents: ["Modelo financiero", "MRR dashboard", "KYC/KYB", "SOC roadmap"],
+      documents: [
+        { es: "Modelo financiero", en: "Financial model" },
+        { es: "MRR dashboard", en: "MRR dashboard" },
+        { es: "KYC/KYB", en: "KYC/KYB" },
+        { es: "SOC roadmap", en: "SOC roadmap" },
+      ],
       interest: { status: "under_review" },
     },
   },
   {
     id: "nuxera-gra-003",
-    projectName: "Infraestructura energia distribuida",
+    projectName: { es: "Infraestructura energia distribuida", en: "Distributed energy infrastructure" },
     service_type: "business-plan",
     status: "pending",
     amount: 26000000,
     created_at: "2026-07-04T09:20:00.000Z",
     metadata: {
       companyName: "Luz Norte",
-      sector: "Energia",
+      sector: { es: "Energia", en: "Energy" },
       country: "MX",
-      description: "CAPEX para activos solares C&I y contratos PPA.",
-      targetEntity: "Vehiculo privado de deuda",
-      structure: "Project finance preliminar",
+      description: { es: "CAPEX para activos solares C&I y contratos PPA.", en: "CAPEX for C&I solar assets and PPA contracts." },
+      targetEntity: { es: "Vehiculo privado de deuda", en: "Private debt vehicle" },
+      structure: { es: "Project finance preliminar", en: "Preliminary project finance" },
       complianceScore: 64,
       financialScore: 58,
-      readinessLevel: "Preparacion inicial",
       documentsCount: 7,
-      documents: ["Resumen ejecutivo", "PPA draft", "KYC/KYB"],
-      infoRequests: [{ id: "req-permits", status: "open", title: "Permisos y conexion" }],
+      documents: [
+        { es: "Resumen ejecutivo", en: "Executive summary" },
+        { es: "PPA draft", en: "PPA draft" },
+        { es: "KYC/KYB", en: "KYC/KYB" },
+      ],
+      infoRequests: [{ id: "req-permits", status: "open", title: { es: "Permisos y conexion", en: "Permits & grid connection" } }],
     },
   },
 ];
 
-const riskWeight = {
-  Alto: 3,
-  Medio: 2,
-  Bajo: 1,
-};
+function localizeValue(value, language) {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && ("es" in value || "en" in value)
+    ? pickLang(value, language)
+    : value;
+}
+
+function getGrantorDemoOrders(language) {
+  return grantorDemoOrdersSource.map((order) => ({
+    ...order,
+    projectName: localizeValue(order.projectName, language),
+    metadata: {
+      ...order.metadata,
+      sector: localizeValue(order.metadata.sector, language),
+      description: localizeValue(order.metadata.description, language),
+      targetEntity: localizeValue(order.metadata.targetEntity, language),
+      structure: localizeValue(order.metadata.structure, language),
+      documents: order.metadata.documents.map((doc) => localizeValue(doc, language)),
+      infoRequests: (order.metadata.infoRequests || []).map((request) => ({
+        ...request,
+        title: localizeValue(request.title, language),
+      })),
+    },
+  }));
+}
 
 function getPriority(opportunity) {
-  if (opportunity.readinessLevel === "Listo para comite" && opportunity.risk !== "Alto") return "committee-ready";
-  if (opportunity.infoRequests?.some((request) => request.status === "open") || opportunity.risk === "Alto") return "needs-information";
+  if (opportunity.readinessKey === "committee-ready" && opportunity.riskLevel !== "high") return "committee-ready";
+  if (opportunity.infoRequests?.some((request) => request.status === "open") || opportunity.riskLevel === "high") return "needs-information";
   return "watch";
 }
 
-function buildDecisionSignals(opportunity) {
+function buildDecisionSignals(opportunity, language) {
   return [
     `Readiness: ${opportunity.readinessLevel}`,
-    `Riesgo: ${opportunity.risk}`,
-    `Documentos visibles: ${opportunity.documentsCount}`,
-    `Ticket: ${opportunity.amountLabel}`,
+    `${pickLang({ es: "Riesgo", en: "Risk" }, language)}: ${opportunity.risk}`,
+    `${pickLang({ es: "Documentos visibles", en: "Visible documents" }, language)}: ${opportunity.documentsCount}`,
+    `${pickLang({ es: "Ticket", en: "Ticket" }, language)}: ${opportunity.amountLabel}`,
   ];
 }
 
-function buildCaseQueue(opportunities, source) {
+function buildCaseQueue(opportunities, source, language) {
   const cases = opportunities
-    .map((opportunity) => ({
-      ...opportunity,
-      priority: getPriority(opportunity),
-      decisionSignals: buildDecisionSignals(opportunity),
-      nextAction: getPriority(opportunity) === "committee-ready"
-        ? "Preparar memo de comite y confirmar condiciones no vinculantes."
-        : getPriority(opportunity) === "needs-information"
-          ? "Solicitar evidencia faltante antes de continuar revision."
-          : "Mantener en observacion y revisar cambios de evidencia.",
-      evidenceLinks: [
-        { engine: "Finance", path: "/dashboard/nuxera/finance", label: "Score y estructura" },
-        { engine: "Intelligence", path: "/dashboard/nuxera/intelligence", label: "Documentos y hallazgos" },
-        { engine: "Strategy", path: "/dashboard/nuxera/strategy", label: "Escenarios y rollback" },
-      ],
-    }))
-    .sort((a, b) => (riskWeight[b.risk] - riskWeight[a.risk]) || (b.averageScore - a.averageScore));
+    .map((opportunity) => {
+      const priority = getPriority(opportunity);
+      return {
+        ...opportunity,
+        priority,
+        decisionSignals: buildDecisionSignals(opportunity, language),
+        nextAction: priority === "committee-ready"
+          ? pickLang({ es: "Preparar memo de comite y confirmar condiciones no vinculantes.", en: "Prepare the committee memo and confirm non-binding conditions." }, language)
+          : priority === "needs-information"
+            ? pickLang({ es: "Solicitar evidencia faltante antes de continuar revision.", en: "Request the missing evidence before continuing the review." }, language)
+            : pickLang({ es: "Mantener en observacion y revisar cambios de evidencia.", en: "Keep under watch and review evidence changes." }, language),
+        evidenceLinks: [
+          { engine: "Finance", path: "/dashboard/nuxera/finance", label: pickLang({ es: "Score y estructura", en: "Score & structure" }, language) },
+          { engine: "Intelligence", path: "/dashboard/nuxera/intelligence", label: pickLang({ es: "Documentos y hallazgos", en: "Documents & findings" }, language) },
+          { engine: "Strategy", path: "/dashboard/nuxera/strategy", label: pickLang({ es: "Escenarios y rollback", en: "Scenarios & rollback" }, language) },
+        ],
+      };
+    })
+    .sort((a, b) => {
+      const riskWeight = { high: 3, medium: 2, low: 1 };
+      return (riskWeight[b.riskLevel] - riskWeight[a.riskLevel]) || (b.averageScore - a.averageScore);
+    });
 
   return {
     source,
     cases,
-    analytics: buildOtorganteAnalytics(cases),
+    analytics: buildOtorganteAnalytics(cases, language),
     policies: [
-      "La cola no aprueba credito ni emite term sheets automaticamente.",
-      "Cada caso requiere revision humana antes de contacto, comite o decision vinculante.",
-      "La visibilidad documental debe respetar permisos de data room existentes.",
-      "Las senales de riesgo son priorizacion operativa, no decision final.",
-    ],
+      { es: "La cola no aprueba credito ni emite term sheets automaticamente.", en: "The queue does not approve credit or automatically issue term sheets." },
+      { es: "Cada caso requiere revision humana antes de contacto, comite o decision vinculante.", en: "Every case requires human review before contact, committee, or a binding decision." },
+      { es: "La visibilidad documental debe respetar permisos de data room existentes.", en: "Document visibility must respect existing data room permissions." },
+      { es: "Las senales de riesgo son priorizacion operativa, no decision final.", en: "Risk signals are operational prioritization, not a final decision." },
+    ].map((policy) => pickLang(policy, language)),
   };
 }
 
-export function getGrantorCaseQueue() {
-  return buildCaseQueue(buildOtorgantePipeline(grantorDemoOrders), "demo-local");
+export function getGrantorCaseQueue(language = "es") {
+  return buildCaseQueue(buildOtorgantePipeline(getGrantorDemoOrders(language), language), "demo-local", language);
 }
 
-export function buildGrantorCaseQueueFromPipeline(entries = []) {
-  return buildCaseQueue(buildOtorgantePipelineFromEntries(entries), "authorized-pipeline");
+export function buildGrantorCaseQueueFromPipeline(entries = [], language = "es") {
+  return buildCaseQueue(buildOtorgantePipelineFromEntries(entries, language), "authorized-pipeline", language);
 }
 
 export function resolveSelectedGrantorCase(queue, selectedCaseId) {
@@ -148,90 +186,102 @@ export function getGrantorQueueSummary(queue = getGrantorCaseQueue()) {
     requiresHumanReview: true,
   };
 }
-function getWorkbenchQuestions(caseItem) {
+function getWorkbenchQuestions(caseItem, language) {
   return [
     {
       id: "risk-gap",
-      label: "Riesgo y faltantes",
-      prompt: `Que evidencia falta para bajar riesgo ${caseItem.risk} antes de comite?`,
-      owner: "Analista de riesgo",
+      label: pickLang({ es: "Riesgo y faltantes", en: "Risk & gaps" }, language),
+      prompt: pickLang(
+        { es: `Que evidencia falta para bajar riesgo ${caseItem.risk} antes de comite?`, en: `What evidence is missing to lower the ${caseItem.risk} risk before committee?` },
+        language
+      ),
+      owner: pickLang({ es: "Analista de riesgo", en: "Risk analyst" }, language),
     },
     {
       id: "structure-fit",
-      label: "Estructura",
-      prompt: `La estructura ${caseItem.structure} calza con ticket, plazo y garantias?`,
-      owner: "Otorgante",
+      label: pickLang({ es: "Estructura", en: "Structure" }, language),
+      prompt: pickLang(
+        { es: `La estructura ${caseItem.structure} calza con ticket, plazo y garantias?`, en: `Does the ${caseItem.structure} structure fit the ticket size, term and collateral?` },
+        language
+      ),
+      owner: pickLang({ es: "Otorgante", en: "Grantor" }, language),
     },
     {
       id: "permission-check",
-      label: "Permisos",
-      prompt: "El data room permite revisar todos los documentos citados sin ampliar acceso indebidamente?",
-      owner: "Operacion NUXERA",
+      label: pickLang({ es: "Permisos", en: "Permissions" }, language),
+      prompt: pickLang(
+        { es: "El data room permite revisar todos los documentos citados sin ampliar acceso indebidamente?", en: "Does the data room allow reviewing all cited documents without improperly expanding access?" },
+        language
+      ),
+      owner: pickLang({ es: "Operacion NUXERA", en: "NUXERA Operations" }, language),
     },
   ];
 }
 
-function getWorkbenchConditions(caseItem) {
+function getWorkbenchConditions(caseItem, language) {
   return [
-    `Confirmar ${caseItem.documentsCount} documentos visibles y vigentes antes de contacto formal.`,
-    "Cerrar informacion abierta antes de emitir condiciones no vinculantes.",
-    "Registrar decision humana, supuestos y rollback si cambian score, mercado o permisos.",
+    pickLang(
+      { es: `Confirmar ${caseItem.documentsCount} documentos visibles y vigentes antes de contacto formal.`, en: `Confirm ${caseItem.documentsCount} visible, current documents before formal contact.` },
+      language
+    ),
+    pickLang({ es: "Cerrar informacion abierta antes de emitir condiciones no vinculantes.", en: "Close open information requests before issuing non-binding conditions." }, language),
+    pickLang({ es: "Registrar decision humana, supuestos y rollback si cambian score, mercado o permisos.", en: "Record the human decision, assumptions and rollback if score, market or permissions change." }, language),
   ];
 }
 
-export function getGrantorCaseWorkbench(caseId, queue = getGrantorCaseQueue()) {
+export function getGrantorCaseWorkbench(caseId, queue = getGrantorCaseQueue(), language = "es") {
   const selectedCase = queue.cases.find((item) => item.id === caseId) || queue.cases[0];
 
   return {
     case: selectedCase,
     status: selectedCase.priority === "committee-ready" ? "ready-for-memo" : "evidence-required",
-    questions: getWorkbenchQuestions(selectedCase),
+    questions: getWorkbenchQuestions(selectedCase, language),
     requiredEvidence: selectedCase.documents.map((documentName, index) => ({
       id: `${selectedCase.id}-doc-${index + 1}`,
       label: documentName,
       status: index < Math.max(selectedCase.documents.length - 1, 1) ? "visible" : "verify",
     })),
-    conditions: getWorkbenchConditions(selectedCase),
+    conditions: getWorkbenchConditions(selectedCase, language),
     auditTrail: [
-      "Workbench local para revision del otorgante.",
-      "No emite term sheet ni aprobacion vinculante.",
-      "Respeta permisos existentes del data room; no concede accesos nuevos.",
-    ],
+      { es: "Workbench local para revision del otorgante.", en: "Local workbench for grantor review." },
+      { es: "No emite term sheet ni aprobacion vinculante.", en: "It does not issue a term sheet or a binding approval." },
+      { es: "Respeta permisos existentes del data room; no concede accesos nuevos.", en: "It respects existing data room permissions; it does not grant new access." },
+    ].map((entry) => pickLang(entry, language)),
   };
 }
-function getMemoRecommendation(caseItem) {
+function getMemoRecommendation(caseItem, language) {
   if (caseItem.priority === "committee-ready") {
-    return "Preparar comite interno con condiciones no vinculantes y confirmacion documental.";
+    return pickLang({ es: "Preparar comite interno con condiciones no vinculantes y confirmacion documental.", en: "Prepare an internal committee with non-binding conditions and documentary confirmation." }, language);
   }
 
   if (caseItem.priority === "needs-information") {
-    return "No avanzar a comite hasta cerrar evidencia faltante y actualizar riesgo.";
+    return pickLang({ es: "No avanzar a comite hasta cerrar evidencia faltante y actualizar riesgo.", en: "Do not move to committee until the missing evidence is closed and risk is updated." }, language);
   }
 
-  return "Mantener en observacion hasta recibir nueva evidencia o cambio de apetito.";
+  return pickLang({ es: "Mantener en observacion hasta recibir nueva evidencia o cambio de apetito.", en: "Keep under watch until new evidence arrives or risk appetite changes." }, language);
 }
 
-export function getGrantorDocumentSummary(caseId, queue = getGrantorCaseQueue()) {
-  const workbench = getGrantorCaseWorkbench(caseId, queue);
+export function getGrantorDocumentSummary(caseId, queue = getGrantorCaseQueue(), language = "es") {
+  const workbench = getGrantorCaseWorkbench(caseId, queue, language);
   const caseItem = workbench.case;
   const visible = workbench.requiredEvidence.filter((item) => item.status === "visible");
   const verify = workbench.requiredEvidence.filter((item) => item.status !== "visible");
   const folders = [
     {
       id: "identity-kyb",
-      label: "Identidad y KYB",
+      label: pickLang({ es: "Identidad y KYB", en: "Identity & KYB" }, language),
       status: visible.some((item) => item.label.includes("KYC") || item.label.includes("KYB")) ? "summary-visible" : "verify-required",
       evidence: workbench.requiredEvidence.filter((item) => item.label.includes("KYC") || item.label.includes("KYB")),
     },
     {
       id: "project-file",
-      label: "Proyecto y estructura",
+      label: pickLang({ es: "Proyecto y estructura", en: "Project & structure" }, language),
       status: "summary-visible",
       evidence: workbench.requiredEvidence.filter((item) => !item.label.includes("KYC") && !item.label.includes("KYB")).slice(0, 3),
     },
     {
       id: "risk-requests",
-      label: "Faltantes y requests",
+      label: pickLang({ es: "Faltantes y requests", en: "Gaps & requests" }, language),
       status: caseItem.infoRequests?.some((request) => request.status === "open") ? "needs-information" : "ready-for-review",
       evidence: (caseItem.infoRequests || []).map((request) => ({
         id: request.id,
@@ -254,17 +304,17 @@ export function getGrantorDocumentSummary(caseId, queue = getGrantorCaseQueue())
     },
     folders,
     nextAction: pending.length > 0
-      ? `Confirmar ${pending[0].label} antes de comite o condiciones.`
-      : "Mantener revision documental dentro de permisos existentes.",
+      ? pickLang({ es: `Confirmar ${pending[0].label} antes de comite o condiciones.`, en: `Confirm ${pending[0].label} before committee or conditions.` }, language)
+      : pickLang({ es: "Mantener revision documental dentro de permisos existentes.", en: "Keep document review within existing permissions." }, language),
     guardrails: [
-      "Resumen documental para otorgante; no abre archivos y no concede acceso nuevo.",
-      "La disponibilidad real depende de permisos vigentes del data room.",
-      "No permite descarga, share, upload ni cambios de visibilidad.",
-    ],
+      { es: "Resumen documental para otorgante; no abre archivos y no concede acceso nuevo.", en: "Document summary for the grantor; it does not open files or grant new access." },
+      { es: "La disponibilidad real depende de permisos vigentes del data room.", en: "Real availability depends on current data room permissions." },
+      { es: "No permite descarga, share, upload ni cambios de visibilidad.", en: "It does not allow download, sharing, upload, or visibility changes." },
+    ].map((guardrail) => pickLang(guardrail, language)),
   };
 }
-export function getGrantorDecisionMemo(caseId, queue = getGrantorCaseQueue()) {
-  const workbench = getGrantorCaseWorkbench(caseId, queue);
+export function getGrantorDecisionMemo(caseId, queue = getGrantorCaseQueue(), language = "es") {
+  const workbench = getGrantorCaseWorkbench(caseId, queue, language);
   const caseItem = workbench.case;
   const visibleEvidence = workbench.requiredEvidence.filter((item) => item.status === "visible");
   const pendingEvidence = workbench.requiredEvidence.filter((item) => item.status !== "visible");
@@ -272,13 +322,13 @@ export function getGrantorDecisionMemo(caseId, queue = getGrantorCaseQueue()) {
   return {
     id: `${caseItem.id}-memo-local`,
     case: caseItem,
-    title: `Memo local no vinculante: ${caseItem.name}`,
+    title: pickLang({ es: `Memo local no vinculante: ${caseItem.name}`, en: `Local non-binding memo: ${caseItem.name}` }, language),
     status: caseItem.priority === "committee-ready" ? "draft-ready" : "evidence-blocked",
-    recommendation: getMemoRecommendation(caseItem),
+    recommendation: getMemoRecommendation(caseItem, language),
     thesis: [
-      `${caseItem.applicant} solicita ${caseItem.amountLabel} para ${caseItem.sector}.`,
-      `Estructura preliminar: ${caseItem.structure}.`,
-      `Readiness reportado: ${caseItem.readinessLevel}; riesgo operativo: ${caseItem.risk}.`,
+      pickLang({ es: `${caseItem.applicant} solicita ${caseItem.amountLabel} para ${caseItem.sector}.`, en: `${caseItem.applicant} is requesting ${caseItem.amountLabel} for ${caseItem.sector}.` }, language),
+      pickLang({ es: `Estructura preliminar: ${caseItem.structure}.`, en: `Preliminary structure: ${caseItem.structure}.` }, language),
+      pickLang({ es: `Readiness reportado: ${caseItem.readinessLevel}; riesgo operativo: ${caseItem.risk}.`, en: `Reported readiness: ${caseItem.readinessLevel}; operating risk: ${caseItem.risk}.` }, language),
     ],
     evidenceSnapshot: {
       visible: visibleEvidence.length,
@@ -286,9 +336,9 @@ export function getGrantorDecisionMemo(caseId, queue = getGrantorCaseQueue()) {
       documents: workbench.requiredEvidence,
     },
     riskNotes: [
-      `Score promedio observado: ${caseItem.averageScore}/100.`,
-      `Faltantes abiertos: ${pendingEvidence.length}.`,
-      "La decision final requiere revision humana y evidencia vigente.",
+      pickLang({ es: `Score promedio observado: ${caseItem.averageScore}/100.`, en: `Observed average score: ${caseItem.averageScore}/100.` }, language),
+      pickLang({ es: `Faltantes abiertos: ${pendingEvidence.length}.`, en: `Open gaps: ${pendingEvidence.length}.` }, language),
+      pickLang({ es: "La decision final requiere revision humana y evidencia vigente.", en: "The final decision requires human review and current evidence." }, language),
     ],
     proposedConditions: workbench.conditions,
     nextActions: workbench.questions.map((question) => ({
@@ -297,9 +347,9 @@ export function getGrantorDecisionMemo(caseId, queue = getGrantorCaseQueue()) {
       action: question.prompt,
     })),
     guardrails: [
-      "Memo local para preparacion; no es term sheet ni aprobacion de credito.",
-      "No cambia permisos del data room ni comparte documentos fuera del flujo existente.",
-      "No persiste estado ni crea compromisos vinculantes sin contrato backend aprobado.",
-    ],
+      { es: "Memo local para preparacion; no es term sheet ni aprobacion de credito.", en: "Local preparation memo; it is not a term sheet or a credit approval." },
+      { es: "No cambia permisos del data room ni comparte documentos fuera del flujo existente.", en: "It does not change data room permissions or share documents outside the existing flow." },
+      { es: "No persiste estado ni crea compromisos vinculantes sin contrato backend aprobado.", en: "It does not persist state or create binding commitments without an approved backend contract." },
+    ].map((guardrail) => pickLang(guardrail, language)),
   };
 }
