@@ -77,6 +77,29 @@ Every denied response must avoid leaking restricted row existence.
 
 ~~Remaining gap: only the `authorized-grantor` endpoint was not called over real HTTP...~~ **Closed 2026-07-19.** See the three `grantor-evidence` rows above. All test identities/rows created for this run (auth user, `users` row, `data_room_shares` row, `nuxera_evidence_links` row) were deleted afterward via service role; all four tables/collections confirmed back to their pre-test state (`nuxera_evidence_links` at 0 rows, no residual `data_room_shares` row for the test email, no residual `users`/auth entry for the test identity).
 
+## Deployed-preview endpoint evidence (Vercel + Render, not localhost)
+
+Everything above (2026-07-18/19) was verified against the **local** backend (`http://localhost:3001`) with real production Supabase credentials — it proves the route/service/RLS logic is correct, but never exercised the actual deployed request path a real user hits. The `MIGRATION_MATRIX.md` "End-to-end and rollout" row explicitly listed this as pending: *"A GET-only role-token harness and deployment runbook are ready; execution against the real preview remains pending."*
+
+**Closed 2026-07-20 (same continuous session as 2026-07-19).** Confirmed infrastructure first: `GET https://codex-backendnsd-pr-3.onrender.com/health` → `200 {"status":"ok"}`; CORS preflight from the real Vercel Preview origin (`https://nsd-git-nuxera-controlled-migration-ulitron34-codes-projects.vercel.app`) → `204` with the exact expected `Access-Control-Allow-Origin`. Then real sessions were generated locally (same no-password `generateLink`+`verifyOtp` technique as before) and used as `Authorization: Bearer <token>` directly against the **deployed** Render backend — not localhost — with the browser-equivalent `Origin` header set.
+
+| Endpoint | Actor | Target | Observed | Pass/Fail |
+|---|---|---|---|---|
+| `GET /api/nuxera/orders/:orderId/state` | applicant-owner | Deployed Render PR-3 backend | `200`, full checklist state payload | **PASS** |
+| `GET /api/nuxera/orders/:orderId/state` | different real user | Deployed Render PR-3 backend | `404`, generic `NUXERA_RESOURCE_UNAVAILABLE`, no leak | **PASS** |
+| `GET /api/nuxera/orders/:orderId/evidence` | applicant-owner | Deployed Render PR-3 backend | `200` | **PASS** |
+| `GET /api/nuxera/admin/controls` | admin-internal | Deployed Render PR-3 backend | `200` | **PASS** |
+| `GET /api/nuxera/admin/controls` | non-admin | Deployed Render PR-3 backend | `403 PERMISSION_DENIED` | **PASS** |
+| `GET /api/nuxera/admin/readiness` | admin-internal | Deployed Render PR-3 backend | `200` | **PASS** |
+| `GET /api/nuxera/admin/readiness` | non-admin | Deployed Render PR-3 backend | `403 PERMISSION_DENIED` | **PASS** |
+| `GET /api/nuxera/orders/:orderId/state` | none | Deployed Render PR-3 backend | `401 AUTH_MISSING` | **PASS** |
+| `GET /api/nuxera/orders/:orderId/grantor-evidence` | authorized-grantor (real temporary otorgante identity, created and torn down this run) | Deployed Render PR-3 backend | `200` with the exact real evidence link (`engine:"finance"`, `visibility:"authorized_grantor"`) | **PASS** |
+| `GET /api/nuxera/orders/:orderId/grantor-evidence` | none | Deployed Render PR-3 backend | `401 AUTH_MISSING` | **PASS** |
+
+**9/9 PASS against the actual deployed infrastructure.** Same cleanup discipline as every prior run: the temporary otorgante identity, `data_room_shares` row and `nuxera_evidence_links` row were deleted via service role immediately after the calls; confirmed both tables back to their pre-test state (0 rows / no residual entry for the test email).
+
+**This closes the "execution against the real preview remains pending" gap** noted in `MIGRATION_MATRIX.md`'s "End-to-end and rollout" row. Combined with the local-backend evidence above, both the code path (local) and the deployed path (Vercel + Render) are now verified for every `/api/nuxera/*` route with real identities.
+
 **New finding (not a blocker, documented for awareness):** `GET /api/nuxera/orders/:orderId/grantor-evidence` does not call `logAuditEvent` anywhere in its path (`nuxera.js` route handler and `nuxeraEvidenceLinkService.js` both have zero audit calls), unlike the legacy `GET /shared-data-room/:token` route (`shares.js`) which logs `shared_data_room_viewed` on every read, and unlike the NUXERA write route (`PATCH .../state/checklist`, audited via `nuxeraWorkspaceStateService.js`). Confirmed by querying `audit_logs` for the full test window — zero rows from the three `grantor-evidence` calls above. Not fixed this session; flagging for a deliberate decision on whether authorized-grantor evidence reads should be audited like the legacy data-room view.
 
 ## No-go criteria
@@ -103,7 +126,7 @@ Of the eight no-go criteria listed above:
 - "Denied responses reveal restricted row existence" — **not observed**; all real HTTP denials (403 permission, 404 foreign order/write, 401 no token) returned generic sanitized bodies with no row/user details beyond the caller's own role.
 - "Feature flag off still allows NUXERA UI reads or writes" — **not observed**; verified live with real network capture (see Rollback rehearsal evidence).
 - "Rollback cannot hide/soft-archive NUXERA state without deleting audit history" — **not observed**; soft-archive verified to hide without deleting (see Rollback rehearsal evidence), and the write-endpoint test cleanup deleted only the test data row, never the audit_logs entry.
-- All eight no-go criteria have now been exercised at least once this session and none were observed to fail. The one remaining coverage gap is the `authorized-grantor` endpoint's real HTTP behavior (its RLS policy was verified directly against the database, but the route itself was not called with a real session — see endpoint table above).
+- All eight no-go criteria have now been exercised at least once this session and none were observed to fail. Updated 2026-07-20: the `authorized-grantor` endpoint's real HTTP behavior is now closed (both local and deployed-preview, see endpoint tables above) — no remaining coverage gap in this list.
 
 ## Rollback rehearsal evidence
 
@@ -119,10 +142,10 @@ Of the eight no-go criteria listed above:
 
 | Decision field | Value |
 |---|---|
-| Controlled RLS pass complete? | **Yes, at the database/RLS layer** — all 4 identities (applicant-owner, different-applicant, authorized-grantor, admin-internal) tested against production with real ids inside rolled-back transactions, all PASS. HTTP-level permission gates (middleware) were not separately exercised. |
-| Endpoint pass complete? | **Yes — 12 of 12 rows PASS with real HTTP calls and real sessions**, including the write route (real create, real denial, real `audit_logs` entry confirmed, cleaned up to 0 rows afterward) and, as of 2026-07-19, the `authorized-grantor` evidence route (real new otorgante identity created/torn down for this run, 200/403/401 all verified). One non-blocking finding: the grantor-evidence read path has no `audit_logs` call anywhere, unlike comparable read/write routes — see endpoint table. |
+| Controlled RLS pass complete? | **Yes, at the database/RLS layer** — all 4 identities (applicant-owner, different-applicant, authorized-grantor, admin-internal) tested against production with real ids inside rolled-back transactions, all PASS. HTTP-level permission gates (middleware) were also exercised for real, both locally and against the deployed Vercel+Render preview — see below. |
+| Endpoint pass complete? | **Yes — 12 of 12 rows PASS against the local backend**, including the write route (real create, real denial, real `audit_logs` entry confirmed, cleaned up to 0 rows afterward) and the `authorized-grantor` evidence route. **Additionally, 9/9 of those same scenarios re-verified 2026-07-20 against the actually deployed Vercel Preview + Render PR-3 backend** (not localhost), including CORS from the real Preview origin — see "Deployed-preview endpoint evidence" above. One non-blocking finding: the grantor-evidence read path has no `audit_logs` call anywhere, unlike comparable read/write routes — see endpoint table. |
 | Rollback rehearsal complete? | **Yes — 5 of 5 checks pass.** Flag-off hides NUXERA reads/writes (verified live), legacy code has zero coupling (verified by repo grep), soft-archive hides without deleting (verified in production with rollback), prior commit and rollback owner recorded. |
 | Approved to enable applicant checklist writes outside local fallback? | **Not yet — awaiting the user's explicit go-ahead**, not a technical blocker. The backend write path itself is now verified end-to-end (real write, real denial, real audit_logs event, real cleanup); the applicant NUXERA UI's checklist "Marcar listo" control is a separate frontend wiring decision (`NU-FE-WRITE-APP-001`) not touched this session and is not itself gated on this row. |
 | Approver | Not yet — user (`ulitron34`) authorized the SQL *application* to production explicitly in chat, and is now recorded as operator/reviewer/rollback owner, but has not yet given the formal "approved to enable writes" decision this row asks for. |
 | Approval date | N/A |
-| Remaining blockers | Only the formal write-enablement approval decision remains — a decision for the user, not a technical gap. Everything else — all 4 RLS identities, all read and write HTTP endpoints (including `authorized-grantor`, closed 2026-07-19), audit_logs evidence, rollback rehearsal (5/5), operator/reviewer/rollback-owner names, and the grantor-authorized evidence policy itself — is now resolved and documented in this file. Non-blocking: the grantor-evidence read route is unaudited (see finding above), a design decision left open for the user. |
+| Remaining blockers | Only the formal write-enablement approval decision and the standard external gates remain (UAT with pilot users, formal external security review, a stable-metrics pilot window) — none of these are technical/code gaps. Everything technical — all 4 RLS identities, all read and write HTTP endpoints against both the local backend and the actually deployed preview infrastructure, audit_logs evidence, rollback rehearsal (5/5), operator/reviewer/rollback-owner names, and the grantor-authorized evidence policy itself — is now resolved and documented in this file. Non-blocking: the grantor-evidence read route is unaudited (see finding above), a design decision left open for the user. |
