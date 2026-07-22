@@ -169,7 +169,7 @@ describe('evaluateReadinessDocument con ANTHROPIC_API_KEY configurada', () => {
     expect(result.extracted_data.some((e) => e.key === 'structure_score')).toBe(true);
   });
 
-  it('cae a DeepSeek para el contenido si Anthropic falla, y registra el proveedor real + costo estimado (sección 23.2/28)', async () => {
+  it("bloquea DeepSeek para contenido sensible si Anthropic falla y cae a heuristica segura", async () => {
     process.env.DEEPSEEK_API_KEY = 'sk-deepseek-test';
     createMock.mockRejectedValue(new Error('anthropic caído'));
     openaiCreateMock.mockImplementation(async ({ baseURL, messages }) => {
@@ -188,9 +188,8 @@ describe('evaluateReadinessDocument con ANTHROPIC_API_KEY configurada', () => {
       order: { metadata: {} }
     });
 
-    expect(result.score).toBe(78);
-    expect(result.extracted_data.find((e) => e.key === 'ai_provider')?.value).toBe('deepseek');
-    expect(result.extracted_data.find((e) => e.key === 'tokens_entrada')?.value).toBeGreaterThan(0);
-    expect(result.extracted_data.find((e) => e.key === 'costo_estimado_usd')?.value).toBeGreaterThan(0);
+    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(result.extracted_data.find((e) => e.key === "ai_provider")?.value).not.toBe("deepseek");
+    expect(result.warnings.join(" " )).toContain("heurística");
   });
 });
