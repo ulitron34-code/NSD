@@ -133,6 +133,7 @@ describe("NUXERA role navigation", () => {
     expect(navigationByRole.grantor[0].path).toBe("/dashboard");
     expect(navigationByRole.admin[0].path).toBe("/dashboard");
     expect(navigationByRole.applicant.map((item) => item.id)).toContain("finance");
+    expect(navigationByRole.grantor.find((item) => item.id === "queue")?.label).toBe("Bandeja de expedientes");
     expect(navigationByRole.admin.map((item) => item.id)).toContain("security");
   });
 });
@@ -1335,8 +1336,9 @@ describe("NUXERA grantor case queue", () => {
       expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
     );
     expect(queue.policies).toEqual(
-      expect.arrayContaining([expect.stringContaining("no aprueba credito")])
+      expect.arrayContaining([expect.stringContaining("bandeja de expedientes")])
     );
+    expect(queue.policies.join(" ")).not.toContain("cola");
   });
 
   it("opens a local case workbench with questions, conditions and audit trail", () => {
@@ -1509,11 +1511,13 @@ describe("NUXERA Finance journey", () => {
     expect(journey.goals).toContain("Conseguir financiamiento");
   });
 
-  it("gives grantors queue-oriented actions", () => {
+  it("gives grantors inbox-oriented actions", () => {
     const journey = getFinanceJourney("grantor");
 
     expect(journey.headline).toContain("casos");
+    expect(journey.goals).toContain("Ver bandeja prioritaria");
     expect(journey.goals).toContain("Preparar comite");
+    expect(journey.effort).toBe("Revision por bandeja y prioridad");
   });
 
   it("falls back to applicant journey for unknown roles", () => {

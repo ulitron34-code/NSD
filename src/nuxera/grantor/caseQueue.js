@@ -152,7 +152,7 @@ function buildCaseQueue(opportunities, source, language) {
     cases,
     analytics: buildOtorganteAnalytics(cases, language),
     policies: [
-      { es: "La cola no aprueba credito ni emite term sheets automaticamente.", en: "The queue does not approve credit or automatically issue term sheets." },
+      { es: "La bandeja de expedientes no aprueba credito ni emite term sheets automaticamente.", en: "The file inbox does not approve credit or automatically issue term sheets." },
       { es: "Cada caso requiere revision humana antes de contacto, comite o decision vinculante.", en: "Every case requires human review before contact, committee, or a binding decision." },
       { es: "La visibilidad documental debe respetar permisos de data room existentes.", en: "Document visibility must respect existing data room permissions." },
       { es: "Las senales de riesgo son priorizacion operativa, no decision final.", en: "Risk signals are operational prioritization, not a final decision." },

@@ -12,7 +12,7 @@ const missionByRole = {
   grantor: {
     id: "grantor-case-intake",
     title: { es: "Preparar caso para revision", en: "Prepare the case for review" },
-    summary: { es: "Ordenar evidencia inicial antes de pasar a cola de decision.", en: "Organize initial evidence before moving the case into the decision queue." },
+    summary: { es: "Ordenar evidencia inicial antes de pasar a la bandeja de revision.", en: "Organize initial evidence before moving the case into the review inbox." },
     outcome: { es: "Caso con senales suficientes para priorizacion.", en: "Case with enough signals for prioritization." },
     progress: 38,
     nextAction: { es: "Revisar Finance e Intelligence antes de solicitar informacion adicional.", en: "Review Finance and Intelligence before requesting additional information." },

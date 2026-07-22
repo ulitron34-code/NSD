@@ -30,7 +30,7 @@ const roleCopy = {
   grantor: {
     eyebrow: { es: "Otorgante", en: "Grantor" },
     title: { es: "Mesa de decision orientada a evidencia", en: "Evidence-driven decision desk" },
-    body: { es: "La nueva experiencia concentrara cola, riesgo, documentos, hallazgos y decision en una entrada operativa.", en: "The new experience concentrates queue, risk, documents, findings and decision in a single operating entry point." },
+    body: { es: "La nueva experiencia separa la bandeja de expedientes del analisis de decision: primero prioriza evidencia y riesgo; despues prepara revision humana.", en: "The new experience separates the file inbox from decision analysis: first it prioritizes evidence and risk; then it prepares human review." },
     cards: [
       { es: "Casos prioritarios", en: "Priority cases" },
       { es: "Pendientes de informacion", en: "Pending information" },
@@ -295,7 +295,7 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
   );
 }
 
-function GrantorQueueHome({ sectionLabel }) {
+function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
   const { L, language } = useNuxeraLanguage();
   const { pipeline, authorizedOrder, orderId, selectOrder, isDemo, loading } = useMyGrantorPipeline();
   const queue = isDemo ? getGrantorCaseQueue(language) : buildGrantorCaseQueueFromPipeline(pipeline, language);
@@ -310,13 +310,21 @@ function GrantorQueueHome({ sectionLabel }) {
     language,
   });
 
+  const isInboxView = variant === "inbox";
+  const heroTitle = isInboxView
+    ? L("Bandeja de expedientes priorizados", "Prioritized file inbox")
+    : L("Mesa de decision orientada a evidencia", "Evidence-driven decision desk");
+  const heroBody = isInboxView
+    ? L("Organiza expedientes autorizados por evidencia, riesgo, readiness y siguiente accion antes de llevarlos a la mesa de decision.", "Organize authorized files by evidence, risk, readiness and next action before moving them to the decision desk.")
+    : L("Evalua el expediente seleccionado con preguntas de revision, evidencia autorizada, condiciones no vinculantes y memo humano antes de cualquier decision institucional.", "Evaluate the selected file with review questions, authorized evidence, non-binding conditions and a human memo before any institutional decision.");
+
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
       <p className="nuxera-eyebrow">NUXERA Financial Intelligence / {L("Otorgante", "Grantor")}</p>
       <div className="nuxera-hero-row">
         <div>
-          <h1 id="nuxera-home-title">{L("Cola de casos priorizada", "Prioritized case queue")}</h1>
-          <p>{L("Revisa oportunidades por evidencia, riesgo, readiness y siguiente accion sin ejecutar decisiones automaticas.", "Review opportunities by evidence, risk, readiness and next action without executing automated decisions.")}</p>
+          <h1 id="nuxera-home-title">{heroTitle}</h1>
+          <p>{heroBody}</p>
         </div>
         <div className="nuxera-status-panel">
           <span>{summary.status}</span>
@@ -481,7 +489,7 @@ function GrantorQueueHome({ sectionLabel }) {
         </div>
       </section>}
 <section className="nuxera-grantor-policies" aria-label={L("Politicas de revision otorgante", "Grantor review policies")}>
-        <h2>{L("Politicas de cola", "Queue policies")}</h2>
+        <h2>{L("Politicas de bandeja", "Inbox policies")}</h2>
         {queue.policies.map((policy) => <p key={policy}>{policy}</p>)}
       </section>
     </section>
@@ -1052,7 +1060,7 @@ export default function NuxeraHome({ role = "applicant", section = "home" }) {
   }
 
   if (role === "grantor") {
-    return <GrantorQueueHome sectionLabel={sectionLabel} />;
+    return <GrantorQueueHome sectionLabel={section === "queue" ? L("Bandeja", "Inbox") : L("Mesa", "Desk")} variant={section === "queue" ? "inbox" : "decision"} />;
   }
 
   if (role === "admin") {

@@ -15,7 +15,7 @@ const navigationByRoleSource = {
   ],
   grantor: [
     { id: "home", label: { es: "Mesa de decision", en: "Decision desk" }, path: "/dashboard" },
-    { id: "queue", label: { es: "Cola de casos", en: "Case queue" }, path: "/dashboard/nuxera/queue" },
+    { id: "queue", label: { es: "Bandeja de expedientes", en: "File inbox" }, path: "/dashboard/nuxera/queue" },
     ...sharedEngines,
   ],
   admin: [

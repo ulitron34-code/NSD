@@ -23,13 +23,13 @@ const financeJourneyByRoleSource = {
     nextAction: { es: "Revisa oportunidades listas para comite y separa las que requieren informacion.", en: "Review opportunities ready for committee and separate those needing information." },
     progressLabel: { es: "Casos revisables", en: "Reviewable cases" },
     progress: 48,
-    effort: { es: "Revision por cola y prioridad", en: "Review by queue and priority" },
+    effort: { es: "Revision por bandeja y prioridad", en: "Review by inbox and priority" },
     alerts: [
       { es: "Casos con score alto aun pueden requerir documentos o autorizaciones.", en: "Cases with a high score may still require documents or authorizations." },
       { es: "La decision final debe conservar revision humana y politicas internas.", en: "The final decision must preserve human review and internal policies." },
     ],
     goals: [
-      { es: "Ver cola prioritaria", en: "View priority queue" },
+      { es: "Ver bandeja prioritaria", en: "View priority inbox" },
       { es: "Pedir informacion", en: "Request information" },
       { es: "Preparar comite", en: "Prepare committee" },
       { es: "Registrar interes", en: "Register interest" },
