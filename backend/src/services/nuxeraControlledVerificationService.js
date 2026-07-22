@@ -31,20 +31,22 @@ const ENDPOINT_CHECKS = Object.freeze([
   { id: 'get-evidence-owner', method: 'GET', path: '/api/nuxera/orders/:orderId/evidence', actor: 'applicant-owner', expected: 'Owner-visible evidence only', auditLogRequired: false },
   { id: 'get-evidence-grantor', method: 'GET', path: '/api/nuxera/orders/:orderId/grantor-evidence', actor: 'authorized-grantor', expected: 'Authorized-grantor evidence only after accepted data_room_shares check and audited read event', auditLogRequired: true },
   { id: 'get-admin-controls', method: 'GET', path: '/api/nuxera/admin/controls', actor: 'admin-internal', expected: 'Read-only admin controls with admin-read permission', auditLogRequired: false },
-  { id: 'get-admin-readiness', method: 'GET', path: '/api/nuxera/admin/readiness', actor: 'admin-internal', expected: 'Read-only backend readiness with admin-read permission', auditLogRequired: false }
+  { id: 'get-admin-readiness', method: 'GET', path: '/api/nuxera/admin/readiness', actor: 'admin-internal', expected: 'Read-only backend readiness with admin-read permission', auditLogRequired: false },
+  { id: 'get-notification-outbox-readiness', method: 'GET', path: '/api/nuxera/admin/notification-outbox-readiness', actor: 'admin-internal', expected: 'Read-only notification outbox contract with delivery disabled', auditLogRequired: false }
 ]);
 
 const DENIED_CHECKS = Object.freeze([
   { id: 'state-foreign-denied', actor: 'different-applicant', target: '/api/nuxera/orders/:orderId/state', expected: '403/404 without row-existence leak' },
   { id: 'admin-controls-applicant-denied', actor: 'applicant-owner', target: '/api/nuxera/admin/controls', expected: 'Denied without admin control details' },
-  { id: 'admin-readiness-applicant-denied', actor: 'applicant-owner', target: '/api/nuxera/admin/readiness', expected: 'Denied without backend inventory details' }
+  { id: 'admin-readiness-applicant-denied', actor: 'applicant-owner', target: '/api/nuxera/admin/readiness', expected: 'Denied without backend inventory details' },
+  { id: 'notification-outbox-applicant-denied', actor: 'applicant-owner', target: '/api/nuxera/admin/notification-outbox-readiness', expected: 'Denied without notification delivery contract details' }
 ]);
 
 const NO_GO_CRITERIA = Object.freeze([
   'Any actor reads or writes a foreign order unexpectedly.',
   'Applicant checklist writes affect grantor, admin or evidence records.',
   'Grantor accesses owner-only evidence or hidden documents without explicit authorization.',
-  'Admin readiness or controls work without admin-read permission.',
+  'Admin readiness, notification outbox readiness or controls work without admin-read permission.',
   'Denied responses leak restricted row existence.',
   'Any enabled write lacks audit_logs evidence.',
   'Feature flag off still allows NUXERA UI reads or writes.',

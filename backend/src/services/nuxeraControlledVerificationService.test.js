@@ -21,7 +21,8 @@ describe('nuxeraControlledVerificationService', () => {
       '/api/nuxera/orders/:orderId/evidence',
       '/api/nuxera/orders/:orderId/grantor-evidence',
       '/api/nuxera/admin/controls',
-      '/api/nuxera/admin/readiness'
+      '/api/nuxera/admin/readiness',
+      '/api/nuxera/admin/notification-outbox-readiness'
     ]));
     expect(plan.deniedChecks.length).toBeGreaterThan(0);
     expect(plan.noGoCriteria.join(' ')).toContain('row existence');

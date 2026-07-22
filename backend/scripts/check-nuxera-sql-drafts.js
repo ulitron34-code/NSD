@@ -88,6 +88,29 @@ const drafts = [
     policyCount: 1,
     forbiddenPolicyVerbs: ['for insert', 'for update', 'for delete'],
   },
+  {
+    label: 'notification outbox',
+    path: 'sql_migrations_pendientes/2026-07-22_nuxera_notification_outbox.sql',
+    requiredSnippets: [
+      ['table', 'CREATE TABLE IF NOT EXISTS nuxera_notification_outbox'],
+      ['event id', 'event_id            TEXT        NOT NULL'],
+      ['audience check', "audience            TEXT        NOT NULL CHECK (audience IN ('applicant', 'grantor', 'admin'))"],
+      ['service order fk', 'order_id            UUID        REFERENCES service_orders(id) ON DELETE CASCADE'],
+      ['channels array', "channels            TEXT[]      NOT NULL DEFAULT ARRAY['in_app']::TEXT[]"],
+      ['status check', "status              TEXT        NOT NULL DEFAULT 'queued' CHECK (status IN ('preview', 'queued', 'sent', 'failed', 'suppressed'))"],
+      ['metadata json', "metadata            JSONB       NOT NULL DEFAULT '{}'::JSONB"],
+      ['dedupe key', 'dedupe_key          TEXT        NOT NULL'],
+      ['recipient check', 'nuxera_notification_outbox_recipient_required'],
+      ['dedupe index', 'idx_nuxera_notification_outbox_dedupe'],
+      ['status index', 'idx_nuxera_notification_outbox_status'],
+      ['rls enabled', 'ALTER TABLE nuxera_notification_outbox ENABLE ROW LEVEL SECURITY'],
+      ['recipient read policy', 'nuxera_notification_outbox_recipient_read'],
+      ['recipient user gate', 'recipient_user_id = auth.uid()'],
+      ['recipient email gate', "recipient_email ILIKE (auth.jwt() ->> 'email')"],
+    ],
+    policyCount: 1,
+    forbiddenPolicyVerbs: ['FOR INSERT', 'FOR UPDATE', 'FOR DELETE'],
+  },
 ];
 
 const forbiddenPatterns = [

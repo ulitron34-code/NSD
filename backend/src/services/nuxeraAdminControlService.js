@@ -83,7 +83,7 @@ export function buildDefaultAdminControls() {
         payload: {
           label: 'SQL drafts pendientes',
           requirement: 'Aplicar/verificar SQL en Supabase controlado antes de writes UI.',
-          tables: ['nuxera_workspace_states', 'nuxera_evidence_links', 'nuxera_admin_controls']
+          tables: ['nuxera_workspace_states', 'nuxera_evidence_links', 'nuxera_admin_controls', 'nuxera_notification_outbox']
         },
         guardrails: ['Default local; no aplica migraciones.']
       }

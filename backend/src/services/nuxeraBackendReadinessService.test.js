@@ -30,7 +30,8 @@ describe('nuxeraBackendReadinessService', () => {
     state.tables = {
       nuxera_workspace_states: { count: 2 },
       nuxera_evidence_links: { count: 3 },
-      nuxera_admin_controls: { count: 1 }
+      nuxera_admin_controls: { count: 1 },
+      nuxera_notification_outbox: { count: 0 }
     };
   });
 
@@ -40,12 +41,13 @@ describe('nuxeraBackendReadinessService', () => {
     expect(readiness).toMatchObject({
       status: 'backend-readiness-visible',
       ready: true,
-      summary: { total: 3, available: 3, unavailable: 0, readiness: 100 }
+      summary: { total: 4, available: 4, unavailable: 0, readiness: 100 }
     });
     expect(readiness.signals.map((signal) => signal.table)).toEqual([
       'nuxera_workspace_states',
       'nuxera_evidence_links',
-      'nuxera_admin_controls'
+      'nuxera_admin_controls',
+      'nuxera_notification_outbox'
     ]);
     expect(readiness.guardrails.join(' ')).toContain('no aplica SQL');
   });
@@ -58,7 +60,7 @@ describe('nuxeraBackendReadinessService', () => {
     const readiness = await getNuxeraBackendReadiness();
 
     expect(readiness.ready).toBe(false);
-    expect(readiness.summary).toMatchObject({ total: 3, available: 2, unavailable: 1, readiness: 67 });
+    expect(readiness.summary).toMatchObject({ total: 4, available: 3, unavailable: 1, readiness: 75 });
     expect(readiness.signals.find((signal) => signal.table === 'nuxera_evidence_links')).toMatchObject({
       status: 'unavailable',
       ready: false,
@@ -70,7 +72,8 @@ describe('nuxeraBackendReadinessService', () => {
     expect(getNuxeraReadinessDefinitions().map((definition) => definition.id)).toEqual([
       'workspace-states',
       'evidence-links',
-      'admin-controls'
+      'admin-controls',
+      'notification-outbox'
     ]);
   });
 });

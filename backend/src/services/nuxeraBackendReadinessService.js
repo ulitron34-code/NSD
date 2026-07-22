@@ -21,6 +21,13 @@ const READINESS_TABLES = Object.freeze([
     label: 'Admin controls',
     owner: 'admin-console',
     requiredFor: ['admin-readiness-read']
+  },
+  {
+    id: 'notification-outbox',
+    table: 'nuxera_notification_outbox',
+    label: 'Notification outbox',
+    owner: 'communications',
+    requiredFor: ['notification-delivery-readiness']
   }
 ]);
 

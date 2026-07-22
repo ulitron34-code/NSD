@@ -3,7 +3,8 @@ import { getNuxeraControlledVerificationPlan } from './nuxeraControlledVerificat
 const DEFAULT_SQL_DRAFTS = Object.freeze([
   'backend/sql_migrations_pendientes/2026-07-16_nuxera_workspace_states.sql',
   'backend/sql_migrations_pendientes/2026-07-17_nuxera_evidence_links.sql',
-  'backend/sql_migrations_pendientes/2026-07-17_nuxera_admin_controls.sql'
+  'backend/sql_migrations_pendientes/2026-07-17_nuxera_admin_controls.sql',
+  'backend/sql_migrations_pendientes/2026-07-22_nuxera_notification_outbox.sql'
 ]);
 
 function asMetadataValue(value, fallback = 'TODO') {

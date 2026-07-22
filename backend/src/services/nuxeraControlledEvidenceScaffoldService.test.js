@@ -23,15 +23,16 @@ describe('nuxeraControlledEvidenceScaffoldService', () => {
       },
       summary: {
         identities: 4,
-        endpointRows: 9,
+        endpointRows: 11,
         noGoCriteria: 8,
         rollbackChecks: 5,
-        sqlDrafts: 3
+        sqlDrafts: 4
       }
     });
     expect(scaffold.markdown).toContain('## Required RLS identities');
     expect(scaffold.markdown).toContain('`applicant-owner`');
     expect(scaffold.markdown).toContain('`PATCH /api/nuxera/orders/:orderId/state/checklist`');
+    expect(scaffold.markdown).toContain('2026-07-22_nuxera_notification_outbox.sql');
     expect(scaffold.markdown).toContain('Controlled RLS pass complete?');
     expect(scaffold.guardrails.join(' ')).toContain('no endpoint execution');
   });

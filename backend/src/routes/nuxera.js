@@ -11,6 +11,7 @@ import { getNuxeraControlledReleaseDossier } from '../services/nuxeraControlledR
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
+import { getNuxeraNotificationOutboxReadiness } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
@@ -55,6 +56,26 @@ router.get(
           'NU-DB-RLS-ENDPOINT-VERIFY-001 exposes the controlled verification plan in read-only mode.',
           'Verification plan does not execute endpoints, apply SQL, change RLS or enable writes.',
           'Completed evidence must come from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/notification-outbox-readiness',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: 'admin',
+        notificationOutbox: getNuxeraNotificationOutboxReadiness(),
+        guardrails: [
+          'Notification outbox readiness is read-only and does not send email, WhatsApp or in-app notifications.',
+          'Delivery remains disabled until SQL, RLS verification, audit logging and worker approval are completed.',
+          'Agents may draft or summarize notification content but cannot deliver messages automatically.'
         ]
       });
     } catch (error) {
