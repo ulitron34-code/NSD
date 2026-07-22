@@ -271,6 +271,11 @@ export const nuxeraNotificationOutboxAPI = {
     api.get('/nuxera/admin/notification-outbox-readiness')
 };
 
+export const nuxeraConversationAgentAPI = {
+  getReadiness: () =>
+    api.get('/nuxera/admin/conversation-agent-readiness')
+};
+
 export const nuxeraControlledVerificationAPI = {
   getPlan: () =>
     api.get('/nuxera/admin/verification-plan')

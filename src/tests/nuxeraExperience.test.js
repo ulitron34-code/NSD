@@ -27,6 +27,7 @@ import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpe
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
 import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
+import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
 
 describe("NUXERA admin operational snapshot", () => {
   it("maps each admin navigation lane to a specialized protected workspace", () => {
@@ -1328,6 +1329,45 @@ describe("NUXERA notification and conversation operating model", () => {
     });
     expect(merged.outbox.requiredBackendSteps).toHaveLength(2);
     expect(merged.guardrails.join(" ")).toContain("Delivery permanece apagado");
+  });
+
+  it("merges remote conversation agent readiness into the communications model without enabling chat", () => {
+    const agent = normalizeNuxeraConversationAgentReadinessResponse({
+      conversationAgent: {
+        status: "agent-contract-ready-no-chat-delivery",
+        runtimeEnabled: false,
+        assistantScope: "Role-scoped selected file context only.",
+        roles: [
+          {
+            role: "grantor",
+            channel: "grantor-decision-desk-assistant",
+            requiredPermission: "data_room:authorized:read",
+            allowedSources: ["messages", "nuxera_evidence_links"],
+            capabilities: ["summarize-authorized-evidence"],
+            blockedActions: ["issue-term-sheet", "send-email"],
+            status: "requires-selected-authorized-file",
+          },
+        ],
+        summary: { roles: 1, allowedSources: 2, blockedActions: 2, runtimeEnabled: false, humanReviewRequired: true },
+        requiredBackendSteps: ["Crear endpoint conversacional", "Aprobar auditoria"],
+        guardrails: ["Readiness only; no chat runtime."],
+      },
+      guardrails: ["Endpoint read-only."],
+    });
+    const merged = mergeCommunicationModelWithConversationAgent(getNuxeraNotificationCatalog(), agent);
+
+    expect(agent.source).toBe("remote-runtime-disabled");
+    expect(merged.summary).toMatchObject({
+      conversationRuntimeEnabled: false,
+      conversationRoles: 1,
+      conversationSources: 2,
+      blockedAgentActions: 2,
+    });
+    expect(merged.conversationAgent.roles[0]).toMatchObject({
+      role: "grantor",
+      requiredPermission: "data_room:authorized:read",
+    });
+    expect(merged.guardrails.join(" ")).toContain("Chat runtime permanece apagado");
   });
 
   it("scopes conversation agents to authorized selected files and blocks demo/no-context reads", () => {

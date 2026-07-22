@@ -16,6 +16,7 @@ import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../e
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
+import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness } from "../communications/conversationAgentBackendAdapter";
 
 const roleCopy = {
   applicant: {
@@ -561,7 +562,12 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled(), language });
   const notificationOutboxReadiness = useNotificationOutboxReadiness({ enabled: isNuxeraExperienceEnabled(), language });
-  const communicationModel = mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language);
+  const conversationAgentReadiness = useConversationAgentReadiness({ enabled: isNuxeraExperienceEnabled(), language });
+  const communicationModel = mergeCommunicationModelWithConversationAgent(
+    mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language),
+    conversationAgentReadiness,
+    language
+  );
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(language), adminControls, language),
     backendReadiness,
@@ -1039,6 +1045,23 @@ function AdminOperationsHome({ sectionLabel }) {
             <strong>{communicationModel.summary.automatedDeliveryEnabled ? L("Activo", "Enabled") : L("No activo", "Disabled")}</strong>
             <p>{L("El agente redacta o resume; el envio real requiere outbox, auditoria y reglas anti-duplicado.", "The agent drafts or summarizes; real delivery requires outbox, audit and dedupe rules.")}</p>
           </article>
+          <article>
+            <span>{L("Chat runtime", "Chat runtime")}</span>
+            <strong>{communicationModel.summary.conversationRuntimeEnabled ? L("Activo", "Enabled") : L("Apagado", "Disabled")}</strong>
+            <p>{communicationModel.conversationAgent.label || communicationModel.conversationAgent.status}</p>
+            <small>{communicationModel.conversationAgent.loading ? L("Cargando readiness agente...", "Loading agent readiness...") : communicationModel.conversationAgent.source}</small>
+          </article>
+        </div>
+        <div>
+          {communicationModel.conversationAgent.roles.map((agentRole) => (
+            <article key={agentRole.role}>
+              <span>{agentRole.status}</span>
+              <strong>{agentRole.role} / {agentRole.channel}</strong>
+              <p>{agentRole.allowedSources.slice(0, 4).join(", ")}</p>
+              <small>{agentRole.requiredPermission} / {agentRole.capabilities.slice(0, 2).join(", ")}</small>
+              <em>{agentRole.blockedActions.slice(0, 3).join(", ")}</em>
+            </article>
+          ))}
         </div>
         <div>
           {communicationModel.events.map((event) => (
@@ -1051,9 +1074,9 @@ function AdminOperationsHome({ sectionLabel }) {
             </article>
           ))}
         </div>
-        {communicationModel.outbox.requiredBackendSteps.length > 0 && (
+        {(communicationModel.outbox.requiredBackendSteps.length > 0 || communicationModel.conversationAgent.requiredBackendSteps.length > 0) && (
           <div>
-            {communicationModel.outbox.requiredBackendSteps.slice(0, 3).map((step) => (
+            {[...communicationModel.outbox.requiredBackendSteps.slice(0, 2), ...communicationModel.conversationAgent.requiredBackendSteps.slice(0, 2)].map((step) => (
               <article key={step}>
                 <span>{L("Siguiente paso", "Next step")}</span>
                 <strong>{communicationModel.outbox.deliveryEnabled ? L("Monitorear", "Monitor") : L("Preparar", "Prepare")}</strong>
