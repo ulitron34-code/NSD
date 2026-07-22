@@ -1784,3 +1784,14 @@ Verification performed:
 Documentation cleanup:
 - Updated current migration matrix/readiness notes that still described `grantor-evidence` or HTTP-level verification as pending even though later evidence closed those gaps.
 - Production cutover remains explicitly not executed; merge to `main`, Vercel production flag flip, Render production health confirmation and live production verification still require explicit go-ahead.
+
+## Grantor evidence read audit instrumentation - 2026-07-22
+
+Closed the local design question around `GET /api/nuxera/orders/:orderId/grantor-evidence`: authorized reads now emit `logAuditEvent` with action `nuxera_grantor_evidence_read` after the service authorization/data-room checks return evidence successfully.
+
+Implementation notes:
+- Audit metadata records `workspaceRole:'grantor'`, requester email, returned link count and whether the response came from persisted evidence rows.
+- Permission-denied/no-token attempts still stop before the route's evidence service and produce no grantor read audit event.
+- The controlled verification plan now marks the authorized-grantor evidence endpoint as requiring audit evidence.
+
+Validation scope: local route test coverage was updated to verify both sides of the behavior. This change is local until pushed to PR #3 and deployed; the historical 2026-07-19/20 deployed evidence remains accurate because that run observed zero audit rows before this instrumentation existed.

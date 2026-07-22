@@ -6,6 +6,7 @@ const serviceCalls = {
   upsert: [],
   evidence: [],
   grantorEvidence: [],
+  audit: [],
   adminControls: [],
   readiness: [],
   verificationPlan: [],
@@ -292,6 +293,11 @@ vi.mock('../services/ragService.js', () => ({
   searchReferenceSources: vi.fn(async () => [])
 }));
 
+vi.mock('../utils/audit.js', () => ({
+  logAuditEvent: vi.fn(async (event) => {
+    serviceCalls.audit.push(event);
+  })
+}));
 vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
   getOwnerEvidenceLinks: vi.fn(async (input) => {
     serviceCalls.evidence.push(input);
@@ -342,6 +348,7 @@ describe('nuxera routes', () => {
     serviceCalls.upsert = [];
     serviceCalls.evidence = [];
     serviceCalls.grantorEvidence = [];
+    serviceCalls.audit = [];
     serviceCalls.adminControls = [];
     serviceCalls.readiness = [];
     serviceCalls.verificationPlan = [];
@@ -898,6 +905,7 @@ describe('nuxera routes', () => {
     expect(response.status).toBe(403);
     expect(await response.json()).toMatchObject({ requiredPermission: 'data_room:authorized:read' });
     expect(serviceCalls.grantorEvidence).toHaveLength(0);
+    expect(serviceCalls.audit).toHaveLength(0);
   });
 
   it('returns authorized-grantor evidence links with no-access guardrails', async () => {
@@ -924,6 +932,20 @@ describe('nuxera routes', () => {
       userId: 'grantor-1',
       email: 'grantor@example.com'
     });
+    expect(serviceCalls.audit[0]).toMatchObject({
+      userId: 'grantor-1',
+      action: 'nuxera_grantor_evidence_read',
+      entityType: 'nuxera_evidence_links',
+      orderId: 'order-1',
+      metadata: {
+        workspaceRole: 'grantor',
+        requesterEmail: 'grantor@example.com',
+        linksCount: 0,
+        persisted: false
+      },
+      complianceRelevant: true
+    });
+    expect(serviceCalls.audit[0].req).toBeTruthy();
   });
 
   it('requires case:own:update before patching checklist state', async () => {

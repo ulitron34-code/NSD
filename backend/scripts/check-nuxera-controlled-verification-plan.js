@@ -13,6 +13,7 @@ const requiredFiles = [
       'GET /api/nuxera/orders/:orderId/state',
       'PATCH /api/nuxera/orders/:orderId/state/checklist',
       'GET /api/nuxera/orders/:orderId/evidence',
+      'GET /api/nuxera/orders/:orderId/grantor-evidence',
       'GET /api/nuxera/admin/controls',
       'GET /api/nuxera/admin/readiness',
       'No-go criteria',
@@ -33,6 +34,7 @@ const requiredFiles = [
       'GET /api/nuxera/orders/:orderId/state',
       'PATCH /api/nuxera/orders/:orderId/state/checklist',
       'GET /api/nuxera/orders/:orderId/evidence',
+      'GET /api/nuxera/orders/:orderId/grantor-evidence',
       'GET /api/nuxera/admin/controls',
       'GET /api/nuxera/admin/readiness',
     ],
@@ -142,6 +144,7 @@ const endpointChecks = [
   'GET /api/nuxera/orders/:orderId/state',
   'PATCH /api/nuxera/orders/:orderId/state/checklist',
   'GET /api/nuxera/orders/:orderId/evidence',
+  'GET /api/nuxera/orders/:orderId/grantor-evidence',
   'GET /api/nuxera/admin/controls',
   'GET /api/nuxera/admin/readiness',
 ];
@@ -174,8 +177,8 @@ if (verificationScenarios.length !== 4) {
   fail(`expected 4 controlled RLS verification scenarios, found ${verificationScenarios.length}`);
 }
 
-if (endpointChecks.length !== 5) {
-  fail(`expected 5 endpoint checks, found ${endpointChecks.length}`);
+if (endpointChecks.length !== 6) {
+  fail(`expected 6 endpoint checks, found ${endpointChecks.length}`);
 }
 
 if (process.exitCode) process.exit();

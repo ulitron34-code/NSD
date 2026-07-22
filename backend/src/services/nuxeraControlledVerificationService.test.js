@@ -19,6 +19,7 @@ describe('nuxeraControlledVerificationService', () => {
       '/api/nuxera/orders/:orderId/state',
       '/api/nuxera/orders/:orderId/state/checklist',
       '/api/nuxera/orders/:orderId/evidence',
+      '/api/nuxera/orders/:orderId/grantor-evidence',
       '/api/nuxera/admin/controls',
       '/api/nuxera/admin/readiness'
     ]));

@@ -14,6 +14,7 @@ import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteG
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
+import { logAuditEvent } from '../utils/audit.js';
 
 const router = express.Router();
 
@@ -425,6 +426,21 @@ router.get(
         orderId: req.params.orderId,
         userId: req.userId,
         email: req.user?.email
+      });
+
+      await logAuditEvent({
+        userId: req.userId,
+        action: 'nuxera_grantor_evidence_read',
+        entityType: 'nuxera_evidence_links',
+        orderId: req.params.orderId,
+        metadata: {
+          workspaceRole: 'grantor',
+          requesterEmail: req.user?.email || null,
+          linksCount: Array.isArray(evidence?.links) ? evidence.links.length : 0,
+          persisted: Boolean(evidence?.persisted)
+        },
+        req,
+        complianceRelevant: true
       });
 
       res.json({

@@ -29,7 +29,7 @@ const ENDPOINT_CHECKS = Object.freeze([
   { id: 'get-state-owner', method: 'GET', path: '/api/nuxera/orders/:orderId/state', actor: 'applicant-owner', expected: 'Own applicant state only', auditLogRequired: false },
   { id: 'patch-checklist-owner', method: 'PATCH', path: '/api/nuxera/orders/:orderId/state/checklist', actor: 'applicant-owner', expected: 'Checklist-only write after gates pass', auditLogRequired: true },
   { id: 'get-evidence-owner', method: 'GET', path: '/api/nuxera/orders/:orderId/evidence', actor: 'applicant-owner', expected: 'Owner-visible evidence only', auditLogRequired: false },
-  { id: 'get-evidence-grantor', method: 'GET', path: '/api/nuxera/orders/:orderId/grantor-evidence', actor: 'authorized-grantor', expected: 'Authorized-grantor evidence only after accepted data_room_shares check', auditLogRequired: false },
+  { id: 'get-evidence-grantor', method: 'GET', path: '/api/nuxera/orders/:orderId/grantor-evidence', actor: 'authorized-grantor', expected: 'Authorized-grantor evidence only after accepted data_room_shares check and audited read event', auditLogRequired: true },
   { id: 'get-admin-controls', method: 'GET', path: '/api/nuxera/admin/controls', actor: 'admin-internal', expected: 'Read-only admin controls with admin-read permission', auditLogRequired: false },
   { id: 'get-admin-readiness', method: 'GET', path: '/api/nuxera/admin/readiness', actor: 'admin-internal', expected: 'Read-only backend readiness with admin-read permission', auditLogRequired: false }
 ]);
