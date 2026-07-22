@@ -15,6 +15,7 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 
 const roleCopy = {
   applicant: {
@@ -559,7 +560,8 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled(), language });
-  const communicationModel = getNuxeraNotificationCatalog(language);
+  const notificationOutboxReadiness = useNotificationOutboxReadiness({ enabled: isNuxeraExperienceEnabled(), language });
+  const communicationModel = mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language);
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(language), adminControls, language),
     backendReadiness,
@@ -1027,6 +1029,12 @@ function AdminOperationsHome({ sectionLabel }) {
             </article>
           ))}
           <article>
+            <span>{L("Outbox", "Outbox")}</span>
+            <strong>{communicationModel.outbox.table}</strong>
+            <p>{communicationModel.outbox.label || communicationModel.outbox.status}</p>
+            <small>{communicationModel.outbox.loading ? L("Cargando readiness outbox...", "Loading outbox readiness...") : communicationModel.outbox.source}</small>
+          </article>
+          <article>
             <span>{L("Delivery", "Delivery")}</span>
             <strong>{communicationModel.summary.automatedDeliveryEnabled ? L("Activo", "Enabled") : L("No activo", "Disabled")}</strong>
             <p>{L("El agente redacta o resume; el envio real requiere outbox, auditoria y reglas anti-duplicado.", "The agent drafts or summarizes; real delivery requires outbox, audit and dedupe rules.")}</p>
@@ -1043,6 +1051,17 @@ function AdminOperationsHome({ sectionLabel }) {
             </article>
           ))}
         </div>
+        {communicationModel.outbox.requiredBackendSteps.length > 0 && (
+          <div>
+            {communicationModel.outbox.requiredBackendSteps.slice(0, 3).map((step) => (
+              <article key={step}>
+                <span>{L("Siguiente paso", "Next step")}</span>
+                <strong>{communicationModel.outbox.deliveryEnabled ? L("Monitorear", "Monitor") : L("Preparar", "Prepare")}</strong>
+                <p>{step}</p>
+              </article>
+            ))}
+          </div>
+        )}
         <footer>
           {communicationModel.guardrails.map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
         </footer>

@@ -34,8 +34,10 @@ vi.mock('../utils/audit.js', () => ({
 import {
   NUXERA_NOTIFICATION_EVENTS,
   buildNuxeraNotificationDedupeKey,
+  buildNuxeraNotificationDeliveryPlan,
   buildNuxeraNotificationOutboxPreview,
   enqueueNuxeraNotificationIntent,
+  processNuxeraNotificationDeliveryBatch,
   getNuxeraNotificationOutboxReadiness
 } from './nuxeraNotificationOutboxService.js';
 
@@ -118,13 +120,50 @@ describe('nuxeraNotificationOutboxService', () => {
     });
   });
 
-  it('exposes a read-only outbox readiness contract', () => {
+  it("builds a delivery worker plan that remains disabled unless explicitly enabled", () => {
+    const disabled = buildNuxeraNotificationDeliveryPlan({ channels: ["email", "invalid"], maxBatchSize: 500 });
+    const enabled = buildNuxeraNotificationDeliveryPlan({ deliveryEnabled: true, channels: ["whatsapp"], maxBatchSize: 0 });
+
+    expect(disabled).toMatchObject({
+      enabled: false,
+      mode: "delivery-disabled-dry-run",
+      maxBatchSize: 100,
+      channels: ["email"]
+    });
+    expect(disabled.guardrails.join(" ")).toContain("Delivery disabled");
+    expect(enabled).toMatchObject({
+      enabled: true,
+      mode: "delivery-enabled-controlled-worker",
+      maxBatchSize: 1,
+      channels: ["whatsapp"]
+    });
+  });
+
+  it("runs the notification delivery worker as a no-write dry-run by default", async () => {
+    const result = await processNuxeraNotificationDeliveryBatch();
+
+    expect(result).toMatchObject({
+      status: "delivery-disabled-dry-run",
+      processed: 0,
+      sent: 0,
+      failed: 0,
+      suppressed: 0,
+      deliveryEnabled: false
+    });
+    expect(result.reason).toContain("NUXERA_NOTIFICATION_DELIVERY_ENABLED");
+    expect(state.inserted).toBeNull();
+    expect(state.auditEvents).toEqual([]);
+  });
+
+  it("exposes a read-only outbox readiness contract", () => {
     const readiness = getNuxeraNotificationOutboxReadiness();
 
     expect(readiness).toMatchObject({
-      status: 'outbox-contract-ready-delivery-disabled',
-      table: 'nuxera_notification_outbox',
-      deliveryEnabled: false
+      status: "outbox-contract-ready-delivery-disabled",
+      table: "nuxera_notification_outbox",
+      deliveryEnabled: false,
+      deliveryWorkerEnabled: false,
+      workerMode: "delivery-disabled-dry-run"
     });
     expect(readiness.supportedChannels).toEqual(expect.arrayContaining(['email', 'in_app', 'whatsapp']));
     expect(readiness.guardrails.join(' ')).toContain('no aplica SQL');

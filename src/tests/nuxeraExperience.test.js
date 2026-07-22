@@ -26,6 +26,7 @@ import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/s
 import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
 import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
+import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
 
 describe("NUXERA admin operational snapshot", () => {
   it("maps each admin navigation lane to a specialized protected workspace", () => {
@@ -1300,6 +1301,33 @@ describe("NUXERA notification and conversation operating model", () => {
     });
     expect(blocked.allowed).toBe(false);
     expect(blocked.blockers.join(" ")).toContain("rol destinatario");
+  });
+
+  it("merges remote outbox readiness into the communications model without enabling delivery", () => {
+    const outbox = normalizeNuxeraNotificationOutboxReadinessResponse({
+      notificationOutbox: {
+        status: "outbox-contract-ready-delivery-disabled",
+        table: "nuxera_notification_outbox",
+        deliveryEnabled: false,
+        supportedEvents: ["grantor-information-response"],
+        supportedChannels: ["in_app", "email", "whatsapp"],
+        statuses: ["preview", "queued", "sent", "failed", "suppressed"],
+        requiredBackendSteps: ["Aplicar SQL", "Verificar RLS"],
+        guardrails: ["Readiness solamente; no envia mensajes."],
+      },
+      guardrails: ["Endpoint read-only."],
+    });
+    const merged = mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(), outbox);
+
+    expect(outbox.source).toBe("remote-delivery-disabled");
+    expect(merged.summary).toMatchObject({
+      automatedDeliveryEnabled: false,
+      outboxReady: true,
+      supportedChannels: 3,
+      deliveryStatuses: 5,
+    });
+    expect(merged.outbox.requiredBackendSteps).toHaveLength(2);
+    expect(merged.guardrails.join(" ")).toContain("Delivery permanece apagado");
   });
 
   it("scopes conversation agents to authorized selected files and blocks demo/no-context reads", () => {

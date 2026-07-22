@@ -23,6 +23,7 @@ const EVENT_AUDIENCE = Object.freeze({
 
 const ALLOWED_CHANNELS = new Set(['in_app', 'email', 'whatsapp']);
 const ALLOWED_STATUSES = new Set(['preview', 'queued', 'sent', 'failed', 'suppressed']);
+const DELIVERY_DISABLED_REASON = "NUXERA_NOTIFICATION_DELIVERY_ENABLED is not true";
 
 function normalizeString(value, maxLength = 240) {
   if (typeof value !== 'string') return null;
@@ -37,6 +38,10 @@ function normalizeChannels(channels) {
     .filter((channel) => ALLOWED_CHANNELS.has(channel));
 
   return [...new Set(normalized.length ? normalized : ['in_app'])];
+}
+
+function isDeliveryEnabled(explicitValue = process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED) {
+  return String(explicitValue || '').trim().toLowerCase() === 'true';
 }
 
 function getAudience(eventId) {
@@ -165,23 +170,76 @@ export async function enqueueNuxeraNotificationIntent({ intent, actorUserId, req
   };
 }
 
-export function getNuxeraNotificationOutboxReadiness() {
+export function buildNuxeraNotificationDeliveryPlan(options = {}) {
+  const enabled = isDeliveryEnabled(options.deliveryEnabled);
+  const parsedBatchSize = Number(options.maxBatchSize ?? 25);
+
   return {
-    status: 'outbox-contract-ready-delivery-disabled',
-    table: 'nuxera_notification_outbox',
+    enabled,
+    mode: enabled ? "delivery-enabled-controlled-worker" : "delivery-disabled-dry-run",
+    maxBatchSize: Math.max(1, Math.min(Number.isFinite(parsedBatchSize) ? parsedBatchSize : 25, 100)),
+    channels: normalizeChannels(options.channels || ["in_app", "email", "whatsapp"]),
+    requiredProviders: ["email-provider", "whatsapp-provider", "audit-log"],
+    guardrails: [
+      enabled
+        ? "Delivery enabled only by explicit backend configuration."
+        : "Delivery disabled; worker can only report pending delivery posture.",
+      "Worker must update nuxera_notification_outbox status and audit each delivery transition.",
+      "Emails/WhatsApp must never include sensitive evidence or attachments."
+    ]
+  };
+}
+
+export async function processNuxeraNotificationDeliveryBatch(options = {}) {
+  const plan = buildNuxeraNotificationDeliveryPlan(options);
+
+  if (!plan.enabled) {
+    return {
+      status: "delivery-disabled-dry-run",
+      processed: 0,
+      sent: 0,
+      failed: 0,
+      suppressed: 0,
+      deliveryEnabled: false,
+      reason: DELIVERY_DISABLED_REASON,
+      guardrails: plan.guardrails
+    };
+  }
+
+  return {
+    status: "delivery-worker-not-implemented",
+    processed: 0,
+    sent: 0,
+    failed: 0,
+    suppressed: 0,
+    deliveryEnabled: true,
+    reason: "Delivery adapters require separate approved implementation.",
+    guardrails: plan.guardrails
+  };
+}
+
+export function getNuxeraNotificationOutboxReadiness() {
+  const worker = buildNuxeraNotificationDeliveryPlan();
+
+  return {
+    status: "outbox-contract-ready-delivery-disabled",
+    table: "nuxera_notification_outbox",
     deliveryEnabled: false,
+    deliveryWorkerEnabled: worker.enabled,
+    workerMode: worker.mode,
+    workerGuardrails: worker.guardrails,
     supportedEvents: Object.values(NUXERA_NOTIFICATION_EVENTS),
     supportedChannels: [...ALLOWED_CHANNELS],
     statuses: [...ALLOWED_STATUSES],
     requiredBackendSteps: [
-      'Aplicar SQL nuxera_notification_outbox en entorno controlado.',
-      'Verificar RLS/readiness antes de habilitar writes.',
-      'Conectar worker de entrega con RESEND_API_KEY/Twilio solo despues de aprobacion.'
+      "Aplicar SQL nuxera_notification_outbox en entorno controlado.",
+      "Verificar RLS/readiness antes de habilitar writes.",
+      "Conectar worker de entrega con RESEND_API_KEY/Twilio solo despues de aprobacion."
     ],
     guardrails: [
-      'Readiness solamente; no aplica SQL ni envia mensajes.',
-      'Los correos no deben incluir evidencia sensible ni adjuntos.',
-      'Todo cambio de estado debe quedar auditable.'
+      "Readiness solamente; no aplica SQL ni envia mensajes.",
+      "Los correos no deben incluir evidencia sensible ni adjuntos.",
+      "Todo cambio de estado debe quedar auditable."
     ]
   };
 }
