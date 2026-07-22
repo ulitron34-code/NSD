@@ -1769,3 +1769,18 @@ The one remaining technical gap from the 2026-07-18 controlled RLS/endpoint evid
 Full evidence rows added to `NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md` and `NUXERA_SQL_RLS_READINESS_CHECKLIST.md`.
 
 **Net effect:** all 4 RLS identities and all HTTP endpoints in the controlled evidence matrix are now PASS. The only thing left before enabling any NUXERA production write path is the user's formal go/no-go decision — already true before today, unchanged by this work — plus the newly-surfaced, non-blocking question of whether `grantor-evidence` reads should be audited like the legacy data-room view.
+
+## Pre-cutover live metadata audit - 2026-07-22
+
+Codex synchronized the local workspace to `4418d3a7` from the latest `F:\NUXERA` bundle and re-ran local validation in the office environment.
+
+Verification performed:
+- GitHub PR #3 is open, non-draft, mergeable, and points at head `4418d3a7726f4f418fbc90be93b4bc37049e3af1` on `nuxera-controlled-migration` over `main`.
+- GitHub reports Vercel status checks for commit `4418d3a7` as success (`Vercel - nsd` and `Vercel - nsd-j28v`).
+- Pull request has no unresolved review threads according to the GitHub connector.
+- Direct public GET from this office shell to the Vercel Preview and Render PR backend was blocked by local proxy/refusal (`127.0.0.1:9`), so HTTP availability was not re-claimed from this machine.
+- Local validation on the synchronized checkout passed: NUXERA public identity, public pages package, HTTP readiness plan, SQL draft guard, controlled verification plan, RBAC matrix, backend targeted tests (2 files / 51 tests), frontend NUXERA targeted tests (1 file / 104 tests), backend full suite (51 files / 484 tests), frontend full suite (9 files / 265 tests), and frontend production build.
+
+Documentation cleanup:
+- Updated current migration matrix/readiness notes that still described `grantor-evidence` or HTTP-level verification as pending even though later evidence closed those gaps.
+- Production cutover remains explicitly not executed; merge to `main`, Vercel production flag flip, Render production health confirmation and live production verification still require explicit go-ahead.

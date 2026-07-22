@@ -14,7 +14,7 @@ The earlier 90% estimate increased after completing the specialized administrati
 
 | # | Master-plan criterion | Status | Assessment |
 |---:|---|---|---|
-| 1 | Three NUXERA profiles work | Substantially complete | Applicant, grantor and administrator have role-aware workspaces; real preview evidence remains pending. |
+| 1 | Three NUXERA profiles work | Substantially complete | Applicant, grantor and administrator have role-aware workspaces; deployed-preview GET-only role evidence is documented as PASS. Production go-live remains pending explicit cutover approval. |
 | 2 | Coherent routes | Complete locally | Role registry, deep links, fallback and E2E are validated. |
 | 3 | Monolithic dashboard decomposed | Substantially complete | NUXERA is isolated and lazy-loaded; the preserved legacy host still has 765 lines and must remain during transition. |
 | 4 | Existing components reused | Complete | Specialized legacy modules are mounted through adapters. |
