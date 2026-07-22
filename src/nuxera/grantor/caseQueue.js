@@ -186,6 +186,49 @@ export function getGrantorQueueSummary(queue = getGrantorCaseQueue()) {
     requiresHumanReview: true,
   };
 }
+export function filterGrantorInboxCases(cases = [], filter = "all") {
+  if (filter === "committee-ready") return cases.filter((item) => item.priority === "committee-ready");
+  if (filter === "needs-information") return cases.filter((item) => item.priority === "needs-information");
+  if (filter === "high-risk") return cases.filter((item) => item.riskLevel === "high");
+  if (filter === "watch") return cases.filter((item) => item.priority === "watch");
+  return cases;
+}
+
+export function getGrantorInboxFilters(queue = getGrantorCaseQueue(), language = "es") {
+  const cases = Array.isArray(queue?.cases) ? queue.cases : [];
+  const filters = [
+    {
+      id: "all",
+      label: pickLang({ es: "Todos", en: "All" }, language),
+      description: pickLang({ es: "Todos los expedientes autorizados.", en: "All authorized files." }, language),
+    },
+    {
+      id: "committee-ready",
+      label: pickLang({ es: "Listos para mesa", en: "Ready for desk" }, language),
+      description: pickLang({ es: "Casos con evidencia suficiente para analisis.", en: "Files with enough evidence for analysis." }, language),
+    },
+    {
+      id: "needs-information",
+      label: pickLang({ es: "Faltantes", en: "Gaps" }, language),
+      description: pickLang({ es: "Casos que requieren evidencia antes de avanzar.", en: "Files that need evidence before moving forward." }, language),
+    },
+    {
+      id: "high-risk",
+      label: pickLang({ es: "Riesgo alto", en: "High risk" }, language),
+      description: pickLang({ es: "Expedientes que deben revisarse por alerta.", en: "Files that need risk-alert review." }, language),
+    },
+    {
+      id: "watch",
+      label: pickLang({ es: "Observacion", en: "Watch" }, language),
+      description: pickLang({ es: "Casos activos sin accion inmediata.", en: "Active files without immediate action." }, language),
+    },
+  ];
+
+  return filters.map((filter) => ({
+    ...filter,
+    count: filterGrantorInboxCases(cases, filter.id).length,
+  }));
+}
 function getWorkbenchQuestions(caseItem, language) {
   return [
     {

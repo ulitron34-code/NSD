@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { useMyGrantorPipeline } from "../../hooks/useMyGrantorPipeline";
@@ -13,7 +13,7 @@ import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantM
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
-import { buildGrantorCaseQueueFromPipeline, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
+import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 
 const roleCopy = {
   applicant: {
@@ -297,25 +297,28 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
 
 function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
   const { L, language } = useNuxeraLanguage();
+  const [inboxFilter, setInboxFilter] = useState("all");
   const { pipeline, authorizedOrder, orderId, selectOrder, isDemo, loading } = useMyGrantorPipeline();
   const queue = isDemo ? getGrantorCaseQueue(language) : buildGrantorCaseQueueFromPipeline(pipeline, language);
   const summary = getGrantorQueueSummary(queue);
+  const isInboxView = variant === "inbox";
   const selectedCase = resolveSelectedGrantorCase(queue, orderId);
   const workbench = selectedCase ? getGrantorCaseWorkbench(selectedCase.id, queue, language) : null;
   const memo = selectedCase ? getGrantorDecisionMemo(selectedCase.id, queue, language) : null;
   const grantorDocumentSummary = selectedCase ? getGrantorDocumentSummary(selectedCase.id, queue, language) : null;
   const grantorEvidenceLedger = useAuthorizedGrantorEvidenceLedger(orderId, {
-    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    enabled: isNuxeraExperienceEnabled() && !isDemo && !isInboxView && Boolean(orderId),
     role: "grantor",
     language,
   });
+  const inboxFilters = getGrantorInboxFilters(queue, language);
+  const filteredCases = filterGrantorInboxCases(queue.cases, inboxFilter);
 
-  const isInboxView = variant === "inbox";
   const heroTitle = isInboxView
     ? L("Bandeja de expedientes priorizados", "Prioritized file inbox")
     : L("Mesa de decision orientada a evidencia", "Evidence-driven decision desk");
   const heroBody = isInboxView
-    ? L("Organiza expedientes autorizados por evidencia, riesgo, readiness y siguiente accion antes de llevarlos a la mesa de decision.", "Organize authorized files by evidence, risk, readiness and next action before moving them to the decision desk.")
+    ? L("Filtra, compara y asigna el siguiente expediente antes de abrir una revision profunda; esta vista es para triage operativo, no para dictamen.", "Filter, compare and assign the next file before opening deep review; this view is for operational triage, not decisioning.")
     : L("Evalua el expediente seleccionado con preguntas de revision, evidencia autorizada, condiciones no vinculantes y memo humano antes de cualquier decision institucional.", "Evaluate the selected file with review questions, authorized evidence, non-binding conditions and a human memo before any institutional decision.");
 
   return (
@@ -340,162 +343,206 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
         <article><span>{L("Revision humana", "Human review")}</span><strong>{summary.requiresHumanReview ? L("Si", "Yes") : L("No", "No")}</strong></article>
       </div>
 
-      <div className="nuxera-grantor-queue">
-        <small>{isDemo ? L("Modelo local de preparacion para cuenta demo.", "Local preparation model for the demo account.") : L("Pipeline real limitado a expedientes autorizados por data room.", "Real pipeline limited to files authorized through the data room.")}</small>
-        {loading && <p>{L("Cargando pipeline autorizado...", "Loading authorized pipeline...")}</p>}
-        {!loading && !isDemo && queue.cases.length === 0 && <p>{L("No hay expedientes autorizados disponibles.", "No authorized files are available.")}</p>}
-        {queue.cases.map((item) => (
-          <article key={item.id}>
+      {isInboxView ? (
+        <section className="nuxera-grantor-inbox" aria-label={L("Triage de expedientes otorgante", "Grantor file triage")}>
+          <header className="nuxera-grantor-inbox-toolbar">
+            <div>
+              <span>{isDemo ? L("Modelo local de preparacion", "Local preparation model") : L("Pipeline autorizado", "Authorized pipeline")}</span>
+              <h2>{L("Priorizacion accionable", "Actionable prioritization")}</h2>
+            </div>
+            <div role="tablist" aria-label={L("Filtros de bandeja", "Inbox filters")}>
+              {inboxFilters.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={inboxFilter === filter.id}
+                  onClick={() => setInboxFilter(filter.id)}
+                  title={filter.description}
+                >
+                  <span>{filter.label}</span>
+                  <strong>{filter.count}</strong>
+                </button>
+              ))}
+            </div>
+          </header>
+          {loading && <p>{L("Cargando pipeline autorizado...", "Loading authorized pipeline...")}</p>}
+          {!loading && !isDemo && queue.cases.length === 0 && <p>{L("No hay expedientes autorizados disponibles.", "No authorized files are available.")}</p>}
+          {!loading && queue.cases.length > 0 && filteredCases.length === 0 && <p>{L("No hay expedientes en este filtro.", "There are no files in this filter.")}</p>}
+          <div className="nuxera-grantor-queue">
+            {filteredCases.map((item) => (
+              <article key={item.id} className={item.id === selectedCase?.id ? "is-selected" : undefined}>
+                <header>
+                  <div>
+                    <span>{item.priority}</span>
+                    <strong>{item.name}</strong>
+                  </div>
+                  <em>{item.risk}</em>
+                </header>
+                <p>{item.applicant} / {item.sector} / {item.amountLabel}</p>
+                <div>
+                  {item.decisionSignals.map((signal) => <small key={signal}>{signal}</small>)}
+                </div>
+                <p>{item.nextAction}</p>
+                <footer>
+                  {!isDemo && <button type="button" onClick={() => selectOrder(item.id)} aria-pressed={item.id === selectedCase?.id}>{item.id === selectedCase?.id ? L("Seleccionado", "Selected") : L("Priorizar", "Prioritize")}</button>}
+                  <NavLink to="/dashboard">{L("Abrir mesa", "Open desk")}</NavLink>
+                  {item.evidenceLinks.map((link) => (
+                    <NavLink key={link.engine} to={link.path}>{link.engine}</NavLink>
+                  ))}
+                </footer>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="nuxera-grantor-decision-focus" aria-label={L("Expediente activo para mesa de decision", "Active file for decision desk")}>
             <header>
               <div>
-                <span>{item.priority}</span>
-                <strong>{item.name}</strong>
+                <span>{selectedCase ? selectedCase.priority : L("Sin expediente", "No file")}</span>
+                <h2>{selectedCase ? selectedCase.name : L("Selecciona un expediente desde la bandeja", "Select a file from the inbox")}</h2>
               </div>
-              <em>{item.risk}</em>
+              <NavLink to="/dashboard/nuxera/queue">{L("Cambiar expediente", "Change file")}</NavLink>
             </header>
-            <p>{item.applicant} / {item.sector} / {item.amountLabel}</p>
-            <div>
-              {item.decisionSignals.map((signal) => <small key={signal}>{signal}</small>)}
+            {selectedCase && <div className="nuxera-decision-focus-grid">
+              <article><span>{L("Solicitante", "Applicant")}</span><strong>{selectedCase.applicant}</strong></article>
+              <article><span>{L("Ticket", "Ticket")}</span><strong>{selectedCase.amountLabel}</strong></article>
+              <article><span>{L("Readiness", "Readiness")}</span><strong>{selectedCase.readinessLevel}</strong></article>
+              <article><span>{L("Riesgo", "Risk")}</span><strong>{selectedCase.risk}</strong></article>
+            </div>}
+          </section>
+
+          {workbench && <section className="nuxera-grantor-workbench" aria-label={L("Workbench del caso prioritario", "Priority case workbench")}>
+            <header>
+              <div>
+                <span>{workbench.status}</span>
+                <h2>{workbench.case.name}</h2>
+              </div>
+              <strong>{workbench.case.readinessLevel}</strong>
+            </header>
+            <div className="nuxera-workbench-grid">
+              <section>
+                <h3>{L("Preguntas de revision", "Review questions")}</h3>
+                {workbench.questions.map((question) => (
+                  <article key={question.id}>
+                    <span>{question.owner}</span>
+                    <strong>{question.label}</strong>
+                    <p>{question.prompt}</p>
+                  </article>
+                ))}
+              </section>
+              <section>
+                <h3>{L("Evidencia requerida", "Required evidence")}</h3>
+                {workbench.requiredEvidence.map((item) => (
+                  <article key={item.id}>
+                    <span>{item.status}</span>
+                    <p>{item.label}</p>
+                  </article>
+                ))}
+              </section>
+              <section>
+                <h3>{L("Condiciones no vinculantes", "Non-binding conditions")}</h3>
+                {workbench.conditions.map((condition) => (
+                  <article key={condition}>
+                    <span>{L("Condicion", "Condition")}</span>
+                    <p>{condition}</p>
+                  </article>
+                ))}
+              </section>
             </div>
-            <p>{item.nextAction}</p>
-            <footer>
-              {!isDemo && <button type="button" onClick={() => selectOrder(item.id)} aria-pressed={item.id === selectedCase?.id}>{L("Revisar expediente", "Review file")}</button>}
-              {item.evidenceLinks.map((link) => (
-                <NavLink key={link.engine} to={link.path}>{link.engine}</NavLink>
+            <div className="nuxera-workbench-audit">
+              {workbench.auditTrail.map((entry) => <p key={entry}>{entry}</p>)}
+            </div>
+          </section>}
+
+          {grantorDocumentSummary && <section className="nuxera-grantor-document-summary" aria-label={L("Resumen documental autorizado para otorgante", "Authorized document summary for the grantor")}>
+            <header>
+              <div>
+                <span>{grantorDocumentSummary.status}</span>
+                <h2>{L("Resumen documental autorizado", "Authorized document summary")}</h2>
+              </div>
+              <strong>{grantorDocumentSummary.summary.visible}/{grantorDocumentSummary.summary.total} {L("visibles", "visible")}</strong>
+            </header>
+            <div>
+              {grantorDocumentSummary.folders.map((folder) => (
+                <article key={folder.id}>
+                  <span>{folder.status}</span>
+                  <strong>{folder.label}</strong>
+                  <p>{folder.evidence.length || 0} {L("senales documentales resumidas.", "document signals summarized.")}</p>
+                </article>
               ))}
-            </footer>
-          </article>
-        ))}
-      </div>
+            </div>
+            <footer>{grantorDocumentSummary.nextAction} {grantorDocumentSummary.guardrails[0]}</footer>
+          </section>}
+          <section className="nuxera-grantor-evidence-ledger" aria-label={L("Ledger read-only de evidencia otorgante", "Read-only grantor evidence ledger")}>
+            <header>
+              <div>
+                <span>{grantorEvidenceLedger.status}</span>
+                <h2>{isDemo ? L("Evidencia demo resumida", "Summarized demo evidence") : L("Evidencia real del expediente autorizado", "Real evidence for the authorized file")}</h2>
+              </div>
+              <strong>{grantorEvidenceLedger.summary.total} {L("senales", "signals")}</strong>
+            </header>
+            {orderId && <small>{L("Expediente", "File")}: {authorizedOrder?.name || authorizedOrder?.project_name || orderId} ({orderId})</small>}
+            {!orderId && !isDemo && <small>{L("No hay un expediente real autorizado seleccionado.", "No authorized real file is selected.")}</small>}
+            {grantorEvidenceLedger.backendEvidence?.loading && <small>{L("Cargando evidence_links NUXERA autorizados...", "Loading authorized NUXERA evidence_links...")}</small>}
+            {grantorEvidenceLedger.backendEvidence?.source?.startsWith("remote") && (
+              <small>{grantorEvidenceLedger.backendEvidence.label}</small>
+            )}
+            <div>
+              {grantorEvidenceLedger.items.slice(0, 6).map((item) => (
+                <article key={item.id}>
+                  <span>{item.engine} / {item.visibility}</span>
+                  <strong>{item.label}</strong>
+                  <p>{item.detail}</p>
+                  <small>{item.guardrail}</small>
+                </article>
+              ))}
+            </div>
+            <footer>{grantorEvidenceLedger.policies[0]}</footer>
+          </section>
+          {memo && <section className="nuxera-grantor-memo" aria-label={L("Memo local no vinculante del otorgante", "Local, non-binding grantor memo")}>
+            <header>
+              <div>
+                <span>{memo.status}</span>
+                <h2>{memo.title}</h2>
+              </div>
+              <strong>{memo.evidenceSnapshot.visible}/{memo.evidenceSnapshot.documents.length} {L("evidencias", "evidence items")}</strong>
+            </header>
+            <div className="nuxera-memo-grid">
+              <section>
+                <h3>{L("Tesis preliminar", "Preliminary thesis")}</h3>
+                {memo.thesis.map((item) => <p key={item}>{item}</p>)}
+              </section>
+              <section>
+                <h3>{L("Riesgos y recomendacion", "Risks & recommendation")}</h3>
+                <strong>{memo.recommendation}</strong>
+                {memo.riskNotes.map((note) => <p key={note}>{note}</p>)}
+              </section>
+              <section>
+                <h3>{L("Siguientes acciones", "Next actions")}</h3>
+                {memo.nextActions.map((item) => (
+                  <article key={item.id}>
+                    <span>{item.owner}</span>
+                    <p>{item.action}</p>
+                  </article>
+                ))}
+              </section>
+            </div>
+            <div className="nuxera-memo-guardrails">
+              {memo.guardrails.map((guardrail) => <p key={guardrail}>{guardrail}</p>)}
+            </div>
+          </section>}
+        </>
+      )}
 
-      {workbench && <section className="nuxera-grantor-workbench" aria-label={L("Workbench del caso prioritario", "Priority case workbench")}>
-        <header>
-          <div>
-            <span>{workbench.status}</span>
-            <h2>{workbench.case.name}</h2>
-          </div>
-          <strong>{workbench.case.readinessLevel}</strong>
-        </header>
-        <div className="nuxera-workbench-grid">
-          <section>
-            <h3>{L("Preguntas de revision", "Review questions")}</h3>
-            {workbench.questions.map((question) => (
-              <article key={question.id}>
-                <span>{question.owner}</span>
-                <strong>{question.label}</strong>
-                <p>{question.prompt}</p>
-              </article>
-            ))}
-          </section>
-          <section>
-            <h3>{L("Evidencia requerida", "Required evidence")}</h3>
-            {workbench.requiredEvidence.map((item) => (
-              <article key={item.id}>
-                <span>{item.status}</span>
-                <p>{item.label}</p>
-              </article>
-            ))}
-          </section>
-          <section>
-            <h3>{L("Condiciones no vinculantes", "Non-binding conditions")}</h3>
-            {workbench.conditions.map((condition) => (
-              <article key={condition}>
-                <span>{L("Condicion", "Condition")}</span>
-                <p>{condition}</p>
-              </article>
-            ))}
-          </section>
-        </div>
-        <div className="nuxera-workbench-audit">
-          {workbench.auditTrail.map((entry) => <p key={entry}>{entry}</p>)}
-        </div>
-      </section>}
-
-      {grantorDocumentSummary && <section className="nuxera-grantor-document-summary" aria-label={L("Resumen documental autorizado para otorgante", "Authorized document summary for the grantor")}>
-        <header>
-          <div>
-            <span>{grantorDocumentSummary.status}</span>
-            <h2>{L("Resumen documental autorizado", "Authorized document summary")}</h2>
-          </div>
-          <strong>{grantorDocumentSummary.summary.visible}/{grantorDocumentSummary.summary.total} {L("visibles", "visible")}</strong>
-        </header>
-        <div>
-          {grantorDocumentSummary.folders.map((folder) => (
-            <article key={folder.id}>
-              <span>{folder.status}</span>
-              <strong>{folder.label}</strong>
-              <p>{folder.evidence.length || 0} {L("senales documentales resumidas.", "document signals summarized.")}</p>
-            </article>
-          ))}
-        </div>
-        <footer>{grantorDocumentSummary.nextAction} {grantorDocumentSummary.guardrails[0]}</footer>
-      </section>}
-      <section className="nuxera-grantor-evidence-ledger" aria-label={L("Ledger read-only de evidencia otorgante", "Read-only grantor evidence ledger")}>
-        <header>
-          <div>
-            <span>{grantorEvidenceLedger.status}</span>
-            <h2>{isDemo ? L("Evidencia demo resumida", "Summarized demo evidence") : L("Evidencia real del expediente autorizado", "Real evidence for the authorized file")}</h2>
-          </div>
-          <strong>{grantorEvidenceLedger.summary.total} {L("senales", "signals")}</strong>
-        </header>
-        {orderId && <small>{L("Expediente", "File")}: {authorizedOrder?.name || authorizedOrder?.project_name || orderId} ({orderId})</small>}
-        {!orderId && !isDemo && <small>{L("No hay un expediente real autorizado seleccionado.", "No authorized real file is selected.")}</small>}
-        {grantorEvidenceLedger.backendEvidence?.loading && <small>{L("Cargando evidence_links NUXERA autorizados...", "Loading authorized NUXERA evidence_links...")}</small>}
-        {grantorEvidenceLedger.backendEvidence?.source?.startsWith("remote") && (
-          <small>{grantorEvidenceLedger.backendEvidence.label}</small>
-        )}
-        <div>
-          {grantorEvidenceLedger.items.slice(0, 6).map((item) => (
-            <article key={item.id}>
-              <span>{item.engine} / {item.visibility}</span>
-              <strong>{item.label}</strong>
-              <p>{item.detail}</p>
-              <small>{item.guardrail}</small>
-            </article>
-          ))}
-        </div>
-        <footer>{grantorEvidenceLedger.policies[0]}</footer>
-      </section>
-      {memo && <section className="nuxera-grantor-memo" aria-label={L("Memo local no vinculante del otorgante", "Local, non-binding grantor memo")}>
-        <header>
-          <div>
-            <span>{memo.status}</span>
-            <h2>{memo.title}</h2>
-          </div>
-          <strong>{memo.evidenceSnapshot.visible}/{memo.evidenceSnapshot.documents.length} {L("evidencias", "evidence items")}</strong>
-        </header>
-        <div className="nuxera-memo-grid">
-          <section>
-            <h3>{L("Tesis preliminar", "Preliminary thesis")}</h3>
-            {memo.thesis.map((item) => <p key={item}>{item}</p>)}
-          </section>
-          <section>
-            <h3>{L("Riesgos y recomendacion", "Risks & recommendation")}</h3>
-            <strong>{memo.recommendation}</strong>
-            {memo.riskNotes.map((note) => <p key={note}>{note}</p>)}
-          </section>
-          <section>
-            <h3>{L("Siguientes acciones", "Next actions")}</h3>
-            {memo.nextActions.map((item) => (
-              <article key={item.id}>
-                <span>{item.owner}</span>
-                <p>{item.action}</p>
-              </article>
-            ))}
-          </section>
-        </div>
-        <div className="nuxera-memo-guardrails">
-          {memo.guardrails.map((guardrail) => <p key={guardrail}>{guardrail}</p>)}
-        </div>
-      </section>}
-<section className="nuxera-grantor-policies" aria-label={L("Politicas de revision otorgante", "Grantor review policies")}>
-        <h2>{L("Politicas de bandeja", "Inbox policies")}</h2>
+      <section className="nuxera-grantor-policies" aria-label={L("Politicas de revision otorgante", "Grantor review policies")}>
+        <h2>{isInboxView ? L("Politicas de bandeja", "Inbox policies") : L("Politicas de mesa", "Desk policies")}</h2>
         {queue.policies.map((policy) => <p key={policy}>{policy}</p>)}
       </section>
     </section>
   );
 }
-
 
 function AdminOperationsHome({ sectionLabel }) {
   const { L, language } = useNuxeraLanguage();

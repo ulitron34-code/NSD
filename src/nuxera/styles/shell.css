@@ -695,6 +695,101 @@
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
+.nuxera-grantor-inbox,
+.nuxera-grantor-decision-focus {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-grantor-inbox-toolbar,
+.nuxera-grantor-decision-focus > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.nuxera-grantor-inbox-toolbar h2,
+.nuxera-grantor-decision-focus h2 {
+  margin: 4px 0 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-grantor-inbox-toolbar span,
+.nuxera-grantor-decision-focus span,
+.nuxera-decision-focus-grid span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-grantor-inbox-toolbar [role="tablist"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.nuxera-grantor-inbox-toolbar button,
+.nuxera-grantor-queue button,
+.nuxera-grantor-decision-focus a {
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: var(--nuxera-ink);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nuxera-grantor-inbox-toolbar button {
+  display: grid;
+  min-width: 94px;
+  gap: 2px;
+  text-align: left;
+}
+
+.nuxera-grantor-inbox-toolbar button[aria-selected="true"],
+.nuxera-grantor-queue button[aria-pressed="true"],
+.nuxera-grantor-queue article.is-selected {
+  border-color: var(--nuxera-gold);
+  background: var(--nuxera-gold-soft);
+}
+
+.nuxera-grantor-inbox-toolbar button strong {
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-decision-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nuxera-decision-focus-grid article {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-decision-focus-grid strong {
+  color: var(--nuxera-ink);
+  font-size: 0.95rem;
+}
+
 .nuxera-grantor-summary article {
   padding: 14px;
   display: grid;

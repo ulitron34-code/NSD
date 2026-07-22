@@ -14,7 +14,7 @@ import { buildEmptyProjectBuilderAnswers, getMissingRequiredProjectBuilderFields
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { readSelectedExpedienteId, subscribeSelectedExpediente, writeSelectedExpedienteId } from "../hooks/useSelectedExpediente";
-import { buildGrantorCaseQueueFromPipeline, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../nuxera/grantor/caseQueue";
+import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, buildMarketWatchlistForExpedient, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { buildResearchMissionForExpedient, getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
@@ -1323,6 +1323,19 @@ describe("NUXERA grantor case queue", () => {
     expect(queue.cases.map((item) => item.priority)).toEqual(
       expect.arrayContaining(["committee-ready", "needs-information"])
     );
+  });
+
+  it("builds actionable inbox filters instead of a duplicated decision desk", () => {
+    const queue = getGrantorCaseQueue();
+    const filters = getGrantorInboxFilters(queue);
+
+    expect(filters.map((filter) => filter.id)).toEqual(["all", "committee-ready", "needs-information", "high-risk", "watch"]);
+    expect(filters.find((filter) => filter.id === "all").count).toBe(queue.cases.length);
+    expect(filters.find((filter) => filter.id === "needs-information").count).toBe(
+      queue.cases.filter((item) => item.priority === "needs-information").length
+    );
+    expect(filterGrantorInboxCases(queue.cases, "high-risk").every((item) => item.riskLevel === "high")).toBe(true);
+    expect(filterGrantorInboxCases(queue.cases, "committee-ready").every((item) => item.priority === "committee-ready")).toBe(true);
   });
 
   it("connects each grantor case to evidence engines without automatic approval", () => {
