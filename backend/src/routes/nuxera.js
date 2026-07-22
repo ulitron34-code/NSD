@@ -12,6 +12,7 @@ import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookS
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { getNuxeraConversationAgentReadiness } from "../services/nuxeraConversationAgentReadinessService.js";
+import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
 import { getNuxeraNotificationOutboxReadiness } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
@@ -57,6 +58,26 @@ router.get(
           'NU-DB-RLS-ENDPOINT-VERIFY-001 exposes the controlled verification plan in read-only mode.',
           'Verification plan does not execute endpoints, apply SQL, change RLS or enable writes.',
           'Completed evidence must come from a controlled non-production Supabase run.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  "/nuxera/admin/ai-provider-policy",
+  authMiddleware,
+  requirePermission("nuxera:admin:read"),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: "admin",
+        aiProviderPolicy: getNuxeraAiProviderPolicy(),
+        guardrails: [
+          "AI provider policy is read-only and never exposes API key values.",
+          "Anthropic/OpenAI remain primary for sensitive document review.",
+          "Kimi/DeepSeek/NVIDIA are restricted to explicit low-risk anonymized tasks."
         ]
       });
     } catch (error) {

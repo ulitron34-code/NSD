@@ -17,7 +17,8 @@ const serviceCalls = {
   writeGate: [],
   changeRequest: [],
   releaseDossier: [],
-  continuationPack: []
+  continuationPack: [],
+  aiProviderPolicy: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -289,6 +290,24 @@ vi.mock('../services/nuxeraAdminControlService.js', () => ({
     };
   })
 }));
+vi.mock("../services/nuxeraAiProviderPolicyService.js", () => ({
+  getNuxeraAiProviderPolicy: vi.fn(() => {
+    serviceCalls.aiProviderPolicy.push({ called: true });
+    return {
+      id: "nuxera-ai-provider-policy",
+      status: "primary-provider-ready",
+      sensitiveRuntimeReady: true,
+      restrictedRuntimeReady: true,
+      providers: [
+        { name: "anthropic", tier: "primary", configured: true, allowed: true, model: "claude-sonnet-4-6" },
+        { name: "kimi", tier: "restricted", configured: true, allowed: false, model: "kimi-k3", blockedReason: "restricted-provider-requires-low-risk-anonymized-task" }
+      ],
+      scenarios: [{ id: "low-risk-classification", allowedProviders: ["anthropic", "kimi"], status: "provider-path-available" }],
+      summary: { totalProviders: 5, configured: 2, configuredPrimary: 1, configuredRestricted: 1, sensitiveAllowedConfigured: 1, sensitiveBlockedConfigured: 1, scenarioPathsAvailable: 1 },
+      guardrails: ["Provider policy is read-only and never exposes API key values."]
+    };
+  })
+}));
 vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
   getNuxeraNotificationOutboxReadiness: vi.fn(() => ({
     status: "outbox-contract-ready-delivery-disabled",
@@ -373,6 +392,7 @@ describe('nuxera routes', () => {
     serviceCalls.changeRequest = [];
     serviceCalls.releaseDossier = [];
     serviceCalls.continuationPack = [];
+    serviceCalls.aiProviderPolicy = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -776,6 +796,39 @@ describe('nuxera routes', () => {
       error: 'Servicio NUXERA no disponible',
       code: 'NUXERA_BACKEND_UNAVAILABLE'
     });
+  });
+  it("requires nuxera:admin:read before reading AI provider policy", async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/ai-provider-policy`, {
+      headers: { "x-test-user-id": "admin-1", "x-test-permissions": "case:own:read" }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: "nuxera:admin:read" });
+    expect(serviceCalls.aiProviderPolicy).toHaveLength(0);
+  });
+
+  it("returns AI provider policy without exposing secret values or enabling providers", async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/ai-provider-policy`, {
+      headers: { "x-test-user-id": "admin-1", "x-test-permissions": "nuxera:admin:read" }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: "admin",
+      aiProviderPolicy: {
+        id: "nuxera-ai-provider-policy",
+        sensitiveRuntimeReady: true,
+        summary: { configuredPrimary: 1, configuredRestricted: 1 }
+      }
+    });
+    expect(body.aiProviderPolicy.providers.find((provider) => provider.name === "kimi")).toMatchObject({
+      tier: "restricted",
+      allowed: false
+    });
+    expect(JSON.stringify(body)).not.toContain("sk-kimi-test");
+    expect(body.guardrails.join(" ")).toContain("never exposes API key values");
+    expect(serviceCalls.aiProviderPolicy).toEqual([{ called: true }]);
   });
   it("requires nuxera:admin:read before reading conversation agent readiness", async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/conversation-agent-readiness`, {

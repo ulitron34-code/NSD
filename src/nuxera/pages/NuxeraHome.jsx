@@ -5,6 +5,7 @@ import { useMyGrantorPipeline } from "../../hooks/useMyGrantorPipeline";
 import { NavLink } from "react-router-dom";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
+import { mergeAiProviderPolicyWithConsole, useAiProviderPolicy } from "../admin/aiProviderPolicyAdapter";
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
@@ -563,15 +564,20 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled(), language });
   const notificationOutboxReadiness = useNotificationOutboxReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const conversationAgentReadiness = useConversationAgentReadiness({ enabled: isNuxeraExperienceEnabled(), language });
+  const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const communicationModel = mergeCommunicationModelWithConversationAgent(
     mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language),
     conversationAgentReadiness,
     language
   );
-  const consoleState = mergeBackendReadinessWithConsole(
-    mergeAdminControlsWithConsole(getAdminOperationsConsole(language), adminControls, language),
-    backendReadiness,
-    controlledVerificationPlan,
+  const consoleState = mergeAiProviderPolicyWithConsole(
+    mergeBackendReadinessWithConsole(
+      mergeAdminControlsWithConsole(getAdminOperationsConsole(language), adminControls, language),
+      backendReadiness,
+      controlledVerificationPlan,
+      language
+    ),
+    aiProviderPolicy,
     language
   );
 
@@ -1017,6 +1023,57 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
       </section>
 
+      <section className="nuxera-admin-ai-policy" aria-label={L("Politica de proveedores IA NUXERA", "NUXERA AI provider policy")}>
+        <header>
+          <span>{consoleState.aiProviderPolicy.status}</span>
+          <h2>{L("Política de proveedores IA", "AI provider policy")}</h2>
+        </header>
+        <p>
+          {consoleState.summary.aiPrimaryProvidersConfigured} {L("primarios configurados", "primary configured")}; {consoleState.summary.aiRestrictedProvidersConfigured} {L("secundarios restringidos", "restricted secondary")}; {consoleState.summary.aiScenarioPathsAvailable} {L("rutas operables", "available paths")}.
+        </p>
+        {consoleState.aiProviderPolicy.loading && <small>{L("Cargando política IA...", "Loading AI policy...")}</small>}
+        <div className="nuxera-admin-summary">
+          <article>
+            <span>{L("Datos sensibles", "Sensitive data")}</span>
+            <strong>{consoleState.aiProviderPolicy.sensitiveRuntimeReady ? L("Listo", "Ready") : L("Bloqueado", "Blocked")}</strong>
+            <p>{L("Solo Anthropic/OpenAI pueden revisar documentos sensibles.", "Only Anthropic/OpenAI may review sensitive documents.")}</p>
+          </article>
+          <article>
+            <span>{L("Kimi/DeepSeek", "Kimi/DeepSeek")}</span>
+            <strong>{consoleState.aiProviderPolicy.restrictedRuntimeReady ? L("Disponible", "Available") : L("Restringido", "Restricted")}</strong>
+            <p>{L("Solo tareas de bajo riesgo con datos anonimizados.", "Only low-risk tasks with anonymized data.")}</p>
+          </article>
+          <article>
+            <span>{L("Secretos", "Secrets")}</span>
+            <strong>{L("No expuestos", "Not exposed")}</strong>
+            <p>{L("La consola muestra presencia de llaves, nunca valores.", "Console shows key presence, never values.")}</p>
+          </article>
+        </div>
+        <div>
+          {consoleState.aiProviderPolicy.providers.map((provider) => (
+            <article key={provider.name}>
+              <span>{provider.tier} / {provider.configured ? L("configurado", "configured") : L("sin llave", "no key")}</span>
+              <strong>{provider.name}</strong>
+              <p>{provider.model}</p>
+              <small>{provider.riskProfile}</small>
+              <em>{provider.allowed ? L("Permitido para el escenario sensible actual", "Allowed for current sensitive scenario") : provider.blockedReason}</em>
+            </article>
+          ))}
+        </div>
+        <div>
+          {consoleState.aiProviderPolicy.scenarios.map((scenario) => (
+            <article key={scenario.id}>
+              <span>{scenario.status}</span>
+              <strong>{scenario.label}</strong>
+              <p>{scenario.dataRisk} / {scenario.anonymized ? L("anonimizado", "anonymized") : L("no anonimizado", "not anonymized")}</p>
+              <small>{scenario.allowedProviders.length ? scenario.allowedProviders.join(", ") : L("Sin ruta configurada", "No configured path")}</small>
+            </article>
+          ))}
+        </div>
+        <footer>
+          {consoleState.aiProviderPolicy.guardrails.map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
+        </footer>
+      </section>
       <section className="nuxera-admin-communications" aria-label={L("Operacion de comunicaciones NUXERA", "NUXERA communications operations")}>
         <header>
           <span>{communicationModel.status}</span>

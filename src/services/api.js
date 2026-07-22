@@ -270,6 +270,10 @@ export const nuxeraNotificationOutboxAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/notification-outbox-readiness')
 };
+export const nuxeraAiProviderPolicyAPI = {
+  getPolicy: () =>
+    api.get('/nuxera/admin/ai-provider-policy')
+};
 
 export const nuxeraConversationAgentAPI = {
   getReadiness: () =>
