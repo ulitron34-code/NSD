@@ -35,6 +35,7 @@ import {
   NUXERA_NOTIFICATION_EVENTS,
   buildNuxeraNotificationDedupeKey,
   buildNuxeraNotificationDeliveryPlan,
+  buildNuxeraNotificationDryRunBatch,
   buildNuxeraNotificationOutboxPreview,
   enqueueNuxeraNotificationIntent,
   processNuxeraNotificationDeliveryBatch,
@@ -155,6 +156,37 @@ describe('nuxeraNotificationOutboxService', () => {
     expect(state.auditEvents).toEqual([]);
   });
 
+  it('builds a notification dry-run batch with duplicate suppression and no writes', () => {
+    const result = buildNuxeraNotificationDryRunBatch([
+      {
+        eventId: NUXERA_NOTIFICATION_EVENTS.APPLICANT_MISSING_EVIDENCE,
+        orderId: 'order-1',
+        recipientUserId: 'applicant-1',
+        recipientRole: 'applicant',
+        subject: 'Falta evidencia',
+        channels: ['email']
+      },
+      {
+        eventId: NUXERA_NOTIFICATION_EVENTS.APPLICANT_MISSING_EVIDENCE,
+        orderId: 'order-1',
+        recipientUserId: 'applicant-1',
+        recipientRole: 'applicant',
+        subject: 'Duplicado',
+        channels: ['email']
+      },
+      { eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_DECISION_READY, recipientRole: 'applicant' }
+    ]);
+
+    expect(result).toMatchObject({
+      status: 'notification-dry-run-ready',
+      deliveryEnabled: false,
+      summary: { accepted: 2, duplicates: 1, rejected: 1 }
+    });
+    expect(result.previews.map((preview) => preview.status)).toEqual(['preview', 'suppressed']);
+    expect(result.rejected[0].reason).toContain('Destinatario NUXERA notification requerido');
+    expect(state.inserted).toBeNull();
+    expect(state.auditEvents).toEqual([]);
+  });
   it("exposes a read-only outbox readiness contract", () => {
     const readiness = getNuxeraNotificationOutboxReadiness();
 

@@ -130,6 +130,24 @@ function buildCaseQueue(opportunities, source, language) {
         ...opportunity,
         priority,
         decisionSignals: buildDecisionSignals(opportunity, language),
+        triage: {
+          lane: priority === "committee-ready"
+            ? pickLang({ es: "Mesa", en: "Desk" }, language)
+            : priority === "needs-information"
+              ? pickLang({ es: "Subsanacion", en: "Remediation" }, language)
+              : pickLang({ es: "Observacion", en: "Watch" }, language),
+          sla: priority === "committee-ready" ? "24h" : priority === "needs-information" ? "48h" : "7d",
+          owner: priority === "committee-ready"
+            ? pickLang({ es: "Analista senior", en: "Senior analyst" }, language)
+            : priority === "needs-information"
+              ? pickLang({ es: "Relacion solicitante", en: "Applicant relations" }, language)
+              : pickLang({ es: "Monitoreo", en: "Monitoring" }, language),
+          reason: priority === "committee-ready"
+            ? pickLang({ es: "Readiness suficiente para memo humano.", en: "Enough readiness for a human memo." }, language)
+            : priority === "needs-information"
+              ? pickLang({ es: "Faltantes o riesgo impiden comite.", en: "Gaps or risk block committee." }, language)
+              : pickLang({ es: "Sin accion inmediata; esperar nueva evidencia.", en: "No immediate action; wait for new evidence." }, language)
+        },
         nextAction: priority === "committee-ready"
           ? pickLang({ es: "Preparar memo de comite y confirmar condiciones no vinculantes.", en: "Prepare the committee memo and confirm non-binding conditions." }, language)
           : priority === "needs-information"
@@ -151,6 +169,8 @@ function buildCaseQueue(opportunities, source, language) {
     source,
     cases,
     analytics: buildOtorganteAnalytics(cases, language),
+    queueMode: { label: pickLang({ es: "Bandeja de expedientes", en: "File inbox" }, language), purpose: pickLang({ es: "Triage, SLA, asignacion y faltantes; no analiza condiciones de decision.", en: "Triage, SLA, assignment and gaps; it does not analyze decision conditions." }, language) },
+    decisionDeskMode: { label: pickLang({ es: "Mesa de decision", en: "Decision desk" }, language), purpose: pickLang({ es: "Memo no vinculante, preguntas de comite, evidencia autorizada y condiciones humanas.", en: "Non-binding memo, committee questions, authorized evidence and human conditions." }, language) },
     policies: [
       { es: "La bandeja de expedientes no aprueba credito ni emite term sheets automaticamente.", en: "The file inbox does not approve credit or automatically issue term sheets." },
       { es: "Cada caso requiere revision humana antes de contacto, comite o decision vinculante.", en: "Every case requires human review before contact, committee, or a binding decision." },

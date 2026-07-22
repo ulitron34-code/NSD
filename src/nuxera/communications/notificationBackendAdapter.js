@@ -118,3 +118,77 @@ export function useNotificationOutboxReadiness({ enabled = true, language = "es"
 
   return state;
 }
+
+const LOCAL_NOTIFICATION_DRY_RUN = Object.freeze({
+  source: "local-fallback",
+  status: "notification-dry-run-local",
+  deliveryEnabled: false,
+  loading: false,
+  error: null,
+  previews: [],
+  rejected: [],
+  summary: { accepted: 0, duplicates: 0, rejected: 0, channels: 0 },
+  guardrails: ["Local dry-run fallback; no envia mensajes ni inserta outbox."],
+});
+
+export function normalizeNuxeraNotificationDryRunResponse(response) {
+  const payload = response?.dryRun || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_NOTIFICATION_DRY_RUN,
+      error: "nuxera-notification-dry-run-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_NOTIFICATION_DRY_RUN,
+    ...payload,
+    source: "remote-dry-run",
+    loading: false,
+    error: null,
+    previews: asArray(payload.previews),
+    rejected: asArray(payload.rejected),
+    summary: {
+      ...LOCAL_NOTIFICATION_DRY_RUN.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useNotificationDryRun({ enabled = true, intents = [], language = "es" } = {}) {
+  const [state, setState] = useState(LOCAL_NOTIFICATION_DRY_RUN);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled || !intents.length) {
+      setState(LOCAL_NOTIFICATION_DRY_RUN);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraNotificationOutboxAPI.dryRun({ intents })
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraNotificationDryRunResponse(data, language));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Notification dry-run unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_NOTIFICATION_DRY_RUN,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-notification-dry-run-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled, intents, language]);
+
+  return state;
+}

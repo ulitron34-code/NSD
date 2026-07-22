@@ -8,7 +8,7 @@ const operationLanesSource = [
     label: { es: "Operacion", en: "Operations" },
     status: "watch",
     owner: "Ops NUXERA",
-    signal: { es: "Colas applicant/grantor activas en modo local.", en: "Applicant/grantor queues active in local mode." },
+    signal: { es: "Bandejas applicant/grantor activas en modo local.", en: "Applicant/grantor inboxes active in local mode." },
     action: { es: "Revisar handoff, tareas abiertas y estados de migracion antes de habilitar persistencia.", en: "Review handoff, open tasks and migration status before enabling persistence." },
   },
   {
@@ -66,7 +66,7 @@ const releaseGatesSource = [
 
 const adminAuditEventsSource = [
   { es: "Applicant mission y checklist montados como preparacion local.", en: "Applicant mission and checklist mounted as local preparation." },
-  { es: "Grantor queue y workbench montados sin cambios de permisos.", en: "Grantor queue and workbench mounted without permission changes." },
+  { es: "Bandeja de expedientes y mesa otorgante montadas sin cambios de permisos.", en: "Grantor file inbox and decision desk mounted without permission changes." },
   { es: "Markets realtime bloqueado salvo proveedor licenciado.", en: "Real-time Markets data blocked pending a licensed provider." },
   { es: "Strategy mantiene gates, rollback y audit trail local.", en: "Strategy keeps gates, rollback and a local audit trail." },
 ];

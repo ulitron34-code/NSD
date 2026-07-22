@@ -90,3 +90,69 @@ export function buildNuxeraConversationAgentEnvelope(context = {}) {
     ]
   };
 }
+
+function normalizeConversationMessage(value) {
+  if (typeof value !== 'string') return '';
+  return value.trim().slice(0, 1200);
+}
+
+function buildAssistantDraft({ role, policy, message, selectedId, allowed }) {
+  const topic = message.toLowerCase();
+  const canDiscussEvidence = topic.includes('evidencia') || topic.includes('document') || topic.includes('faltante') || topic.includes('risk') || topic.includes('riesgo');
+  const capabilities = allowed ? policy.capabilities : [];
+
+  if (!allowed) {
+    return {
+      mode: 'blocked-preview',
+      answer: 'No puedo conversar sobre este expediente hasta tener un expediente seleccionado, contexto autorizado por rol y runtime aprobado.',
+      suggestedActions: ['Seleccionar expediente autorizado.', 'Verificar permisos del rol.', 'Mantener runtime apagado hasta aprobacion.'],
+      citations: []
+    };
+  }
+
+  return {
+    mode: 'safe-preview',
+    answer: canDiscussEvidence
+      ? `Puedo ayudarte a ordenar evidencia y faltantes del expediente ${selectedId} usando solo fuentes autorizadas para ${role}. No emitire aprobaciones, term sheets ni envios automaticos.`
+      : `Puedo responder preguntas operativas del expediente ${selectedId} dentro del canal ${policy.channel}, citando fuentes autorizadas cuando esten disponibles.`,
+    suggestedActions: capabilities,
+    citations: policy.allowedSources.map((source) => ({ source, scope: 'role-scoped-selected-file' }))
+  };
+}
+
+export function buildNuxeraConversationPreview(input = {}) {
+  const envelope = buildNuxeraConversationAgentEnvelope({
+    role: input.role,
+    orderId: input.orderId || input.selectedId,
+    selectedId: input.selectedId,
+    authorized: input.authorized,
+    runtimeEnabled: input.runtimeEnabled
+  });
+  const policy = ROLE_POLICIES[envelope.role];
+  const message = normalizeConversationMessage(input.message);
+  const draft = buildAssistantDraft({
+    role: envelope.role,
+    policy,
+    message,
+    selectedId: envelope.selectedId,
+    allowed: envelope.allowed
+  });
+
+  return {
+    id: 'nuxera-conversation-preview',
+    status: envelope.allowed ? 'conversation-preview-ready' : 'conversation-preview-blocked',
+    message,
+    envelope,
+    draft,
+    persistence: {
+      chatTurnsPersisted: false,
+      auditLogWritten: false,
+      retentionApproved: false
+    },
+    guardrails: [
+      'Preview only; no LLM provider call is performed.',
+      'No email, WhatsApp, in-app notification or database write is performed.',
+      'The assistant cannot approve financing, issue term sheets, change permissions or grant document access.'
+    ]
+  };
+}

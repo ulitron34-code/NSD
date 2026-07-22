@@ -21,6 +21,22 @@ const POLICY_SCENARIOS = Object.freeze([
   }
 ]);
 
+const PROVIDER_COST_HINTS = Object.freeze({
+  anthropic: { inputPerMillion: 3, outputPerMillion: 15, posture: 'premium-primary' },
+  openai: { inputPerMillion: 0.15, outputPerMillion: 0.6, posture: 'efficient-primary' },
+  kimi: { inputPerMillion: 3, outputPerMillion: 15, posture: 'restricted-secondary' },
+  deepseek: { inputPerMillion: 0.14, outputPerMillion: 0.28, posture: 'low-cost-restricted-secondary' },
+  nvidia: { inputPerMillion: 0.2, outputPerMillion: 0.2, posture: 'restricted-extraction-secondary' }
+});
+
+function estimatePilotCost(costHint) {
+  if (!costHint) return null;
+  const inputTokens = 250000;
+  const outputTokens = 75000;
+  const cost = (inputTokens * (costHint.inputPerMillion / 1000000)) + (outputTokens * (costHint.outputPerMillion / 1000000));
+  return Number(cost.toFixed(4));
+}
+
 function summarizeProviders(policy) {
   const providers = policy.providers.map((provider) => ({
     name: provider.name,
@@ -29,7 +45,11 @@ function summarizeProviders(policy) {
     riskProfile: provider.riskProfile,
     configured: provider.configured,
     allowed: provider.allowed,
-    blockedReason: provider.blockedReason
+    blockedReason: provider.blockedReason,
+    cost: {
+      ...PROVIDER_COST_HINTS[provider.name],
+      estimatedPilotUsd: estimatePilotCost(PROVIDER_COST_HINTS[provider.name])
+    }
   }));
 
   return {
@@ -88,8 +108,10 @@ export function getNuxeraAiProviderPolicy() {
       configuredRestricted: summary.configuredRestricted,
       sensitiveAllowedConfigured: summary.allowedConfigured,
       sensitiveBlockedConfigured: summary.blockedConfigured,
-      scenarioPathsAvailable: scenarios.filter((scenario) => scenario.status === 'provider-path-available').length
+      scenarioPathsAvailable: scenarios.filter((scenario) => scenario.status === 'provider-path-available').length,
+      estimatedPilotUsd: Number(summary.providers.reduce((total, provider) => total + (provider.configured && provider.allowed ? provider.cost.estimatedPilotUsd || 0 : 0), 0).toFixed(4))
     },
+    usageAssumptions: { pilotInputTokens: 250000, pilotOutputTokens: 75000, currency: 'USD', billing: 'estimate-only' },
     requiredEnv: ['ANTHROPIC_API_KEY or OPENAI_API_KEY for sensitive review', 'KIMI_API_KEY optional for low-risk anonymized tasks', 'DEEPSEEK_API_KEY optional secondary fallback'],
     guardrails: [
       'Provider policy is read-only and never exposes API key values.',

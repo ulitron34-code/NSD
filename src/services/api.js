@@ -277,7 +277,9 @@ export const nuxeraAiProviderPolicyAPI = {
 
 export const nuxeraConversationAgentAPI = {
   getReadiness: () =>
-    api.get('/nuxera/admin/conversation-agent-readiness')
+    api.get('/nuxera/admin/conversation-agent-readiness'),
+  preview: (payload = {}) =>
+    api.post('/nuxera/conversation/preview', payload)
 };
 
 export const nuxeraControlledVerificationAPI = {

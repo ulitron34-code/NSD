@@ -11,9 +11,9 @@ import { getNuxeraControlledReleaseDossier } from '../services/nuxeraControlledR
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
-import { getNuxeraConversationAgentReadiness } from "../services/nuxeraConversationAgentReadinessService.js";
+import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
-import { getNuxeraNotificationOutboxReadiness } from '../services/nuxeraNotificationOutboxService.js';
+import { buildNuxeraNotificationDryRunBatch, getNuxeraNotificationOutboxReadiness } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
@@ -98,6 +98,58 @@ router.get(
           'Notification outbox readiness is read-only and does not send email, WhatsApp or in-app notifications.',
           'Delivery remains disabled until SQL, RLS verification, audit logging and worker approval are completed.',
           'Agents may draft or summarize notification content but cannot deliver messages automatically.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  "/nuxera/conversation/preview",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const requestedRole = req.body?.role || (req.userRole === 'otorgante' || req.userRole === 'inversionista' ? 'grantor' : req.userRole === 'administrador' ? 'admin' : 'applicant');
+      const conversationPreview = buildNuxeraConversationPreview({
+        role: requestedRole,
+        orderId: req.body?.orderId,
+        selectedId: req.body?.selectedId,
+        authorized: req.body?.authorized === true,
+        runtimeEnabled: process.env.NUXERA_CONVERSATION_RUNTIME_ENABLED,
+        message: req.body?.message
+      });
+
+      res.json({
+        workspaceRole: requestedRole,
+        conversationPreview,
+        guardrails: [
+          "Conversation preview is read-only and does not call an LLM provider.",
+          "Runtime remains disabled unless NUXERA_CONVERSATION_RUNTIME_ENABLED=true and context is authorized.",
+          "The assistant cannot send notifications, approve financing, issue term sheets or change permissions."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  "/nuxera/admin/notification-outbox-dry-run",
+  authMiddleware,
+  requirePermission("nuxera:admin:read"),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: "admin",
+        dryRun: buildNuxeraNotificationDryRunBatch(req.body?.intents, {
+          channels: req.body?.channels,
+          maxBatchSize: req.body?.maxBatchSize
+        }),
+        guardrails: [
+          "Notification dry-run is read-only and never sends messages.",
+          "No outbox rows are inserted from this endpoint.",
+          "Human approval, dedupe and audit evidence are required before real queueing."
         ]
       });
     } catch (error) {

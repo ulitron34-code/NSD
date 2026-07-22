@@ -18,7 +18,8 @@ const serviceCalls = {
   changeRequest: [],
   releaseDossier: [],
   continuationPack: [],
-  aiProviderPolicy: []
+  aiProviderPolicy: [],
+  notificationDryRun: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -309,6 +310,10 @@ vi.mock("../services/nuxeraAiProviderPolicyService.js", () => ({
   })
 }));
 vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
+  buildNuxeraNotificationDryRunBatch: vi.fn((intents = []) => {
+    serviceCalls.notificationDryRun.push({ intents });
+    return { status: "notification-dry-run-ready", deliveryEnabled: false, previews: intents, rejected: [], summary: { accepted: intents.length, duplicates: 0, rejected: 0 } };
+  }),
   getNuxeraNotificationOutboxReadiness: vi.fn(() => ({
     status: "outbox-contract-ready-delivery-disabled",
     table: "nuxera_notification_outbox",
@@ -393,6 +398,7 @@ describe('nuxera routes', () => {
     serviceCalls.releaseDossier = [];
     serviceCalls.continuationPack = [];
     serviceCalls.aiProviderPolicy = [];
+    serviceCalls.notificationDryRun = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -796,6 +802,48 @@ describe('nuxera routes', () => {
       error: 'Servicio NUXERA no disponible',
       code: 'NUXERA_BACKEND_UNAVAILABLE'
     });
+  });
+  it('returns a blocked conversation preview without calling runtime providers', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/conversation/preview`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'grantor-1', 'x-test-role': 'otorgante' },
+      body: JSON.stringify({ role: 'grantor', orderId: 'order-1', authorized: true, message: 'Que evidencia falta?' })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.conversationPreview).toMatchObject({
+      status: 'conversation-preview-blocked',
+      persistence: { chatTurnsPersisted: false, auditLogWritten: false }
+    });
+    expect(body.guardrails.join(' ')).toContain('does not call an LLM provider');
+  });
+
+  it('requires nuxera:admin:read before notification dry-run', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox-dry-run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      body: JSON.stringify({ intents: [] })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+    expect(serviceCalls.notificationDryRun).toHaveLength(0);
+  });
+
+  it('returns notification dry-run without inserting outbox rows', async () => {
+    const intents = [{ eventId: 'applicant-missing-evidence', orderId: 'order-1', recipientUserId: 'user-1', recipientRole: 'applicant' }];
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox-dry-run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({ intents })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.dryRun).toMatchObject({ status: 'notification-dry-run-ready', deliveryEnabled: false, summary: { accepted: 1 } });
+    expect(body.guardrails.join(' ')).toContain('never sends messages');
+    expect(serviceCalls.notificationDryRun).toEqual([{ intents }]);
   });
   it("requires nuxera:admin:read before reading AI provider policy", async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/ai-provider-policy`, {

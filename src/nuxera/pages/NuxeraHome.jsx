@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { isNuxeraExperienceEnabled } from "../../experience/experienceFlags";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { useMyGrantorPipeline } from "../../hooks/useMyGrantorPipeline";
@@ -16,8 +16,8 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
-import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness } from "../communications/conversationAgentBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
+import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 
 const roleCopy = {
   applicant: {
@@ -319,11 +319,11 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
   const filteredCases = filterGrantorInboxCases(queue.cases, inboxFilter);
 
   const heroTitle = isInboxView
-    ? L("Bandeja de expedientes priorizados", "Prioritized file inbox")
-    : L("Mesa de decision orientada a evidencia", "Evidence-driven decision desk");
+    ? queue.queueMode.label
+    : queue.decisionDeskMode.label;
   const heroBody = isInboxView
-    ? L("Filtra, compara y asigna el siguiente expediente antes de abrir una revision profunda; esta vista es para triage operativo, no para dictamen.", "Filter, compare and assign the next file before opening deep review; this view is for operational triage, not decisioning.")
-    : L("Evalua el expediente seleccionado con preguntas de revision, evidencia autorizada, condiciones no vinculantes y memo humano antes de cualquier decision institucional.", "Evaluate the selected file with review questions, authorized evidence, non-binding conditions and a human memo before any institutional decision.");
+    ? queue.queueMode.purpose
+    : queue.decisionDeskMode.purpose;
 
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -562,8 +562,20 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled(), language });
+  const notificationDryRunIntents = useMemo(() => ([
+    { eventId: "applicant-missing-evidence", orderId: "demo-order-1", recipientUserId: "demo-applicant", recipientRole: "applicant", subject: "Evidencia faltante", channels: ["email", "in_app"] },
+    { eventId: "grantor-information-response", orderId: "demo-order-1", recipientEmail: "grantor@example.com", recipientRole: "grantor", subject: "Respuesta recibida", channels: ["email"] }
+  ]), []);
+  const conversationPreviewPayload = useMemo(() => ({
+    role: "grantor",
+    orderId: "demo-order-1",
+    authorized: true,
+    message: "Resume riesgos y evidencia faltante para la mesa de decision."
+  }), []);
   const notificationOutboxReadiness = useNotificationOutboxReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const conversationAgentReadiness = useConversationAgentReadiness({ enabled: isNuxeraExperienceEnabled(), language });
+  const conversationPreview = useConversationPreview({ enabled: isNuxeraExperienceEnabled(), payload: conversationPreviewPayload });
+  const notificationDryRun = useNotificationDryRun({ enabled: isNuxeraExperienceEnabled(), intents: notificationDryRunIntents, language });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const communicationModel = mergeCommunicationModelWithConversationAgent(
     mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language),
@@ -581,6 +593,25 @@ function AdminOperationsHome({ sectionLabel }) {
     language
   );
 
+  const productionGoNoGo = {
+    status: controlledReleaseDossier.readyForReleaseReview && controlledChangeRequest.readyForChangeReview && controlledWriteGate.readyForControlledWriteChange ? "ready-for-final-human-review" : "no-go-controlled-preview",
+    checks: [
+      { id: "backend", label: "Backend/RLS", ready: backendReadiness.ready, detail: backendReadiness.status },
+      { id: "evidence", label: "Evidencia controlada", ready: controlledEvidenceReview.readyForHumanReview, detail: controlledEvidenceReview.status },
+      { id: "approval", label: "Aprobacion humana", ready: controlledApprovalPackage.readyForReleaseDecision, detail: controlledApprovalPackage.status },
+      { id: "write-gate", label: "Write gate", ready: controlledWriteGate.readyForControlledWriteChange, detail: controlledWriteGate.status },
+      { id: "change", label: "Change request", ready: controlledChangeRequest.readyForChangeReview, detail: controlledChangeRequest.status },
+      { id: "release", label: "Release dossier", ready: controlledReleaseDossier.readyForReleaseReview, detail: controlledReleaseDossier.status },
+      { id: "ai", label: "IA sensible", ready: aiProviderPolicy.sensitiveRuntimeReady, detail: aiProviderPolicy.status },
+      { id: "outbox", label: "Delivery automatico", ready: !notificationOutboxReadiness.deliveryEnabled, detail: notificationOutboxReadiness.deliveryEnabled ? "delivery-enabled-review-required" : "delivery-disabled-safe" },
+      { id: "chat", label: "Chat runtime", ready: !conversationAgentReadiness.runtimeEnabled, detail: conversationAgentReadiness.runtimeEnabled ? "runtime-enabled-review-required" : "runtime-disabled-safe" }
+    ]
+  };
+  productionGoNoGo.summary = {
+    ready: productionGoNoGo.checks.filter((check) => check.ready).length,
+    total: productionGoNoGo.checks.length,
+    blockers: productionGoNoGo.checks.filter((check) => !check.ready).length
+  };
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
       <p className="nuxera-eyebrow">NUXERA Financial Intelligence / {L("Administrador", "Administrator")}</p>
@@ -1029,7 +1060,7 @@ function AdminOperationsHome({ sectionLabel }) {
           <h2>{L("Política de proveedores IA", "AI provider policy")}</h2>
         </header>
         <p>
-          {consoleState.summary.aiPrimaryProvidersConfigured} {L("primarios configurados", "primary configured")}; {consoleState.summary.aiRestrictedProvidersConfigured} {L("secundarios restringidos", "restricted secondary")}; {consoleState.summary.aiScenarioPathsAvailable} {L("rutas operables", "available paths")}.
+          {consoleState.summary.aiPrimaryProvidersConfigured} {L("primarios configurados", "primary configured")}; {consoleState.summary.aiRestrictedProvidersConfigured} {L("secundarios restringidos", "restricted secondary")}; {consoleState.summary.aiScenarioPathsAvailable} {L("rutas operables", "available paths")}; {consoleState.aiProviderPolicy.summary.estimatedPilotUsd || 0} USD {L("piloto estimado", "estimated pilot")}.
         </p>
         {consoleState.aiProviderPolicy.loading && <small>{L("Cargando política IA...", "Loading AI policy...")}</small>}
         <div className="nuxera-admin-summary">
@@ -1055,8 +1086,9 @@ function AdminOperationsHome({ sectionLabel }) {
               <span>{provider.tier} / {provider.configured ? L("configurado", "configured") : L("sin llave", "no key")}</span>
               <strong>{provider.name}</strong>
               <p>{provider.model}</p>
-              <small>{provider.riskProfile}</small>
+              <small>{provider.riskProfile} / {provider.cost?.posture}</small>
               <em>{provider.allowed ? L("Permitido para el escenario sensible actual", "Allowed for current sensitive scenario") : provider.blockedReason}</em>
+              <small>{provider.cost?.estimatedPilotUsd ?? 0} USD {L("piloto estimado", "estimated pilot")}</small>
             </article>
           ))}
         </div>
@@ -1107,6 +1139,18 @@ function AdminOperationsHome({ sectionLabel }) {
             <strong>{communicationModel.summary.conversationRuntimeEnabled ? L("Activo", "Enabled") : L("Apagado", "Disabled")}</strong>
             <p>{communicationModel.conversationAgent.label || communicationModel.conversationAgent.status}</p>
             <small>{communicationModel.conversationAgent.loading ? L("Cargando readiness agente...", "Loading agent readiness...") : communicationModel.conversationAgent.source}</small>
+          </article>
+          <article>
+            <span>{L("Chat preview", "Chat preview")}</span>
+            <strong>{conversationPreview.status}</strong>
+            <p>{conversationPreview.draft.answer}</p>
+            <small>{conversationPreview.loading ? L("Preparando preview conversacional...", "Preparing conversation preview...") : conversationPreview.source}</small>
+          </article>
+          <article>
+            <span>{L("Dry-run outbox", "Dry-run outbox")}</span>
+            <strong>{notificationDryRun.summary.accepted}/{notificationDryRun.summary.accepted + notificationDryRun.summary.rejected}</strong>
+            <p>{L("Previsualiza notificaciones y duplicados sin insertar filas ni enviar mensajes.", "Previews notifications and duplicates without inserting rows or sending messages.")}</p>
+            <small>{notificationDryRun.loading ? L("Ejecutando dry-run...", "Running dry-run...") : notificationDryRun.status}</small>
           </article>
         </div>
         <div>
@@ -1184,7 +1228,26 @@ function AdminOperationsHome({ sectionLabel }) {
         </div>
       </section>
 
-      <section className="nuxera-admin-action-queue" aria-label={L("Cola de acciones admin NUXERA", "NUXERA admin action queue")}>
+      <section className="nuxera-admin-go-no-go" aria-label={L("Go no-go productivo NUXERA", "NUXERA production go/no-go")}>
+        <header>
+          <span>{productionGoNoGo.status}</span>
+          <h2>{L("Go/no-go productivo", "Production go/no-go")}</h2>
+        </header>
+        <p>{productionGoNoGo.summary.ready}/{productionGoNoGo.summary.total} {L("checks listos", "checks ready")}; {productionGoNoGo.summary.blockers} {L("bloqueos", "blockers")}.</p>
+        <div>
+          {productionGoNoGo.checks.map((check) => (
+            <article key={check.id}>
+              <span>{check.ready ? L("ready", "ready") : L("blocked", "blocked")}</span>
+              <strong>{check.label}</strong>
+              <p>{check.detail}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{L("Esta consola no habilita producción: solo consolida señales para revisión humana y cambio separado.", "This console does not enable production: it only consolidates signals for human review and a separate change.")}</small>
+        </footer>
+      </section>
+      <section className="nuxera-admin-action-queue" aria-label={L("Bandeja de acciones admin NUXERA", "NUXERA admin action queue")}>
         <header>
           <span>{L("Action queue", "Action queue")}</span>
           <h2>{L("Seguimiento humano antes de persistencia", "Human follow-up before persistence")}</h2>

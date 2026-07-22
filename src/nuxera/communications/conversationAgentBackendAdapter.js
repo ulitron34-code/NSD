@@ -157,3 +157,74 @@ export function useConversationAgentReadiness({ enabled = true, language = "es" 
 
   return state;
 }
+
+const LOCAL_CONVERSATION_PREVIEW = Object.freeze({
+  source: "local-fallback",
+  status: "conversation-preview-local-blocked",
+  loading: false,
+  error: null,
+  draft: {
+    mode: "blocked-preview",
+    answer: "Chat runtime apagado hasta autorizacion por expediente, rol y fuentes.",
+    suggestedActions: [],
+    citations: []
+  },
+  persistence: { chatTurnsPersisted: false, auditLogWritten: false, retentionApproved: false },
+  guardrails: ["Local fallback; no llama proveedor LLM ni persiste conversacion."],
+});
+
+export function normalizeNuxeraConversationPreviewResponse(response) {
+  const payload = response?.conversationPreview || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_CONVERSATION_PREVIEW,
+      error: "nuxera-conversation-preview-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_CONVERSATION_PREVIEW,
+    ...payload,
+    source: "remote-preview",
+    loading: false,
+    error: null,
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useConversationPreview({ enabled = true, payload = null } = {}) {
+  const [state, setState] = useState(LOCAL_CONVERSATION_PREVIEW);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled || !payload) {
+      setState(LOCAL_CONVERSATION_PREVIEW);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraConversationAgentAPI.preview(payload)
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraConversationPreviewResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Conversation preview unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_CONVERSATION_PREVIEW,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-conversation-preview-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled, payload]);
+
+  return state;
+}

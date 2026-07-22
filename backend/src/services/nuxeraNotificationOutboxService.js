@@ -243,3 +243,55 @@ export function getNuxeraNotificationOutboxReadiness() {
     ]
   };
 }
+
+export function buildNuxeraNotificationDryRunBatch(intents = [], options = {}) {
+  const plan = buildNuxeraNotificationDeliveryPlan({
+    deliveryEnabled: false,
+    channels: options.channels,
+    maxBatchSize: options.maxBatchSize
+  });
+  const normalizedIntents = Array.isArray(intents) ? intents.slice(0, plan.maxBatchSize) : [];
+  const previews = [];
+  const rejected = [];
+  const seen = new Set();
+
+  normalizedIntents.forEach((intent, index) => {
+    try {
+      const preview = buildNuxeraNotificationOutboxPreview(intent);
+      const duplicate = seen.has(preview.dedupeKey);
+      seen.add(preview.dedupeKey);
+      previews.push({
+        ...preview,
+        dryRunIndex: index,
+        duplicate,
+        status: duplicate ? 'suppressed' : 'preview'
+      });
+    } catch (error) {
+      rejected.push({
+        dryRunIndex: index,
+        reason: error.message,
+        eventId: intent?.eventId || null
+      });
+    }
+  });
+
+  return {
+    status: 'notification-dry-run-ready',
+    deliveryEnabled: false,
+    workerMode: plan.mode,
+    processed: previews.length + rejected.length,
+    previews,
+    rejected,
+    summary: {
+      accepted: previews.length,
+      duplicates: previews.filter((preview) => preview.duplicate).length,
+      rejected: rejected.length,
+      channels: [...new Set(previews.flatMap((preview) => preview.channels))].length
+    },
+    guardrails: [
+      'Dry-run only; no Supabase insert, email, WhatsApp or in-app delivery is performed.',
+      'Duplicate previews are marked suppressed but not persisted.',
+      'Human review is required before any notification is queued.'
+    ]
+  };
+}

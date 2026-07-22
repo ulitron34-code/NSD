@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildNuxeraConversationAgentEnvelope,
+  buildNuxeraConversationPreview,
   getNuxeraConversationAgentReadiness
 } from './nuxeraConversationAgentReadinessService.js';
 
@@ -53,5 +54,39 @@ describe('nuxeraConversationAgentReadinessService', () => {
       requiredPermission: 'data_room:authorized:read'
     });
     expect(allowed.allowedSources).toEqual(expect.arrayContaining(['messages', 'nuxera_evidence_links']));
+  });
+
+  it('builds a blocked safe conversation preview without provider calls or persistence', () => {
+    const preview = buildNuxeraConversationPreview({
+      role: 'grantor',
+      orderId: 'order-1',
+      authorized: true,
+      message: 'Que evidencia falta?',
+      runtimeEnabled: 'false'
+    });
+
+    expect(preview).toMatchObject({
+      id: 'nuxera-conversation-preview',
+      status: 'conversation-preview-blocked',
+      persistence: { chatTurnsPersisted: false, auditLogWritten: false }
+    });
+    expect(preview.envelope.allowed).toBe(false);
+    expect(preview.draft.mode).toBe('blocked-preview');
+    expect(preview.guardrails.join(' ')).toContain('no LLM provider call');
+  });
+
+  it('builds an allowed preview only with selected authorized context and runtime flag', () => {
+    const preview = buildNuxeraConversationPreview({
+      role: 'grantor',
+      orderId: 'order-1',
+      authorized: true,
+      message: 'Resume riesgos y documentos faltantes',
+      runtimeEnabled: 'true'
+    });
+
+    expect(preview.status).toBe('conversation-preview-ready');
+    expect(preview.envelope.allowedSources).toEqual(expect.arrayContaining(['document_reviews', 'nuxera_evidence_links']));
+    expect(preview.draft.citations.map((citation) => citation.source)).toEqual(expect.arrayContaining(['messages', 'nuxera_evidence_links']));
+    expect(preview.draft.answer).toContain('No emitire aprobaciones');
   });
 });
