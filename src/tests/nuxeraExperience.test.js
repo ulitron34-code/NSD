@@ -25,6 +25,7 @@ import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
 import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
+import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
 
 describe("NUXERA admin operational snapshot", () => {
   it("maps each admin navigation lane to a specialized protected workspace", () => {
@@ -1257,6 +1258,68 @@ describe("NUXERA backend readiness adapter", () => {
     expect(merged.summary.backendReadiness).toBe(100);
     expect(merged.backendReadiness.ready).toBe(true);
     expect(merged.policies.join(" ")).toContain("RLS aun requiere verificacion controlada");
+  });
+});
+describe("NUXERA notification and conversation operating model", () => {
+  it("separates applicant, grantor and admin notification events without enabling delivery", () => {
+    const catalog = getNuxeraNotificationCatalog();
+
+    expect(catalog.status).toBe("design-ready-no-delivery-enabled");
+    expect(catalog.summary).toMatchObject({
+      applicant: 3,
+      grantor: 3,
+      admin: 1,
+      automatedDeliveryEnabled: false,
+      humanReviewRequired: true,
+    });
+    expect(catalog.channels.map((channel) => channel.id)).toEqual(["in-app", "email", "whatsapp"]);
+    expect(catalog.guardrails.join(" ")).toContain("outbox");
+  });
+
+  it("builds a queued-preview notification only when recipient and file context are aligned", () => {
+    const event = buildNuxeraNotificationEvent(NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_INFORMATION_RESPONSE, {
+      orderId: "order-123",
+      orderLabel: "Expansion industrial",
+      recipientEmail: "otorgante@example.com",
+      recipientRole: "grantor",
+    });
+
+    expect(event.allowed).toBe(true);
+    expect(event.status).toBe("queued-preview");
+    expect(event.channels).toEqual(["in-app", "email"]);
+    expect(event.delivery).toMatchObject({
+      enabled: false,
+      requiresOutbox: true,
+      requiresAuditLog: true,
+    });
+
+    const blocked = buildNuxeraNotificationEvent(NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_INFORMATION_RESPONSE, {
+      orderId: "order-123",
+      recipientEmail: "solicitante@example.com",
+      recipientRole: "applicant",
+    });
+    expect(blocked.allowed).toBe(false);
+    expect(blocked.blockers.join(" ")).toContain("rol destinatario");
+  });
+
+  it("scopes conversation agents to authorized selected files and blocks demo/no-context reads", () => {
+    const grantorEnvelope = buildNuxeraConversationEnvelope({
+      role: "grantor",
+      selectedId: "order-456",
+      source: "authorized-grantor-entry",
+      isDemo: false,
+    });
+
+    expect(grantorEnvelope.allowed).toBe(true);
+    expect(grantorEnvelope.channel).toBe("decision-desk");
+    expect(grantorEnvelope.sources).toEqual(
+      expect.arrayContaining(["documents", "document_extractions", "messages", "nuxera_evidence_links"])
+    );
+    expect(grantorEnvelope.guardrails.join(" ")).toContain("No envia mensajes");
+
+    const blocked = buildNuxeraConversationEnvelope({ role: "applicant", selectedId: "demo-order", isDemo: true });
+    expect(blocked.allowed).toBe(false);
+    expect(blocked.blockedSources).toEqual(["documents", "document_extractions", "messages"]);
   });
 });
 describe("NUXERA Finance adapter", () => {

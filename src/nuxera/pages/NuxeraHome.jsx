@@ -14,6 +14,7 @@ import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspa
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
+import { getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
 
 const roleCopy = {
   applicant: {
@@ -558,6 +559,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled(), language });
+  const communicationModel = getNuxeraNotificationCatalog(language);
   const consoleState = mergeBackendReadinessWithConsole(
     mergeAdminControlsWithConsole(getAdminOperationsConsole(language), adminControls, language),
     backendReadiness,
@@ -1005,6 +1007,45 @@ function AdminOperationsHome({ sectionLabel }) {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="nuxera-admin-communications" aria-label={L("Operacion de comunicaciones NUXERA", "NUXERA communications operations")}>
+        <header>
+          <span>{communicationModel.status}</span>
+          <h2>{L("Comunicaciones y agente conversacional", "Communications and conversational agent")}</h2>
+        </header>
+        <p>
+          {communicationModel.summary.totalEvents} {L("eventos definidos", "defined events")}; {communicationModel.summary.applicant} {L("para solicitante", "for applicants")}; {communicationModel.summary.grantor} {L("para otorgante", "for grantors")}; {communicationModel.summary.admin} admin.
+        </p>
+        <div className="nuxera-admin-summary">
+          {communicationModel.channels.map((channel) => (
+            <article key={channel.id}>
+              <span>{channel.label}</span>
+              <strong>{channel.id}</strong>
+              <p>{channel.purpose}</p>
+              <small>{channel.guardrail}</small>
+            </article>
+          ))}
+          <article>
+            <span>{L("Delivery", "Delivery")}</span>
+            <strong>{communicationModel.summary.automatedDeliveryEnabled ? L("Activo", "Enabled") : L("No activo", "Disabled")}</strong>
+            <p>{L("El agente redacta o resume; el envio real requiere outbox, auditoria y reglas anti-duplicado.", "The agent drafts or summarizes; real delivery requires outbox, audit and dedupe rules.")}</p>
+          </article>
+        </div>
+        <div>
+          {communicationModel.events.map((event) => (
+            <article key={event.id}>
+              <span>{event.audience} / {event.priority}</span>
+              <strong>{event.subject}</strong>
+              <p>{event.trigger}</p>
+              <small>{event.channels.join(", ")} / {event.agentMode}</small>
+              <em>{event.action}</em>
+            </article>
+          ))}
+        </div>
+        <footer>
+          {communicationModel.guardrails.map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
+        </footer>
       </section>
 
       <section className="nuxera-admin-audit-package" aria-label={L("Paquete de auditoria admin NUXERA", "NUXERA admin audit package")}>

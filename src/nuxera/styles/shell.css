@@ -1978,7 +1978,8 @@
   .nuxera-admin-readiness > div,
   .nuxera-admin-document-readiness > div,
   .nuxera-admin-audit-package > div,
-  .nuxera-admin-health-signals > div,
+  .nuxera-admin-communications > div:not(.nuxera-admin-summary),
+.nuxera-admin-health-signals > div,
   .nuxera-admin-action-queue > div,
   .nuxera-agent-orchestration > header,
   .nuxera-agent-orchestration > div:not(.nuxera-admin-summary),
@@ -2129,6 +2130,7 @@
 .nuxera-admin-evidence-coverage,
 .nuxera-admin-document-readiness,
 .nuxera-admin-audit-package,
+.nuxera-admin-communications,
 .nuxera-admin-health-signals,
 .nuxera-admin-action-queue {
   margin-bottom: 16px;
@@ -2142,6 +2144,7 @@
 .nuxera-admin-evidence-coverage > header,
 .nuxera-admin-document-readiness > header,
 .nuxera-admin-audit-package > header,
+.nuxera-admin-communications > header,
 .nuxera-admin-health-signals > header,
 .nuxera-admin-action-queue > header {
   margin-bottom: 14px;
@@ -2150,7 +2153,8 @@
 .nuxera-admin-evidence-coverage > div,
 .nuxera-admin-document-readiness > div,
 .nuxera-admin-audit-package > div,
-.nuxera-admin-health-signals > div,
+.nuxera-admin-communications > div:not(.nuxera-admin-summary),
+  .nuxera-admin-health-signals > div,
 .nuxera-admin-action-queue > div {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2160,6 +2164,7 @@
 .nuxera-admin-evidence-coverage article,
 .nuxera-admin-document-readiness article,
 .nuxera-admin-audit-package article,
+.nuxera-admin-communications article,
 .nuxera-admin-health-signals article,
 .nuxera-admin-action-queue article {
   display: grid;
@@ -2177,6 +2182,9 @@
 .nuxera-admin-document-readiness em,
 .nuxera-admin-audit-package span,
 .nuxera-admin-audit-package small,
+.nuxera-admin-communications span,
+.nuxera-admin-communications small,
+.nuxera-admin-communications em,
 .nuxera-admin-health-signals span,
 .nuxera-admin-health-signals small,
 .nuxera-admin-action-queue span,
@@ -2194,6 +2202,8 @@
 .nuxera-admin-document-readiness strong,
 .nuxera-admin-audit-package h2,
 .nuxera-admin-audit-package strong,
+.nuxera-admin-communications h2,
+.nuxera-admin-communications strong,
 .nuxera-admin-health-signals h2,
 .nuxera-admin-health-signals strong,
 .nuxera-admin-action-queue h2,
@@ -2206,6 +2216,7 @@
 .nuxera-admin-evidence-coverage p,
 .nuxera-admin-document-readiness p,
 .nuxera-admin-audit-package p,
+.nuxera-admin-communications p,
 .nuxera-admin-health-signals p,
 .nuxera-admin-action-queue p {
   margin: 0;
@@ -2214,7 +2225,8 @@
   line-height: 1.45;
 }
 
-.nuxera-admin-audit-package footer {
+.nuxera-admin-audit-package footer,
+.nuxera-admin-communications footer {
   display: grid;
   gap: 6px;
   margin-top: 12px;
