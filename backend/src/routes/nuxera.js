@@ -11,6 +11,7 @@ import { getNuxeraControlledReleaseDossier } from '../services/nuxeraControlledR
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
+import { getNuxeraConversationAgentReadiness } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraNotificationOutboxReadiness } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
@@ -84,7 +85,27 @@ router.get(
   }
 );
 router.get(
-  '/nuxera/admin/verification-continuation-pack',
+  "/nuxera/admin/conversation-agent-readiness",
+  authMiddleware,
+  requirePermission("nuxera:admin:read"),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: "admin",
+        conversationAgent: getNuxeraConversationAgentReadiness(),
+        guardrails: [
+          "Conversation agent readiness is read-only and does not call an LLM provider.",
+          "Runtime chat remains disabled until role-scoped retrieval, retention and audit rules are approved.",
+          "The agent cannot send notifications, approve financing, issue term sheets or change permissions."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  "/nuxera/admin/verification-continuation-pack",
   authMiddleware,
   requirePermission('nuxera:admin:read'),
   async (req, res) => {

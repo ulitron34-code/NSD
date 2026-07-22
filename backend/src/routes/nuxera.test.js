@@ -289,6 +289,19 @@ vi.mock('../services/nuxeraAdminControlService.js', () => ({
     };
   })
 }));
+vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
+  getNuxeraNotificationOutboxReadiness: vi.fn(() => ({
+    status: "outbox-contract-ready-delivery-disabled",
+    table: "nuxera_notification_outbox",
+    deliveryEnabled: false,
+    deliveryWorkerEnabled: false,
+    workerMode: "delivery-disabled-dry-run",
+    supportedEvents: [],
+    supportedChannels: ["in_app", "email", "whatsapp"],
+    statuses: ["preview", "queued", "sent", "failed", "suppressed"],
+    guardrails: ["Read-only notification outbox."]
+  }))
+}));
 vi.mock('../services/ragService.js', () => ({
   searchReferenceSources: vi.fn(async () => [])
 }));
@@ -764,7 +777,35 @@ describe('nuxera routes', () => {
       code: 'NUXERA_BACKEND_UNAVAILABLE'
     });
   });
-  it('requires nuxera:admin:read before reading admin controls', async () => {
+  it("requires nuxera:admin:read before reading conversation agent readiness", async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/conversation-agent-readiness`, {
+      headers: { "x-test-user-id": "admin-1", "x-test-permissions": "case:own:read" }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: "nuxera:admin:read" });
+  });
+
+  it("returns conversation agent readiness without enabling chat runtime", async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/conversation-agent-readiness`, {
+      headers: { "x-test-user-id": "admin-1", "x-test-permissions": "nuxera:admin:read" }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      workspaceRole: "admin",
+      conversationAgent: {
+        status: "agent-contract-ready-no-chat-delivery",
+        runtimeEnabled: false,
+        summary: { roles: 3, runtimeEnabled: false }
+      }
+    });
+    expect(body.conversationAgent.roles.map((role) => role.role)).toEqual(["applicant", "grantor", "admin"]);
+    expect(body.guardrails.join(" ")).toContain("does not call an LLM provider");
+  });
+
+  it("requires nuxera:admin:read before reading admin controls", async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/controls`, {
       headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
     });
