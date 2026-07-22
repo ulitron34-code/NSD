@@ -13,6 +13,7 @@ import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlle
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
+import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
 
 const router = express.Router();
 
@@ -435,6 +436,31 @@ router.get(
           'Requires an accepted data_room_shares record for this order and requester.',
           'Evidence links do not grant document access or data-room visibility.',
           'No write endpoint is exposed for evidence links.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  '/nuxera/applicant/project-builder/draft',
+  authMiddleware,
+  requirePermission('case:own:create'),
+  async (req, res) => {
+    try {
+      const result = await draftProjectFromAnswers(req.body?.answers, {
+        language: req.body?.language === 'en' ? 'en' : 'es',
+        country: typeof req.body?.country === 'string' ? req.body.country : 'MX'
+      });
+
+      res.json({
+        workspaceRole: 'applicant',
+        ...result,
+        guardrails: [
+          'NU-APP-PROJECTBUILDER-001 genera un borrador local; no crea ni modifica ningun expediente.',
+          'No aprueba credito, no garantiza fondeo ni sustituye asesoria legal, fiscal o financiera.',
+          'El borrador requiere revision y edicion del solicitante antes de usarse.'
         ]
       });
     } catch (error) {

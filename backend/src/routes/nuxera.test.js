@@ -288,6 +288,10 @@ vi.mock('../services/nuxeraAdminControlService.js', () => ({
     };
   })
 }));
+vi.mock('../services/ragService.js', () => ({
+  searchReferenceSources: vi.fn(async () => [])
+}));
+
 vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
   getOwnerEvidenceLinks: vi.fn(async (input) => {
     serviceCalls.evidence.push(input);
@@ -1013,5 +1017,46 @@ describe('nuxera routes', () => {
       payload: { completedItemIds: ['doc_kyc'] }
     });
     expect(serviceCalls.upsert[0].req).toBeTruthy();
+  });
+
+  it('requires case:own:create before drafting a project', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/applicant/project-builder/draft`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-test-user-id': 'user-1',
+        'x-test-permissions': 'case:own:read'
+      },
+      body: JSON.stringify({ answers: {} })
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('drafts a local project per section when no AI provider is configured, matched to the right entity', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/applicant/project-builder/draft`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-test-user-id': 'user-1',
+        'x-test-permissions': 'case:own:create'
+      },
+      body: JSON.stringify({
+        answers: { sector: 'Tecnologia / Startup', goal: 'Capital de trabajo', amount: '$500,000', useOfFunds: 'Nomina', market: 'PYMEs locales' },
+        language: 'es'
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.workspaceRole).toBe('applicant');
+    expect(body.entityMatch.matrixKey).toBe('MX_FO_STARTUP');
+    expect(body.entityMatch.requiredDocuments.length).toBeGreaterThan(0);
+    expect(body.sections).toHaveLength(5);
+    expect(body.sections.every((section) => section.source === 'local-template')).toBe(true);
+    expect(body.scope.humanMustReview.length).toBeGreaterThan(0);
+    expect(body.guardrails).toEqual(
+      expect.arrayContaining([expect.stringContaining('NU-APP-PROJECTBUILDER-001')])
+    );
   });
 });

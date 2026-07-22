@@ -128,8 +128,8 @@ export function buildFinanceJourneyFromExpedient(expedient, role = "applicant", 
   };
 }
 
-export function getFinanceJourneyEvidenceLinks(language = "es") {
-  return [
+export function getFinanceJourneyEvidenceLinks(language = "es", role) {
+  const links = [
     {
       id: "readiness",
       label: pickLang({ es: "Readiness financiero", en: "Financial readiness" }, language),
@@ -138,7 +138,7 @@ export function getFinanceJourneyEvidenceLinks(language = "es") {
     },
     {
       id: "documents",
-      label: pickLang({ es: "Inteligencia documental", en: "Document intelligence" }, language),
+      label: pickLang({ es: "Validacion de documentos", en: "Document validation" }, language),
       path: "/dashboard/nuxera/intelligence",
       detail: pickLang({ es: "Cruces, red flags y validacion de documentos.", en: "Cross-checks, red flags and document validation." }, language),
     },
@@ -149,4 +149,6 @@ export function getFinanceJourneyEvidenceLinks(language = "es") {
       detail: pickLang({ es: "Supuestos, escenarios y acciones.", en: "Assumptions, scenarios and actions." }, language),
     },
   ];
+
+  return role === "applicant" ? links.filter((link) => link.id !== "strategy") : links;
 }

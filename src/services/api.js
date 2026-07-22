@@ -244,6 +244,11 @@ export const nuxeraWorkspaceStateAPI = {
     api.patch(`/nuxera/orders/${orderId}/state/checklist`, payload)
 };
 
+export const nuxeraProjectBuilderAPI = {
+  draft: (answers, language) =>
+    api.post('/nuxera/applicant/project-builder/draft', { answers, language })
+};
+
 export const nuxeraEvidenceAPI = {
   getOrderEvidence: (orderId) =>
     api.get(`/nuxera/orders/${orderId}/evidence`),

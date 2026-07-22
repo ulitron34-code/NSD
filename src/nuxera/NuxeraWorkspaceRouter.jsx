@@ -35,6 +35,10 @@ function RoleWorkspace({ role }) {
     return <AdminWorkspaceAdapter section={section} />;
   }
 
+  if (role === "applicant" && ["markets", "strategy"].includes(section)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (resolvedSection?.adapter === "finance-workspace") {
     return <FinanceWorkspaceAdapter role={role} />;
   }

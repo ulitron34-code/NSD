@@ -2,10 +2,15 @@ import { getNuxeraEngineNavigationItems } from "../engines/engineRegistry";
 
 const sharedEngines = getNuxeraEngineNavigationItems();
 
+const APPLICANT_VISIBLE_ENGINE_IDS = ["finance"];
+const applicantEngines = sharedEngines
+  .filter((item) => APPLICANT_VISIBLE_ENGINE_IDS.includes(item.id))
+  .map((item) => (item.id === "finance" ? { ...item, label: { es: "Mi expediente", en: "My file" } } : item));
+
 const navigationByRoleSource = {
   applicant: [
     { id: "home", label: { es: "Inicio", en: "Home" }, path: "/dashboard" },
-    ...sharedEngines,
+    ...applicantEngines,
     { id: "followup", label: { es: "Seguimiento", en: "Follow-up" }, path: "/dashboard/nuxera/followup" },
   ],
   grantor: [

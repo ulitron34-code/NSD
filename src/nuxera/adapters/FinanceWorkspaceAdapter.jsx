@@ -4,6 +4,7 @@ import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../finance/financeJourney";
 import { pickLang } from "../../data/requisitosMinimos";
+import ProjectBuilderAssistant from "./ProjectBuilderAssistant";
 
 const FundingReadinessTab = lazy(() => import("../../components/Dashboard/Solicitante/FundingReadinessTab"));
 const PipelineTab = lazy(() => import("../../components/Dashboard/Otorgante/PipelineTab"));
@@ -40,8 +41,8 @@ export function getFinanceAdapterConfig(role, language = "es") {
   return { ...config, title: pickLang(config.title, language), body: pickLang(config.body, language) };
 }
 
-function FinanceJourneyPanel({ journey, options = [], selectedId, onSelect, L, language }) {
-  const evidenceLinks = getFinanceJourneyEvidenceLinks(language);
+function FinanceJourneyPanel({ journey, options = [], selectedId, onSelect, L, language, role }) {
+  const evidenceLinks = getFinanceJourneyEvidenceLinks(language, role);
 
   return (
     <section className="nuxera-finance-journey" aria-label={L("Resumen financiero guiado", "Guided financial summary")}>
@@ -95,6 +96,7 @@ function RoleFinanceJourney({ role, L, language }) {
       onSelect={context.selectExpedient}
       L={L}
       language={language}
+      role={role}
     />
   );
 }
@@ -120,6 +122,8 @@ export default function FinanceWorkspaceAdapter({ role }) {
       </header>
 
       <RoleFinanceJourney role={role} L={L} language={language} />
+
+      {role === "applicant" && <ProjectBuilderAssistant />}
 
       <div className="nuxera-adapter-body">
         <Suspense fallback={<AdapterLoading L={L} />}>

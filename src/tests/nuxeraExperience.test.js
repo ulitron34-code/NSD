@@ -10,6 +10,7 @@ import { buildAdminOperationalModules, normalizeAdminOperationalSnapshot } from 
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../nuxera/applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace, normalizeApplicantProjectProfile } from "../nuxera/applicant/projectWorkspace";
+import { buildEmptyProjectBuilderAnswers, getMissingRequiredProjectBuilderFields, getProjectBuilderQuestions, getRubricFallbackLabel } from "../nuxera/applicant/projectBuilder";
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { readSelectedExpedienteId, subscribeSelectedExpediente, writeSelectedExpedienteId } from "../hooks/useSelectedExpediente";
@@ -1559,5 +1560,56 @@ describe("NUXERA Intelligence research missions", () => {
       provenance: expect.any(String),
       reliability: expect.any(String),
     });
+  });
+});
+
+describe("NUXERA applicant project builder assistant", () => {
+  it("lists guided questions with required fields marked", () => {
+    const questions = getProjectBuilderQuestions("es");
+
+    expect(questions.map((q) => q.id)).toEqual(
+      expect.arrayContaining(["sector", "goal", "amount", "useOfFunds", "stage", "market", "advantage", "knownRisks"])
+    );
+    expect(questions.find((q) => q.id === "goal").required).toBe(true);
+    expect(questions.find((q) => q.id === "sector").required).toBe(false);
+  });
+
+  it("builds an empty answers object matching every question id", () => {
+    const answers = buildEmptyProjectBuilderAnswers();
+    const questionIds = getProjectBuilderQuestions("es").map((q) => q.id);
+
+    expect(Object.keys(answers).sort()).toEqual(questionIds.sort());
+    expect(Object.values(answers).every((value) => value === "")).toBe(true);
+  });
+
+  it("flags missing required fields without flagging optional ones", () => {
+    const missing = getMissingRequiredProjectBuilderFields({ goal: "Expansion" }, "es");
+
+    expect(missing).toEqual(
+      expect.arrayContaining(["Monto aproximado", "Uso de fondos", "Mercado / clientes"])
+    );
+    expect(missing).not.toEqual(expect.arrayContaining(["Sector"]));
+  });
+
+  it("returns no missing fields once all required answers are present", () => {
+    const missing = getMissingRequiredProjectBuilderFields({
+      goal: "Expansion",
+      amount: "$1M",
+      useOfFunds: "Inventario",
+      market: "Retail",
+    }, "es");
+
+    expect(missing).toEqual([]);
+  });
+
+  it("marks the preferred entity type question as optional", () => {
+    const questions = getProjectBuilderQuestions("es");
+    expect(questions.find((q) => q.id === "entityHint").required).toBe(false);
+  });
+
+  it("provides a fallback label for each of the 5 draftable rubrics", () => {
+    expect(getRubricFallbackLabel("plan_negocios", "es")).toBe("Plan de negocios");
+    expect(getRubricFallbackLabel("modelo_financiero", "en")).toBe("Financial model");
+    expect(getRubricFallbackLabel("unknown_rubric", "es")).toBe("unknown_rubric");
   });
 });

@@ -51,7 +51,7 @@ const roleCopy = {
   },
 };
 
-function ApplicantMissionHome({ sectionLabel }) {
+function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
   const { L, language } = useNuxeraLanguage();
   const mission = getApplicantGuidedMission("applicant", language);
   const readiness = getApplicantMissionReadiness("applicant", language);
@@ -107,172 +107,177 @@ function ApplicantMissionHome({ sectionLabel }) {
         </section>
       )}
 
-      <section className="nuxera-mission-next" aria-label={L("Siguiente accion del solicitante", "Applicant's next action")}>
-        <div>
-          <span>{L("Resultado esperado", "Expected outcome")}</span>
-          <strong>{mission.outcome}</strong>
-        </div>
-        <p>{readiness.nextAction}</p>
-      </section>
+      {variant === "home" && (
+        <section className="nuxera-mission-next" aria-label={L("Siguiente accion del solicitante", "Applicant's next action")}>
+          <div>
+            <span>{L("Resultado esperado", "Expected outcome")}</span>
+            <strong>{mission.outcome}</strong>
+          </div>
+          <p>{readiness.nextAction}</p>
+        </section>
+      )}
 
-      <section className="nuxera-onboarding-wizard" aria-label={L("Onboarding guiado del solicitante", "Guided applicant onboarding")}>
-        <header>
+      {variant === "followup" && (
+        <section className="nuxera-mission-next" aria-label={L("Resumen de avance del solicitante", "Applicant progress summary")}>
           <div>
-            <span>{onboardingWizard.status}</span>
-            <h2>{L("Onboarding del expediente", "File onboarding")}</h2>
+            <span>{L("Lo que ya completaste", "What you've completed so far")}</span>
+            <strong>{documentCenter.summary.ready}/{documentCenter.summary.documents} {L("documentos listos", "documents ready")}</strong>
           </div>
-          <strong>{onboardingWizard.summary.progress}% {L("evidencia lista", "evidence ready")}</strong>
-        </header>
-        <div>
-          {onboardingWizard.stages.map((stage) => (
-            <article key={stage.id}>
-              <span>{L("Paso", "Step")} {stage.order} / {stage.status}</span>
-              <strong>{stage.label}</strong>
-              <p>{stage.objective}</p>
-              <small>{stage.readyEvidence}/{stage.evidence.length} {L("evidencias listas; siguiente", "evidence ready; next")}: {stage.nextEvidence}</small>
-              <NavLink to={stage.sectionPath}>{stage.owner}</NavLink>
-            </article>
-          ))}
-        </div>
-        <footer>{onboardingWizard.guardrails[0]} {L("Siguiente etapa", "Next stage")}: {onboardingWizard.nextStage.label}.</footer>
-      </section>
-      <div className="nuxera-mission-grid">
-        {mission.steps.map((step) => (
-          <article className="nuxera-mission-step" key={step.id}>
-            <span>{step.status}</span>
-            <strong>{step.label}</strong>
-            <p>{step.prompt}</p>
-            <small>{step.owner}</small>
-            <NavLink to={step.evidencePath}>{step.engine}</NavLink>
-          </article>
-        ))}
-      </div>
+          <p>{checklist.summary.status}</p>
+        </section>
+      )}
 
-      <section className="nuxera-project-workspace" aria-label={L("Datos de empresa y proyecto del solicitante", "Applicant company and project data")}>
-        <header>
-          <div>
-            <span>{projectWorkspace.source}</span>
-            <h2>{L("Empresa y proyecto", "Company & project")}</h2>
-            <p>{projectWorkspace.profile.companyName} / {projectWorkspace.profile.projectName}</p>
+      {variant === "home" && (
+        <>
+          <section className="nuxera-onboarding-wizard" aria-label={L("Onboarding guiado del solicitante", "Guided applicant onboarding")}>
+            <header>
+              <div>
+                <span>{onboardingWizard.status}</span>
+                <h2>{L("Onboarding del expediente", "File onboarding")}</h2>
+              </div>
+              <strong>{onboardingWizard.summary.progress}% {L("evidencia lista", "evidence ready")}</strong>
+            </header>
+            <div>
+              {onboardingWizard.stages.map((stage) => (
+                <article key={stage.id}>
+                  <span>{L("Paso", "Step")} {stage.order} / {stage.status}</span>
+                  <strong>{stage.label}</strong>
+                  <p>{stage.objective}</p>
+                  <small>{stage.readyEvidence}/{stage.evidence.length} {L("evidencias listas; siguiente", "evidence ready; next")}: {stage.nextEvidence}</small>
+                  <NavLink to={stage.sectionPath}>{stage.owner}</NavLink>
+                </article>
+              ))}
+            </div>
+            <footer>{onboardingWizard.guardrails[0]} {L("Siguiente etapa", "Next stage")}: {onboardingWizard.nextStage.label}.</footer>
+          </section>
+          <div className="nuxera-mission-grid">
+            {mission.steps.map((step) => (
+              <article className="nuxera-mission-step" key={step.id}>
+                <span>{step.status}</span>
+                <strong>{step.label}</strong>
+                <p>{step.prompt}</p>
+                <small>{step.owner}</small>
+                <NavLink to={step.evidencePath}>{step.engine}</NavLink>
+              </article>
+            ))}
           </div>
-          <strong>{projectWorkspace.summary.readiness}% readiness</strong>
-        </header>
-        <div className="nuxera-project-profile">
-          <article><span>{L("Monto", "Amount")}</span><strong>{projectWorkspace.profile.requestedAmount}</strong></article>
-          <article><span>{L("Sector", "Sector")}</span><strong>{projectWorkspace.profile.sector}</strong></article>
-          <article><span>{L("Pais", "Country")}</span><strong>{projectWorkspace.profile.country}</strong></article>
-          <article><span>{L("Etapa", "Stage")}</span><strong>{projectWorkspace.profile.stage}</strong></article>
-        </div>
-        <div className="nuxera-project-sections">
-          {projectWorkspace.sections.map((section) => (
-            <article key={section.id}>
-              <span>{section.status}</span>
-              <strong>{section.label}</strong>
-              <p>{section.readyEvidence}/{section.evidence.length} {L("evidencias listas; siguiente", "evidence ready; next")}: {section.nextEvidence}</p>
-              <small>{section.owner}</small>
-              <NavLink to={section.path}>{L("Abrir modulo", "Open module")}</NavLink>
-            </article>
-          ))}
-        </div>
-        <footer>{projectWorkspace.nextAction} {projectWorkspace.guardrails[0]}</footer>
-      </section>
-      <section className="nuxera-document-center" aria-label={L("Centro documental contextual del solicitante", "Applicant contextual document center")}>
-        <header>
-          <div>
-            <span>{documentCenter.status}</span>
-            <h2>{L("Centro documental contextual", "Contextual document center")}</h2>
-            <p>{documentCenter.profile.companyName} / {documentCenter.profile.projectName}</p>
-          </div>
-          <strong>{documentCenter.summary.ready}/{documentCenter.summary.documents} {L("listos", "ready")}</strong>
-        </header>
-        <div className="nuxera-document-folders">
-          {documentCenter.folders.map((folder) => (
-            <article key={folder.id}>
-              <span>{folder.status}</span>
-              <strong>{folder.label}</strong>
-              <p>{folder.summary.ready}/{folder.summary.total} {L("listos", "ready")}; {folder.summary.missing + folder.summary.needsAttention} {L("pendientes", "pending")}</p>
-              <small>{folder.scope}</small>
-              <NavLink to={folder.path}>{L("Abrir contexto", "Open context")}</NavLink>
-            </article>
-          ))}
-        </div>
-        <div className="nuxera-document-rows">
-          {documentCenter.activeFolder.rows.slice(0, 5).map((document) => (
-            <article key={document.id}>
-              <span>{document.status} / {document.source}</span>
-              <strong>{document.label}</strong>
-              <p>{document.detail}</p>
-              <small>{document.owner} / {document.version} / {document.risk}</small>
-            </article>
-          ))}
-        </div>
-        <footer>{documentCenter.nextAction} {documentCenter.guardrails[0]}</footer>
-      </section>
-      <section className="nuxera-applicant-checklist" aria-label={L("Checklist documental del solicitante", "Applicant document checklist")}>
-        <header>
-          <div>
-            <span>{L("Data room readiness", "Data room readiness")}</span>
-            <h2>{L("Checklist para preparar expediente", "Checklist to prepare the file")}</h2>
-            <p className="nuxera-state-caption">{workspaceState.label}: {stateDetail}</p>
-          </div>
-          <strong>{workspaceState.loading ? "loading" : checklist.summary.status}</strong>
-        </header>
-        <div className="nuxera-checklist-summary">
-          <article><span>{L("Listos", "Ready")}</span><strong>{checklist.summary.ready}</strong></article>
-          <article><span>{L("En revision", "In review")}</span><strong>{checklist.summary.inReview}</strong></article>
-          <article><span>{L("Faltantes", "Missing")}</span><strong>{checklist.summary.missing}</strong></article>
-          <article><span>{L("Criticos", "Critical")}</span><strong>{checklist.summary.criticalMissing}</strong></article>
-        </div>
-        <div className="nuxera-data-room-folders">
-          {checklist.folders.map((folder) => (
-            <article key={folder.id}>
-              <span>{folder.status}</span>
-              <strong>{folder.label}</strong>
-              <p>{folder.visibility}</p>
-              <small>{folder.items.filter((item) => item.status === "ready").length}/{folder.items.length} {L("documentos listos", "documents ready")}</small>
-            </article>
-          ))}
-        </div>
-        <div className="nuxera-next-evidence">
-          <strong>{L("Siguiente evidencia", "Next evidence")}</strong>
-          {checklist.nextEvidence.map((item) => (
-            <article key={item.id}>
-              <p>{item.critical ? L("Critico", "Critical") : L("Pendiente", "Pending")}: {item.label}</p>
-              <button
-                type="button"
-                disabled={!workspaceState.canWrite || workspaceState.saving}
-                onClick={() => workspaceState.saveChecklistItem(item.id)}
-              >
-                {workspaceState.saving ? L("Guardando...", "Saving...") : L("Marcar listo", "Mark ready")}
-              </button>
-            </article>
-          ))}
-          <small>
-            {checklist.guardrail} {workspaceState.persisted ? L(`Estado persistido: ${workspaceState.status}.`, `Persisted state: ${workspaceState.status}.`) : L("Sin writes desde UI.", "No writes from the UI.")}
-            {workspaceState.saveError ? L(" Guardado no disponible; fallback local activo.", " Save unavailable; local fallback active.") : ""}
-          </small>
-        </div>
-      </section>
+
+          <section className="nuxera-project-workspace" aria-label={L("Datos de empresa y proyecto del solicitante", "Applicant company and project data")}>
+            <header>
+              <div>
+                <span>{projectWorkspace.source}</span>
+                <h2>{L("Empresa y proyecto", "Company & project")}</h2>
+                <p>{projectWorkspace.profile.companyName} / {projectWorkspace.profile.projectName}</p>
+              </div>
+              <strong>{projectWorkspace.summary.readiness}% readiness</strong>
+            </header>
+            <div className="nuxera-project-profile">
+              <article><span>{L("Monto", "Amount")}</span><strong>{projectWorkspace.profile.requestedAmount}</strong></article>
+              <article><span>{L("Sector", "Sector")}</span><strong>{projectWorkspace.profile.sector}</strong></article>
+              <article><span>{L("Pais", "Country")}</span><strong>{projectWorkspace.profile.country}</strong></article>
+              <article><span>{L("Etapa", "Stage")}</span><strong>{projectWorkspace.profile.stage}</strong></article>
+            </div>
+            <div className="nuxera-project-sections">
+              {projectWorkspace.sections.map((section) => (
+                <article key={section.id}>
+                  <span>{section.status}</span>
+                  <strong>{section.label}</strong>
+                  <p>{section.readyEvidence}/{section.evidence.length} {L("evidencias listas; siguiente", "evidence ready; next")}: {section.nextEvidence}</p>
+                  <small>{section.owner}</small>
+                  <NavLink to={section.path}>{L("Abrir modulo", "Open module")}</NavLink>
+                </article>
+              ))}
+            </div>
+            <footer>{projectWorkspace.nextAction} {projectWorkspace.guardrails[0]}</footer>
+          </section>
+        </>
+      )}
+
+      {variant === "followup" && (
+        <>
+          <section className="nuxera-document-center" aria-label={L("Centro documental contextual del solicitante", "Applicant contextual document center")}>
+            <header>
+              <div>
+                <span>{documentCenter.status}</span>
+                <h2>{L("Documentos procesados", "Processed documents")}</h2>
+                <p>{documentCenter.profile.companyName} / {documentCenter.profile.projectName}</p>
+              </div>
+              <strong>{documentCenter.summary.ready}/{documentCenter.summary.documents} {L("listos", "ready")}</strong>
+            </header>
+            <div className="nuxera-document-folders">
+              {documentCenter.folders.map((folder) => (
+                <article key={folder.id}>
+                  <span>{folder.status}</span>
+                  <strong>{folder.label}</strong>
+                  <p>{folder.summary.ready}/{folder.summary.total} {L("listos", "ready")}; {folder.summary.missing + folder.summary.needsAttention} {L("pendientes", "pending")}</p>
+                  <small>{folder.scope}</small>
+                  <NavLink to={folder.path}>{L("Abrir contexto", "Open context")}</NavLink>
+                </article>
+              ))}
+            </div>
+            <div className="nuxera-document-rows">
+              {documentCenter.activeFolder.rows.slice(0, 5).map((document) => (
+                <article key={document.id}>
+                  <span>{document.status} / {document.source}</span>
+                  <strong>{document.label}</strong>
+                  <p>{document.detail}</p>
+                  <small>{document.owner} / {document.version} / {document.risk}</small>
+                </article>
+              ))}
+            </div>
+            <footer>{documentCenter.nextAction} {documentCenter.guardrails[0]}</footer>
+          </section>
+          <section className="nuxera-applicant-checklist" aria-label={L("Checklist documental del solicitante", "Applicant document checklist")}>
+            <header>
+              <div>
+                <span>{L("Data room readiness", "Data room readiness")}</span>
+                <h2>{L("Avance del checklist", "Checklist progress")}</h2>
+                <p className="nuxera-state-caption">{workspaceState.label}: {stateDetail}</p>
+              </div>
+              <strong>{workspaceState.loading ? "loading" : checklist.summary.status}</strong>
+            </header>
+            <div className="nuxera-checklist-summary">
+              <article><span>{L("Listos", "Ready")}</span><strong>{checklist.summary.ready}</strong></article>
+              <article><span>{L("En revision", "In review")}</span><strong>{checklist.summary.inReview}</strong></article>
+              <article><span>{L("Faltantes", "Missing")}</span><strong>{checklist.summary.missing}</strong></article>
+              <article><span>{L("Criticos", "Critical")}</span><strong>{checklist.summary.criticalMissing}</strong></article>
+            </div>
+            <div className="nuxera-data-room-folders">
+              {checklist.folders.map((folder) => (
+                <article key={folder.id}>
+                  <span>{folder.status}</span>
+                  <strong>{folder.label}</strong>
+                  <p>{folder.visibility}</p>
+                  <small>{folder.items.filter((item) => item.status === "ready").length}/{folder.items.length} {L("documentos listos", "documents ready")}</small>
+                </article>
+              ))}
+            </div>
+            <small>{checklist.guardrail} {workspaceState.persisted ? L(`Estado persistido: ${workspaceState.status}.`, `Persisted state: ${workspaceState.status}.`) : L("Sin writes desde UI.", "No writes from the UI.")}</small>
+          </section>
+        </>
+      )}
 
       <div className="nuxera-mission-panels">
-        <section>
-          <h2>{L("Evidencia conectada", "Connected evidence")}</h2>
-          {mission.evidenceLinks.map((link) => (
-            <NavLink className="nuxera-evidence-link" key={link.id} to={link.path}>
-              <span>{link.engine}</span>
-              <strong>{link.label}</strong>
-              <p>{link.signal}</p>
-            </NavLink>
-          ))}
-        </section>
+        {variant === "home" && (
+          <section>
+            <h2>{L("Evidencia conectada", "Connected evidence")}</h2>
+            {mission.evidenceLinks.map((link) => (
+              <NavLink className="nuxera-evidence-link" key={link.id} to={link.path}>
+                <span>{link.engine}</span>
+                <strong>{link.label}</strong>
+                <p>{link.signal}</p>
+              </NavLink>
+            ))}
+          </section>
+        )}
         <section className="nuxera-evidence-ledger">
-          <h2>{L("Ledger read-only", "Read-only ledger")}</h2>
+          <h2>{variant === "followup" ? L("Historial de evidencia", "Evidence history") : L("Ledger read-only", "Read-only ledger")}</h2>
           <p>{evidenceLedger.summary.total} {L("evidencias normalizadas", "normalized evidence items")} / {evidenceLedger.status}</p>
           {evidenceLedger.backendEvidence?.loading && <small>{L("Cargando evidence_links NUXERA...", "Loading NUXERA evidence_links...")}</small>}
           {evidenceLedger.backendEvidence?.source?.startsWith("remote") && (
             <small>{evidenceLedger.backendEvidence.label}</small>
           )}
-          {evidenceLedger.items.slice(0, 4).map((item) => (
+          {evidenceLedger.items.slice(0, variant === "followup" ? 8 : 4).map((item) => (
             <article key={item.id}>
               <span>{item.engine} / {item.status}</span>
               <strong>{item.label}</strong>
@@ -1043,7 +1048,7 @@ export default function NuxeraHome({ role = "applicant", section = "home" }) {
   const sectionLabel = section === "home" ? "Workspace" : section;
 
   if (role === "applicant") {
-    return <ApplicantMissionHome sectionLabel={sectionLabel} />;
+    return <ApplicantMissionHome sectionLabel={sectionLabel} variant={section === "followup" ? "followup" : "home"} />;
   }
 
   if (role === "grantor") {
