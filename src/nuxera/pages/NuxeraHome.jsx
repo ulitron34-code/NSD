@@ -9,7 +9,7 @@ import { mergeAiProviderPolicyWithConsole, useAiProviderPolicy } from "../admin/
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
-import { mergeGrantorCasesWithConsole, previewNuxeraCaseAssignment, useAdminGrantorCases } from "../admin/grantorCasesAdapter";
+import { mergeGrantorCasesWithConsole, previewNuxeraCaseAssignment, useAdminGrantorCases, useCaseAssignmentHistory } from "../admin/grantorCasesAdapter";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
@@ -572,6 +572,19 @@ function getDefaultAssignmentDueAt() {
   return dueAt.toISOString().slice(0, 16);
 }
 
+const CASE_ASSIGNMENT_SLA_STATUS_LABELS = {
+  overdue: { es: "Vencido", en: "Overdue" },
+  "due-soon": { es: "Por vencer", en: "Due soon" },
+  "on-track": { es: "En tiempo", en: "On track" },
+  closed: { es: "Cerrado", en: "Closed" },
+  "sla-unset": { es: "Sin SLA", en: "No SLA" },
+  "sla-invalid": { es: "SLA invalido", en: "Invalid SLA" },
+};
+
+function getAssignmentSlaStatusLabel(status, L) {
+  const copy = CASE_ASSIGNMENT_SLA_STATUS_LABELS[status] || { es: status || "Sin estado", en: status || "No status" };
+  return L(copy.es, copy.en);
+}
 function toAssignmentDueAtIso(value) {
   const date = value ? new Date(value) : null;
   return date && !Number.isNaN(date.getTime()) ? date.toISOString() : null;
@@ -607,6 +620,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const notificationOutboxList = useNotificationOutboxList({ enabled: isNuxeraExperienceEnabled(), limit: 10 });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const adminGrantorCases = useAdminGrantorCases({ enabled: isNuxeraExperienceEnabled(), language });
+  const caseAssignmentHistory = useCaseAssignmentHistory({ enabled: isNuxeraExperienceEnabled(), limit: 20 });
   const [caseAssignmentForm, setCaseAssignmentForm] = useState({
     caseId: "",
     assignedReviewerRole: "grantor_analyst",
@@ -637,6 +651,12 @@ function AdminOperationsHome({ sectionLabel }) {
     language
   );
 
+  const assignmentCaseLabels = new Map(consoleState.grantorDocumentReadiness.map((item) => [item.caseId, item]));
+  const assignmentHistoryRows = caseAssignmentHistory.assignments.slice(0, 6).map((assignment) => ({
+    ...assignment,
+    caseLabel: assignmentCaseLabels.get(assignment.orderId)?.label || assignment.orderId,
+    applicant: assignmentCaseLabels.get(assignment.orderId)?.applicant || L("Sin solicitante visible", "No visible applicant"),
+  }));
   const assignmentCandidates = consoleState.grantorDocumentReadiness.slice(0, 12);
   const selectedAssignmentCaseId = caseAssignmentForm.caseId || assignmentCandidates[0]?.caseId || "";
   const selectedAssignmentCase = assignmentCandidates.find((item) => item.caseId === selectedAssignmentCaseId) || assignmentCandidates[0] || null;
@@ -1388,6 +1408,35 @@ function AdminOperationsHome({ sectionLabel }) {
             <p>{caseAssignmentError || caseAssignmentPreview?.guardrails?.[0] || L("NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED controla la persistencia.", "NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED controls persistence.")}</p>
           </article>
         </div>
+        <div className="nuxera-admin-case-assignment-history">
+          <article>
+            <span>{caseAssignmentHistory.status}</span>
+            <strong>{caseAssignmentHistory.summary.open}/{caseAssignmentHistory.summary.total} {L("abiertas", "open")}</strong>
+            <p>{caseAssignmentHistory.loading ? L("Cargando historial...", "Loading history...") : caseAssignmentHistory.guardrails[0]}</p>
+          </article>
+          <article>
+            <span>{L("SLA", "SLA")}</span>
+            <strong>{caseAssignmentHistory.summary.overdue} {L("vencidas", "overdue")}</strong>
+            <p>{caseAssignmentHistory.summary.dueSoon} {L("por vencer", "due soon")}; {caseAssignmentHistory.summary.onTrack} {L("en tiempo", "on track")}.</p>
+          </article>
+          <article>
+            <span>{caseAssignmentHistory.tableAvailable ? L("Tabla activa", "Table active") : L("Tabla no disponible", "Table unavailable")}</span>
+            <strong>{caseAssignmentHistory.summary.reassigned} {L("reasignadas", "reassigned")}</strong>
+            <p>{caseAssignmentHistory.error || L("Lectura admin, sin escritura ni envio automatico.", "Admin read, no write or automatic send.")}</p>
+          </article>
+        </div>
+        {assignmentHistoryRows.length > 0 && (
+          <div className="nuxera-admin-case-assignment-ledger">
+            {assignmentHistoryRows.map((assignment) => (
+              <article key={assignment.id}>
+                <span>{getAssignmentSlaStatusLabel(assignment.slaStatus, L)} / {assignment.status}</span>
+                <strong>{assignment.caseLabel}</strong>
+                <p>{assignment.assignedReviewerRole || L("Sin responsable", "No owner")} / {assignment.slaTier || L("Sin SLA", "No SLA")}</p>
+                <small>{assignment.reason || assignment.applicant}</small>
+              </article>
+            ))}
+          </div>
+        )}
         {caseAssignmentPreview?.guardrails?.length > 1 && (
           <footer>{caseAssignmentPreview.guardrails.slice(1, 4).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}</footer>
         )}

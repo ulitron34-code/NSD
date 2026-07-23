@@ -24,6 +24,17 @@ const LOCAL_CASE_ASSIGNMENT_PREVIEW_STATE = Object.freeze({
   guardrails: ["Local fallback; no crea ni reasigna expedientes."],
 });
 
+const LOCAL_CASE_ASSIGNMENT_HISTORY_STATE = Object.freeze({
+  source: "local-fallback",
+  status: "case-assignment-history-unverified",
+  loading: false,
+  error: null,
+  tableAvailable: false,
+  assignments: [],
+  summary: { total: 0, open: 0, reassigned: 0, overdue: 0, dueSoon: 0, onTrack: 0 },
+  guardrails: ["Local fallback; no confirma historial real de asignaciones."],
+});
+
 function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -49,6 +60,27 @@ export function normalizeNuxeraAdminGrantorCasesResponse(response) {
   };
 }
 
+export function normalizeNuxeraCaseAssignmentHistoryResponse(response) {
+  const payload = response && typeof response === "object" ? response : null;
+
+  if (!payload || !Array.isArray(payload.assignments)) {
+    return {
+      ...LOCAL_CASE_ASSIGNMENT_HISTORY_STATE,
+      error: "nuxera-case-assignment-history-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_CASE_ASSIGNMENT_HISTORY_STATE,
+    source: payload.source || "remote",
+    status: payload.tableAvailable === false ? "case-assignment-history-unavailable" : "case-assignment-history-ready",
+    error: null,
+    tableAvailable: payload.tableAvailable !== false,
+    assignments: payload.assignments,
+    summary: { ...LOCAL_CASE_ASSIGNMENT_HISTORY_STATE.summary, ...(payload.summary || {}) },
+    guardrails: asArray(payload.guardrails).filter(Boolean),
+  };
+}
 export function normalizeNuxeraCaseAssignmentPreviewResponse(response) {
   const payload = response && typeof response === "object" ? response : null;
   const assignmentEnvelope = payload?.assignment && typeof payload.assignment === "object" ? payload.assignment : null;
@@ -91,6 +123,7 @@ export async function previewNuxeraCaseAssignment(payload = {}) {
     };
   }
 }
+
 export function mergeGrantorCasesWithConsole(consoleState, grantorCasesState = LOCAL_ADMIN_GRANTOR_CASES_STATE, language = "es") {
   const state = { ...LOCAL_ADMIN_GRANTOR_CASES_STATE, ...(grantorCasesState || {}) };
 
@@ -135,6 +168,39 @@ export function mergeGrantorCasesWithConsole(consoleState, grantorCasesState = L
       ...asArray(state.guardrails),
     ],
   };
+}
+
+export function useCaseAssignmentHistory({ enabled = true, limit = 50 } = {}) {
+  const [state, setState] = useState(LOCAL_CASE_ASSIGNMENT_HISTORY_STATE);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled) {
+      setState(LOCAL_CASE_ASSIGNMENT_HISTORY_STATE);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraCaseAssignmentsAPI.list({ limit })
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraCaseAssignmentHistoryResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Case assignment history unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_CASE_ASSIGNMENT_HISTORY_STATE,
+          loading: false,
+          error: error?.response?.data?.code || error?.response?.data?.error || error?.message || "nuxera-case-assignment-history-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled, limit]);
+
+  return state;
 }
 
 export function useAdminGrantorCases({ enabled = true, language = "es" } = {}) {

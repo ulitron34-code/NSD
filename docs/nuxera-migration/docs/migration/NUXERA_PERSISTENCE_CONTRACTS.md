@@ -157,6 +157,7 @@ All routes are proposed under `/nuxera` to avoid changing existing legacy endpoi
 | `PATCH` | `/nuxera/admin/controls/:controlId` | `*` or future `nuxera:admin:update` | Update release/incident control. |
 | `GET` | `/nuxera/admin/notification-outbox` | `*` or `nuxera:admin:read` | Read outbox rows without changing state or sending messages. |
 | `POST` | `/nuxera/admin/notification-outbox` | `*` or `nuxera:admin:update` | Queue a notification intent only when backend delivery persistence is explicitly enabled; otherwise returns preview. |
+| `GET` | `/nuxera/admin/case-assignments` | `*` or `nuxera:admin:read` | Read-only assignment history with SLA status summary; no document contents, writes, permission changes or notifications. |
 | `POST` | `/nuxera/admin/case-assignments` | `*` or `nuxera:admin:update` | Validate assignment/reassignment intent; persists only when `NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED=true`, otherwise returns preview. |
 
 ## Permission additions draft

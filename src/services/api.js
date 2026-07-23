@@ -267,6 +267,8 @@ export const nuxeraAdminGrantorCasesAPI = {
 };
 
 export const nuxeraCaseAssignmentsAPI = {
+  list: (params = {}) =>
+    api.get('/nuxera/admin/case-assignments', { params }),
   preview: (payload = {}) =>
     api.post('/nuxera/admin/case-assignments', payload)
 };

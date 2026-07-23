@@ -181,7 +181,7 @@ describe('otorgante pipeline route', () => {
       id: 'assignment-1',
       order_id: 'order-1',
       assigned_reviewer_id: 'reviewer-1',
-      assigned_reviewer_role: 'analista',
+      assigned_reviewer_role: 'grantor_analyst',
       sla_tier: 'needs-information-48h',
       sla_due_at: '2026-07-25T18:00:00.000Z',
       status: 'open',
@@ -198,7 +198,7 @@ describe('otorgante pipeline route', () => {
     expect(body[0].assignment).toMatchObject({
       id: 'assignment-1',
       assignedReviewerId: 'reviewer-1',
-      assignedReviewerRole: 'analista',
+      assignedReviewerRole: 'grantor_analyst',
       slaTier: 'needs-information-48h',
       status: 'open',
       source: 'nuxera_case_assignments'
@@ -222,7 +222,7 @@ describe('otorgante pipeline route', () => {
       body: JSON.stringify({
         orderId: 'order-1',
         assignedReviewerId: 'reviewer-1',
-        assignedReviewerRole: 'analista',
+        assignedReviewerRole: 'grantor_analyst',
         slaTier: 'needs-information-48h',
         slaDueAt: '2026-07-25T18:00:00.000Z',
         reason: 'Validar estados financieros'
@@ -238,7 +238,7 @@ describe('otorgante pipeline route', () => {
       assignment: {
         orderId: 'order-1',
         assignedReviewerId: 'reviewer-1',
-        assignedReviewerRole: 'analista',
+        assignedReviewerRole: 'grantor_analyst',
         slaTier: 'needs-information-48h',
         reason: 'Validar estados financieros',
         source: 'preview-no-write'
@@ -284,6 +284,55 @@ describe('admin-wide grantor cases route', () => {
     expect(response.status).toBe(403);
   });
 
+  it('requires nuxera:admin:read to inspect case assignment history', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/case-assignments`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:update' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:read' });
+  });
+
+  it('returns assignment history with SLA status and read-only guardrails', async () => {
+    tableRows.nuxera_case_assignments = [
+      {
+        id: 'assignment-open-1',
+        order_id: 'order-1',
+        assigned_reviewer_id: 'reviewer-1',
+        assigned_reviewer_role: 'grantor_analyst',
+        sla_tier: 'needs-information-48h',
+        sla_due_at: '2099-07-25T18:00:00.000Z',
+        status: 'open',
+        reason: 'Validar evidencia faltante',
+        created_at: '2026-07-23T10:00:00.000Z',
+        updated_at: '2026-07-23T11:00:00.000Z'
+      },
+      {
+        id: 'assignment-overdue-1',
+        order_id: 'order-2',
+        assigned_reviewer_id: null,
+        assigned_reviewer_role: 'risk_committee',
+        sla_tier: 'risk-escalation-24h',
+        sla_due_at: '2000-07-25T18:00:00.000Z',
+        status: 'open',
+        reason: 'Escalamiento vencido',
+        created_at: '2026-07-22T10:00:00.000Z',
+        updated_at: '2026-07-22T11:00:00.000Z'
+      }
+    ];
+
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/case-assignments`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.source).toBe('nuxera_case_assignments');
+    expect(body.summary).toMatchObject({ total: 2, open: 2, overdue: 1, onTrack: 1 });
+    expect(body.assignments[0]).toMatchObject({ id: 'assignment-open-1', slaStatus: 'on-track', source: 'nuxera_case_assignments' });
+    expect(body.assignments[1]).toMatchObject({ id: 'assignment-overdue-1', slaStatus: 'overdue' });
+    expect(body.guardrails.join(' ')).toContain('read-only');
+  });
   it('aggregates every accepted/shared data room, not only the requesting grantor own shares', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/grantor-cases`, {
       headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }

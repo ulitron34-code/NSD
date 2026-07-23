@@ -4,7 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getAdminWorkspaceConfig } from "../nuxera/adapters/AdminWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeGrantorCasesWithConsole, normalizeNuxeraAdminGrantorCasesResponse, normalizeNuxeraCaseAssignmentPreviewResponse } from "../nuxera/admin/grantorCasesAdapter";
+import { mergeGrantorCasesWithConsole, normalizeNuxeraAdminGrantorCasesResponse, normalizeNuxeraCaseAssignmentHistoryResponse, normalizeNuxeraCaseAssignmentPreviewResponse } from "../nuxera/admin/grantorCasesAdapter";
 import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledContinuationPackResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { buildAdminOperationalModules, normalizeAdminOperationalSnapshot } from "../nuxera/admin/operationalSnapshotAdapter";
@@ -280,6 +280,24 @@ describe("NUXERA admin operations console", () => {
     expect(withRemote.policies.join(" ")).toContain("pipeline real");
   });
 
+  it("normalizes case assignment history with SLA summary", () => {
+    const history = normalizeNuxeraCaseAssignmentHistoryResponse({
+      source: "nuxera_case_assignments",
+      tableAvailable: true,
+      summary: { total: 2, open: 1, overdue: 1, dueSoon: 0, onTrack: 1 },
+      assignments: [
+        { id: "assignment-1", orderId: "order-admin-1", slaStatus: "overdue", status: "open" },
+        { id: "assignment-2", orderId: "order-admin-2", slaStatus: "on-track", status: "reassigned" },
+      ],
+      guardrails: ["Assignment history is read-only in this endpoint."],
+    });
+
+    expect(history.status).toBe("case-assignment-history-ready");
+    expect(history.tableAvailable).toBe(true);
+    expect(history.summary).toMatchObject({ total: 2, overdue: 1, onTrack: 1 });
+    expect(history.assignments[0]).toMatchObject({ orderId: "order-admin-1", slaStatus: "overdue" });
+    expect(history.guardrails.join(" ")).toContain("read-only");
+  });
   it("normalizes controlled case assignment previews without claiming persistence", () => {
     const preview = normalizeNuxeraCaseAssignmentPreviewResponse({
       writeEnabled: false,
