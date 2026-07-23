@@ -19,6 +19,7 @@ const serviceCalls = {
   releaseDossier: [],
   continuationPack: [],
   aiProviderPolicy: [],
+  tenTrackClosure: [],
   notificationDryRun: [],
   notificationRules: [],
   notificationApprovalPlan: [],
@@ -321,6 +322,19 @@ vi.mock("../services/nuxeraAiProviderPolicyService.js", () => ({
     };
   })
 }));
+vi.mock('../services/nuxeraTenTrackClosureService.js', () => ({
+  getNuxeraTenTrackClosurePlan: vi.fn(() => {
+    serviceCalls.tenTrackClosure.push({ called: true });
+    return {
+      id: 'nuxera-ten-track-closure-plan',
+      status: 'blocked-by-controlled-cutover-evidence',
+      progressPercent: 74,
+      summary: { total: 10, averageCompletion: 74, blocked: 10, ready: 0, blockers: 12, criticalPath: 3 },
+      tracks: [{ id: 'sql-rls-non-production', label: 'SQL/RLS', status: 'blocked', domain: 'cutover', percent: 70, implemented: [], blockers: ['RLS evidence pending.'], nextActions: ['Run non-prod evidence.'], readyForProduction: false }],
+      guardrails: ['Ten-track closure read-only.']
+    };
+  })
+}));
 vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
   buildNuxeraNotificationDryRunBatch: vi.fn((intents = []) => {
     serviceCalls.notificationDryRun.push({ intents });
@@ -531,6 +545,7 @@ describe('nuxera routes', () => {
     serviceCalls.releaseDossier = [];
     serviceCalls.continuationPack = [];
     serviceCalls.aiProviderPolicy = [];
+    serviceCalls.tenTrackClosure = [];
     serviceCalls.notificationDryRun = [];
     serviceCalls.notificationRules = [];
     serviceCalls.notificationApprovalPlan = [];
@@ -1223,6 +1238,22 @@ describe('nuxera routes', () => {
     expect(serviceCalls.notificationBatch[0]).toMatchObject({ actorUserId: 'admin-1', deliveryEnabled: false, maxBatchSize: 2, channels: ['email'] });
     expect(serviceCalls.notificationBatch[0]).not.toHaveProperty('emailDeliveryEnabled');
   });
+  it('returns ten-track closure plan as admin read-only', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/ten-track-closure`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/ten-track-closure`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body.closurePlan).toMatchObject({ progressPercent: 74, summary: { total: 10, criticalPath: 3 } });
+    expect(body.guardrails.join(' ')).toContain('does not execute SQL');
+    expect(serviceCalls.tenTrackClosure).toEqual([{ called: true }]);
+  });
+
   it("requires nuxera:admin:read before reading AI provider policy", async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/ai-provider-policy`, {
       headers: { "x-test-user-id": "admin-1", "x-test-permissions": "case:own:read" }

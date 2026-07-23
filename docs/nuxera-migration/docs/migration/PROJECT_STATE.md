@@ -2073,3 +2073,14 @@ Validation snapshot: targeted frontend ESLint passed, frontend NUXERA Vitest pas
 Added the next controlled notification block: approval history persistence readiness. The new SQL draft `2026-07-23_nuxera_notification_approvals.sql` defines an additive approval ledger with owner/grantor/admin read policies and zero write policies. Backend exposes `GET /api/nuxera/admin/notification-approval-readiness` as read-only, frontend Admin surfaces the status as `Historial aprobaciones`, and tests cover service, route and frontend normalization.
 
 No production SQL was executed, no approval history rows are written, no delivery flags were enabled and no notifications are sent by this block. Next resume point: validate RLS in non-production before wiring service_role ledger inserts.
+
+## Ten-track closure plan - 2026-07-23
+
+Added a read-only closure plan for the 10 remaining NUXERA fronts. Backend service `nuxeraTenTrackClosureService` now summarizes SQL/RLS evidence, controlled persistence writes, notification lifecycle, chat/agent retention, production cutover, Mesa source tracing, case management/SLA handoff, applicant live actions, risk/KYB provider orchestration and docs/continuation sync.
+
+Runtime surface:
+- `GET /api/nuxera/admin/ten-track-closure` behind `nuxera:admin:read`.
+- Frontend Admin shows `Cierre de 10 frentes` with average progress, blockers, next action and per-track status.
+- Frontend normalizer and backend route/service tests cover the plan as read-only.
+
+Guardrails: this does not apply SQL, enable flags, deploy production, persist new write rows, call providers or send notifications. It turns the remaining backlog into an operational closure dashboard so the next work can attack blockers in dependency order.

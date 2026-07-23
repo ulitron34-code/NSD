@@ -76,3 +76,11 @@ Additional pending SQL draft:
   - No insert/update/delete policies; backend writes remain a future service-role design after SQL/RLS evidence.
 
 Review impact: this closes the design gap between approval previews and a future auditable approval ledger, but it does not change runtime delivery behavior.
+
+## Addendum - Ten-track closure dashboard (2026-07-23)
+
+New read-only admin endpoint: `GET /api/nuxera/admin/ten-track-closure`.
+
+Purpose: consolidate the ten remaining production blockers into a single closure plan before SQL/RLS execution or write enablement. The plan explicitly keeps production blocked until non-production evidence, write gates, release dossier and human approval are complete.
+
+No production action is performed by this endpoint.

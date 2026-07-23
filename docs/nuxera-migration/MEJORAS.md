@@ -295,3 +295,19 @@ Se agrego el contrato controlado para persistir historial de aprobaciones de not
 - UI admin muestra `Historial aprobaciones` junto al plan aprobable: estado SQL draft, tabla, policies y writePolicies=0.
 
 Sigue pendiente antes de produccion: ejecutar SQL solo en non-production, validar RLS con identidades reales, y despues disenar el write path service_role que registre aprobaciones sin enviar mensajes automaticamente.
+
+## Avance - Cierre de 10 Frentes (2026-07-23)
+
+Se agrego un tablero read-only para los 10 pendientes principales:
+1. SQL/RLS non-production.
+2. Writes controlados.
+3. Notificaciones completas.
+4. Chat/agente y retencion.
+5. Cutover productivo.
+6. Mesa/source tracing.
+7. Gestion SLA/handoff.
+8. Acciones vivas del solicitante.
+9. Riesgo/KYB/proveedores.
+10. Docs/continuidad.
+
+El tablero vive en Admin como `Cierre de 10 frentes` y resume porcentaje, blockers y siguiente accion por frente. No habilita produccion ni reemplaza la evidencia real; ordena el cierre para avanzar por dependencias.

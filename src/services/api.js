@@ -313,6 +313,11 @@ export const nuxeraBackendReadinessAPI = {
     api.get('/nuxera/admin/readiness')
 };
 
+export const nuxeraTenTrackClosureAPI = {
+  getPlan: () =>
+    api.get('/nuxera/admin/ten-track-closure')
+};
+
 export const nuxeraNotificationOutboxAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/notification-outbox-readiness'),

@@ -6,6 +6,7 @@ import { NavLink } from "react-router-dom";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { mergeAiProviderPolicyWithConsole, useAiProviderPolicy } from "../admin/aiProviderPolicyAdapter";
+import { useTenTrackClosure } from "../admin/tenTrackClosureAdapter";
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
@@ -920,6 +921,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const notificationOutboxList = useNotificationOutboxList({ enabled: isNuxeraExperienceEnabled(), limit: 10 });
   const notificationDeliveryBatch = useNotificationDeliveryBatch({ enabled: isNuxeraExperienceEnabled(), maxBatchSize: 1, channels: ["email"] });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
+  const tenTrackClosure = useTenTrackClosure({ enabled: isNuxeraExperienceEnabled() });
   const adminGrantorCases = useAdminGrantorCases({ enabled: isNuxeraExperienceEnabled(), language });
 
   const [caseAssignmentForm, setCaseAssignmentForm] = useState({
@@ -1781,6 +1783,28 @@ function AdminOperationsHome({ sectionLabel }) {
           <small>{L("Esta consola no habilita producción: solo consolida señales para revisión humana y cambio separado.", "This console does not enable production: it only consolidates signals for human review and a separate change.")}</small>
         </footer>
       </section>
+      <section className="nuxera-admin-go-no-go" aria-label={L("Cierre de diez frentes NUXERA", "NUXERA ten-track closure")}>
+        <header>
+          <span>{tenTrackClosure.loading ? L("Cargando cierre", "Loading closure") : tenTrackClosure.status}</span>
+          <h2>{L("Cierre de 10 frentes", "Ten-track closure")}</h2>
+        </header>
+        <p>{tenTrackClosure.progressPercent}% {L("avance promedio", "average progress")}; {tenTrackClosure.summary.blocked}/{tenTrackClosure.summary.total} {L("frentes con blockers", "tracks with blockers")}; {tenTrackClosure.summary.blockers} blockers.</p>
+        <div>
+          {tenTrackClosure.tracks.map((track) => (
+            <article key={track.id} data-status={track.blockers.length ? "warning" : "success"}>
+              <span>{track.domain} / {track.status}</span>
+              <strong>{track.percent}% - {track.label}</strong>
+              <p>{track.nextActions[0] || track.implemented[0] || L("Pendiente de plan", "Plan pending")}</p>
+              <small>{track.blockers.length ? track.blockers[0] : L("Sin blocker abierto", "No open blocker")}</small>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <small>{tenTrackClosure.error || tenTrackClosure.nextBigMove}</small>
+          {tenTrackClosure.guardrails.slice(0, 2).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
+        </footer>
+      </section>
+
       <CaseTimelinePanel
         timeline={adminTimeline}
         title={L("Trazabilidad del expediente", "File traceability")}

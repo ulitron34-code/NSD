@@ -6,6 +6,7 @@ import { getAdminWorkspaceConfig } from "../nuxera/adapters/AdminWorkspaceAdapte
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { mergeGrantorCasesWithConsole, normalizeNuxeraAdminGrantorCasesResponse, normalizeNuxeraCaseAssignmentHistoryResponse, normalizeNuxeraCaseAssignmentPreviewResponse } from "../nuxera/admin/grantorCasesAdapter";
 import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledContinuationPackResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
+import { normalizeNuxeraTenTrackClosureResponse } from "../nuxera/admin/tenTrackClosureAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { buildAdminOperationalModules, normalizeAdminOperationalSnapshot } from "../nuxera/admin/operationalSnapshotAdapter";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
@@ -37,6 +38,23 @@ describe("NUXERA admin operational snapshot", () => {
     expect(getAdminWorkspaceConfig("security").modules[0][0]).toBe("traceability");
     expect(getAdminWorkspaceConfig("ai").modules[0][0]).toBe("ai-ops");
     expect(getAdminWorkspaceConfig("system").modules[0][0]).toBe("predeploy");
+  });
+
+  it("normalizes ten-track closure as a blocked admin cutover plan", () => {
+    const closure = normalizeNuxeraTenTrackClosureResponse({
+      closurePlan: {
+        status: "blocked-by-controlled-cutover-evidence",
+        progressPercent: 74,
+        summary: { total: 10, blocked: 10, blockers: 12, criticalPath: 3 },
+        tracks: [
+          { id: "sql-rls-non-production", label: "SQL/RLS", status: "blocked", domain: "cutover", percent: 70, implemented: ["drafts"], blockers: ["evidence"], nextActions: ["run non-prod"], readyForProduction: false },
+        ],
+        guardrails: ["Read-only."],
+      },
+    });
+
+    expect(closure).toMatchObject({ source: "remote-read-only", progressPercent: 74, summary: { total: 1, criticalPath: 3 } });
+    expect(closure.tracks[0]).toMatchObject({ id: "sql-rls-non-production", readyForProduction: false });
   });
 
   it("normalizes protected admin sources without inventing fallback records", () => {
