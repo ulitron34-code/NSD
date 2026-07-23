@@ -22,6 +22,7 @@ const serviceCalls = {
   notificationDryRun: [],
   notificationQueue: [],
   notificationList: [],
+  notificationBatch: [],
   conversationTurn: []
 };
 
@@ -338,6 +339,10 @@ vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
   listNuxeraNotificationOutbox: vi.fn(async (filters) => {
     serviceCalls.notificationList.push(filters);
     return { status: 'outbox-list-ready', entries: [], guardrails: ['Listado administrativo de outbox; no envia mensajes ni cambia estado.'] };
+  }),
+  processNuxeraNotificationDeliveryBatch: vi.fn(async (options) => {
+    serviceCalls.notificationBatch.push(options);
+    return { status: options.deliveryEnabled ? 'email-delivery-disabled-dry-run' : 'delivery-disabled-dry-run', processed: 0, sent: 0, failed: 0, suppressed: 0, deliveryEnabled: options.deliveryEnabled, emailDeliveryEnabled: false };
   })
 }));
 vi.mock('../services/nuxeraConversationAgentReadinessService.js', async (importOriginal) => {
@@ -431,6 +436,7 @@ describe('nuxera routes', () => {
     serviceCalls.notificationDryRun = [];
     serviceCalls.notificationQueue = [];
     serviceCalls.notificationList = [];
+    serviceCalls.notificationBatch = [];
     serviceCalls.conversationTurn = [];
     const listening = await listen(createApp());
     server = listening.server;
@@ -985,6 +991,33 @@ describe('nuxera routes', () => {
     expect(response.status).toBe(200);
     expect(body.outbox.status).toBe('outbox-list-ready');
     expect(serviceCalls.notificationList).toEqual([{ status: 'queued', audience: 'grantor', orderId: undefined, limit: '10' }]);
+  });
+  it('requires nuxera:admin:update before running a notification delivery batch', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-delivery-batch`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({ maxBatchSize: 1 })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:update' });
+    expect(serviceCalls.notificationBatch).toHaveLength(0);
+  });
+
+  it('runs a manual notification delivery batch using server-side delivery flags only', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-delivery-batch`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:update' },
+      body: JSON.stringify({ deliveryEnabled: true, emailDeliveryEnabled: true, maxBatchSize: 2, channels: ['email'] })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.batch).toMatchObject({ status: 'delivery-disabled-dry-run', deliveryEnabled: false, processed: 0 });
+    expect(body.guardrails.join(' ')).toContain('never trusts client-supplied delivery flags');
+    expect(serviceCalls.notificationBatch).toHaveLength(1);
+    expect(serviceCalls.notificationBatch[0]).toMatchObject({ actorUserId: 'admin-1', deliveryEnabled: false, maxBatchSize: 2, channels: ['email'] });
+    expect(serviceCalls.notificationBatch[0]).not.toHaveProperty('emailDeliveryEnabled');
   });
   it("requires nuxera:admin:read before reading AI provider policy", async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/ai-provider-policy`, {

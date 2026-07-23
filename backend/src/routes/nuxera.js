@@ -13,7 +13,7 @@ import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlle
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness, runNuxeraConversationTurn } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
-import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox } from '../services/nuxeraNotificationOutboxService.js';
+import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
@@ -241,6 +241,34 @@ router.post(
           "Queueing only persists a row when NUXERA_NOTIFICATION_DELIVERY_ENABLED=true; otherwise it stays a preview.",
           "Duplicate dedupe keys are rejected and audited instead of creating a second row.",
           "The delivery worker remains disabled; no email, WhatsApp or in-app message is ever sent from this route."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  "/nuxera/admin/notification-delivery-batch",
+  authMiddleware,
+  requirePermission("nuxera:admin:update"),
+  async (req, res) => {
+    try {
+      const batch = await processNuxeraNotificationDeliveryBatch({
+        actorUserId: req.userId,
+        req,
+        deliveryEnabled: isNuxeraNotificationDeliveryEnabled(),
+        channels: req.body?.channels,
+        maxBatchSize: req.body?.maxBatchSize
+      });
+
+      res.json({
+        workspaceRole: "admin",
+        batch,
+        guardrails: [
+          "Manual delivery batch requires nuxera:admin:update and never trusts client-supplied delivery flags.",
+          "The worker only reads or updates rows when backend delivery gates are explicitly enabled.",
+          "No cron or automatic delivery is triggered by this endpoint."
         ]
       });
     } catch (error) {

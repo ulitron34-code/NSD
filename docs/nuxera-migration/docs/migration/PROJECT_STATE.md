@@ -1884,3 +1884,9 @@ Implemented the first real delivery adapter for `nuxera_notification_outbox` wit
 When both gates are explicitly enabled, the worker reads queued rows, processes only entries that request the `email` channel and have `recipient_email`, renders a minimal NUXERA email from `subject` and `body_preview`, calls `emailService.sendEmail`/Resend, updates the outbox row to `sent`, `failed` or `suppressed`, increments attempts, and writes metadata-only audit events for sent/failed/suppressed transitions. Unsupported channels remain gated; WhatsApp and in-app delivery adapters were not implemented in this block.
 
 Guardrails: no env var was enabled locally, in Render or in Vercel; no SQL was applied; no cron/route was added to trigger the worker automatically; email content excludes evidence, attachments and hidden file context. The worker exists as controlled backend plumbing for a later operator-approved runbook.
+
+## Manual notification delivery batch endpoint and runbook - 2026-07-23
+
+Added `POST /api/nuxera/admin/notification-delivery-batch` behind `nuxera:admin:update`. The route executes `processNuxeraNotificationDeliveryBatch` manually, passes `actorUserId`, `channels` and `maxBatchSize`, and derives delivery state only from backend configuration via `isNuxeraNotificationDeliveryEnabled`; it does not trust client-supplied `deliveryEnabled` or `emailDeliveryEnabled`. No cron, scheduler or automatic worker was added.
+
+Added `NUXERA_NOTIFICATION_DELIVERY_RUNBOOK.md` covering required gates, preflight, manual execution, post-run verification, rollback and explicitly-not-implemented channels. Also registered the endpoint in `NUXERA_PERSISTENCE_CONTRACTS.md`. Tests cover permission denial and the no-client-flag behavior.
