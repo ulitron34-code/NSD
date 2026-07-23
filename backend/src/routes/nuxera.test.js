@@ -22,6 +22,7 @@ const serviceCalls = {
   notificationDryRun: [],
   notificationQueue: [],
   notificationList: [],
+  notificationHealth: [],
   notificationBatch: [],
   conversationTurn: [],
   timeline: []
@@ -330,7 +331,17 @@ vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
     statuses: ["preview", "queued", "sent", "failed", "suppressed"],
     guardrails: ["Read-only notification outbox."]
   })),
-  enqueueNuxeraNotificationIntent: vi.fn(async ({ intent, actorUserId, deliveryEnabled }) => {
+  getNuxeraNotificationOutboxHealth: vi.fn(async (input = {}) => {
+    serviceCalls.notificationHealth.push(input);
+    return {
+      id: 'nuxera-notification-outbox-health',
+      status: 'notification-health-ready',
+      summary: { total: 0, queued: 0, sent: 0, failed: 0, suppressed: 0, retryCandidates: 0, manualReviewRequired: 0 },
+      signals: [],
+      entries: [],
+      guardrails: ['Notification health read-only.']
+    };
+  }),  enqueueNuxeraNotificationIntent: vi.fn(async ({ intent, actorUserId, deliveryEnabled }) => {
     serviceCalls.notificationQueue.push({ intent, actorUserId, deliveryEnabled });
     return deliveryEnabled
       ? { persisted: true, status: 'queued', id: 'outbox-1', eventId: intent?.eventId }
@@ -485,6 +496,7 @@ describe('nuxera routes', () => {
     serviceCalls.notificationDryRun = [];
     serviceCalls.notificationQueue = [];
     serviceCalls.notificationList = [];
+    serviceCalls.notificationHealth = [];
     serviceCalls.notificationBatch = [];
     serviceCalls.conversationTurn = [];
     serviceCalls.timeline = [];
@@ -1046,6 +1058,26 @@ describe('nuxera routes', () => {
     expect(response.status).toBe(200);
     expect(body.outbox.status).toBe('outbox-list-ready');
     expect(serviceCalls.notificationList).toEqual([{ status: 'queued', audience: 'grantor', orderId: undefined, limit: '10' }]);
+  });
+  it('requires nuxera:admin:read before reading notification outbox health', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox-health?limit=10`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(serviceCalls.notificationHealth).toHaveLength(0);
+  });
+
+  it('returns notification outbox health without retrying or sending messages', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox-health?limit=10`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.notificationHealth.status).toBe('notification-health-ready');
+    expect(body.guardrails.join(' ')).toContain('read-only');
+    expect(serviceCalls.notificationHealth).toEqual([{ limit: '10' }]);
   });
   it('requires nuxera:admin:update before running a notification delivery batch', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-delivery-batch`, {

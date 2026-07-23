@@ -2019,3 +2019,20 @@ Validation:
 
 Next recommended task:
 - Add dedicated unit tests for `nuxeraDecisionEvidencePackageService` and `nuxeraRiskOrchestrationService`, then draft SQL/RLS for `nuxera_case_events` and stronger provenance columns before any write path is considered.
+
+## Local continuation - 2026-07-23
+
+Current instruction: prepare changes for review only. Do not commit, push, deploy, run production SQL or enable production delivery.
+
+Latest local block:
+- Added notification outbox health contract and admin route.
+- Added frontend notification health hook and NUXERA communications cards.
+- Added conversation audit metadata to agent readiness.
+- Added conversation audit events to case timeline summary/type filters.
+- Added SQL drafts for `nuxera_case_events` and evidence provenance columns.
+- Added cutover review pack: `docs/nuxera-migration/docs/migration/NUXERA_CUTOVER_REVIEW_PACK.md`.
+
+Next resume point:
+1. Run targeted syntax checks, SQL draft check, backend route/timeline tests, frontend NUXERA tests and build.
+2. Fix any lint/test failures locally.
+3. Ask before commit/push/deploy.

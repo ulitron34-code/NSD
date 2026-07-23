@@ -47,7 +47,14 @@ export function getNuxeraConversationAgentReadiness() {
       allowedSources: [...new Set(roles.flatMap((role) => role.allowedSources))].length,
       blockedActions: [...new Set(roles.flatMap((role) => role.blockedActions))].length,
       runtimeEnabled: false,
-      humanReviewRequired: true
+      humanReviewRequired: true,
+      auditActions: 3
+    },
+    auditMetadata: {
+      persistedText: false,
+      loggedFields: ['role', 'provider', 'model', 'messageLength', 'answerLength', 'reason'],
+      timelineActions: ['nuxera_conversation_turn_completed', 'nuxera_conversation_turn_output_blocked', 'nuxera_conversation_turn_failed'],
+      blockedOutputAction: 'nuxera_conversation_turn_output_blocked'
     },
     requiredBackendSteps: [
       'Add a selected-file conversation endpoint that resolves role, order and authorization before retrieval.',

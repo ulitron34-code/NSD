@@ -23,6 +23,7 @@ const TYPE_FILTERS = Object.freeze([
   { id: 'information-request', label: 'Solicitudes' },
   { id: 'assignment', label: 'SLA/asignaciones' },
   { id: 'notification', label: 'Notificaciones' },
+  { id: 'conversation', label: 'Chat/agente' },
   { id: 'audit', label: 'Auditoria' }
 ]);
 
@@ -35,6 +36,7 @@ const PHASE_BY_TYPE = Object.freeze({
   decision: 'decision-desk',
   risk: 'decision-desk',
   notification: 'notifications-audit',
+  conversation: 'notifications-audit',
   audit: 'notifications-audit'
 });
 
@@ -214,19 +216,62 @@ function mapNotificationEvents(rows) {
   }));
 }
 
-function mapAuditEvents(rows) {
-  return rows.map((row) => buildEvent({
-    id: `audit:${row.id}`,
-    type: 'audit',
+function isConversationAudit(row) {
+  return String(row?.action || '').startsWith('nuxera_conversation_turn_');
+}
+
+function mapConversationAuditEvent(row) {
+  const metadata = asObject(row.metadata);
+  const action = String(row.action || 'nuxera_conversation_turn_observed');
+  const status = action === 'nuxera_conversation_turn_completed'
+    ? 'completed'
+    : action === 'nuxera_conversation_turn_output_blocked'
+      ? 'output-blocked'
+      : action === 'nuxera_conversation_turn_failed'
+        ? 'failed'
+        : 'observed';
+
+  return buildEvent({
+    id: `conversation:${row.id}`,
+    type: 'conversation',
     source: 'audit_logs',
-    status: row.compliance_relevant === false ? 'non-compliance-log' : 'compliance-log',
-    severity: String(row.action || '').includes('failed') ? 'warning' : 'info',
-    actorRole: 'system',
-    title: row.action || 'Audit log',
-    description: `${row.entity_type || 'entity'}${row.entity_id ? ` / ${row.entity_id}` : ''}.`,
+    status,
+    severity: ['failed', 'output-blocked'].includes(status) ? 'warning' : 'info',
+    actorRole: metadata.role || 'system',
+    title: 'Turno de agente conversacional',
+    description: `${action}; provider ${metadata.provider || 'n/a'}; mensaje ${metadata.messageLength ?? 0} chars.`,
     timestamp: eventTimestamp(row.created_at),
-    metadata: { entityType: row.entity_type || null, entityId: row.entity_id || null, userId: row.user_id || null, action: row.action || null }
-  }));
+    metadata: {
+      entityType: row.entity_type || null,
+      entityId: row.entity_id || null,
+      userId: row.user_id || null,
+      action,
+      role: metadata.role || null,
+      provider: metadata.provider || null,
+      model: metadata.model || null,
+      messageLength: Number(metadata.messageLength || 0),
+      answerLength: Number(metadata.answerLength || 0),
+      persistedText: false
+    }
+  });
+}
+
+function mapAuditEvents(rows) {
+  return rows.map((row) => {
+    if (isConversationAudit(row)) return mapConversationAuditEvent(row);
+    return buildEvent({
+      id: `audit:${row.id}`,
+      type: 'audit',
+      source: 'audit_logs',
+      status: row.compliance_relevant === false ? 'non-compliance-log' : 'compliance-log',
+      severity: String(row.action || '').includes('failed') ? 'warning' : 'info',
+      actorRole: 'system',
+      title: row.action || 'Audit log',
+      description: `${row.entity_type || 'entity'}${row.entity_id ? ` / ${row.entity_id}` : ''}.`,
+      timestamp: eventTimestamp(row.created_at),
+      metadata: { entityType: row.entity_type || null, entityId: row.entity_id || null, userId: row.user_id || null, action: row.action || null }
+    });
+  });
 }
 
 function hoursUntil(value) {
@@ -350,6 +395,8 @@ function summarizeTimeline(events, sources) {
     notifications: byType.notification || 0,
     assignments: byType.assignment || 0,
     auditEvents: byType.audit || 0,
+    conversationTurns: byType.conversation || 0,
+    blockedConversationTurns: countEvents(events, (event) => event.type === 'conversation' && ['failed', 'output-blocked'].includes(String(event.status).toLowerCase())),
     openInformationRequests,
     failedNotifications,
     suppressedNotifications,

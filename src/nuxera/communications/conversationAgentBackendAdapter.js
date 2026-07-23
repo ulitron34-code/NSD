@@ -46,6 +46,13 @@ const LOCAL_CONVERSATION_AGENT_READINESS = Object.freeze({
     blockedActions: 6,
     runtimeEnabled: false,
     humanReviewRequired: true,
+    auditActions: 3,
+  },
+  auditMetadata: {
+    persistedText: false,
+    loggedFields: ['role', 'provider', 'model', 'messageLength', 'answerLength', 'reason'],
+    timelineActions: ['nuxera_conversation_turn_completed', 'nuxera_conversation_turn_output_blocked', 'nuxera_conversation_turn_failed'],
+    blockedOutputAction: 'nuxera_conversation_turn_output_blocked',
   },
   requiredBackendSteps: [
     "Verificar endpoint /api/nuxera/admin/conversation-agent-readiness.",
@@ -92,6 +99,14 @@ export function normalizeNuxeraConversationAgentReadinessResponse(response, lang
       ...LOCAL_CONVERSATION_AGENT_READINESS.summary,
       ...asObject(payload.summary),
       runtimeEnabled,
+      auditActions: Number(payload.summary?.auditActions || LOCAL_CONVERSATION_AGENT_READINESS.summary.auditActions || 0),
+    },
+    auditMetadata: {
+      ...LOCAL_CONVERSATION_AGENT_READINESS.auditMetadata,
+      ...asObject(payload.auditMetadata),
+      loggedFields: asArray(payload.auditMetadata?.loggedFields).length ? asArray(payload.auditMetadata.loggedFields) : LOCAL_CONVERSATION_AGENT_READINESS.auditMetadata.loggedFields,
+      timelineActions: asArray(payload.auditMetadata?.timelineActions).length ? asArray(payload.auditMetadata.timelineActions) : LOCAL_CONVERSATION_AGENT_READINESS.auditMetadata.timelineActions,
+      persistedText: payload.auditMetadata?.persistedText === true,
     },
     requiredBackendSteps: asArray(payload.requiredBackendSteps),
     guardrails: [
@@ -114,6 +129,7 @@ export function mergeCommunicationModelWithConversationAgent(model, agent = LOCA
       conversationRoles: normalizedAgent.summary.roles || normalizedAgent.roles.length,
       conversationSources: normalizedAgent.summary.allowedSources || 0,
       blockedAgentActions: normalizedAgent.summary.blockedActions || 0,
+      auditActions: normalizedAgent.summary.auditActions || 0,
     },
     guardrails: [
       ...asArray(model.guardrails),

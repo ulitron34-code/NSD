@@ -79,7 +79,10 @@ describe('nuxeraCaseTimelineService', () => {
     tables.information_requests = [{ id: 'req-1', order_id: 'order-1', title: 'Estados financieros', status: 'open', priority: 'high', due_date: '2026-07-24', created_at: '2026-07-22T09:00:00.000Z' }];
     tables.nuxera_case_assignments = [{ id: 'asn-1', order_id: 'order-1', assigned_reviewer_role: 'analyst', sla_tier: '24h', sla_due_at: '2026-07-23T08:00:00.000Z', status: 'open', reason: 'revision', created_at: '2026-07-22T08:00:00.000Z', updated_at: '2026-07-22T10:00:00.000Z' }];
     tables.nuxera_notification_outbox = [{ id: 'not-1', order_id: 'order-1', event_id: 'case.assignment.created', audience: 'grantor', channels: ['email'], priority: 'high', status: 'failed', attempts: 2, subject: 'Asignacion vencida', created_at: '2026-07-22T11:00:00.000Z', updated_at: '2026-07-22T12:00:00.000Z' }];
-    tables.audit_logs = [{ id: 'audit-1', order_id: 'order-1', action: 'nuxera_timeline_read', entity_type: 'service_order', entity_id: 'order-1', compliance_relevant: true, created_at: '2026-07-22T13:00:00.000Z' }];
+    tables.audit_logs = [
+      { id: 'audit-1', order_id: 'order-1', action: 'nuxera_timeline_read', entity_type: 'service_order', entity_id: 'order-1', compliance_relevant: true, created_at: '2026-07-22T13:00:00.000Z' },
+      { id: 'audit-2', order_id: 'order-1', action: 'nuxera_conversation_turn_output_blocked', entity_type: 'nuxera_conversation_turn', entity_id: 'order-1:grantor', metadata: { role: 'grantor', provider: 'anthropic', model: 'claude-safe', messageLength: 92, answerLength: 0, message: 'contenido-no-debe-salir' }, compliance_relevant: true, created_at: '2026-07-22T14:00:00.000Z' }
+    ];
   });
 
   afterEach(() => {
@@ -104,8 +107,12 @@ describe('nuxeraCaseTimelineService', () => {
     ]));
     expect(timeline.summary.phases).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: 'evidence', count: 3, blockers: 1 }),
-      expect.objectContaining({ id: 'notifications-audit', count: 2, blockers: 1 })
+      expect.objectContaining({ id: 'notifications-audit', count: 3, blockers: 2 })
     ]));
+    expect(timeline.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'conversation', status: 'output-blocked', actorRole: 'grantor', metadata: expect.objectContaining({ persistedText: false, provider: 'anthropic', messageLength: 92 }) })
+    ]));
+    expect(timeline.events.find((event) => event.type === 'conversation').metadata.message).toBeUndefined();
     expect(timeline.events.every((event) => event.sensitiveContentExcluded)).toBe(true);
   });
 

@@ -506,6 +506,118 @@ export async function listNuxeraNotificationOutbox({ status, audience, orderId, 
   };
 }
 
+
+function summarizeOutboxEntries(entries = []) {
+  const byStatus = entries.reduce((acc, entry) => ({ ...acc, [entry.status]: (acc[entry.status] || 0) + 1 }), {});
+  const byAudience = entries.reduce((acc, entry) => ({ ...acc, [entry.audience]: (acc[entry.audience] || 0) + 1 }), {});
+  const failed = entries.filter((entry) => entry.status === 'failed');
+  const suppressed = entries.filter((entry) => entry.status === 'suppressed');
+  const queued = entries.filter((entry) => entry.status === 'queued');
+  const latestActivityAt = entries.map((entry) => entry.updatedAt || entry.sentAt || entry.createdAt).filter(Boolean).sort().at(-1) || null;
+
+  return {
+    total: entries.length,
+    queued: queued.length,
+    sent: byStatus.sent || 0,
+    failed: failed.length,
+    suppressed: suppressed.length,
+    preview: byStatus.preview || 0,
+    byStatus,
+    byAudience,
+    latestActivityAt,
+    retryCandidates: failed.filter((entry) => Number(entry.attempts || 0) < 3).length,
+    manualReviewRequired: failed.length + suppressed.length + queued.length
+  };
+}
+
+function buildOutboxHealthSignals({ summary, readiness }) {
+  return [
+    {
+      id: 'delivery-gate',
+      label: 'Delivery gate',
+      status: readiness.deliveryEnabled ? 'attention' : 'safe-disabled',
+      value: readiness.deliveryEnabled ? 'enabled' : 'disabled',
+      detail: readiness.deliveryEnabled ? 'Delivery general esta activo; requiere monitoreo.' : 'Delivery general apagado; no se envian mensajes.'
+    },
+    {
+      id: 'email-gate',
+      label: 'Email worker',
+      status: readiness.emailDeliveryEnabled ? 'attention' : 'safe-disabled',
+      value: readiness.emailDeliveryEnabled ? 'enabled' : 'disabled',
+      detail: readiness.emailDeliveryEnabled ? 'Worker email activo por bandera backend.' : 'Worker email apagado por bandera backend.'
+    },
+    {
+      id: 'failed',
+      label: 'Fallidas',
+      status: summary.failed ? 'attention' : 'ready',
+      value: String(summary.failed),
+      detail: summary.failed ? 'Hay notificaciones fallidas para revisar antes de automatizar.' : 'Sin fallas registradas en la ventana consultada.'
+    },
+    {
+      id: 'suppressed',
+      label: 'Suprimidas',
+      status: summary.suppressed ? 'attention' : 'ready',
+      value: String(summary.suppressed),
+      detail: summary.suppressed ? 'Hay dedupe/politicas que suprimieron envios.' : 'Sin supresiones registradas.'
+    },
+    {
+      id: 'queued',
+      label: 'Pendientes',
+      status: summary.queued ? 'attention' : 'ready',
+      value: String(summary.queued),
+      detail: summary.queued ? 'Hay filas queued; no procesar sin runbook aprobado.' : 'Sin cola pendiente.'
+    }
+  ];
+}
+
+export async function getNuxeraNotificationOutboxHealth({ limit = 100 } = {}) {
+  const readiness = getNuxeraNotificationOutboxReadiness();
+  let list;
+  try {
+    list = await listNuxeraNotificationOutbox({ limit });
+  } catch (error) {
+    if (String(error.message || '').includes('does not exist') || String(error.message || '').includes('schema cache')) {
+      return {
+        id: 'nuxera-notification-outbox-health',
+        status: 'notification-health-unavailable',
+        table: 'nuxera_notification_outbox',
+        deliveryEnabled: readiness.deliveryEnabled,
+        emailDeliveryEnabled: readiness.emailDeliveryEnabled,
+        summary: summarizeOutboxEntries([]),
+        signals: [
+          { id: 'source', label: 'Outbox table', status: 'unavailable', value: '0', detail: 'Tabla opcional no disponible; health degrada sin romper.' }
+        ],
+        entries: [],
+        guardrails: [
+          'Notification health is read-only and tolerates missing optional SQL.',
+          'No message is sent, queued, retried or updated from this endpoint.'
+        ]
+      };
+    }
+    throw error;
+  }
+
+  const entries = list.entries || [];
+  const summary = summarizeOutboxEntries(entries);
+  const status = summary.failed ? 'notification-health-attention' : summary.queued || summary.suppressed ? 'notification-health-watch' : 'notification-health-ready';
+
+  return {
+    id: 'nuxera-notification-outbox-health',
+    status,
+    table: 'nuxera_notification_outbox',
+    deliveryEnabled: readiness.deliveryEnabled,
+    emailDeliveryEnabled: readiness.emailDeliveryEnabled,
+    workerMode: readiness.workerMode,
+    summary,
+    signals: buildOutboxHealthSignals({ summary, readiness }),
+    entries: entries.slice(0, 20),
+    guardrails: [
+      'Notification health is read-only; it does not send, queue, retry or update rows.',
+      'Failed/suppressed/queued rows require human review before any delivery automation.',
+      'Email, WhatsApp and in-app remain controlled by backend flags and runbook approval.'
+    ]
+  };
+}
 export function buildNuxeraNotificationDryRunBatch(intents = [], options = {}) {
   const plan = buildNuxeraNotificationDeliveryPlan({
     deliveryEnabled: false,

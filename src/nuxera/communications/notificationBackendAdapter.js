@@ -121,6 +121,83 @@ export function useNotificationOutboxReadiness({ enabled = true, language = "es"
   return state;
 }
 
+
+const LOCAL_NOTIFICATION_HEALTH = Object.freeze({
+  source: "local-fallback",
+  status: "notification-health-unverified",
+  loading: false,
+  error: null,
+  deliveryEnabled: false,
+  emailDeliveryEnabled: false,
+  summary: { total: 0, queued: 0, sent: 0, failed: 0, suppressed: 0, retryCandidates: 0, manualReviewRequired: 0 },
+  signals: [],
+  entries: [],
+  guardrails: ["Local fallback; no confirma health de outbox ni ejecuta delivery."],
+});
+
+export function normalizeNuxeraNotificationOutboxHealthResponse(response) {
+  const payload = response?.notificationHealth || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_NOTIFICATION_HEALTH,
+      error: "nuxera-notification-health-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_NOTIFICATION_HEALTH,
+    ...payload,
+    source: "remote",
+    loading: false,
+    error: null,
+    deliveryEnabled: Boolean(payload.deliveryEnabled),
+    emailDeliveryEnabled: Boolean(payload.emailDeliveryEnabled),
+    summary: {
+      ...LOCAL_NOTIFICATION_HEALTH.summary,
+      ...asObject(payload.summary),
+    },
+    signals: asArray(payload.signals),
+    entries: asArray(payload.entries),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useNotificationOutboxHealth({ enabled = true, limit = 100 } = {}) {
+  const [state, setState] = useState(LOCAL_NOTIFICATION_HEALTH);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled) {
+      setState(LOCAL_NOTIFICATION_HEALTH);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraNotificationOutboxAPI.getHealth({ limit })
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraNotificationOutboxHealthResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Notification outbox health unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_NOTIFICATION_HEALTH,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-notification-health-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled, limit]);
+
+  return state;
+}
 const LOCAL_NOTIFICATION_DRY_RUN = Object.freeze({
   source: "local-fallback",
   status: "notification-dry-run-local",

@@ -314,6 +314,8 @@ export const nuxeraBackendReadinessAPI = {
 export const nuxeraNotificationOutboxAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/notification-outbox-readiness'),
+  getHealth: (params = {}) =>
+    api.get('/nuxera/admin/notification-outbox-health', { params }),
   dryRun: (payload = {}) =>
     api.post('/nuxera/admin/notification-outbox-dry-run', payload),
   queue: (payload = {}) =>

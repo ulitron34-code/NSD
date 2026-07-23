@@ -17,7 +17,7 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
@@ -886,6 +886,7 @@ function AdminOperationsHome({ sectionLabel }) {
     message: "Resume riesgos y evidencia faltante para la mesa de decision."
   }), []);
   const notificationOutboxReadiness = useNotificationOutboxReadiness({ enabled: isNuxeraExperienceEnabled(), language });
+  const notificationOutboxHealth = useNotificationOutboxHealth({ enabled: isNuxeraExperienceEnabled(), limit: 100 });
   const conversationAgentReadiness = useConversationAgentReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const conversationPreview = useConversationPreview({ enabled: isNuxeraExperienceEnabled(), payload: conversationPreviewPayload });
   const caseAssignmentHistory = useCaseAssignmentHistory({ enabled: isNuxeraExperienceEnabled(), limit: 20 });
@@ -1519,6 +1520,12 @@ function AdminOperationsHome({ sectionLabel }) {
             <small>{communicationModel.outbox.loading ? L("Cargando readiness outbox...", "Loading outbox readiness...") : communicationModel.outbox.source}</small>
           </article>
           <article>
+            <span>{L("Health outbox", "Outbox health")}</span>
+            <strong>{notificationOutboxHealth.summary.failed}/{notificationOutboxHealth.summary.queued}</strong>
+            <p>{L("Fallidas / pendientes; lectura operacional sin retry ni envio.", "Failed / queued; operational read without retry or send.")}</p>
+            <small>{notificationOutboxHealth.loading ? L("Cargando health...", "Loading health...") : notificationOutboxHealth.status}</small>
+          </article>
+          <article>
             <span>{L("Delivery", "Delivery")}</span>
             <strong>{communicationModel.summary.automatedDeliveryEnabled ? L("Activo", "Enabled") : L("No activo", "Disabled")}</strong>
             <p>{L("El agente redacta o resume; el envio real requiere outbox, auditoria y reglas anti-duplicado.", "The agent drafts or summarizes; real delivery requires outbox, audit and dedupe rules.")}</p>
@@ -1529,6 +1536,12 @@ function AdminOperationsHome({ sectionLabel }) {
             <strong>{communicationModel.summary.conversationRuntimeEnabled ? L("Activo", "Enabled") : L("Apagado", "Disabled")}</strong>
             <p>{communicationModel.conversationAgent.label || communicationModel.conversationAgent.status}</p>
             <small>{communicationModel.conversationAgent.loading ? L("Cargando readiness agente...", "Loading agent readiness...") : communicationModel.conversationAgent.source}</small>
+          </article>
+          <article>
+            <span>{L("Auditoria chat", "Chat audit")}</span>
+            <strong>{communicationModel.conversationAgent.auditMetadata.persistedText ? L("Texto persistido", "Text persisted") : L("Sin texto", "No text")}</strong>
+            <p>{communicationModel.conversationAgent.auditMetadata.loggedFields.slice(0, 4).join(", ")}</p>
+            <small>{communicationModel.summary.auditActions} acciones / {communicationModel.conversationAgent.auditMetadata.blockedOutputAction}</small>
           </article>
           <article>
             <span>{L("Chat preview", "Chat preview")}</span>
@@ -1552,6 +1565,17 @@ function AdminOperationsHome({ sectionLabel }) {
             <small>{notificationDeliveryBatch.error || `${notificationDeliveryBatch.status} / ${notificationDeliveryBatch.failed} fallidos / ${notificationDeliveryBatch.suppressed} suprimidos`}</small>
           </article>
         </div>
+        {notificationOutboxHealth.signals.length > 0 && (
+          <div>
+            {notificationOutboxHealth.signals.map((signal) => (
+              <article key={signal.id}>
+                <span>{signal.status}</span>
+                <strong>{signal.label}: {signal.value}</strong>
+                <p>{signal.detail}</p>
+              </article>
+            ))}
+          </div>
+        )}
         <div>
           {communicationModel.conversationAgent.roles.map((agentRole) => (
             <article key={agentRole.role}>

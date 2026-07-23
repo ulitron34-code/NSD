@@ -13,7 +13,7 @@ import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlle
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness, runNuxeraConversationTurn } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
-import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
+import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
@@ -102,6 +102,25 @@ router.get(
           'Notification outbox readiness is read-only and does not send email, WhatsApp or in-app notifications.',
           'Delivery remains disabled until SQL, RLS verification, audit logging and worker approval are completed.',
           'Agents may draft or summarize notification content but cannot deliver messages automatically.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/notification-outbox-health',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: 'admin',
+        notificationHealth: await getNuxeraNotificationOutboxHealth({ limit: req.query?.limit }),
+        guardrails: [
+          'Notification health is read-only and cannot send or retry messages.',
+          'Failed, suppressed and queued rows require human review before automation.'
         ]
       });
     } catch (error) {

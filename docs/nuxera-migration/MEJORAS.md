@@ -244,3 +244,18 @@ Bloque 1 ya inicio con el primer ciclo real read-only:
 - Panel compartido de timeline en solicitante, otorgante y admin.
 
 Estado: Timeline 1.2 + Decision Package inicial + Risk Orchestration inicial implementados como capa read-only. Ya existe proyeccion `case_events` sin persistencia, paquete de decision trazable para otorgante, coverage admin, risk profile por rol y risk health admin. Todavia falta SQL/RLS de `nuxera_case_events`, unit tests dedicados de decision/risk, provenance fuerte persistido, proveedores KYB/KYC reales y cualquier write path productivo bajo aprobacion separada.
+
+## Avance Local Sin Commit - 2026-07-23
+
+Se avanzo el cierre de los pendientes principales sin activar produccion:
+- Notificaciones: health read-only del outbox con endpoint admin, adaptador frontend y tarjetas de fallidas/pendientes/senales operativas.
+- Agentes/chat: auditoria conversacional incorporada al timeline como tipo `conversation`, sin persistir ni mostrar texto de mensajes; readiness expone `auditMetadata` seguro.
+- SQL/cutover: borradores aditivos para `nuxera_case_events` y provenance fuerte de evidencia, mas verificador local de drafts.
+- Documentacion: nuevo `NUXERA_CUTOVER_REVIEW_PACK.md` para retomar revision antes de commit/push/deploy.
+
+Lo que sigue antes de produccion:
+- Correr suite completa y corregir cualquier regresion.
+- Revisar SQL/RLS con identidades reales en non-production.
+- Definir si `nuxera_case_events` sera ledger persistido o seguira como proyeccion virtual hasta tener evidencia suficiente.
+- Completar historial de delivery real solo despues de aprobar flags, runbook y proveedor de email.
+- Definir retencion del chat antes de persistir cualquier conversacion completa.
