@@ -15,7 +15,7 @@ import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantM
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
-import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
+import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
@@ -313,6 +313,7 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
   const workbench = selectedCase ? getGrantorCaseWorkbench(selectedCase.id, queue, language) : null;
   const memo = selectedCase ? getGrantorDecisionMemo(selectedCase.id, queue, language) : null;
   const grantorDocumentSummary = selectedCase ? getGrantorDocumentSummary(selectedCase.id, queue, language) : null;
+  const deskHandoff = selectedCase ? getGrantorDeskHandoffPreview(selectedCase.id, queue, language) : null;
   const grantorEvidenceLedger = useAuthorizedGrantorEvidenceLedger(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && !isInboxView && Boolean(orderId),
     role: "grantor",
@@ -380,6 +381,31 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
             <article><span>SLA</span><strong>{caseManagementBoard.summary.overdue}</strong><p>{L("vencidos", "overdue")}; {caseManagementBoard.summary.dueSoon} {L("por vencer", "due soon")}</p></article>
             <article><span>{L("Faltantes", "Gaps")}</span><strong>{caseManagementBoard.summary.openRequests}</strong><p>{caseManagementBoard.summary.needsAssignment} {L("sin asignacion real", "without real assignment")}</p></article>
           </div>
+          {deskHandoff && (
+            <section className="nuxera-grantor-desk-handoff" aria-label={L("Preparacion para Mesa", "Desk preparation")}>
+              <header>
+                <div>
+                  <span>{deskHandoff.status}</span>
+                  <h2>{L("Paquete de envio a Mesa", "Desk handoff package")}</h2>
+                  <p>{deskHandoff.case.label} / {deskHandoff.case.applicant}</p>
+                </div>
+                <strong>{deskHandoff.readyCount}/{deskHandoff.totalCriteria}</strong>
+              </header>
+              <div className="nuxera-grantor-desk-handoff-grid">
+                {deskHandoff.criteria.map((criterion) => (
+                  <article key={criterion.id} data-status={criterion.status}>
+                    <span>{criterion.status}</span>
+                    <strong>{criterion.label}</strong>
+                    <p>{criterion.detail}</p>
+                  </article>
+                ))}
+              </div>
+              <footer>
+                <p>{deskHandoff.nextAction}</p>
+                <NavLink to={deskHandoff.handoffPackage.decisionDeskPath}>{deskHandoff.blockers.length > 0 ? L("Preparar Mesa", "Prepare Desk") : L("Enviar a Mesa", "Send to Desk")}</NavLink>
+              </footer>
+            </section>
+          )}
           {loading && <p>{L("Cargando pipeline autorizado...", "Loading authorized pipeline...")}</p>}
           {!loading && !isDemo && queue.cases.length === 0 && <p>{L("No hay expedientes autorizados disponibles.", "No authorized files are available.")}</p>}
           {!loading && queue.cases.length > 0 && filteredCases.length === 0 && <p>{L("No hay expedientes en este filtro.", "There are no files in this filter.")}</p>}

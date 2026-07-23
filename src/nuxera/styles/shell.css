@@ -2544,3 +2544,119 @@
   color: var(--nuxera-muted);
   font-size: 0.82rem;
 }
+
+.nuxera-grantor-desk-handoff {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 16px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--nuxera-panel) 88%, #ffffff 12%);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-grantor-desk-handoff header,
+.nuxera-grantor-desk-handoff footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nuxera-grantor-desk-handoff header div {
+  display: grid;
+  gap: 4px;
+}
+
+.nuxera-grantor-desk-handoff span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-grantor-desk-handoff h2,
+.nuxera-grantor-desk-handoff p {
+  margin: 0;
+}
+
+.nuxera-grantor-desk-handoff h2 {
+  color: var(--nuxera-ink);
+  font-size: 1.05rem;
+}
+
+.nuxera-grantor-desk-handoff p {
+  color: var(--nuxera-muted);
+  font-size: 0.86rem;
+}
+
+.nuxera-grantor-desk-handoff header > strong {
+  min-width: 64px;
+  text-align: right;
+  color: var(--nuxera-ink);
+  font-size: 1.45rem;
+}
+
+.nuxera-grantor-desk-handoff-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nuxera-grantor-desk-handoff-grid article {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 132px;
+  padding: 10px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-grantor-desk-handoff-grid article[data-status="blocked"] {
+  border-color: rgba(185, 28, 28, 0.45);
+}
+
+.nuxera-grantor-desk-handoff-grid article[data-status="ready"] {
+  border-color: rgba(21, 128, 61, 0.38);
+}
+
+.nuxera-grantor-desk-handoff-grid article strong {
+  color: var(--nuxera-ink);
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.nuxera-grantor-desk-handoff footer a {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  color: var(--nuxera-ink);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-decoration: none;
+  background: var(--nuxera-gold);
+  border-radius: 8px;
+}
+
+@media (max-width: 1100px) {
+  .nuxera-grantor-desk-handoff-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .nuxera-grantor-desk-handoff header,
+  .nuxera-grantor-desk-handoff footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nuxera-grantor-desk-handoff header > strong {
+    text-align: left;
+  }
+
+  .nuxera-grantor-desk-handoff-grid {
+    grid-template-columns: 1fr;
+  }
+}

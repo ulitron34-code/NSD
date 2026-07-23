@@ -122,6 +122,10 @@ function formatAssignmentOwner(assignment, language) {
   if (!assignment) return null;
   const roleLabels = {
     analista: { es: "Analista", en: "Analyst" },
+    grantor_analyst: { es: "Analista otorgante", en: "Grantor analyst" },
+    grantor_senior: { es: "Analista senior", en: "Senior analyst" },
+    compliance_reviewer: { es: "Compliance", en: "Compliance" },
+    risk_committee: { es: "Comite de riesgo", en: "Risk committee" },
     agente_interno: { es: "Agente interno", en: "Internal agent" },
     compliance_officer: { es: "Compliance", en: "Compliance" },
     administrador: { es: "Administrador", en: "Administrator" }
@@ -266,6 +270,51 @@ function getOperationalAction(caseItem, language) {
   return pickLang({ es: "Mantener monitoreo operativo y esperar nueva evidencia.", en: "Keep operational monitoring and wait for new evidence." }, language);
 }
 
+function buildDeskHandoffCriteria(caseItem, managementItem, workbench, language) {
+  const openRequests = managementItem.openRequests;
+  const visibleEvidence = workbench.requiredEvidence.filter((item) => item.status === "visible").length;
+  const verifiedSla = !["overdue", "invalid-sla", "needs-assignment"].includes(managementItem.slaStatus);
+
+  return [
+    {
+      id: "assignment-sla",
+      label: pickLang({ es: "Responsable y SLA verificables", en: "Verifiable owner and SLA" }, language),
+      status: verifiedSla && managementItem.source !== "policy-fallback" ? "ready" : "blocked",
+      detail: managementItem.source === "policy-fallback"
+        ? pickLang({ es: "Usa regla local; falta asignacion operativa real.", en: "Uses local policy; real operational assignment is missing." }, language)
+        : `${managementItem.owner} / ${managementItem.sla} / ${managementItem.slaStatus}.`,
+    },
+    {
+      id: "open-requests",
+      label: pickLang({ es: "Faltantes cerrados", en: "Closed information gaps" }, language),
+      status: openRequests === 0 ? "ready" : "blocked",
+      detail: openRequests === 0
+        ? pickLang({ es: "Sin solicitudes de informacion abiertas.", en: "No open information requests." }, language)
+        : pickLang({ es: `${openRequests} faltante(s) abiertos antes de Mesa.`, en: `${openRequests} open gap(s) before Desk.` }, language),
+    },
+    {
+      id: "decision-readiness",
+      label: pickLang({ es: "Caso apto para analisis", en: "Case ready for analysis" }, language),
+      status: caseItem.priority === "committee-ready" ? "ready" : "blocked",
+      detail: caseItem.priority === "committee-ready"
+        ? pickLang({ es: "Readiness suficiente para memo humano no vinculante.", en: "Enough readiness for a non-binding human memo." }, language)
+        : pickLang({ es: "Aun requiere gestion operativa antes del memo.", en: "Still requires operational management before the memo." }, language),
+    },
+    {
+      id: "authorized-evidence",
+      label: pickLang({ es: "Evidencia autorizada visible", en: "Visible authorized evidence" }, language),
+      status: visibleEvidence > 0 ? "ready" : "blocked",
+      detail: pickLang({ es: `${visibleEvidence}/${workbench.requiredEvidence.length} documentos visibles en resumen local.`, en: `${visibleEvidence}/${workbench.requiredEvidence.length} documents visible in local summary.` }, language),
+    },
+    {
+      id: "human-review",
+      label: pickLang({ es: "Revision humana obligatoria", en: "Mandatory human review" }, language),
+      status: "required",
+      detail: pickLang({ es: "Mesa puede revisar; no aprueba ni emite condiciones automaticamente.", en: "Desk can review; it does not approve or issue conditions automatically." }, language),
+    },
+  ];
+}
+
 export function getGrantorCaseManagementBoard(queue = getGrantorCaseQueue(), language = "es") {
   const cases = Array.isArray(queue?.cases) ? queue.cases : [];
   const items = cases.map((caseItem) => {
@@ -307,6 +356,68 @@ export function getGrantorCaseManagementBoard(queue = getGrantorCaseQueue(), lan
     ],
   };
 }
+export function getGrantorDeskHandoffPreview(caseId, queue = getGrantorCaseQueue(), language = "es") {
+  const selectedCase = resolveSelectedGrantorCase(queue, caseId);
+  if (!selectedCase) {
+    return {
+      status: "no-case-selected",
+      case: null,
+      criteria: [],
+      blockers: [],
+      readyCount: 0,
+      totalCriteria: 0,
+      nextAction: pickLang({ es: "Selecciona un expediente para preparar Mesa.", en: "Select a file to prepare Desk." }, language),
+      guardrails: [pickLang({ es: "Preview local; no persiste cambios ni mueve expedientes.", en: "Local preview; it does not persist changes or move files." }, language)],
+    };
+  }
+
+  const board = getGrantorCaseManagementBoard(queue, language);
+  const managementItem = board.items.find((item) => item.caseId === selectedCase.id);
+  const workbench = getGrantorCaseWorkbench(selectedCase.id, queue, language);
+  const criteria = buildDeskHandoffCriteria(selectedCase, managementItem, workbench, language);
+  const blockers = criteria.filter((item) => item.status === "blocked");
+  const readyCount = criteria.filter((item) => item.status === "ready").length;
+
+  return {
+    id: `${selectedCase.id}-desk-handoff-preview`,
+    status: blockers.length > 0 ? "not-ready-for-desk" : "ready-for-desk-preview",
+    case: {
+      id: selectedCase.id,
+      label: selectedCase.name,
+      applicant: selectedCase.applicant,
+      priority: selectedCase.priority,
+      risk: selectedCase.risk,
+      owner: managementItem.owner,
+      sla: managementItem.sla,
+    },
+    criteria,
+    blockers,
+    readyCount,
+    totalCriteria: criteria.length,
+    nextAction: blockers.length > 0
+      ? pickLang({ es: `Resolver ${blockers[0].label.toLowerCase()} antes de abrir Mesa.`, en: `Resolve ${blockers[0].label.toLowerCase()} before opening Desk.` }, language)
+      : pickLang({ es: "Abrir Mesa con paquete operativo preparado para revision humana.", en: "Open Desk with an operational package prepared for human review." }, language),
+    handoffPackage: {
+      decisionDeskPath: "/dashboard",
+      mode: "local-read-only-preview",
+      includes: [
+        pickLang({ es: "Responsable, SLA y trazabilidad operativa.", en: "Owner, SLA and operational traceability." }, language),
+        pickLang({ es: "Faltantes y evidencia visible autorizada.", en: "Gaps and visible authorized evidence." }, language),
+        pickLang({ es: "Preguntas de Mesa sin recomendacion vinculante.", en: "Desk questions without binding recommendation." }, language),
+      ],
+    },
+    auditTrail: [
+      pickLang({ es: "Preparacion calculada desde Gestion de expedientes.", en: "Preparation calculated from Case management." }, language),
+      pickLang({ es: "No inserta registros, no envia correos y no cambia estado del expediente.", en: "It does not insert records, send emails, or change file status." }, language),
+      pickLang({ es: "Mesa conserva revision humana antes de contacto, comite o decision.", en: "Desk keeps human review before contact, committee or decision." }, language),
+    ],
+    guardrails: [
+      pickLang({ es: "Preview local; no persiste cambios ni mueve expedientes.", en: "Local preview; it does not persist changes or move files." }, language),
+      pickLang({ es: "Enviar a Mesa abre el espacio de analisis, no una aprobacion automatica.", en: "Send to Desk opens the analysis workspace, not an automatic approval." }, language),
+    ],
+  };
+}
+
 export function getGrantorQueueSummary(queue = getGrantorCaseQueue()) {
   const committeeReady = queue.cases.filter((item) => item.priority === "committee-ready").length;
   const needsInformation = queue.cases.filter((item) => item.priority === "needs-information").length;

@@ -15,7 +15,7 @@ import { buildEmptyProjectBuilderAnswers, getMissingRequiredProjectBuilderFields
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { readSelectedExpedienteId, subscribeSelectedExpediente, writeSelectedExpedienteId } from "../hooks/useSelectedExpediente";
-import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../nuxera/grantor/caseQueue";
+import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, buildMarketWatchlistForExpedient, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { buildResearchMissionForExpedient, getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
@@ -1701,6 +1701,81 @@ describe("NUXERA grantor case queue", () => {
     expect(board.summary).toMatchObject({ total: 1, overdue: 1, openRequests: 1 });
     expect(board.items[0]).toMatchObject({ slaStatus: "overdue", readyForDesk: false, source: "nuxera_case_assignments" });
     expect(board.guardrails.join(" ")).toContain("no contiene memo");
+  });
+  it("prepares a controlled desk handoff preview from operational case management", () => {
+    const blockedQueue = buildGrantorCaseQueueFromPipeline([{
+      share: { id: "share-handoff-1", status: "accepted" },
+      order: {
+        id: "order-handoff-blocked",
+        project_name: "Expansion bloqueada",
+        service_type: "combo-complete",
+        status: "in_progress",
+        requested_amount: 9000000,
+        metadata: { companyName: "Empresa Bloqueada", sector: "Manufactura", country: "MX" },
+      },
+      documentsCount: 4,
+      latestReview: null,
+      scoring: { finalScore: 70, regulatoryValidation: { status: "clear" } },
+      interest: null,
+      contactRequest: null,
+      informationRequests: [{ id: "req-handoff-1", title: "Estado financiero auditado", status: "open", priority: "high" }],
+      assignment: {
+        id: "assignment-handoff-1",
+        assignedReviewerId: "reviewer-handoff-1",
+        assignedReviewerRole: "grantor_analyst",
+        slaTier: "needs-information-48h",
+        slaDueAt: "2000-07-24T18:00:00.000Z",
+        status: "open",
+        reason: "Cerrar faltante documental",
+        source: "nuxera_case_assignments",
+      },
+    }]);
+    const blockedHandoff = getGrantorDeskHandoffPreview("order-handoff-blocked", blockedQueue);
+
+    expect(blockedHandoff.status).toBe("not-ready-for-desk");
+    expect(blockedHandoff.blockers.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["assignment-sla", "open-requests", "decision-readiness"])
+    );
+    expect(blockedHandoff.guardrails.join(" ")).toContain("no persiste");
+
+    const readyQueue = buildGrantorCaseQueueFromPipeline([{
+      share: { id: "share-handoff-2", status: "accepted" },
+      order: {
+        id: "order-handoff-ready",
+        project_name: "Expansion lista",
+        service_type: "combo-complete",
+        status: "in_progress",
+        requested_amount: 14000000,
+        metadata: {
+          companyName: "Empresa Lista",
+          sector: "SaaS B2B",
+          country: "MX",
+          documents: ["KYC/KYB", "Estados financieros", "Modelo financiero", "Contratos"],
+        },
+      },
+      documentsCount: 4,
+      latestReview: { status: "reviewed" },
+      scoring: { finalScore: 88, regulatoryValidation: { status: "clear" } },
+      interest: { status: "under_review" },
+      contactRequest: null,
+      informationRequests: [],
+      assignment: {
+        id: "assignment-handoff-2",
+        assignedReviewerId: "reviewer-handoff-2",
+        assignedReviewerRole: "grantor_senior",
+        slaTier: "committee-ready-24h",
+        slaDueAt: "2099-07-24T18:00:00.000Z",
+        status: "open",
+        reason: "Preparar revision humana",
+        source: "nuxera_case_assignments",
+      },
+    }]);
+    const readyHandoff = getGrantorDeskHandoffPreview("order-handoff-ready", readyQueue);
+
+    expect(readyHandoff.status).toBe("ready-for-desk-preview");
+    expect(readyHandoff.blockers).toHaveLength(0);
+    expect(readyHandoff.handoffPackage).toMatchObject({ decisionDeskPath: "/dashboard", mode: "local-read-only-preview" });
+    expect(readyHandoff.criteria.find((item) => item.id === "human-review").status).toBe("required");
   });
   it("builds actionable inbox filters instead of a duplicated decision desk", () => {
     const queue = getGrantorCaseQueue();

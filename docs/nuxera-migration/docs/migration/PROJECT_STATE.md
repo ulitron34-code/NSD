@@ -1868,3 +1868,11 @@ Guardrails remain unchanged: delivery stays disabled, dry-run performs validatio
 Renamed the grantor operational surface from `Bandeja de expedientes` to `Gestion de expedientes` and made it functionally different from `Mesa de decision`. Gestion now exposes an operational board for SLA, owners, open requests, overdue/due-soon counts, cases ready for Desk, and next operational actions. Its case cards show owner/SLA/open gaps and route cases to Mesa without showing decision signals as the primary content.
 
 Mesa remains focused on non-binding memo, decision questions, authorized evidence summary, conditions and human review. The change keeps the same routes and feature flag, does not add writes, does not alter permissions and keeps all credit/term-sheet decisions human-gated.
+
+## Controlled grantor Desk handoff preview - 2026-07-23
+
+Added a read-only handoff preparation layer between `Gestion de expedientes` and `Mesa de decision`. `src/nuxera/grantor/caseQueue.js` now exposes `getGrantorDeskHandoffPreview`, which evaluates whether the selected case has a verifiable assignment/SLA, no open information requests, committee-ready priority, visible authorized evidence, and the mandatory human-review guardrail. The function returns `ready-for-desk-preview` or `not-ready-for-desk`, explicit blockers, ready/total criterion counts, next action text, a local handoff package, audit-trail copy, and guardrails stating that nothing is persisted or moved automatically.
+
+Frontend: the grantor `Gestion de expedientes` view now shows a `Paquete de envio a Mesa` panel for the active case, with live criteria cards and a CTA that becomes `Preparar Mesa` while blockers remain or `Enviar a Mesa` once the case is ready. This makes the operational tab materially different from Mesa: Gestion prepares and clears blockers; Mesa keeps analysis, memo, evidence questions and human review. Reviewer role labels were also expanded for `grantor_analyst`, `grantor_senior`, `compliance_reviewer`, and `risk_committee` so real assignments do not leak technical ids in the UI.
+
+Guardrails: no backend write route was added, no SQL was applied, no status mutation occurs, no notification/email is sent, and the handoff remains a local read-only preview until the controlled write path is explicitly designed and approved.
