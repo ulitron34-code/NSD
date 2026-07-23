@@ -82,6 +82,23 @@ describe('nuxeraNotificationOutboxService', () => {
     expect(state.auditEvents).toEqual([]);
   });
 
+  it('accepts assignment and SLA notification events in dry-run normalization', () => {
+    const preview = buildNuxeraNotificationOutboxPreview({
+      eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_SLA_DUE_SOON,
+      recipientUserId: 'reviewer-1',
+      recipientRole: 'grantor',
+      orderId: 'order-1',
+      subject: 'SLA por vencer',
+      channels: ['in_app', 'email']
+    });
+
+    expect(preview).toMatchObject({
+      eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_SLA_DUE_SOON,
+      audience: 'grantor',
+      deliveryEnabled: false,
+      status: 'preview'
+    });
+  });
   it('rejects notification intents when recipient role does not match event audience', () => {
     expect(() => buildNuxeraNotificationOutboxPreview({
       eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_DECISION_READY,

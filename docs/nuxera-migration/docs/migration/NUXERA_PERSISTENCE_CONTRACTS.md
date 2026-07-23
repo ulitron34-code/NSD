@@ -337,3 +337,5 @@ Connected the grantor NUXERA home to the new endpoint the same session:
 - Verified in Chrome: grantor NUXERA home still renders without console errors in demo mode (where the new hook stays disabled and falls back to local, as designed).
 
 Remaining gaps updated 2026-07-22: the real authenticated HTTP test for `GET /api/nuxera/orders/:orderId/grantor-evidence` is now closed in the evidence template, including deployed-preview verification. `nuxera_review_artifacts` (grantor memo persistence) and new write paths remain contract-only, unchanged by this note. Resolved locally 2026-07-22: authorized-grantor evidence reads should emit `audit_logs` like legacy data-room views. Pending: push/deploy the local route change and confirm one real deployed `nuxera_grantor_evidence_read` row.
+
+Notification catalog now includes assignment/SLA dry-run events (`grantor-case-assigned`, `grantor-sla-due-soon`, `admin-case-sla-overdue`). These events are accepted by dry-run validation only; delivery remains disabled until the outbox worker and flags are separately approved.

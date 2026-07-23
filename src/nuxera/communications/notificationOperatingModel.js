@@ -72,6 +72,35 @@ const EVENT_DEFINITIONS = [
     agentMode: "draft-non-binding-memo",
   },
   {
+    id: NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_CASE_ASSIGNED,
+    audience: "grantor",
+    trigger: { es: "Administrador asigna o reasigna un expediente con SLA", en: "Administrator assigns or reassigns a file with SLA" },
+    subject: { es: "Tienes un expediente asignado en NUXERA", en: "You have an assigned NUXERA file" },
+    action: { es: "Abrir Gestion de expedientes y revisar SLA", en: "Open case management and review SLA" },
+    priority: "high",
+    channels: ["in-app", "email"],
+    agentMode: "triage-summary",
+  },
+  {
+    id: NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_SLA_DUE_SOON,
+    audience: "grantor",
+    trigger: { es: "SLA de expediente asignado vence en menos de 24 horas", en: "Assigned file SLA is due within 24 hours" },
+    subject: { es: "SLA por vencer en expediente NUXERA", en: "NUXERA file SLA due soon" },
+    action: { es: "Atender faltantes o escalar antes del vencimiento", en: "Handle gaps or escalate before due time" },
+    priority: "high",
+    channels: ["in-app", "email"],
+    agentMode: "summarize-delta",
+  },
+  {
+    id: NUXERA_COMMUNICATION_EVENT_IDS.ADMIN_CASE_SLA_OVERDUE,
+    audience: "admin",
+    trigger: { es: "SLA de expediente asignado ya vencio", en: "Assigned file SLA is overdue" },
+    subject: { es: "SLA vencido requiere seguimiento", en: "Overdue SLA requires follow-up" },
+    action: { es: "Revisar historial de asignaciones y reasignar si aplica", en: "Review assignment history and reassign if needed" },
+    priority: "critical",
+    channels: ["in-app"],
+    agentMode: "no-agent",
+  },  {
     id: NUXERA_COMMUNICATION_EVENT_IDS.ADMIN_DELIVERY_FAILURE,
     audience: "admin",
     trigger: { es: "Email, WhatsApp o in-app falla despues de reintento", en: "Email, WhatsApp or in-app fails after retry" },
@@ -192,6 +221,66 @@ export function buildNuxeraNotificationEvent(eventId, context = {}, language = "
   };
 }
 
+export function buildNuxeraAssignmentNotificationIntents(assignments = [], context = {}) {
+  const adminRecipientUserId = context.adminRecipientUserId || "admin-operations";
+
+  return (Array.isArray(assignments) ? assignments : []).flatMap((assignment) => {
+    const orderId = assignment.orderId;
+    const orderLabel = context.caseLabels?.get?.(orderId)?.label || assignment.caseLabel || orderId;
+    const reviewerRecipient = assignment.assignedReviewerId
+      ? { recipientUserId: assignment.assignedReviewerId, recipientRole: "grantor" }
+      : null;
+    const baseMetadata = {
+      assignmentId: assignment.id,
+      slaTier: assignment.slaTier,
+      slaStatus: assignment.slaStatus,
+      source: "nuxera_case_assignments",
+    };
+    const intents = [];
+
+    if (assignment.status === "open" && reviewerRecipient) {
+      intents.push({
+        eventId: NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_CASE_ASSIGNED,
+        orderId,
+        ...reviewerRecipient,
+        subject: "Expediente NUXERA asignado",
+        bodyPreview: `${orderLabel || orderId} / ${assignment.slaTier || "SLA"} / ${assignment.reason || "Seguimiento requerido"}`,
+        channels: ["in_app", "email"],
+        priority: "high",
+        metadata: baseMetadata,
+      });
+    }
+
+    if (assignment.slaStatus === "due-soon" && reviewerRecipient) {
+      intents.push({
+        eventId: NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_SLA_DUE_SOON,
+        orderId,
+        ...reviewerRecipient,
+        subject: "SLA NUXERA por vencer",
+        bodyPreview: `${orderLabel || orderId} vence ${assignment.slaDueAt || "pronto"}`,
+        channels: ["in_app", "email"],
+        priority: "high",
+        metadata: baseMetadata,
+      });
+    }
+
+    if (assignment.slaStatus === "overdue") {
+      intents.push({
+        eventId: NUXERA_COMMUNICATION_EVENT_IDS.ADMIN_CASE_SLA_OVERDUE,
+        orderId,
+        recipientUserId: adminRecipientUserId,
+        recipientRole: "admin",
+        subject: "SLA NUXERA vencido",
+        bodyPreview: `${orderLabel || orderId} / ${assignment.assignedReviewerRole || "sin responsable"}`,
+        channels: ["in_app"],
+        priority: "critical",
+        metadata: baseMetadata,
+      });
+    }
+
+    return intents;
+  });
+}
 export function buildNuxeraConversationEnvelope(context = {}, language = "es") {
   const role = context.role || "applicant";
   const selectedId = context.selectedId || context.orderId || null;

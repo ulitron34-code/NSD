@@ -16,7 +16,7 @@ import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspa
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
-import { getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
+import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
@@ -603,7 +603,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const controlledWriteGate = useControlledWriteGate({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledChangeRequest = useControlledChangeRequest({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledReleaseDossier = useControlledReleaseDossier({ enabled: isNuxeraExperienceEnabled(), language });
-  const notificationDryRunIntents = useMemo(() => ([
+  const baseNotificationDryRunIntents = useMemo(() => ([
     { eventId: "applicant-missing-evidence", orderId: "demo-order-1", recipientUserId: "demo-applicant", recipientRole: "applicant", subject: "Evidencia faltante", channels: ["email", "in_app"] },
     { eventId: "grantor-information-response", orderId: "demo-order-1", recipientEmail: "grantor@example.com", recipientRole: "grantor", subject: "Respuesta recibida", channels: ["email"] }
   ]), []);
@@ -616,11 +616,20 @@ function AdminOperationsHome({ sectionLabel }) {
   const notificationOutboxReadiness = useNotificationOutboxReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const conversationAgentReadiness = useConversationAgentReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const conversationPreview = useConversationPreview({ enabled: isNuxeraExperienceEnabled(), payload: conversationPreviewPayload });
+  const caseAssignmentHistory = useCaseAssignmentHistory({ enabled: isNuxeraExperienceEnabled(), limit: 20 });
+  const caseAssignmentNotificationIntents = useMemo(
+    () => buildNuxeraAssignmentNotificationIntents(caseAssignmentHistory.assignments, { adminRecipientUserId: "admin-operations" }),
+    [caseAssignmentHistory.assignments]
+  );
+  const notificationDryRunIntents = useMemo(
+    () => [...baseNotificationDryRunIntents, ...caseAssignmentNotificationIntents].slice(0, 8),
+    [baseNotificationDryRunIntents, caseAssignmentNotificationIntents]
+  );
   const notificationDryRun = useNotificationDryRun({ enabled: isNuxeraExperienceEnabled(), intents: notificationDryRunIntents, language });
   const notificationOutboxList = useNotificationOutboxList({ enabled: isNuxeraExperienceEnabled(), limit: 10 });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const adminGrantorCases = useAdminGrantorCases({ enabled: isNuxeraExperienceEnabled(), language });
-  const caseAssignmentHistory = useCaseAssignmentHistory({ enabled: isNuxeraExperienceEnabled(), limit: 20 });
+
   const [caseAssignmentForm, setCaseAssignmentForm] = useState({
     caseId: "",
     assignedReviewerRole: "grantor_analyst",

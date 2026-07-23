@@ -26,7 +26,7 @@ import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
 import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
-import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
+import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraAssignmentNotificationIntents, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse, normalizeNuxeraConversationTurnResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
 
@@ -1383,8 +1383,8 @@ describe("NUXERA notification and conversation operating model", () => {
     expect(catalog.status).toBe("design-ready-no-delivery-enabled");
     expect(catalog.summary).toMatchObject({
       applicant: 3,
-      grantor: 3,
-      admin: 1,
+      grantor: 5,
+      admin: 2,
       automatedDeliveryEnabled: false,
       humanReviewRequired: true,
     });
@@ -1392,6 +1392,37 @@ describe("NUXERA notification and conversation operating model", () => {
     expect(catalog.guardrails.join(" ")).toContain("outbox");
   });
 
+  it("builds assignment-driven notification intents for dry-run only", () => {
+    const intents = buildNuxeraAssignmentNotificationIntents([
+      {
+        id: "assignment-1",
+        orderId: "order-1",
+        assignedReviewerId: "reviewer-1",
+        assignedReviewerRole: "grantor_analyst",
+        slaTier: "needs-information-48h",
+        slaStatus: "due-soon",
+        slaDueAt: "2026-07-24T18:00:00.000Z",
+        status: "open",
+        reason: "Validar evidencia faltante",
+      },
+      {
+        id: "assignment-2",
+        orderId: "order-2",
+        assignedReviewerRole: "risk_committee",
+        slaTier: "risk-escalation-24h",
+        slaStatus: "overdue",
+        status: "open",
+      },
+    ]);
+
+    expect(intents.map((intent) => intent.eventId)).toEqual([
+      NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_CASE_ASSIGNED,
+      NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_SLA_DUE_SOON,
+      NUXERA_COMMUNICATION_EVENT_IDS.ADMIN_CASE_SLA_OVERDUE,
+    ]);
+    expect(intents[0]).toMatchObject({ recipientUserId: "reviewer-1", recipientRole: "grantor", channels: ["in_app", "email"] });
+    expect(intents[2]).toMatchObject({ recipientUserId: "admin-operations", recipientRole: "admin", priority: "critical" });
+  });
   it("builds a queued-preview notification only when recipient and file context are aligned", () => {
     const event = buildNuxeraNotificationEvent(NUXERA_COMMUNICATION_EVENT_IDS.GRANTOR_INFORMATION_RESPONSE, {
       orderId: "order-123",
