@@ -249,6 +249,15 @@ export const nuxeraProjectBuilderAPI = {
     api.post('/nuxera/applicant/project-builder/draft', { answers, language })
 };
 
+export const nuxeraCaseTimelineAPI = {
+  getApplicantTimeline: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/timeline`),
+  getGrantorTimeline: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-timeline`),
+  getAdminTimeline: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/timeline`)
+};
+
 export const nuxeraEvidenceAPI = {
   getOrderEvidence: (orderId) =>
     api.get(`/nuxera/orders/${orderId}/evidence`),

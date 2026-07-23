@@ -26,6 +26,7 @@ import { resolveNuxeraRole } from "../nuxera/navigation/roleResolver";
 import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/sectionRegistry";
 import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
+import { normalizeNuxeraCaseTimelineResponse } from "../nuxera/orchestration/caseTimelineAdapter";
 import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraAssignmentNotificationIntents, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationDeliveryBatchResponse, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse, normalizeNuxeraConversationTurnResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
@@ -926,6 +927,43 @@ describe("NUXERA secure multi-agent orchestration", () => {
     expect(buildContextAccessEnvelope({ ...authorizedContext, isDemo: true }).allowed).toBe(false);
   });
 });
+describe("NUXERA case timeline adapter", () => {
+  it("normalizes a remote case timeline without inventing sensitive content", () => {
+    const timeline = normalizeNuxeraCaseTimelineResponse({
+      orderId: "order-1",
+      workspaceRole: "grantor",
+      timeline: {
+        status: "timeline-ready",
+        orderId: "order-1",
+        workspaceRole: "grantor",
+        summary: { total: 2, blockers: 1, evidence: 1, availableSources: 4, unavailableSources: 1, byType: { evidence: 1, notification: 1 } },
+        sources: [{ id: "evidence-links", status: "available", count: 1 }],
+        events: [
+          { id: "ev-1", type: "evidence", source: "nuxera_evidence_links", title: "Evidencia", description: "Referencia autorizada", severity: "info", sensitiveContentExcluded: true },
+          { id: "ev-2", type: "notification", source: "nuxera_notification_outbox", title: "Aviso", description: "Queued", severity: "warning" },
+        ],
+        guardrails: ["Timeline read-only."],
+      },
+      guardrails: ["No content payloads."],
+    });
+
+    expect(timeline).toMatchObject({
+      source: "remote",
+      status: "timeline-ready",
+      orderId: "order-1",
+      workspaceRole: "grantor",
+      summary: { total: 2, blockers: 1, evidence: 1, notifications: 0, availableSources: 4, unavailableSources: 1 },
+    });
+    expect(timeline.events).toHaveLength(2);
+    expect(timeline.events.every((event) => event.sensitiveContentExcluded)).toBe(true);
+    expect(timeline.guardrails.join(" ")).toContain("No content payloads");
+
+    const missing = normalizeNuxeraCaseTimelineResponse(null);
+    expect(missing.events).toEqual([]);
+    expect(missing.error).toBe("nuxera-case-timeline-missing");
+  });
+});
+
 describe("NUXERA backend readiness adapter", () => {
   it("normalizes backend readiness responses for admin review", () => {
     const readiness = normalizeNuxeraBackendReadinessResponse({

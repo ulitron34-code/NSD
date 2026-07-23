@@ -20,6 +20,7 @@ import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog 
 import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
+import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
 
 const roleCopy = {
   applicant: {
@@ -57,6 +58,45 @@ const roleCopy = {
   },
 };
 
+function CaseTimelinePanel({ timeline, title, emptyLabel }) {
+  const { L } = useNuxeraLanguage();
+  const events = timeline.events.slice(0, 6);
+  return (
+    <section className="nuxera-case-timeline" aria-label={title}>
+      <header>
+        <div>
+          <span>{timeline.loading ? L("Cargando timeline", "Loading timeline") : timeline.status}</span>
+          <h2>{title}</h2>
+          <p>{timeline.error || `${timeline.summary.total} eventos / ${timeline.summary.availableSources} fuentes activas / ${timeline.summary.unavailableSources} no disponibles`}</p>
+        </div>
+        <strong>{timeline.summary.blockers} {L("blockers", "blockers")}</strong>
+      </header>
+      {events.length === 0 ? (
+        <article>
+          <span>{timeline.source}</span>
+          <strong>{emptyLabel}</strong>
+          <p>{timeline.guardrails[0]}</p>
+        </article>
+      ) : (
+        <div>
+          {events.map((event) => (
+            <article key={event.id}>
+              <span>{event.type} / {event.status} / {event.severity}</span>
+              <strong>{event.title}</strong>
+              <p>{event.description}</p>
+              <small>{event.timestamp || L("Sin fecha", "No date")} / {event.source}</small>
+            </article>
+          ))}
+        </div>
+      )}
+      <footer>
+        {timeline.guardrails.slice(0, 2).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
+      </footer>
+    </section>
+  );
+}
+
+
 function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
   const { L, language } = useNuxeraLanguage();
   const mission = getApplicantGuidedMission("applicant", language);
@@ -77,6 +117,10 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
     role: "applicant",
     language,
+  });
+  const applicantTimeline = useNuxeraCaseTimeline(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "applicant",
   });
   const stateDetail = ordersLoading
     ? L("Buscando expediente real para lectura NUXERA.", "Looking up a real file for NUXERA to read.")
@@ -263,6 +307,12 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
         </>
       )}
 
+      <CaseTimelinePanel
+        timeline={applicantTimeline}
+        title={L("Actividad del expediente", "File activity")}
+        emptyLabel={isDemo ? L("Timeline disponible con expediente real", "Timeline available with a real file") : L("Sin eventos operacionales", "No operational events")}
+      />
+
       <div className="nuxera-mission-panels">
         {variant === "home" && (
           <section>
@@ -319,6 +369,10 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
     role: "grantor",
     language,
   });
+  const grantorTimeline = useNuxeraCaseTimeline(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "grantor",
+  });
   const inboxFilters = getGrantorInboxFilters(queue, language);
   const caseManagementBoard = getGrantorCaseManagementBoard(queue, language);
   const managementByCaseId = new Map(caseManagementBoard.items.map((item) => [item.caseId, item]));
@@ -352,6 +406,12 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
         <article><span>{L("Riesgo alto", "High risk")}</span><strong>{summary.observed}</strong></article>
         <article><span>{L("Revision humana", "Human review")}</span><strong>{summary.requiresHumanReview ? L("Si", "Yes") : L("No", "No")}</strong></article>
       </div>
+
+      <CaseTimelinePanel
+        timeline={grantorTimeline}
+        title={isInboxView ? L("Eventos y blockers", "Events and blockers") : L("Trazabilidad para Mesa", "Desk traceability")}
+        emptyLabel={isDemo ? L("Timeline disponible con expediente autorizado", "Timeline available with an authorized file") : L("Sin eventos operacionales autorizados", "No authorized operational events")}
+      />
 
       {isInboxView ? (
         <section className="nuxera-grantor-inbox" aria-label={L("Gestion operativa de expedientes otorgante", "Grantor operational case management")}>
@@ -705,6 +765,10 @@ function AdminOperationsHome({ sectionLabel }) {
   const assignmentCandidates = consoleState.grantorDocumentReadiness.slice(0, 12);
   const selectedAssignmentCaseId = caseAssignmentForm.caseId || assignmentCandidates[0]?.caseId || "";
   const selectedAssignmentCase = assignmentCandidates.find((item) => item.caseId === selectedAssignmentCaseId) || assignmentCandidates[0] || null;
+  const adminTimeline = useNuxeraCaseTimeline(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+    role: "admin",
+  });
   const caseAssignmentCanSubmit = Boolean(selectedAssignmentCaseId) && !caseAssignmentSubmitting;
   const updateCaseAssignmentForm = (field, value) => {
     setCaseAssignmentForm((current) => ({ ...current, [field]: value }));
@@ -1409,6 +1473,12 @@ function AdminOperationsHome({ sectionLabel }) {
           <small>{L("Esta consola no habilita producción: solo consolida señales para revisión humana y cambio separado.", "This console does not enable production: it only consolidates signals for human review and a separate change.")}</small>
         </footer>
       </section>
+      <CaseTimelinePanel
+        timeline={adminTimeline}
+        title={L("Trazabilidad del expediente", "File traceability")}
+        emptyLabel={L("Selecciona un expediente real para ver timeline", "Select a real file to view timeline")}
+      />
+
       <section className="nuxera-admin-case-assignment" aria-label={L("Previsualizacion de asignacion de expedientes NUXERA", "NUXERA case assignment preview")}>
         <header>
           <span>{caseAssignmentPreview?.status || L("Preview controlado", "Controlled preview")}</span>

@@ -16,6 +16,7 @@ import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicySer
 import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
+import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
 import { logAuditEvent } from '../utils/audit.js';
 
@@ -616,6 +617,84 @@ router.get(
           'NU-ADM-CTRL-001 exposes admin controls in read-only mode.',
           'Admin controls do not activate automation, permissions or licensed market data.',
           'No write endpoint is exposed for admin controls.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/orders/:orderId/timeline',
+  authMiddleware,
+  requirePermission('case:own:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getApplicantCaseTimeline({
+        orderId: req.params.orderId,
+        userId: req.userId
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'applicant',
+        timeline,
+        guardrails: [
+          'Timeline NUXERA owner-scoped read-only; no crea eventos ni cambia estado.',
+          'El timeline excluye contenido sensible y solo muestra metadata operacional.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/orders/:orderId/grantor-timeline',
+  authMiddleware,
+  requirePermission('data_room:authorized:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getGrantorCaseTimeline({
+        orderId: req.params.orderId,
+        userId: req.userId,
+        email: req.user?.email
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'grantor',
+        timeline,
+        guardrails: [
+          'Timeline NUXERA grantor-scoped read-only; requires accepted data_room_shares.',
+          'Evidence links remain references and do not grant document access.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/admin/orders/:orderId/timeline',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({
+        orderId: req.params.orderId
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'admin',
+        timeline,
+        guardrails: [
+          'Timeline NUXERA admin read-only; no ejecuta SQL, writes ni delivery.',
+          'Admin ve metadata operacional para auditoria sin leer evidencia sensible.'
         ]
       });
     } catch (error) {

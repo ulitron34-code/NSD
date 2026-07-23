@@ -234,3 +234,13 @@ NUXERA debe poder demostrar, por cada expediente:
 12. Que decision humana queda pendiente o registrada.
 
 Cuando estos doce puntos funcionen como un ciclo trazable, NUXERA dejara de ser una reestructura visual y se convertira en una plataforma operativa comparable con el mercado investigado.
+
+## Avance De Implementacion - 2026-07-23
+
+Bloque 1 ya inicio con el primer ciclo real read-only:
+- Servicio backend `nuxeraCaseTimelineService`.
+- Endpoints de timeline para solicitante propietario, otorgante autorizado y admin.
+- Agregacion de fuentes existentes sin SQL nueva: expediente, checklist, evidencia, solicitudes de informacion, asignaciones/SLA, outbox y audit logs.
+- Panel compartido de timeline en solicitante, otorgante y admin.
+
+Estado: implementado como agregador read-only inicial. Todavia falta enriquecer filtros, agrupacion visual y pruebas unitarias directas del servicio antes de pasar a eventos persistidos `nuxera_case_events`.

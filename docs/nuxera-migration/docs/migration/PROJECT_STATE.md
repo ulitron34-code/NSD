@@ -1912,3 +1912,34 @@ Validation:
 
 Next recommended task:
 - Add an admin audit/history view for delivery batch attempts and suppression reasons, then wire a read-only operational health summary for notification errors before considering any scheduled worker.
+
+## NUXERA case timeline read-only integration - 2026-07-23
+
+Started Bloque 1 from `MEJORAS.md`: Expediente Vivo y Timeline Operacional.
+
+Changed runtime surface:
+- Added `nuxeraCaseTimelineService`, a read-only backend aggregator for existing case activity sources.
+- Added owner, authorized-grantor and admin timeline endpoints:
+  - `GET /api/nuxera/orders/:orderId/timeline`
+  - `GET /api/nuxera/orders/:orderId/grantor-timeline`
+  - `GET /api/nuxera/admin/orders/:orderId/timeline`
+- Timeline aggregates metadata from existing sources when available: `service_orders`, `nuxera_workspace_states`, `nuxera_evidence_links`, `information_requests`, `nuxera_case_assignments`, `nuxera_notification_outbox` and `audit_logs`.
+- Optional sources tolerate missing tables/schema and report `unavailable` instead of breaking the whole timeline.
+- Added frontend API binding, `caseTimelineAdapter`, normalized hook and shared `CaseTimelinePanel` in applicant, grantor and admin NUXERA surfaces.
+- Applicant sees `Actividad del expediente`; grantor sees `Eventos y blockers` / `Trazabilidad para Mesa`; admin sees `Trazabilidad del expediente` for the selected operational case.
+
+Guardrails:
+- Timeline is read-only; it creates no events, applies no SQL, sends no notifications and changes no permissions.
+- Sensitive content is excluded; events expose operational metadata/status/source only.
+- Role access remains enforced by owner, accepted data-room share or `nuxera:admin:read`.
+
+Validation:
+- `node --check backend/src/services/nuxeraCaseTimelineService.js`: passed.
+- `node --check src/nuxera/orchestration/caseTimelineAdapter.js`: passed.
+- Targeted frontend ESLint: passed; backend test file is ignored by root ESLint config.
+- `vitest run src/tests/nuxeraExperience.test.js`: passed, 1 file / 122 tests, elevated due sandbox `spawn EPERM`.
+- Backend route suite `vitest run src/routes/nuxera.test.js`: passed, 1 file / 58 tests, elevated due Windows sandbox constraints.
+- `vite build`: passed elevated.
+
+Next recommended task:
+- Add a dedicated backend service test for `nuxeraCaseTimelineService` with mocked Supabase optional-source failures, then extend timeline with richer event grouping/filters before designing persisted `nuxera_case_events`.

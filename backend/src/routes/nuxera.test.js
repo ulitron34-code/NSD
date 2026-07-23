@@ -23,7 +23,8 @@ const serviceCalls = {
   notificationQueue: [],
   notificationList: [],
   notificationBatch: [],
-  conversationTurn: []
+  conversationTurn: [],
+  timeline: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -370,6 +371,20 @@ vi.mock('../utils/audit.js', () => ({
     serviceCalls.audit.push(event);
   })
 }));
+vi.mock('../services/nuxeraCaseTimelineService.js', () => ({
+  getApplicantCaseTimeline: vi.fn(async (input) => {
+    serviceCalls.timeline.push({ role: 'applicant', ...input });
+    return { status: 'timeline-ready', orderId: input.orderId, workspaceRole: 'applicant', events: [{ id: 'event-1', type: 'checklist', title: 'Checklist', sensitiveContentExcluded: true }], summary: { total: 1, blockers: 0 }, sources: [], guardrails: ['Timeline read-only.'] };
+  }),
+  getGrantorCaseTimeline: vi.fn(async (input) => {
+    serviceCalls.timeline.push({ role: 'grantor', ...input });
+    return { status: 'timeline-ready', orderId: input.orderId, workspaceRole: 'grantor', events: [{ id: 'event-2', type: 'evidence', title: 'Evidence', sensitiveContentExcluded: true }], summary: { total: 1, blockers: 0 }, sources: [], guardrails: ['Timeline grantor read-only.'] };
+  }),
+  getAdminCaseTimeline: vi.fn(async (input) => {
+    serviceCalls.timeline.push({ role: 'admin', ...input });
+    return { status: 'timeline-ready', orderId: input.orderId, workspaceRole: 'admin', events: [{ id: 'event-3', type: 'audit', title: 'Audit', sensitiveContentExcluded: true }], summary: { total: 1, blockers: 0 }, sources: [], guardrails: ['Timeline admin read-only.'] };
+  })
+}));
 vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
   getOwnerEvidenceLinks: vi.fn(async (input) => {
     serviceCalls.evidence.push(input);
@@ -438,6 +453,7 @@ describe('nuxera routes', () => {
     serviceCalls.notificationList = [];
     serviceCalls.notificationBatch = [];
     serviceCalls.conversationTurn = [];
+    serviceCalls.timeline = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -1184,6 +1200,57 @@ describe('nuxera routes', () => {
     });
   });
 
+
+
+  it('returns owner case timeline without creating events', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/timeline`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      orderId: 'order-1',
+      workspaceRole: 'applicant',
+      timeline: { status: 'timeline-ready', summary: { total: 1 } }
+    });
+    expect(body.guardrails.join(' ')).toContain('read-only');
+    expect(serviceCalls.timeline[0]).toEqual({ role: 'applicant', orderId: 'order-1', userId: 'user-1' });
+  });
+
+  it('returns authorized grantor case timeline with grantor scope', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-timeline`, {
+      headers: {
+        'x-test-user-id': 'grantor-1',
+        'x-test-permissions': 'data_room:authorized:read',
+        'x-test-email': 'grantor@example.com'
+      }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.timeline.workspaceRole).toBe('grantor');
+    expect(body.guardrails.join(' ')).toContain('data_room_shares');
+    expect(serviceCalls.timeline[0]).toEqual({ role: 'grantor', orderId: 'order-1', userId: 'grantor-1', email: 'grantor@example.com' });
+  });
+
+  it('requires nuxera:admin:read before reading admin case timeline', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/timeline`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(denied.status).toBe(403);
+    expect(serviceCalls.timeline).toHaveLength(0);
+
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/timeline`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.timeline.workspaceRole).toBe('admin');
+    expect(serviceCalls.timeline[0]).toEqual({ role: 'admin', orderId: 'order-1' });
+  });
 
   it('requires case:own:read before reading owner evidence links', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/evidence`, {
