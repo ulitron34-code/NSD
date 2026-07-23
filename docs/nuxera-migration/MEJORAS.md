@@ -267,3 +267,13 @@ Se agrego el puente entre timeline virtual y SQL no productivo:
 - Servicio `buildNuxeraCaseEventsPersistencePlan` que prepara candidatos de insert para `nuxera_case_events` sin escribir filas.
 - UI admin muestra candidatos listos, bloqueados, dedupe keys y modo `dry-run-only`.
 - El cliente no puede habilitar writes desde este contrato; requiere SQL/RLS en non-production y aprobacion separada.
+
+## Avance Local - Notification Rules Dry Run
+
+Se agrego el primer motor de reglas operativo para notificaciones:
+- Endpoint admin `GET /api/nuxera/admin/orders/:orderId/notification-rules-dry-run`.
+- Reglas desde timeline: evidencia faltante, asignacion abierta, SLA por vencer, SLA vencido, delivery fallido y decision-ready sin blockers.
+- El resultado genera intents y corre `notification-outbox-dry-run`; no queuea, no envia y no actualiza outbox.
+- UI admin muestra reglas automaticas, intents aceptados y reglas matcheadas para revision humana.
+
+Siguiente gate: sustituir destinatarios operativos de preview por destinatarios autorizados reales del expediente antes de permitir cualquier queueing controlado.

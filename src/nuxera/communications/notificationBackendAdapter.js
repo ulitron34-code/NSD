@@ -239,6 +239,81 @@ export function normalizeNuxeraNotificationDryRunResponse(response) {
   };
 }
 
+
+const LOCAL_NOTIFICATION_RULES_DRY_RUN = Object.freeze({
+  source: "local-fallback",
+  status: "notification-rules-dry-run-unavailable",
+  loading: false,
+  error: null,
+  summary: { matchedRules: 0, generatedIntents: 0, accepted: 0, rejected: 0, duplicates: 0, byAudience: {} },
+  matchedRules: [],
+  intents: [],
+  dryRun: LOCAL_NOTIFICATION_DRY_RUN,
+  guardrails: ["Local fallback; no genera ni queuea notificaciones desde reglas."],
+});
+
+export function normalizeNuxeraNotificationRulesDryRunResponse(response) {
+  const payload = response?.notificationRules || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_NOTIFICATION_RULES_DRY_RUN,
+      error: "nuxera-notification-rules-dry-run-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_NOTIFICATION_RULES_DRY_RUN,
+    ...payload,
+    source: "remote-rules-dry-run",
+    loading: false,
+    error: null,
+    summary: {
+      ...LOCAL_NOTIFICATION_RULES_DRY_RUN.summary,
+      ...asObject(payload.summary),
+    },
+    matchedRules: asArray(payload.matchedRules),
+    intents: asArray(payload.intents),
+    dryRun: normalizeNuxeraNotificationDryRunResponse(payload.dryRun),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useNotificationRulesDryRun(orderId, { enabled = true, params = {} } = {}) {
+  const [state, setState] = useState(LOCAL_NOTIFICATION_RULES_DRY_RUN);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled || !orderId) {
+      setState(LOCAL_NOTIFICATION_RULES_DRY_RUN);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraNotificationOutboxAPI.getRulesDryRun(orderId, params)
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraNotificationRulesDryRunResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Notification rules dry-run unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_NOTIFICATION_RULES_DRY_RUN,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-notification-rules-dry-run-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled, orderId, params]);
+
+  return state;
+}
 const LOCAL_OUTBOX_LIST = Object.freeze({
   source: "local-fallback",
   status: "outbox-list-unverified",

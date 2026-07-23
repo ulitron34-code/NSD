@@ -13,7 +13,7 @@ import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlle
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness, runNuxeraConversationTurn } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
-import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
+import { buildNuxeraNotificationDryRunBatch, buildNuxeraNotificationRulesDryRun, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
@@ -150,6 +150,38 @@ router.post(
           "Conversation preview is read-only and does not call an LLM provider.",
           "Runtime remains disabled unless NUXERA_CONVERSATION_RUNTIME_ENABLED=true and context is authorized.",
           "The assistant cannot send notifications, approve financing, issue term sheets or change permissions."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  "/nuxera/admin/orders/:orderId/notification-rules-dry-run",
+  authMiddleware,
+  requirePermission("nuxera:admin:read"),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({ orderId: req.params.orderId });
+      const notificationRules = buildNuxeraNotificationRulesDryRun(timeline, {
+        orderId: req.params.orderId,
+        applicantRecipientUserId: req.query?.applicantRecipientUserId,
+        applicantRecipientEmail: req.query?.applicantRecipientEmail,
+        grantorRecipientUserId: req.query?.grantorRecipientUserId,
+        grantorRecipientEmail: req.query?.grantorRecipientEmail,
+        adminRecipientUserId: req.query?.adminRecipientUserId,
+        adminRecipientEmail: req.query?.adminRecipientEmail,
+        maxBatchSize: req.query?.maxBatchSize
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: "admin",
+        notificationRules,
+        guardrails: [
+          "Notification rules are dry-run only and never queue, send or update outbox rows.",
+          "Recipients come from explicit admin context; no sensitive evidence is included in notices."
         ]
       });
     } catch (error) {

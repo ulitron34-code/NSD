@@ -669,3 +669,184 @@ export function buildNuxeraNotificationDryRunBatch(intents = [], options = {}) {
     ]
   };
 }
+function firstEvent(events = [], predicate) {
+  return events.find(predicate) || null;
+}
+
+function buildRuleIntent({ ruleId, eventId, timeline, context, recipientRole, recipientUserId, recipientEmail, subject, bodyPreview, channels, priority, sourceEvent = null }) {
+  return {
+    eventId,
+    orderId: timeline?.orderId || context.orderId || null,
+    recipientRole,
+    recipientUserId: recipientUserId || null,
+    recipientEmail: recipientEmail || null,
+    subject,
+    bodyPreview,
+    channels,
+    priority,
+    metadata: {
+      ruleId,
+      source: 'nuxera-notification-rule-engine',
+      sourceEventId: sourceEvent?.id || null,
+      sourceEventType: sourceEvent?.type || null,
+      sourceEventStatus: sourceEvent?.status || null,
+      workspaceRole: timeline?.workspaceRole || 'admin',
+      dryRunOnly: true
+    }
+  };
+}
+
+export function buildNuxeraNotificationRulesDryRun(timeline = {}, context = {}) {
+  const events = Array.isArray(timeline.events) ? timeline.events : [];
+  const summary = timeline.summary && typeof timeline.summary === 'object' ? timeline.summary : {};
+  const order = timeline.order && typeof timeline.order === 'object' ? timeline.order : {};
+  const orderLabel = order.projectName || order.caseNumber || timeline.orderId || context.orderId || 'expediente NUXERA';
+  const rules = [];
+  const intents = [];
+
+  const applicantRecipient = {
+    recipientRole: 'applicant',
+    recipientUserId: context.applicantRecipientUserId || order.userId || null,
+    recipientEmail: context.applicantRecipientEmail || null
+  };
+  const grantorRecipient = {
+    recipientRole: 'grantor',
+    recipientUserId: context.grantorRecipientUserId || null,
+    recipientEmail: context.grantorRecipientEmail || null
+  };
+  const adminRecipient = {
+    recipientRole: 'admin',
+    recipientUserId: context.adminRecipientUserId || 'admin-operations',
+    recipientEmail: context.adminRecipientEmail || null
+  };
+
+  const openRequest = firstEvent(events, (event) => event.type === 'information-request' && ['open', 'pending', 'requested'].includes(String(event.status || '').toLowerCase()));
+  if (openRequest || Number(summary.openInformationRequests || 0) > 0 || Number(summary.evidence || 0) === 0) {
+    const intent = buildRuleIntent({
+      ruleId: 'applicant-missing-evidence',
+      eventId: NUXERA_NOTIFICATION_EVENTS.APPLICANT_MISSING_EVIDENCE,
+      timeline,
+      context,
+      ...applicantRecipient,
+      subject: 'Tu expediente NUXERA requiere evidencia adicional',
+      bodyPreview: `${orderLabel} / ${openRequest?.title || openRequest?.description || 'faltantes documentales por atender'}`,
+      channels: ['in_app', 'email'],
+      priority: 'high',
+      sourceEvent: openRequest
+    });
+    rules.push({ id: 'applicant-missing-evidence', status: 'matched', audience: 'applicant', reason: 'open-information-request-or-empty-evidence', sourceEventId: openRequest?.id || null });
+    intents.push(intent);
+  }
+
+  const assignmentEvent = firstEvent(events, (event) => event.type === 'assignment' && ['open', 'pending', 'assigned'].includes(String(event.status || '').toLowerCase()));
+  if (assignmentEvent) {
+    const intent = buildRuleIntent({
+      ruleId: 'grantor-case-assigned',
+      eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_CASE_ASSIGNED,
+      timeline,
+      context,
+      ...grantorRecipient,
+      subject: 'Tienes un expediente asignado en NUXERA',
+      bodyPreview: `${orderLabel} / ${assignmentEvent.metadata?.slaTier || 'SLA operativo'} / ${assignmentEvent.description || 'revision requerida'}`,
+      channels: ['in_app', 'email'],
+      priority: 'high',
+      sourceEvent: assignmentEvent
+    });
+    rules.push({ id: 'grantor-case-assigned', status: 'matched', audience: 'grantor', reason: 'open-assignment', sourceEventId: assignmentEvent.id });
+    intents.push(intent);
+  }
+
+  if (Number(summary.slaDueSoon || 0) > 0) {
+    const intent = buildRuleIntent({
+      ruleId: 'grantor-sla-due-soon',
+      eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_SLA_DUE_SOON,
+      timeline,
+      context,
+      ...grantorRecipient,
+      subject: 'SLA NUXERA por vencer',
+      bodyPreview: `${orderLabel} / ${summary.slaDueSoon} asignacion(es) por vencer`,
+      channels: ['in_app', 'email'],
+      priority: 'high',
+      sourceEvent: assignmentEvent
+    });
+    rules.push({ id: 'grantor-sla-due-soon', status: 'matched', audience: 'grantor', reason: 'sla-due-soon', sourceEventId: assignmentEvent?.id || null });
+    intents.push(intent);
+  }
+
+  if (Number(summary.slaOverdue || 0) > 0) {
+    const intent = buildRuleIntent({
+      ruleId: 'admin-case-sla-overdue',
+      eventId: NUXERA_NOTIFICATION_EVENTS.ADMIN_CASE_SLA_OVERDUE,
+      timeline,
+      context,
+      ...adminRecipient,
+      subject: 'SLA NUXERA vencido requiere seguimiento',
+      bodyPreview: `${orderLabel} / ${summary.slaOverdue} asignacion(es) vencida(s)`,
+      channels: ['in_app'],
+      priority: 'critical',
+      sourceEvent: assignmentEvent
+    });
+    rules.push({ id: 'admin-case-sla-overdue', status: 'matched', audience: 'admin', reason: 'sla-overdue', sourceEventId: assignmentEvent?.id || null });
+    intents.push(intent);
+  }
+
+  if (Number(summary.failedNotifications || 0) > 0) {
+    const failedNotification = firstEvent(events, (event) => event.type === 'notification' && String(event.status || '').toLowerCase() === 'failed');
+    const intent = buildRuleIntent({
+      ruleId: 'admin-delivery-failure',
+      eventId: NUXERA_NOTIFICATION_EVENTS.ADMIN_DELIVERY_FAILURE,
+      timeline,
+      context,
+      ...adminRecipient,
+      subject: 'Fallo de entrega de notificacion NUXERA',
+      bodyPreview: `${orderLabel} / ${summary.failedNotifications} notificacion(es) fallida(s)`,
+      channels: ['in_app'],
+      priority: 'critical',
+      sourceEvent: failedNotification
+    });
+    rules.push({ id: 'admin-delivery-failure', status: 'matched', audience: 'admin', reason: 'failed-notification', sourceEventId: failedNotification?.id || null });
+    intents.push(intent);
+  }
+
+  if (Number(summary.blockers || 0) === 0 && Number(summary.evidence || 0) > 0 && Number(summary.openInformationRequests || 0) === 0) {
+    const intent = buildRuleIntent({
+      ruleId: 'grantor-decision-ready',
+      eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_DECISION_READY,
+      timeline,
+      context,
+      ...grantorRecipient,
+      subject: 'Expediente NUXERA listo para analisis de mesa',
+      bodyPreview: `${orderLabel} / evidencia y timeline sin blockers criticos`,
+      channels: ['in_app', 'email'],
+      priority: 'high',
+      sourceEvent: firstEvent(events, (event) => event.type === 'evidence')
+    });
+    rules.push({ id: 'grantor-decision-ready', status: 'matched', audience: 'grantor', reason: 'evidence-ready-no-blockers', sourceEventId: intent.metadata.sourceEventId });
+    intents.push(intent);
+  }
+
+  const dryRun = buildNuxeraNotificationDryRunBatch(intents, { maxBatchSize: context.maxBatchSize || 25 });
+
+  return {
+    id: `nuxera-notification-rules-dry-run:${timeline.orderId || context.orderId || 'unknown'}`,
+    status: intents.length ? 'notification-rules-dry-run-ready' : 'notification-rules-dry-run-empty',
+    orderId: timeline.orderId || context.orderId || null,
+    workspaceRole: 'admin',
+    matchedRules: rules,
+    summary: {
+      matchedRules: rules.length,
+      generatedIntents: intents.length,
+      accepted: dryRun.summary.accepted,
+      rejected: dryRun.summary.rejected,
+      duplicates: dryRun.summary.duplicates,
+      byAudience: intents.reduce((acc, intent) => ({ ...acc, [intent.recipientRole]: (acc[intent.recipientRole] || 0) + 1 }), {})
+    },
+    intents,
+    dryRun,
+    guardrails: [
+      'Notification rules dry-run is read-only and never queues outbox rows.',
+      'Recipients must be provided by an authorized admin context before any real queueing.',
+      'Rules generate operational notices only; no evidence, attachments, approval or decision is sent.'
+    ]
+  };
+}

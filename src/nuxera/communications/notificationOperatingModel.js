@@ -7,6 +7,9 @@ export const NUXERA_COMMUNICATION_EVENT_IDS = Object.freeze({
   GRANTOR_FILE_SHARED: "grantor-file-shared",
   GRANTOR_INFORMATION_RESPONSE: "grantor-information-response",
   GRANTOR_DECISION_READY: "grantor-decision-ready",
+  GRANTOR_CASE_ASSIGNED: "grantor-case-assigned",
+  GRANTOR_SLA_DUE_SOON: "grantor-sla-due-soon",
+  ADMIN_CASE_SLA_OVERDUE: "admin-case-sla-overdue",
   ADMIN_DELIVERY_FAILURE: "admin-delivery-failure",
 });
 
@@ -100,7 +103,8 @@ const EVENT_DEFINITIONS = [
     priority: "critical",
     channels: ["in-app"],
     agentMode: "no-agent",
-  },  {
+  },
+  {
     id: NUXERA_COMMUNICATION_EVENT_IDS.ADMIN_DELIVERY_FAILURE,
     audience: "admin",
     trigger: { es: "Email, WhatsApp o in-app falla despues de reintento", en: "Email, WhatsApp or in-app fails after retry" },

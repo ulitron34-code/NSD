@@ -2048,3 +2048,14 @@ Still not done:
 - No SQL executed.
 - No production write path enabled.
 - No deployment promotion.
+
+## Local continuation - notification rules dry-run
+
+Added operational notification rule engine in dry-run mode:
+- Admin endpoint derives notification intents from timeline signals.
+- Frontend admin communications panel shows matched rules and accepted/generated intents.
+- No SQL writes, no outbox queueing and no delivery are performed.
+
+Next resume point:
+- Validate route/service/frontend tests and build.
+- Commit and push if green.

@@ -49,6 +49,7 @@ import {
   buildNuxeraNotificationDeliveryPlan,
   buildNuxeraNotificationDryRunBatch,
   buildNuxeraNotificationOutboxPreview,
+  buildNuxeraNotificationRulesDryRun,
   enqueueNuxeraNotificationIntent,
   isNuxeraNotificationDeliveryEnabled,
   isNuxeraNotificationEmailDeliveryEnabled,
@@ -240,6 +241,37 @@ describe('nuxeraNotificationOutboxService', () => {
       entityId: 'outbox-email-1',
       orderId: 'order-1'
     });
+  });
+  it('builds notification rule dry-run intents from timeline signals without queueing', () => {
+    const result = buildNuxeraNotificationRulesDryRun({
+      orderId: 'order-1',
+      workspaceRole: 'admin',
+      order: { projectName: 'Planta Solar Norte' },
+      summary: { openInformationRequests: 1, evidence: 1, blockers: 2, slaDueSoon: 1, slaOverdue: 1, failedNotifications: 1 },
+      events: [
+        { id: 'request:req-1', type: 'information-request', status: 'open', title: 'Estados financieros', description: 'Falta evidencia', phase: 'evidence' },
+        { id: 'assignment:asn-1', type: 'assignment', status: 'open', description: 'Analista asignado', metadata: { slaTier: 'needs-information-48h' } },
+        { id: 'notification:not-1', type: 'notification', status: 'failed' }
+      ]
+    }, {
+      applicantRecipientUserId: 'applicant-1',
+      grantorRecipientUserId: 'grantor-1',
+      adminRecipientUserId: 'admin-ops'
+    });
+
+    expect(result).toMatchObject({
+      status: 'notification-rules-dry-run-ready',
+      summary: { matchedRules: 5, generatedIntents: 5, accepted: 5, rejected: 0 }
+    });
+    expect(result.matchedRules.map((rule) => rule.id)).toEqual(expect.arrayContaining([
+      'applicant-missing-evidence',
+      'grantor-case-assigned',
+      'grantor-sla-due-soon',
+      'admin-case-sla-overdue',
+      'admin-delivery-failure'
+    ]));
+    expect(result.dryRun.deliveryEnabled).toBe(false);
+    expect(state.inserted).toBeNull();
   });
   it('builds a notification dry-run batch with duplicate suppression and no writes', () => {
     const result = buildNuxeraNotificationDryRunBatch([

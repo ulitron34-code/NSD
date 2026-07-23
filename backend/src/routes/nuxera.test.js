@@ -20,6 +20,7 @@ const serviceCalls = {
   continuationPack: [],
   aiProviderPolicy: [],
   notificationDryRun: [],
+  notificationRules: [],
   notificationQueue: [],
   notificationList: [],
   notificationHealth: [],
@@ -342,7 +343,12 @@ vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
       entries: [],
       guardrails: ['Notification health read-only.']
     };
-  }),  enqueueNuxeraNotificationIntent: vi.fn(async ({ intent, actorUserId, deliveryEnabled }) => {
+  }),
+  buildNuxeraNotificationRulesDryRun: vi.fn((timeline, context = {}) => {
+    serviceCalls.notificationRules.push({ orderId: timeline.orderId, workspaceRole: timeline.workspaceRole, context });
+    return { status: 'notification-rules-dry-run-ready', summary: { matchedRules: 1, generatedIntents: 1, accepted: 1, rejected: 0, duplicates: 0 }, matchedRules: [{ id: 'applicant-missing-evidence', audience: 'applicant', status: 'matched', reason: 'open-information-request' }], intents: [{ eventId: 'applicant-missing-evidence' }], dryRun: { status: 'notification-dry-run-ready', summary: { accepted: 1, rejected: 0, duplicates: 0 } }, guardrails: ['Rules dry-run read-only.'] };
+  }),
+  enqueueNuxeraNotificationIntent: vi.fn(async ({ intent, actorUserId, deliveryEnabled }) => {
     serviceCalls.notificationQueue.push({ intent, actorUserId, deliveryEnabled });
     return deliveryEnabled
       ? { persisted: true, status: 'queued', id: 'outbox-1', eventId: intent?.eventId }
@@ -499,6 +505,7 @@ describe('nuxera routes', () => {
     serviceCalls.continuationPack = [];
     serviceCalls.aiProviderPolicy = [];
     serviceCalls.notificationDryRun = [];
+    serviceCalls.notificationRules = [];
     serviceCalls.notificationQueue = [];
     serviceCalls.notificationList = [];
     serviceCalls.notificationHealth = [];
@@ -992,6 +999,23 @@ describe('nuxera routes', () => {
     expect(serviceCalls.conversationTurn[0].authorizedContext).toMatchObject({ scope: 'operations-monitor' });
   });
 
+  it('returns notification rules dry-run from admin timeline without queueing messages', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/notification-rules-dry-run`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/notification-rules-dry-run?applicantRecipientUserId=applicant-1&grantorRecipientUserId=grantor-1`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body.notificationRules.status).toBe('notification-rules-dry-run-ready');
+    expect(body.guardrails.join(' ')).toContain('dry-run only');
+    expect(serviceCalls.notificationRules).toHaveLength(1);
+    expect(serviceCalls.notificationRules[0]).toMatchObject({ orderId: 'order-1', workspaceRole: 'admin' });
+    expect(serviceCalls.notificationRules[0].context).toMatchObject({ applicantRecipientUserId: 'applicant-1', grantorRecipientUserId: 'grantor-1' });
+  });
   it('requires nuxera:admin:read before notification dry-run', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox-dry-run`, {
       method: 'POST',

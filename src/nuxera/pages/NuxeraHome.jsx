@@ -17,7 +17,7 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness, useNotificationRulesDryRun } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
@@ -978,6 +978,16 @@ function AdminOperationsHome({ sectionLabel }) {
     enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
     role: "admin",
   });
+  const notificationRulesParams = useMemo(() => ({
+    adminRecipientUserId: "admin-operations",
+    grantorRecipientUserId: selectedAssignmentCase?.assignedReviewerId || "grantor-operations",
+    applicantRecipientUserId: selectedAssignmentCase?.applicantUserId || "applicant-operations",
+    maxBatchSize: 12,
+  }), [selectedAssignmentCase?.applicantUserId, selectedAssignmentCase?.assignedReviewerId]);
+  const notificationRulesDryRun = useNotificationRulesDryRun(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+    params: notificationRulesParams,
+  });
   const adminRiskHealth = useNuxeraRiskHealth({ enabled: isNuxeraExperienceEnabled() });
   const caseAssignmentCanSubmit = Boolean(selectedAssignmentCaseId) && !caseAssignmentSubmitting;
   const updateCaseAssignmentForm = (field, value) => {
@@ -1576,6 +1586,12 @@ function AdminOperationsHome({ sectionLabel }) {
             <small>{notificationDryRun.loading ? L("Ejecutando dry-run...", "Running dry-run...") : notificationDryRun.status}</small>
           </article>
           <article>
+            <span>{L("Reglas automaticas", "Automation rules")}</span>
+            <strong>{notificationRulesDryRun.summary.accepted}/{notificationRulesDryRun.summary.generatedIntents}</strong>
+            <p>{L("Genera intents desde timeline, SLA y blockers; no queuea ni envia.", "Generates intents from timeline, SLA and blockers; does not queue or send.")}</p>
+            <small>{notificationRulesDryRun.loading ? L("Evaluando reglas...", "Evaluating rules...") : notificationRulesDryRun.status}</small>
+          </article>
+          <article>
             <span>{L("Batch manual", "Manual batch")}</span>
             <strong>{notificationDeliveryBatch.sent}/{notificationDeliveryBatch.processed}</strong>
             <p>{L("Prueba el endpoint administrativo; si las banderas backend estan apagadas solo devuelve dry-run.", "Tests the admin endpoint; when backend flags are off it only returns dry-run.")}</p>
@@ -1607,6 +1623,18 @@ function AdminOperationsHome({ sectionLabel }) {
             </article>
           ))}
         </div>
+        {notificationRulesDryRun.matchedRules.length > 0 && (
+          <div>
+            {notificationRulesDryRun.matchedRules.map((rule) => (
+              <article key={rule.id}>
+                <span>{rule.audience} / {rule.status}</span>
+                <strong>{rule.id}</strong>
+                <p>{rule.reason}</p>
+                <small>{rule.sourceEventId || L("Sin evento fuente", "No source event")}</small>
+              </article>
+            ))}
+          </div>
+        )}
         <div>
           {communicationModel.events.map((event) => (
             <article key={event.id}>
