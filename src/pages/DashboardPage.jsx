@@ -527,8 +527,15 @@ export default function DashboardPage() {
   };
 
   if (experience === EXPERIENCE_VALUES.NUXERA || (nuxeraEnabled && nuxeraPathRequested)) {
-    const directGrantorDemoMode = import.meta.env.DEV && window.location.pathname.startsWith("/dashboard/nuxera/queue") ? "otorgante" : null;
-    return <NuxeraWorkspaceRouter demoMode={directGrantorDemoMode || (user?.demo ? userMode : null)} onExit={exitNuxeraExperience} />;
+    const path = window.location.pathname;
+    const directNuxeraDemoMode = import.meta.env.DEV && path.startsWith("/dashboard/nuxera")
+      ? path.startsWith("/dashboard/nuxera/queue")
+        ? "otorgante"
+        : ["/dashboard/nuxera/operations", "/dashboard/nuxera/security", "/dashboard/nuxera/ai", "/dashboard/nuxera/system"].some((adminPath) => path.startsWith(adminPath))
+          ? "nsd_admin"
+          : "solicitante"
+      : null;
+    return <NuxeraWorkspaceRouter demoMode={directNuxeraDemoMode || (user?.demo ? userMode : null)} onExit={exitNuxeraExperience} />;
   }
 
   const railWidth = "76px";
