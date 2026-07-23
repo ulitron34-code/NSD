@@ -2801,3 +2801,114 @@
     grid-template-columns: 1fr;
   }
 }
+
+.nuxera-operational-block {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-operational-block > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.nuxera-operational-block h2 {
+  margin: 4px 0 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-operational-block p,
+.nuxera-operational-block small {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nuxera-operational-block span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-operational-block > header > strong {
+  min-width: 68px;
+  text-align: right;
+  color: var(--nuxera-ink);
+  font-size: 1.1rem;
+  text-transform: uppercase;
+}
+
+.nuxera-operational-block > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nuxera-operational-block article {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 86px;
+  padding: 10px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-operational-block article[data-status="attention"],
+.nuxera-operational-block article[data-status="failed"],
+.nuxera-operational-block article[data-status="critical"],
+.nuxera-operational-block article[data-status="missing"],
+.nuxera-operational-block article[data-status="weak"] {
+  border-color: rgba(185, 28, 28, 0.42);
+}
+
+.nuxera-operational-block article[data-status="ready"],
+.nuxera-operational-block article[data-status="available"],
+.nuxera-operational-block article[data-status="covered"] {
+  border-color: rgba(21, 128, 61, 0.34);
+}
+
+.nuxera-operational-block article strong {
+  color: var(--nuxera-ink);
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.nuxera-operational-block footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+@media (max-width: 1100px) {
+  .nuxera-operational-block > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .nuxera-operational-block > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nuxera-operational-block > header > strong {
+    text-align: left;
+  }
+
+  .nuxera-operational-block > div {
+    grid-template-columns: 1fr;
+  }
+}

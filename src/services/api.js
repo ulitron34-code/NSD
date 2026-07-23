@@ -255,7 +255,31 @@ export const nuxeraCaseTimelineAPI = {
   getGrantorTimeline: (orderId) =>
     api.get(`/nuxera/orders/${orderId}/grantor-timeline`),
   getAdminTimeline: (orderId) =>
-    api.get(`/nuxera/admin/orders/${orderId}/timeline`)
+    api.get(`/nuxera/admin/orders/${orderId}/timeline`),
+  getApplicantCaseEvents: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/case-events`),
+  getGrantorCaseEvents: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-case-events`),
+  getAdminCaseEvents: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/case-events`)
+};
+
+export const nuxeraDecisionPackageAPI = {
+  getGrantorDecisionPackage: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-decision-package`),
+  getAdminEvidenceCoverage: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/evidence-coverage`)
+};
+
+export const nuxeraRiskOrchestrationAPI = {
+  getApplicantRiskProfile: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/risk-profile`),
+  getGrantorRiskProfile: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-risk-profile`),
+  getAdminRiskProfile: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/risk-profile`),
+  getAdminRiskHealth: () =>
+    api.get('/nuxera/admin/risk-health')
 };
 
 export const nuxeraEvidenceAPI = {

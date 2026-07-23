@@ -385,6 +385,40 @@ vi.mock('../services/nuxeraCaseTimelineService.js', () => ({
     return { status: 'timeline-ready', orderId: input.orderId, workspaceRole: 'admin', events: [{ id: 'event-3', type: 'audit', title: 'Audit', sensitiveContentExcluded: true }], summary: { total: 1, blockers: 0 }, sources: [], guardrails: ['Timeline admin read-only.'] };
   })
 }));
+vi.mock('../services/nuxeraCaseEventsProjectionService.js', () => ({
+  buildNuxeraCaseEventsProjection: vi.fn((timeline) => {
+    serviceCalls.caseEvents.push({ orderId: timeline.orderId, workspaceRole: timeline.workspaceRole });
+    return { status: 'case-events-projection-ready', orderId: timeline.orderId, workspaceRole: timeline.workspaceRole, summary: { total: 1 }, events: [{ id: 'projected-1', persistenceStatus: 'virtual-read-only' }], guardrails: ['case_events projection read-only.'] };
+  })
+}));
+vi.mock('../services/nuxeraDecisionEvidencePackageService.js', () => ({
+  getGrantorDecisionEvidencePackage: vi.fn(async (input) => {
+    serviceCalls.decisionPackage.push({ role: 'grantor', ...input });
+    return { status: 'decision-package-ready-for-human-review', orderId: input.orderId, workspaceRole: 'grantor', summary: { findings: 1 }, coverage: [], guardrails: ['Decision package read-only.'] };
+  }),
+  getAdminEvidenceCoverage: vi.fn(async (input) => {
+    serviceCalls.evidenceCoverage.push({ role: 'admin', ...input });
+    return { status: 'decision-package-needs-evidence', orderId: input.orderId, workspaceRole: 'admin', summary: { coverageMissing: 1 }, coverage: [], guardrails: ['Evidence coverage read-only.'] };
+  })
+}));
+vi.mock('../services/nuxeraRiskOrchestrationService.js', () => ({
+  getApplicantRiskProfile: vi.fn(async (input) => {
+    serviceCalls.riskProfile.push({ role: 'applicant', ...input });
+    return { status: 'risk-profile-refer', orderId: input.orderId, workspaceRole: 'applicant', riskTier: 'medium', policyOutcome: { automatedDecision: false } };
+  }),
+  getGrantorRiskProfile: vi.fn(async (input) => {
+    serviceCalls.riskProfile.push({ role: 'grantor', ...input });
+    return { status: 'risk-profile-manual-review', orderId: input.orderId, workspaceRole: 'grantor', riskTier: 'high', policyOutcome: { automatedDecision: false } };
+  }),
+  getAdminRiskProfile: vi.fn(async (input) => {
+    serviceCalls.riskProfile.push({ role: 'admin', ...input });
+    return { status: 'risk-profile-refer', orderId: input.orderId, workspaceRole: 'admin', riskTier: 'unknown', policyOutcome: { automatedDecision: false } };
+  }),
+  getAdminRiskHealth: vi.fn(async () => {
+    serviceCalls.riskHealth.push({ role: 'admin' });
+    return { status: 'risk-health-ready', summary: { availableSources: 3, unavailableSources: 0 }, signals: [], guardrails: ['Risk health read-only.'] };
+  })
+}));
 vi.mock('../services/nuxeraEvidenceLinkService.js', () => ({
   getOwnerEvidenceLinks: vi.fn(async (input) => {
     serviceCalls.evidence.push(input);
@@ -454,6 +488,11 @@ describe('nuxera routes', () => {
     serviceCalls.notificationBatch = [];
     serviceCalls.conversationTurn = [];
     serviceCalls.timeline = [];
+    serviceCalls.caseEvents = [];
+    serviceCalls.decisionPackage = [];
+    serviceCalls.evidenceCoverage = [];
+    serviceCalls.riskProfile = [];
+    serviceCalls.riskHealth = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -1252,6 +1291,71 @@ describe('nuxera routes', () => {
     expect(serviceCalls.timeline[0]).toEqual({ role: 'admin', orderId: 'order-1' });
   });
 
+  it('returns read-only case_events projections for owner, grantor and admin scopes', async () => {
+    const owner = await fetch(`${baseUrl}/api/nuxera/orders/order-1/case-events`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const grantor = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-case-events`, {
+      headers: { 'x-test-user-id': 'grantor-1', 'x-test-permissions': 'data_room:authorized:read', 'x-test-email': 'grantor@example.com' }
+    });
+    const deniedAdmin = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/case-events`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const admin = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/case-events`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+
+    expect(owner.status).toBe(200);
+    expect(grantor.status).toBe(200);
+    expect(deniedAdmin.status).toBe(403);
+    expect(admin.status).toBe(200);
+    expect((await admin.json()).caseEvents.events[0].persistenceStatus).toBe('virtual-read-only');
+    expect(serviceCalls.caseEvents.map((call) => call.workspaceRole)).toEqual(['applicant', 'grantor', 'admin']);
+  });
+
+  it('returns grantor decision package and admin evidence coverage without writes', async () => {
+    const grantor = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-decision-package`, {
+      headers: { 'x-test-user-id': 'grantor-1', 'x-test-permissions': 'data_room:authorized:read', 'x-test-email': 'grantor@example.com' }
+    });
+    const deniedAdmin = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/evidence-coverage`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const admin = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/evidence-coverage`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+
+    expect(grantor.status).toBe(200);
+    expect((await grantor.json()).decisionPackage.status).toContain('decision-package');
+    expect(deniedAdmin.status).toBe(403);
+    expect(admin.status).toBe(200);
+    expect((await admin.json()).evidenceCoverage.workspaceRole).toBe('admin');
+    expect(serviceCalls.decisionPackage[0]).toMatchObject({ role: 'grantor', orderId: 'order-1', userId: 'grantor-1', email: 'grantor@example.com' });
+    expect(serviceCalls.evidenceCoverage[0]).toEqual({ role: 'admin', orderId: 'order-1' });
+  });
+
+  it('returns risk profiles by role and admin risk health', async () => {
+    const applicant = await fetch(`${baseUrl}/api/nuxera/orders/order-1/risk-profile`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const grantor = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-risk-profile`, {
+      headers: { 'x-test-user-id': 'grantor-1', 'x-test-permissions': 'data_room:authorized:read', 'x-test-email': 'grantor@example.com' }
+    });
+    const adminProfile = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/risk-profile`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const riskHealth = await fetch(`${baseUrl}/api/nuxera/admin/risk-health`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+
+    expect(applicant.status).toBe(200);
+    expect((await applicant.json()).riskProfile.policyOutcome.automatedDecision).toBe(false);
+    expect(grantor.status).toBe(200);
+    expect(adminProfile.status).toBe(200);
+    expect(riskHealth.status).toBe(200);
+    expect((await riskHealth.json()).riskHealth.status).toBe('risk-health-ready');
+    expect(serviceCalls.riskProfile.map((call) => call.role)).toEqual(['applicant', 'grantor', 'admin']);
+    expect(serviceCalls.riskHealth).toEqual([{ role: 'admin' }]);
+  });
   it('requires case:own:read before reading owner evidence links', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/evidence`, {
       headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:update' }

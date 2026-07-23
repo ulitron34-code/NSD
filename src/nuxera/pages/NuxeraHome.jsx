@@ -21,6 +21,7 @@ import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBat
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
+import { useNuxeraCaseEvents, useNuxeraDecisionPackage, useNuxeraEvidenceCoverage, useNuxeraRiskHealth, useNuxeraRiskProfile } from "../orchestration/operationalBlocksAdapter";
 
 const roleCopy = {
   applicant: {
@@ -150,6 +151,110 @@ function CaseTimelinePanel({ timeline, title, emptyLabel }) {
   );
 }
 
+function RiskProfilePanel({ profile, title }) {
+  const { L } = useNuxeraLanguage();
+  const signals = profile.signals.slice(0, 4);
+  return (
+    <section className="nuxera-operational-block" aria-label={title}>
+      <header>
+        <div>
+          <span>{profile.loading ? L("Cargando riesgo", "Loading risk") : profile.status}</span>
+          <h2>{title}</h2>
+          <p>{profile.error || profile.policyOutcome.label}</p>
+        </div>
+        <strong>{profile.riskTier}</strong>
+      </header>
+      <div>
+        {signals.map((signal) => (
+          <article key={signal.id} data-status={signal.status}>
+            <span>{signal.label}</span>
+            <strong>{signal.value}</strong>
+            <p>{signal.detail}</p>
+          </article>
+        ))}
+      </div>
+      <footer>{profile.guardrails.slice(0, 2).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}</footer>
+    </section>
+  );
+}
+
+function DecisionPackagePanel({ decisionPackage, title }) {
+  const { L } = useNuxeraLanguage();
+  return (
+    <section className="nuxera-operational-block" aria-label={title}>
+      <header>
+        <div>
+          <span>{decisionPackage.loading ? L("Cargando paquete", "Loading package") : decisionPackage.status}</span>
+          <h2>{title}</h2>
+          <p>{decisionPackage.error || decisionPackage.thesis?.summary || decisionPackage.guardrails[0]}</p>
+        </div>
+        <strong>{decisionPackage.summary.sourceTraced}/{decisionPackage.summary.findings}</strong>
+      </header>
+      <div>
+        {decisionPackage.coverage.slice(0, 5).map((item) => (
+          <article key={item.engine} data-status={item.status}>
+            <span>{item.status}</span>
+            <strong>{item.label}</strong>
+            <p>{item.sourceTraced} {L("fuertes", "strong")}; {item.weakReferences} {L("debiles", "weak")}</p>
+          </article>
+        ))}
+      </div>
+      {decisionPackage.questions.length > 0 && (
+        <footer>{decisionPackage.questions.slice(0, 3).map((question) => <small key={question.id}>{question.prompt}</small>)}</footer>
+      )}
+    </section>
+  );
+}
+
+function CaseEventsProjectionPanel({ caseEvents, title }) {
+  const { L } = useNuxeraLanguage();
+  return (
+    <section className="nuxera-operational-block" aria-label={title}>
+      <header>
+        <div>
+          <span>{caseEvents.loading ? L("Cargando eventos", "Loading events") : caseEvents.status}</span>
+          <h2>{title}</h2>
+          <p>{caseEvents.error || caseEvents.guardrails[0]}</p>
+        </div>
+        <strong>{caseEvents.summary.total}</strong>
+      </header>
+      <div>
+        {caseEvents.events.slice(0, 4).map((event) => (
+          <article key={event.id} data-status={event.severity}>
+            <span>{event.phase} / {event.eventType}</span>
+            <strong>{event.title}</strong>
+            <p>{event.persistenceStatus}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RiskHealthPanel({ riskHealth, title }) {
+  const { L } = useNuxeraLanguage();
+  return (
+    <section className="nuxera-operational-block" aria-label={title}>
+      <header>
+        <div>
+          <span>{riskHealth.loading ? L("Cargando health", "Loading health") : riskHealth.status}</span>
+          <h2>{title}</h2>
+          <p>{riskHealth.error || `${riskHealth.summary.availableSources}/${riskHealth.summary.availableSources + riskHealth.summary.unavailableSources} fuentes disponibles`}</p>
+        </div>
+        <strong>{riskHealth.summary.overdueAssignments}</strong>
+      </header>
+      <div>
+        {riskHealth.signals.slice(0, 4).map((signal) => (
+          <article key={signal.id} data-status={signal.status}>
+            <span>{signal.label}</span>
+            <strong>{signal.value}</strong>
+          </article>
+        ))}
+      </div>
+      <footer>{riskHealth.guardrails.slice(0, 2).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}</footer>
+    </section>
+  );
+}
 function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
   const { L, language } = useNuxeraLanguage();
   const mission = getApplicantGuidedMission("applicant", language);
@@ -172,6 +277,14 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
     language,
   });
   const applicantTimeline = useNuxeraCaseTimeline(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "applicant",
+  });
+  const applicantRiskProfile = useNuxeraRiskProfile(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "applicant",
+  });
+  const applicantCaseEvents = useNuxeraCaseEvents(orderId, {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
     role: "applicant",
   });
@@ -365,6 +478,8 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
         title={L("Actividad del expediente", "File activity")}
         emptyLabel={isDemo ? L("Timeline disponible con expediente real", "Timeline available with a real file") : L("Sin eventos operacionales", "No operational events")}
       />
+      <RiskProfilePanel profile={applicantRiskProfile} title={L("Riesgo accionable", "Action-safe risk")} />
+      <CaseEventsProjectionPanel caseEvents={applicantCaseEvents} title={L("Contrato de eventos", "Event contract")} />
 
       <div className="nuxera-mission-panels">
         {variant === "home" && (
@@ -426,6 +541,13 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
     role: "grantor",
   });
+  const grantorDecisionPackage = useNuxeraDecisionPackage(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+  });
+  const grantorRiskProfile = useNuxeraRiskProfile(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "grantor",
+  });
   const inboxFilters = getGrantorInboxFilters(queue, language);
   const caseManagementBoard = getGrantorCaseManagementBoard(queue, language);
   const managementByCaseId = new Map(caseManagementBoard.items.map((item) => [item.caseId, item]));
@@ -465,6 +587,8 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
         title={isInboxView ? L("Eventos y blockers", "Events and blockers") : L("Trazabilidad para Mesa", "Desk traceability")}
         emptyLabel={isDemo ? L("Timeline disponible con expediente autorizado", "Timeline available with an authorized file") : L("Sin eventos operacionales autorizados", "No authorized operational events")}
       />
+      <DecisionPackagePanel decisionPackage={grantorDecisionPackage} title={L("Paquete de decision trazable", "Traceable decision package")} />
+      <RiskProfilePanel profile={grantorRiskProfile} title={L("Riesgo autorizado", "Authorized risk")} />
 
       {isInboxView ? (
         <section className="nuxera-grantor-inbox" aria-label={L("Gestion operativa de expedientes otorgante", "Grantor operational case management")}>
@@ -822,6 +946,18 @@ function AdminOperationsHome({ sectionLabel }) {
     enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
     role: "admin",
   });
+  const adminCaseEvents = useNuxeraCaseEvents(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+    role: "admin",
+  });
+  const adminEvidenceCoverage = useNuxeraEvidenceCoverage(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+  });
+  const adminRiskProfile = useNuxeraRiskProfile(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+    role: "admin",
+  });
+  const adminRiskHealth = useNuxeraRiskHealth({ enabled: isNuxeraExperienceEnabled() });
   const caseAssignmentCanSubmit = Boolean(selectedAssignmentCaseId) && !caseAssignmentSubmitting;
   const updateCaseAssignmentForm = (field, value) => {
     setCaseAssignmentForm((current) => ({ ...current, [field]: value }));
@@ -1531,6 +1667,10 @@ function AdminOperationsHome({ sectionLabel }) {
         title={L("Trazabilidad del expediente", "File traceability")}
         emptyLabel={L("Selecciona un expediente real para ver timeline", "Select a real file to view timeline")}
       />
+      <RiskHealthPanel riskHealth={adminRiskHealth} title={L("Health de riesgo operativo", "Operational risk health")} />
+      <DecisionPackagePanel decisionPackage={adminEvidenceCoverage} title={L("Coverage de evidencia", "Evidence coverage")} />
+      <RiskProfilePanel profile={adminRiskProfile} title={L("Perfil de riesgo admin", "Admin risk profile")} />
+      <CaseEventsProjectionPanel caseEvents={adminCaseEvents} title={L("Proyeccion case_events", "case_events projection")} />
 
       <section className="nuxera-admin-case-assignment" aria-label={L("Previsualizacion de asignacion de expedientes NUXERA", "NUXERA case assignment preview")}>
         <header>

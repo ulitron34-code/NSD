@@ -1971,3 +1971,51 @@ Validation:
 
 Next recommended task:
 - Start Timeline 1.2: design the controlled `nuxera_case_events` contract and read-only event projection first, then add admin audit/history for timeline-producing actions before any write path is enabled.
+
+## NUXERA three-block operational bridge - 2026-07-23
+
+Advanced the three initial improvement blocks from `MEJORAS.md` in one controlled read-only slice.
+
+Block 1 - Expediente Vivo / Timeline 1.2:
+- Added `nuxeraCaseEventsProjectionService`, which projects the enriched timeline into a future `nuxera_case_events` contract without creating rows.
+- Added owner, grantor and admin case-events endpoints:
+  - `GET /api/nuxera/orders/:orderId/case-events`
+  - `GET /api/nuxera/orders/:orderId/grantor-case-events`
+  - `GET /api/nuxera/admin/orders/:orderId/case-events`
+- Frontend now shows a compact `Contrato de eventos` / `case_events projection` panel for applicant/admin surfaces.
+
+Block 2 - Data Room Intelligence / Decision Package:
+- Added `nuxeraDecisionEvidencePackageService`, a metadata-only decision evidence package built from authorized evidence links and timeline health.
+- Added `GET /api/nuxera/orders/:orderId/grantor-decision-package` for authorized grantors.
+- Added `GET /api/nuxera/admin/orders/:orderId/evidence-coverage` for admin evidence coverage.
+- Grantor Mesa now shows `Paquete de decision trazable`; admin shows `Coverage de evidencia` for the selected operational case.
+
+Block 3 - Risk Orchestration / KYB-KYC readiness:
+- Added `nuxeraRiskOrchestrationService`, a provider-call-free risk profile built from order metadata, timeline health, assignments, outbox and evidence-link counts.
+- Added applicant, grantor and admin risk-profile endpoints:
+  - `GET /api/nuxera/orders/:orderId/risk-profile`
+  - `GET /api/nuxera/orders/:orderId/grantor-risk-profile`
+  - `GET /api/nuxera/admin/orders/:orderId/risk-profile`
+- Added admin-wide `GET /api/nuxera/admin/risk-health` for notification/SLA/audit source health.
+- Applicant, grantor and admin now render compact risk panels; admin also sees operational risk health.
+
+Guardrails:
+- No SQL was applied, no new table was created and no production flag was enabled.
+- No external KYB/KYC provider or LLM call is made by the new risk/coverage endpoints.
+- Decision package is non-binding; policy output is routing only and cannot approve, reject, issue term sheets, send notifications or change permissions.
+- Evidence coverage returns metadata/source-trace status only, never document content.
+
+Validation:
+- `node --check backend/src/routes/nuxera.js`: passed.
+- `node --check backend/src/services/nuxeraCaseEventsProjectionService.js`: passed.
+- `node --check backend/src/services/nuxeraDecisionEvidencePackageService.js`: passed.
+- `node --check backend/src/services/nuxeraRiskOrchestrationService.js`: passed.
+- `node --check src/nuxera/orchestration/operationalBlocksAdapter.js`: passed.
+- Targeted frontend ESLint: passed.
+- Backend route suite `vitest run src/routes/nuxera.test.js`: passed, 1 file / 61 tests, elevated due sandbox `spawn EPERM`.
+- Frontend NUXERA suite `vitest run src/tests/nuxeraExperience.test.js`: passed, 1 file / 122 tests, elevated due sandbox `spawn EPERM`.
+- `vite build`: passed elevated.
+- `git diff --check`: passed.
+
+Next recommended task:
+- Add dedicated unit tests for `nuxeraDecisionEvidencePackageService` and `nuxeraRiskOrchestrationService`, then draft SQL/RLS for `nuxera_case_events` and stronger provenance columns before any write path is considered.

@@ -17,6 +17,9 @@ import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, ge
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
+import { buildNuxeraCaseEventsProjection } from '../services/nuxeraCaseEventsProjectionService.js';
+import { getAdminEvidenceCoverage, getGrantorDecisionEvidencePackage } from '../services/nuxeraDecisionEvidencePackageService.js';
+import { getAdminRiskHealth, getAdminRiskProfile, getApplicantRiskProfile, getGrantorRiskProfile } from '../services/nuxeraRiskOrchestrationService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
 import { logAuditEvent } from '../utils/audit.js';
 
@@ -703,6 +706,232 @@ router.get(
   }
 );
 
+router.get(
+  '/nuxera/orders/:orderId/case-events',
+  authMiddleware,
+  requirePermission('case:own:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getApplicantCaseTimeline({
+        orderId: req.params.orderId,
+        userId: req.userId
+      });
+      const caseEvents = buildNuxeraCaseEventsProjection(timeline);
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'applicant',
+        caseEvents,
+        guardrails: [
+          'case_events is a read-only projection; no nuxera_case_events row is created.',
+          'Owner scope receives operational metadata only.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/orders/:orderId/grantor-case-events',
+  authMiddleware,
+  requirePermission('data_room:authorized:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getGrantorCaseTimeline({
+        orderId: req.params.orderId,
+        userId: req.userId,
+        email: req.user?.email
+      });
+      const caseEvents = buildNuxeraCaseEventsProjection(timeline);
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'grantor',
+        caseEvents,
+        guardrails: [
+          'Grantor case_events projection requires accepted data_room_shares.',
+          'Projection does not grant document access or move the case to Mesa.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/admin/orders/:orderId/case-events',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({ orderId: req.params.orderId });
+      const caseEvents = buildNuxeraCaseEventsProjection(timeline);
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'admin',
+        caseEvents,
+        guardrails: [
+          'Admin case_events projection is read-only and metadata-only.',
+          'Persisted writes require SQL/RLS evidence and controlled approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/orders/:orderId/grantor-decision-package',
+  authMiddleware,
+  requirePermission('data_room:authorized:read'),
+  async (req, res) => {
+    try {
+      const decisionPackage = await getGrantorDecisionEvidencePackage({
+        orderId: req.params.orderId,
+        userId: req.userId,
+        email: req.user?.email
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'grantor',
+        decisionPackage,
+        guardrails: [
+          'Decision package is non-binding and read-only.',
+          'No term sheet, approval, rejection, notification send or permission change is performed.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/admin/orders/:orderId/evidence-coverage',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const evidenceCoverage = await getAdminEvidenceCoverage({ orderId: req.params.orderId });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'admin',
+        evidenceCoverage,
+        guardrails: [
+          'Evidence coverage is metadata-only and does not return document content.',
+          'Coverage gaps are review signals, not automated decisions.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/orders/:orderId/risk-profile',
+  authMiddleware,
+  requirePermission('case:own:read'),
+  async (req, res) => {
+    try {
+      const riskProfile = await getApplicantRiskProfile({
+        orderId: req.params.orderId,
+        userId: req.userId
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'applicant',
+        riskProfile,
+        guardrails: [
+          'Applicant risk profile shows action-safe operational routing only.',
+          'No internal sensitive risk rationale or automated decision is exposed.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/orders/:orderId/grantor-risk-profile',
+  authMiddleware,
+  requirePermission('data_room:authorized:read'),
+  async (req, res) => {
+    try {
+      const riskProfile = await getGrantorRiskProfile({
+        orderId: req.params.orderId,
+        userId: req.userId,
+        email: req.user?.email
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'grantor',
+        riskProfile,
+        guardrails: [
+          'Grantor risk profile uses authorized metadata only.',
+          'Policy output routes to human review and cannot approve/reject automatically.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/admin/orders/:orderId/risk-profile',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const riskProfile = await getAdminRiskProfile({ orderId: req.params.orderId });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'admin',
+        riskProfile,
+        guardrails: [
+          'Admin risk profile is read-only and provider-call-free.',
+          'Policy rules are routing signals only until human review/cutover approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+
+router.get(
+  '/nuxera/admin/risk-health',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const riskHealth = await getAdminRiskHealth();
+
+      res.json({
+        workspaceRole: 'admin',
+        riskHealth,
+        guardrails: [
+          'Risk health is read-only and does not execute external screening providers.',
+          'Provider freshness remains informational until live providers are approved.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
 router.get(
   '/nuxera/orders/:orderId/state',
   authMiddleware,
