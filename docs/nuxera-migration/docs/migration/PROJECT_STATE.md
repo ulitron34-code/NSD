@@ -1863,3 +1863,8 @@ Frontend now calls the history endpoint from the NUXERA admin console and shows 
 Extended the notification event catalog and backend outbox service with assignment/SLA events: `grantor-case-assigned`, `grantor-sla-due-soon`, and `admin-case-sla-overdue`. The NUXERA admin console now converts real assignment history rows into notification intents for the existing dry-run endpoint, alongside the baseline demo intents. This lets operations preview who would be notified for assigned cases, due-soon SLAs and overdue SLAs without inserting outbox rows or sending email/in-app/WhatsApp messages.
 
 Guardrails remain unchanged: delivery stays disabled, dry-run performs validation/dedupe only, queueing still requires `nuxera:admin:update`, and no worker or production delivery flag was enabled.
+## Grantor case management vs decision desk separation - 2026-07-23
+
+Renamed the grantor operational surface from `Bandeja de expedientes` to `Gestion de expedientes` and made it functionally different from `Mesa de decision`. Gestion now exposes an operational board for SLA, owners, open requests, overdue/due-soon counts, cases ready for Desk, and next operational actions. Its case cards show owner/SLA/open gaps and route cases to Mesa without showing decision signals as the primary content.
+
+Mesa remains focused on non-binding memo, decision questions, authorized evidence summary, conditions and human review. The change keeps the same routes and feature flag, does not add writes, does not alter permissions and keeps all credit/term-sheet decisions human-gated.

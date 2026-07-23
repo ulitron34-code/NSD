@@ -46,7 +46,7 @@ const EVENT_DEFINITIONS = [
     audience: "grantor",
     trigger: { es: "Data room compartido o aceptado por otorgante", en: "Data room shared with or accepted by grantor" },
     subject: { es: "Nuevo expediente autorizado para revisar", en: "New authorized file to review" },
-    action: { es: "Abrir Bandeja de expedientes", en: "Open file inbox" },
+    action: { es: "Abrir Gestion de expedientes", en: "Open case management" },
     priority: "normal",
     channels: ["in-app", "email"],
     agentMode: "triage-summary",

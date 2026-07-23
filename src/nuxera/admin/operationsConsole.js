@@ -66,7 +66,7 @@ const releaseGatesSource = [
 
 const adminAuditEventsSource = [
   { es: "Applicant mission y checklist montados como preparacion local.", en: "Applicant mission and checklist mounted as local preparation." },
-  { es: "Bandeja de expedientes y mesa otorgante montadas sin cambios de permisos.", en: "Grantor file inbox and decision desk mounted without permission changes." },
+  { es: "Gestion de expedientes y mesa otorgante montadas sin cambios de permisos.", en: "Grantor case management and decision desk mounted without permission changes." },
   { es: "Markets realtime bloqueado salvo proveedor licenciado.", en: "Real-time Markets data blocked pending a licensed provider." },
   { es: "Strategy mantiene gates, rollback y audit trail local.", en: "Strategy keeps gates, rollback and a local audit trail." },
 ];

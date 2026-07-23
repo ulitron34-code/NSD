@@ -15,7 +15,7 @@ import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantM
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
-import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
+import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
@@ -36,7 +36,7 @@ const roleCopy = {
   grantor: {
     eyebrow: { es: "Otorgante", en: "Grantor" },
     title: { es: "Mesa de decision orientada a evidencia", en: "Evidence-driven decision desk" },
-    body: { es: "La nueva experiencia separa la bandeja de expedientes del analisis de decision: primero prioriza evidencia y riesgo; despues prepara revision humana.", en: "The new experience separates the file inbox from decision analysis: first it prioritizes evidence and risk; then it prepares human review." },
+    body: { es: "La nueva experiencia separa la gestion de expedientes del analisis de decision: primero prioriza evidencia y riesgo; despues prepara revision humana.", en: "The new experience separates the case management from decision analysis: first it prioritizes evidence and risk; then it prepares human review." },
     cards: [
       { es: "Casos prioritarios", en: "Priority cases" },
       { es: "Pendientes de informacion", en: "Pending information" },
@@ -319,6 +319,8 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
     language,
   });
   const inboxFilters = getGrantorInboxFilters(queue, language);
+  const caseManagementBoard = getGrantorCaseManagementBoard(queue, language);
+  const managementByCaseId = new Map(caseManagementBoard.items.map((item) => [item.caseId, item]));
   const filteredCases = filterGrantorInboxCases(queue.cases, inboxFilter);
 
   const heroTitle = isInboxView
@@ -351,13 +353,13 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
       </div>
 
       {isInboxView ? (
-        <section className="nuxera-grantor-inbox" aria-label={L("Triage de expedientes otorgante", "Grantor file triage")}>
+        <section className="nuxera-grantor-inbox" aria-label={L("Gestion operativa de expedientes otorgante", "Grantor operational case management")}>
           <header className="nuxera-grantor-inbox-toolbar">
             <div>
               <span>{isDemo ? L("Modelo local de preparacion", "Local preparation model") : L("Pipeline autorizado", "Authorized pipeline")}</span>
-              <h2>{L("Priorizacion accionable", "Actionable prioritization")}</h2>
+              <h2>{L("SLA, responsables y faltantes", "SLA, owners and gaps")}</h2>
             </div>
-            <div role="tablist" aria-label={L("Filtros de bandeja", "Inbox filters")}>
+            <div role="tablist" aria-label={L("Filtros de gestion", "Management filters")}>
               {inboxFilters.map((filter) => (
                 <button
                   key={filter.id}
@@ -373,6 +375,11 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
               ))}
             </div>
           </header>
+          <div className="nuxera-grantor-management-board">
+            <article><span>{caseManagementBoard.status}</span><strong>{caseManagementBoard.summary.readyForDesk}</strong><p>{L("listos para Mesa", "ready for Desk")}</p></article>
+            <article><span>SLA</span><strong>{caseManagementBoard.summary.overdue}</strong><p>{L("vencidos", "overdue")}; {caseManagementBoard.summary.dueSoon} {L("por vencer", "due soon")}</p></article>
+            <article><span>{L("Faltantes", "Gaps")}</span><strong>{caseManagementBoard.summary.openRequests}</strong><p>{caseManagementBoard.summary.needsAssignment} {L("sin asignacion real", "without real assignment")}</p></article>
+          </div>
           {loading && <p>{L("Cargando pipeline autorizado...", "Loading authorized pipeline...")}</p>}
           {!loading && !isDemo && queue.cases.length === 0 && <p>{L("No hay expedientes autorizados disponibles.", "No authorized files are available.")}</p>}
           {!loading && queue.cases.length > 0 && filteredCases.length === 0 && <p>{L("No hay expedientes en este filtro.", "There are no files in this filter.")}</p>}
@@ -388,13 +395,15 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
                 </header>
                 <p>{item.applicant} / {item.sector} / {item.amountLabel}</p>
                 <div>
-                  {item.decisionSignals.map((signal) => <small key={signal}>{signal}</small>)}
+                  <small>{L("Responsable", "Owner")}: {managementByCaseId.get(item.id)?.owner || item.triage.owner}</small>
+                  <small>SLA: {managementByCaseId.get(item.id)?.sla || item.triage.sla}</small>
+                  <small>{L("Faltantes abiertos", "Open gaps")}: {managementByCaseId.get(item.id)?.openRequests ?? item.infoRequests.length}</small>
                 </div>
-                <p>{item.nextAction}</p>
+                <p>{managementByCaseId.get(item.id)?.nextOperationalAction || item.nextAction}</p>
                 <footer>
-                  {!isDemo && <button type="button" onClick={() => selectOrder(item.id)} aria-pressed={item.id === selectedCase?.id}>{item.id === selectedCase?.id ? L("Seleccionado", "Selected") : L("Priorizar", "Prioritize")}</button>}
-                  <NavLink to="/dashboard">{L("Abrir mesa", "Open desk")}</NavLink>
-                  {item.evidenceLinks.map((link) => (
+                  {!isDemo && <button type="button" onClick={() => selectOrder(item.id)} aria-pressed={item.id === selectedCase?.id}>{item.id === selectedCase?.id ? L("Seleccionado", "Selected") : L("Priorizar gestion", "Prioritize management")}</button>}
+                  <NavLink to="/dashboard">{L("Enviar a Mesa", "Send to Desk")}</NavLink>
+                  {item.evidenceLinks.slice(0, 2).map((link) => (
                     <NavLink key={link.engine} to={link.path}>{link.engine}</NavLink>
                   ))}
                 </footer>
@@ -408,7 +417,7 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
             <header>
               <div>
                 <span>{selectedCase ? selectedCase.priority : L("Sin expediente", "No file")}</span>
-                <h2>{selectedCase ? selectedCase.name : L("Selecciona un expediente desde la bandeja", "Select a file from the inbox")}</h2>
+                <h2>{selectedCase ? selectedCase.name : L("Selecciona un expediente desde Gestion", "Select a file from Management")}</h2>
               </div>
               <NavLink to="/dashboard/nuxera/queue">{L("Cambiar expediente", "Change file")}</NavLink>
             </header>
@@ -1514,7 +1523,7 @@ export default function NuxeraHome({ role = "applicant", section = "home" }) {
   }
 
   if (role === "grantor") {
-    return <GrantorQueueHome sectionLabel={section === "queue" ? L("Bandeja", "Inbox") : L("Mesa", "Desk")} variant={section === "queue" ? "inbox" : "decision"} />;
+    return <GrantorQueueHome sectionLabel={section === "queue" ? L("Gestion", "Management") : L("Mesa", "Desk")} variant={section === "queue" ? "inbox" : "decision"} />;
   }
 
   if (role === "admin") {

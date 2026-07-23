@@ -15,7 +15,7 @@ import { buildEmptyProjectBuilderAnswers, getMissingRequiredProjectBuilderFields
 import { buildApplicantChecklistPatchPayload, mergeApplicantChecklistWithWorkspaceState, normalizeNuxeraApplicantChecklistState } from "../nuxera/applicant/workspaceStateAdapter";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../nuxera/finance/financeJourney";
 import { readSelectedExpedienteId, subscribeSelectedExpediente, writeSelectedExpedienteId } from "../hooks/useSelectedExpediente";
-import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../nuxera/grantor/caseQueue";
+import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../nuxera/grantor/caseQueue";
 import { MARKET_PROVIDER_STATES, buildMarketWatchlistForExpedient, canUseRealtimeMarketData, getMarketProviderStatus, getMarketWatchlist, getMonitoringPolicies, getProviderDegradationPlan } from "../nuxera/markets/marketDataProvider";
 import { buildResearchMissionForExpedient, getEvidenceByFinding, getResearchMission, getResearchMissionTypes } from "../nuxera/intelligence/researchMissions";
 import { getNuxeraEngine, getNuxeraEngineNavigationItems, getNuxeraEngines } from "../nuxera/engines/engineRegistry";
@@ -137,7 +137,7 @@ describe("NUXERA role navigation", () => {
     expect(navigationByRole.grantor[0].path).toBe("/dashboard");
     expect(navigationByRole.admin[0].path).toBe("/dashboard");
     expect(navigationByRole.applicant.map((item) => item.id)).toContain("finance");
-    expect(navigationByRole.grantor.find((item) => item.id === "queue")?.label).toBe("Bandeja de expedientes");
+    expect(navigationByRole.grantor.find((item) => item.id === "queue")?.label).toBe("Gestion de expedientes");
     expect(navigationByRole.admin.map((item) => item.id)).toContain("security");
   });
 });
@@ -239,7 +239,7 @@ describe("NUXERA admin operations console", () => {
       ])
     );
     expect(consoleState.auditEvents).toEqual(
-      expect.arrayContaining([expect.stringContaining("Bandeja de expedientes")])
+      expect.arrayContaining([expect.stringContaining("Gestion de expedientes")])
     );
   });
 
@@ -1665,6 +1665,43 @@ describe("NUXERA grantor case queue", () => {
     );
   });
 
+  it("builds an operational case management board separate from the decision desk", () => {
+    const queue = buildGrantorCaseQueueFromPipeline([{
+      share: { id: "share-board-1", status: "accepted" },
+      order: {
+        id: "order-board-1",
+        project_name: "Expansion productiva",
+        service_type: "combo-complete",
+        status: "in_progress",
+        requested_amount: 12000000,
+        metadata: { companyName: "Empresa Board", sector: "Manufactura", country: "MX" },
+      },
+      documentsCount: 5,
+      latestReview: null,
+      scoring: { finalScore: 72, regulatoryValidation: { status: "clear" } },
+      interest: null,
+      contactRequest: null,
+      informationRequests: [{ id: "req-board-1", title: "Balance auditado", status: "open", priority: "high" }],
+      assignment: {
+        id: "assignment-board-1",
+        assignedReviewerId: "reviewer-board-1",
+        assignedReviewerRole: "grantor_analyst",
+        slaTier: "needs-information-48h",
+        slaDueAt: "2000-07-24T18:00:00.000Z",
+        status: "open",
+        reason: "Cerrar faltante documental",
+        source: "nuxera_case_assignments",
+      },
+    }]);
+    const board = getGrantorCaseManagementBoard(queue);
+
+    expect(queue.queueMode.label).toBe("Gestion de expedientes");
+    expect(queue.decisionDeskMode.label).toBe("Mesa de decision");
+    expect(board.status).toBe("sla-escalation-required");
+    expect(board.summary).toMatchObject({ total: 1, overdue: 1, openRequests: 1 });
+    expect(board.items[0]).toMatchObject({ slaStatus: "overdue", readyForDesk: false, source: "nuxera_case_assignments" });
+    expect(board.guardrails.join(" ")).toContain("no contiene memo");
+  });
   it("builds actionable inbox filters instead of a duplicated decision desk", () => {
     const queue = getGrantorCaseQueue();
     const filters = getGrantorInboxFilters(queue);
@@ -1689,7 +1726,7 @@ describe("NUXERA grantor case queue", () => {
       expect.arrayContaining(["Finance", "Intelligence", "Strategy"])
     );
     expect(queue.policies).toEqual(
-      expect.arrayContaining([expect.stringContaining("bandeja de expedientes")])
+      expect.arrayContaining([expect.stringContaining("Gestion de expedientes")])
     );
     expect(queue.policies.join(" ")).not.toContain("cola");
   });

@@ -209,10 +209,10 @@ function buildCaseQueue(opportunities, source, language) {
     source,
     cases,
     analytics: buildOtorganteAnalytics(cases, language),
-    queueMode: { label: pickLang({ es: "Bandeja de expedientes", en: "File inbox" }, language), purpose: pickLang({ es: "Triage, SLA, asignacion y faltantes; no analiza condiciones de decision.", en: "Triage, SLA, assignment and gaps; it does not analyze decision conditions." }, language) },
+    queueMode: { label: pickLang({ es: "Gestion de expedientes", en: "Case management" }, language), purpose: pickLang({ es: "Operacion diaria de SLA, asignacion, faltantes y seguimiento; no analiza condiciones de decision.", en: "Daily operation for SLA, assignment, gaps and follow-up; it does not analyze decision conditions." }, language) },
     decisionDeskMode: { label: pickLang({ es: "Mesa de decision", en: "Decision desk" }, language), purpose: pickLang({ es: "Memo no vinculante, preguntas de comite, evidencia autorizada y condiciones humanas.", en: "Non-binding memo, committee questions, authorized evidence and human conditions." }, language) },
     policies: [
-      { es: "La bandeja de expedientes no aprueba credito ni emite term sheets automaticamente.", en: "The file inbox does not approve credit or automatically issue term sheets." },
+      { es: "Gestion de expedientes no aprueba credito ni emite term sheets automaticamente.", en: "Case management does not approve credit or automatically issue term sheets." },
       { es: "Cada caso requiere revision humana antes de contacto, comite o decision vinculante.", en: "Every case requires human review before contact, committee, or a binding decision." },
       { es: "La visibilidad documental debe respetar permisos de data room existentes.", en: "Document visibility must respect existing data room permissions." },
       { es: "Las senales de riesgo son priorizacion operativa, no decision final.", en: "Risk signals are operational prioritization, not a final decision." },
@@ -233,6 +233,80 @@ export function resolveSelectedGrantorCase(queue, selectedCaseId) {
   return cases.find((item) => item.id === selectedCaseId) || cases[0] || null;
 }
 
+function getOperationalSlaStatus(caseItem) {
+  const dueValue = caseItem?.assignment?.slaDueAt;
+  if (!dueValue) return caseItem?.priority === "needs-information" ? "needs-assignment" : "policy-sla";
+  if (caseItem?.assignment?.status && caseItem.assignment.status !== "open") return "closed";
+
+  const dueAt = new Date(dueValue);
+  if (Number.isNaN(dueAt.getTime())) return "invalid-sla";
+
+  const remainingMs = dueAt.getTime() - Date.now();
+  if (remainingMs < 0) return "overdue";
+  if (remainingMs <= 24 * 60 * 60 * 1000) return "due-soon";
+  return "on-track";
+}
+
+function getOperationalAction(caseItem, language) {
+  const openRequest = caseItem.infoRequests?.find((request) => request.status === "open");
+  const slaStatus = getOperationalSlaStatus(caseItem);
+
+  if (slaStatus === "overdue") {
+    return pickLang({ es: "Escalar SLA vencido y reasignar responsable si aplica.", en: "Escalate overdue SLA and reassign owner if needed." }, language);
+  }
+  if (slaStatus === "due-soon") {
+    return pickLang({ es: "Cerrar accion pendiente antes del vencimiento SLA.", en: "Close the pending action before SLA due time." }, language);
+  }
+  if (openRequest) {
+    return pickLang({ es: `Dar seguimiento al faltante: ${openRequest.title}.`, en: `Follow up on the gap: ${openRequest.title}.` }, language);
+  }
+  if (caseItem.priority === "committee-ready") {
+    return pickLang({ es: "Mover a Mesa de decision con evidencia visible y responsable confirmado.", en: "Move to Decision desk with visible evidence and confirmed owner." }, language);
+  }
+  return pickLang({ es: "Mantener monitoreo operativo y esperar nueva evidencia.", en: "Keep operational monitoring and wait for new evidence." }, language);
+}
+
+export function getGrantorCaseManagementBoard(queue = getGrantorCaseQueue(), language = "es") {
+  const cases = Array.isArray(queue?.cases) ? queue.cases : [];
+  const items = cases.map((caseItem) => {
+    const openRequests = (caseItem.infoRequests || []).filter((request) => request.status === "open");
+    const slaStatus = getOperationalSlaStatus(caseItem);
+
+    return {
+      id: caseItem.id,
+      caseId: caseItem.id,
+      label: caseItem.name,
+      applicant: caseItem.applicant,
+      priority: caseItem.priority,
+      owner: caseItem.triage.owner,
+      sla: caseItem.triage.sla,
+      slaStatus,
+      openRequests: openRequests.length,
+      nextOperationalAction: getOperationalAction(caseItem, language),
+      readyForDesk: caseItem.priority === "committee-ready" && openRequests.length === 0 && !["overdue", "invalid-sla"].includes(slaStatus),
+      source: caseItem.triage.source,
+    };
+  });
+
+  const summary = {
+    total: items.length,
+    readyForDesk: items.filter((item) => item.readyForDesk).length,
+    overdue: items.filter((item) => item.slaStatus === "overdue").length,
+    dueSoon: items.filter((item) => item.slaStatus === "due-soon").length,
+    needsAssignment: items.filter((item) => item.slaStatus === "needs-assignment").length,
+    openRequests: items.reduce((total, item) => total + item.openRequests, 0),
+  };
+
+  return {
+    status: summary.overdue > 0 ? "sla-escalation-required" : summary.openRequests > 0 ? "follow-up-required" : "operations-on-track",
+    items,
+    summary,
+    guardrails: [
+      pickLang({ es: "Gestion operativa; no contiene memo, condiciones ni recomendacion de credito.", en: "Operational management; it does not contain memo, conditions or credit recommendation." }, language),
+      pickLang({ es: "Mover a Mesa solo prepara revision humana, no aprueba decision vinculante.", en: "Moving to Desk only prepares human review, not a binding decision." }, language),
+    ],
+  };
+}
 export function getGrantorQueueSummary(queue = getGrantorCaseQueue()) {
   const committeeReady = queue.cases.filter((item) => item.priority === "committee-ready").length;
   const needsInformation = queue.cases.filter((item) => item.priority === "needs-information").length;

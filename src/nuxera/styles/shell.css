@@ -1966,6 +1966,7 @@
   .nuxera-document-folders,
   .nuxera-document-rows,
   .nuxera-grantor-summary,
+  .nuxera-grantor-management-board,
   .nuxera-grantor-queue,
   .nuxera-workbench-grid,
   .nuxera-memo-grid,
@@ -2508,4 +2509,38 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 10px;
+}
+
+.nuxera-grantor-management-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.nuxera-grantor-management-board article {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-grantor-management-board span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-grantor-management-board strong {
+  color: var(--nuxera-ink);
+  font-size: 1.35rem;
+}
+
+.nuxera-grantor-management-board p {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
 }
