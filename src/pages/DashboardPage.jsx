@@ -103,6 +103,20 @@ export default function DashboardPage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (!path.startsWith("/dashboard/nuxera")) return;
+
+    if (nuxeraEnabled && experience !== EXPERIENCE_VALUES.NUXERA) {
+      setExperience(EXPERIENCE_VALUES.NUXERA);
+      setUiView(EXPERIENCE_VALUES.NUXERA);
+    }
+
+    if (user?.demo && path.startsWith("/dashboard/nuxera/queue") && userMode !== "otorgante") {
+      localStorage.setItem("nsd_demo_profile", "otorgante");
+      setUserMode("otorgante");
+    }
+  }, [experience, nuxeraEnabled, setExperience, user?.demo, userMode]);
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
       const next = !prev;
