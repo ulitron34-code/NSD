@@ -266,6 +266,11 @@ export const nuxeraAdminGrantorCasesAPI = {
     api.get('/nuxera/admin/grantor-cases')
 };
 
+export const nuxeraCaseAssignmentsAPI = {
+  preview: (payload = {}) =>
+    api.post('/nuxera/admin/case-assignments', payload)
+};
+
 export const nuxeraBackendReadinessAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/readiness')

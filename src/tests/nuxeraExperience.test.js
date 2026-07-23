@@ -4,7 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getAdminWorkspaceConfig } from "../nuxera/adapters/AdminWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
-import { mergeGrantorCasesWithConsole, normalizeNuxeraAdminGrantorCasesResponse } from "../nuxera/admin/grantorCasesAdapter";
+import { mergeGrantorCasesWithConsole, normalizeNuxeraAdminGrantorCasesResponse, normalizeNuxeraCaseAssignmentPreviewResponse } from "../nuxera/admin/grantorCasesAdapter";
 import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledContinuationPackResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { buildAdminOperationalModules, normalizeAdminOperationalSnapshot } from "../nuxera/admin/operationalSnapshotAdapter";
@@ -280,6 +280,29 @@ describe("NUXERA admin operations console", () => {
     expect(withRemote.policies.join(" ")).toContain("pipeline real");
   });
 
+  it("normalizes controlled case assignment previews without claiming persistence", () => {
+    const preview = normalizeNuxeraCaseAssignmentPreviewResponse({
+      writeEnabled: false,
+      guardrails: ["Endpoint remains no-write until explicitly enabled."],
+      assignment: {
+        status: "case-assignment-preview",
+        persisted: false,
+        guardrails: ["Preview only; no assignment row was inserted."],
+        assignment: {
+          orderId: "order-admin-1",
+          assignedReviewerRole: "grantor_analyst",
+          slaTier: "needs-information-48h",
+          source: "preview-no-write",
+        },
+      },
+    });
+
+    expect(preview.source).toBe("remote-preview");
+    expect(preview.persisted).toBe(false);
+    expect(preview.writeEnabled).toBe(false);
+    expect(preview.assignment).toMatchObject({ orderId: "order-admin-1", source: "preview-no-write" });
+    expect(preview.guardrails.join(" ")).toContain("no-write");
+  });
   it("tracks rollout readiness, incident controls and compliance evidence", () => {
     const consoleState = getAdminOperationsConsole();
 

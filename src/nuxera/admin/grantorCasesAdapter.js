@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraAdminGrantorCasesAPI } from "../../services/api";
+import { nuxeraAdminGrantorCasesAPI, nuxeraCaseAssignmentsAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 import { pickLang } from "../../data/requisitosMinimos";
 import { buildGrantorCaseQueueFromPipeline, getGrantorDocumentSummary } from "../grantor/caseQueue";
@@ -11,6 +11,17 @@ const LOCAL_ADMIN_GRANTOR_CASES_STATE = Object.freeze({
   error: null,
   pipeline: [],
   guardrails: ["Local fallback; no confirma pipeline real de otorgantes en todo el sistema."],
+});
+
+const LOCAL_CASE_ASSIGNMENT_PREVIEW_STATE = Object.freeze({
+  source: "local-fallback",
+  status: "case-assignment-preview-unverified",
+  loading: false,
+  error: null,
+  writeEnabled: false,
+  persisted: false,
+  assignment: null,
+  guardrails: ["Local fallback; no crea ni reasigna expedientes."],
 });
 
 function asArray(value) {
@@ -38,6 +49,48 @@ export function normalizeNuxeraAdminGrantorCasesResponse(response) {
   };
 }
 
+export function normalizeNuxeraCaseAssignmentPreviewResponse(response) {
+  const payload = response && typeof response === "object" ? response : null;
+  const assignmentEnvelope = payload?.assignment && typeof payload.assignment === "object" ? payload.assignment : null;
+
+  if (!payload || !assignmentEnvelope) {
+    return {
+      ...LOCAL_CASE_ASSIGNMENT_PREVIEW_STATE,
+      error: "nuxera-case-assignment-preview-missing",
+    };
+  }
+
+  const persisted = Boolean(assignmentEnvelope.persisted);
+  const writeEnabled = Boolean(payload.writeEnabled || assignmentEnvelope.writeEnabled);
+
+  return {
+    ...LOCAL_CASE_ASSIGNMENT_PREVIEW_STATE,
+    source: persisted ? "remote-persisted" : "remote-preview",
+    status: assignmentEnvelope.status || (persisted ? "case-assignment-persisted" : "case-assignment-preview"),
+    error: null,
+    writeEnabled,
+    persisted,
+    assignment: assignmentEnvelope.assignment || null,
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(assignmentEnvelope.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export async function previewNuxeraCaseAssignment(payload = {}) {
+  try {
+    const { data } = await nuxeraCaseAssignmentsAPI.preview(payload);
+    return normalizeNuxeraCaseAssignmentPreviewResponse(data);
+  } catch (error) {
+    warn("NUXERA", "Case assignment preview unavailable", error?.message || error);
+    return {
+      ...LOCAL_CASE_ASSIGNMENT_PREVIEW_STATE,
+      loading: false,
+      error: error?.response?.data?.code || error?.response?.data?.error || error?.message || "nuxera-case-assignment-preview-unavailable",
+    };
+  }
+}
 export function mergeGrantorCasesWithConsole(consoleState, grantorCasesState = LOCAL_ADMIN_GRANTOR_CASES_STATE, language = "es") {
   const state = { ...LOCAL_ADMIN_GRANTOR_CASES_STATE, ...(grantorCasesState || {}) };
 

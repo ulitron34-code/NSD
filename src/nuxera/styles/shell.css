@@ -2132,6 +2132,7 @@
 .nuxera-admin-audit-package,
 .nuxera-admin-communications,
 .nuxera-admin-health-signals,
+.nuxera-admin-case-assignment,
 .nuxera-admin-action-queue {
   margin-bottom: 16px;
   padding: 16px;
@@ -2146,6 +2147,7 @@
 .nuxera-admin-audit-package > header,
 .nuxera-admin-communications > header,
 .nuxera-admin-health-signals > header,
+.nuxera-admin-case-assignment > header,
 .nuxera-admin-action-queue > header {
   margin-bottom: 14px;
 }
@@ -2155,6 +2157,7 @@
 .nuxera-admin-audit-package > div,
 .nuxera-admin-communications > div:not(.nuxera-admin-summary),
   .nuxera-admin-health-signals > div,
+.nuxera-admin-case-assignment > div,
 .nuxera-admin-action-queue > div {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2166,6 +2169,7 @@
 .nuxera-admin-audit-package article,
 .nuxera-admin-communications article,
 .nuxera-admin-health-signals article,
+.nuxera-admin-case-assignment article,
 .nuxera-admin-action-queue article {
   display: grid;
   gap: 6px;
@@ -2187,6 +2191,8 @@
 .nuxera-admin-communications em,
 .nuxera-admin-health-signals span,
 .nuxera-admin-health-signals small,
+.nuxera-admin-case-assignment span,
+.nuxera-admin-case-assignment small,
 .nuxera-admin-action-queue span,
 .nuxera-admin-action-queue small,
 .nuxera-admin-action-queue em {
@@ -2206,6 +2212,8 @@
 .nuxera-admin-communications strong,
 .nuxera-admin-health-signals h2,
 .nuxera-admin-health-signals strong,
+.nuxera-admin-case-assignment h2,
+.nuxera-admin-case-assignment strong,
 .nuxera-admin-action-queue h2,
 .nuxera-admin-action-queue strong {
   margin: 0;
@@ -2218,6 +2226,7 @@
 .nuxera-admin-audit-package p,
 .nuxera-admin-communications p,
 .nuxera-admin-health-signals p,
+.nuxera-admin-case-assignment p,
 .nuxera-admin-action-queue p {
   margin: 0;
   color: var(--nuxera-muted);
@@ -2414,4 +2423,78 @@
 
 .nuxera-conversation-chat footer small {
   color: var(--nuxera-muted);
+}
+
+.nuxera-admin-case-assignment form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.nuxera-admin-case-assignment label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nuxera-admin-case-assignment label span {
+  color: var(--nuxera-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-admin-case-assignment select,
+.nuxera-admin-case-assignment input,
+.nuxera-admin-case-assignment textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 11px;
+  color: var(--nuxera-ink);
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.nuxera-admin-case-assignment textarea {
+  resize: vertical;
+}
+
+.nuxera-admin-case-assignment-reason {
+  grid-column: span 3;
+}
+
+.nuxera-admin-case-assignment button {
+  align-self: end;
+  min-height: 42px;
+  padding: 10px 14px;
+  color: #ffffff;
+  background: var(--nuxera-ink);
+  border: 0;
+  border-radius: 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nuxera-admin-case-assignment button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.nuxera-admin-case-assignment footer {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+@media (max-width: 900px) {
+  .nuxera-admin-case-assignment form,
+  .nuxera-admin-case-assignment > div {
+    grid-template-columns: 1fr;
+  }
+
+  .nuxera-admin-case-assignment-reason {
+    grid-column: auto;
+  }
 }

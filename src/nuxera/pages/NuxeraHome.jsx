@@ -9,7 +9,7 @@ import { mergeAiProviderPolicyWithConsole, useAiProviderPolicy } from "../admin/
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
-import { mergeGrantorCasesWithConsole, useAdminGrantorCases } from "../admin/grantorCasesAdapter";
+import { mergeGrantorCasesWithConsole, previewNuxeraCaseAssignment, useAdminGrantorCases } from "../admin/grantorCasesAdapter";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
@@ -552,6 +552,30 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
   );
 }
 
+const CASE_ASSIGNMENT_SLA_OPTIONS = [
+  { value: "needs-information-24h", label: "Info faltante 24h" },
+  { value: "needs-information-48h", label: "Info faltante 48h" },
+  { value: "decision-review-72h", label: "Revision dictamen 72h" },
+  { value: "risk-escalation-24h", label: "Escalamiento riesgo 24h" },
+];
+
+const CASE_ASSIGNMENT_REVIEWER_ROLES = [
+  { value: "grantor_analyst", label: "Analista otorgante" },
+  { value: "grantor_senior", label: "Otorgante senior" },
+  { value: "compliance_reviewer", label: "Compliance" },
+  { value: "risk_committee", label: "Comite de riesgo" },
+];
+
+function getDefaultAssignmentDueAt() {
+  const dueAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  dueAt.setMinutes(dueAt.getMinutes() - dueAt.getTimezoneOffset());
+  return dueAt.toISOString().slice(0, 16);
+}
+
+function toAssignmentDueAtIso(value) {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.toISOString() : null;
+}
 function AdminOperationsHome({ sectionLabel }) {
   const { L, language } = useNuxeraLanguage();
   const operationalSnapshot = useAdminOperationalSnapshot({ enabled: isNuxeraExperienceEnabled(), language });
@@ -583,6 +607,16 @@ function AdminOperationsHome({ sectionLabel }) {
   const notificationOutboxList = useNotificationOutboxList({ enabled: isNuxeraExperienceEnabled(), limit: 10 });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const adminGrantorCases = useAdminGrantorCases({ enabled: isNuxeraExperienceEnabled(), language });
+  const [caseAssignmentForm, setCaseAssignmentForm] = useState({
+    caseId: "",
+    assignedReviewerRole: "grantor_analyst",
+    slaTier: "needs-information-48h",
+    slaDueAt: getDefaultAssignmentDueAt(),
+    reason: "Reasignacion operativa para seguimiento de evidencia y SLA.",
+  });
+  const [caseAssignmentPreview, setCaseAssignmentPreview] = useState(null);
+  const [caseAssignmentSubmitting, setCaseAssignmentSubmitting] = useState(false);
+  const [caseAssignmentError, setCaseAssignmentError] = useState(null);
   const communicationModel = mergeCommunicationModelWithConversationAgent(
     mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language),
     conversationAgentReadiness,
@@ -603,6 +637,33 @@ function AdminOperationsHome({ sectionLabel }) {
     language
   );
 
+  const assignmentCandidates = consoleState.grantorDocumentReadiness.slice(0, 12);
+  const selectedAssignmentCaseId = caseAssignmentForm.caseId || assignmentCandidates[0]?.caseId || "";
+  const selectedAssignmentCase = assignmentCandidates.find((item) => item.caseId === selectedAssignmentCaseId) || assignmentCandidates[0] || null;
+  const caseAssignmentCanSubmit = Boolean(selectedAssignmentCaseId) && !caseAssignmentSubmitting;
+  const updateCaseAssignmentForm = (field, value) => {
+    setCaseAssignmentForm((current) => ({ ...current, [field]: value }));
+  };
+  const handleCaseAssignmentPreview = async (event) => {
+    event.preventDefault();
+    if (!selectedAssignmentCaseId) {
+      setCaseAssignmentError("nuxera-case-assignment-no-case");
+      return;
+    }
+
+    setCaseAssignmentSubmitting(true);
+    setCaseAssignmentError(null);
+    const preview = await previewNuxeraCaseAssignment({
+      orderId: selectedAssignmentCaseId,
+      assignedReviewerRole: caseAssignmentForm.assignedReviewerRole,
+      slaTier: caseAssignmentForm.slaTier,
+      slaDueAt: toAssignmentDueAtIso(caseAssignmentForm.slaDueAt),
+      reason: caseAssignmentForm.reason,
+    });
+    setCaseAssignmentPreview(preview);
+    setCaseAssignmentError(preview.error || null);
+    setCaseAssignmentSubmitting(false);
+  };
   const productionGoNoGo = {
     status: controlledReleaseDossier.readyForReleaseReview && controlledChangeRequest.readyForChangeReview && controlledWriteGate.readyForControlledWriteChange ? "ready-for-final-human-review" : "no-go-controlled-preview",
     checks: [
@@ -1272,6 +1333,64 @@ function AdminOperationsHome({ sectionLabel }) {
         <footer>
           <small>{L("Esta consola no habilita producción: solo consolida señales para revisión humana y cambio separado.", "This console does not enable production: it only consolidates signals for human review and a separate change.")}</small>
         </footer>
+      </section>
+      <section className="nuxera-admin-case-assignment" aria-label={L("Previsualizacion de asignacion de expedientes NUXERA", "NUXERA case assignment preview")}>
+        <header>
+          <span>{caseAssignmentPreview?.status || L("Preview controlado", "Controlled preview")}</span>
+          <h2>{L("Asignacion operativa de expedientes", "Operational case assignment")}</h2>
+        </header>
+        <p>{L("Selecciona un expediente real del pipeline autorizado y prepara la reasignacion con SLA, responsable y motivo. Por defecto solo previsualiza; persistir requiere flag backend separado.", "Select a real case from the authorized pipeline and prepare reassignment with SLA, owner and reason. By default this only previews; persistence requires a separate backend flag.")}</p>
+        <form onSubmit={handleCaseAssignmentPreview}>
+          <label>
+            <span>{L("Expediente", "Case")}</span>
+            <select value={selectedAssignmentCaseId} onChange={(event) => updateCaseAssignmentForm("caseId", event.target.value)} disabled={!assignmentCandidates.length}>
+              {assignmentCandidates.map((item) => (
+                <option key={item.caseId} value={item.caseId}>{item.label} / {item.status}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>SLA</span>
+            <select value={caseAssignmentForm.slaTier} onChange={(event) => updateCaseAssignmentForm("slaTier", event.target.value)}>
+              {CASE_ASSIGNMENT_SLA_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>{L("Responsable", "Owner")}</span>
+            <select value={caseAssignmentForm.assignedReviewerRole} onChange={(event) => updateCaseAssignmentForm("assignedReviewerRole", event.target.value)}>
+              {CASE_ASSIGNMENT_REVIEWER_ROLES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>{L("Vence", "Due")}</span>
+            <input type="datetime-local" value={caseAssignmentForm.slaDueAt} onChange={(event) => updateCaseAssignmentForm("slaDueAt", event.target.value)} />
+          </label>
+          <label className="nuxera-admin-case-assignment-reason">
+            <span>{L("Motivo", "Reason")}</span>
+            <textarea value={caseAssignmentForm.reason} onChange={(event) => updateCaseAssignmentForm("reason", event.target.value)} rows={3} />
+          </label>
+          <button type="submit" disabled={!caseAssignmentCanSubmit}>{caseAssignmentSubmitting ? L("Generando...", "Generating...") : L("Previsualizar asignacion", "Preview assignment")}</button>
+        </form>
+        <div>
+          <article>
+            <span>{selectedAssignmentCase?.status || L("Sin expediente", "No case")}</span>
+            <strong>{selectedAssignmentCase?.label || L("Pipeline no disponible", "Pipeline unavailable")}</strong>
+            <p>{selectedAssignmentCase ? `${selectedAssignmentCase.pending}/${selectedAssignmentCase.total} pendientes - ${selectedAssignmentCase.nextAction}` : L("Carga el pipeline real de otorgantes para habilitar este control.", "Load the real grantor pipeline to enable this control.")}</p>
+          </article>
+          <article>
+            <span>{caseAssignmentPreview?.persisted ? L("Persistido", "Persisted") : L("Sin escritura", "No write")}</span>
+            <strong>{caseAssignmentPreview?.assignment?.assignedReviewerRole || caseAssignmentForm.assignedReviewerRole}</strong>
+            <p>{caseAssignmentPreview?.assignment?.source || caseAssignmentPreview?.source || L("Aun no se ha solicitado preview.", "Preview has not been requested yet.")}</p>
+          </article>
+          <article>
+            <span>{caseAssignmentPreview?.writeEnabled ? L("Flag activo", "Flag enabled") : L("Flag apagado", "Flag disabled")}</span>
+            <strong>{caseAssignmentPreview?.assignment?.slaTier || caseAssignmentForm.slaTier}</strong>
+            <p>{caseAssignmentError || caseAssignmentPreview?.guardrails?.[0] || L("NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED controla la persistencia.", "NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED controls persistence.")}</p>
+          </article>
+        </div>
+        {caseAssignmentPreview?.guardrails?.length > 1 && (
+          <footer>{caseAssignmentPreview.guardrails.slice(1, 4).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}</footer>
+        )}
       </section>
       <section className="nuxera-admin-action-queue" aria-label={L("Bandeja de acciones admin NUXERA", "NUXERA admin action queue")}>
         <header>
