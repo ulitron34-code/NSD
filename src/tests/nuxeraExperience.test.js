@@ -1300,6 +1300,41 @@ describe("NUXERA backend readiness adapter", () => {
     expect(merged.policies.join(" ")).toContain("RLS aun requiere verificacion controlada");
   });
 });
+  it("uses real assignment SLA and reviewer when pipeline entries include nuxera_case_assignments", () => {
+    const queue = buildGrantorCaseQueueFromPipeline([
+      {
+        share: { id: "share-1", status: "accepted" },
+        order: {
+          id: "order-1",
+          service_type: "combo-complete",
+          status: "in_progress",
+          amount: 500000,
+          created_at: "2026-07-01T00:00:00.000Z",
+          metadata: { companyName: "Empresa Demo" },
+        },
+        documentsCount: 4,
+        informationRequests: [{ id: "req-1", status: "open", title: "Estados financieros" }],
+        scoring: { finalScore: 72, regulatoryValidation: { status: "clear" } },
+        assignment: {
+          assignedReviewerId: "reviewer-123456",
+          assignedReviewerRole: "analista",
+          slaTier: "needs-information-48h",
+          slaDueAt: "2026-07-25T18:00:00.000Z",
+          status: "open",
+          reason: "Validar estados financieros",
+          source: "nuxera_case_assignments",
+        },
+      },
+    ]);
+
+    expect(queue.cases[0].triage).toMatchObject({
+      owner: expect.stringContaining("reviewer"),
+      reason: "Validar estados financieros",
+      source: "nuxera_case_assignments",
+      status: "open",
+    });
+    expect(queue.cases[0].triage.sla).toContain("needs-information-48h");
+  });
 describe("NUXERA notification and conversation operating model", () => {
   it("separates applicant, grantor and admin notification events without enabling delivery", () => {
     const catalog = getNuxeraNotificationCatalog();

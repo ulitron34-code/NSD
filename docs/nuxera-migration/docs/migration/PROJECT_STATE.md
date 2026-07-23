@@ -1842,3 +1842,11 @@ Validation: backend full suite 55 files / 528 tests passed (`--no-file-paralleli
 Still not attempted, unchanged from above: production cutover, enabling either rollout flag, or configuring provider keys in Render — these remain operator actions needing an explicit heads-up per `CLAUDE.md`, not something to do silently under a general "sigue."
 
 Next recommended task: either build the per-role chat UI on top of `POST /nuxera/conversation/turn` now that the backend is real, or design the SQL/authorization contract for a real admin-wide case view to close the `operationsConsole.js` demo-data gap.
+
+## Read-only case assignment integration - 2026-07-23
+
+Commit scope: convert the `nuxera_case_assignments` draft from documentation-only into a read-only integration point without applying SQL or enabling writes. `backend/src/routes/otorgante.js` now attempts to read the latest `status='open'` assignment for each pipeline order from `nuxera_case_assignments`; if the table is missing, the pipeline continues with `assignment: null` instead of failing. The same shape is reused by `/otorgante/pipeline` and `/nuxera/admin/grantor-cases`, so grantor and admin surfaces stay aligned.
+
+Frontend: `src/data/otorgantePipeline.js` preserves `entry.assignment`, and `src/nuxera/grantor/caseQueue.js` uses real `slaTier`, `slaDueAt`, reviewer role/id, reason and status when present. Without a real assignment row, the UI keeps the existing static policy labels (`24h`/`48h`/`7d`, `Analista senior`/`Relacion solicitante`/`Monitoreo`).
+
+Guardrails: no SQL was applied; no assignment create/update/reassign route was added; no service-role write path was exposed. Tests added in `backend/src/routes/otorgante.test.js` and `src/tests/nuxeraExperience.test.js` cover the real-assignment read path and fallback behavior.

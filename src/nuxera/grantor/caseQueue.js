@@ -107,6 +107,63 @@ function getGrantorDemoOrders(language) {
   }));
 }
 
+function formatAssignmentDueAt(value, language) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleDateString(language === "en" ? "en-US" : "es-MX", {
+    month: "short",
+    day: "numeric"
+  });
+}
+
+function formatAssignmentOwner(assignment, language) {
+  if (!assignment) return null;
+  const roleLabels = {
+    analista: { es: "Analista", en: "Analyst" },
+    agente_interno: { es: "Agente interno", en: "Internal agent" },
+    compliance_officer: { es: "Compliance", en: "Compliance" },
+    administrador: { es: "Administrador", en: "Administrator" }
+  };
+  const role = pickLang(roleLabels[assignment.assignedReviewerRole], language) || assignment.assignedReviewerRole;
+  const reviewer = assignment.assignedReviewerId ? ` ${String(assignment.assignedReviewerId).slice(0, 8)}` : "";
+  return `${role}${reviewer}`.trim();
+}
+
+function buildAssignmentAwareTriage(priority, assignment, language) {
+  const fallback = {
+    lane: priority === "committee-ready"
+      ? pickLang({ es: "Mesa", en: "Desk" }, language)
+      : priority === "needs-information"
+        ? pickLang({ es: "Subsanacion", en: "Remediation" }, language)
+        : pickLang({ es: "Observacion", en: "Watch" }, language),
+    sla: priority === "committee-ready" ? "24h" : priority === "needs-information" ? "48h" : "7d",
+    owner: priority === "committee-ready"
+      ? pickLang({ es: "Analista senior", en: "Senior analyst" }, language)
+      : priority === "needs-information"
+        ? pickLang({ es: "Relacion solicitante", en: "Applicant relations" }, language)
+        : pickLang({ es: "Monitoreo", en: "Monitoring" }, language),
+    reason: priority === "committee-ready"
+      ? pickLang({ es: "Readiness suficiente para memo humano.", en: "Enough readiness for a human memo." }, language)
+      : priority === "needs-information"
+        ? pickLang({ es: "Faltantes o riesgo impiden comite.", en: "Gaps or risk block committee." }, language)
+        : pickLang({ es: "Sin accion inmediata; esperar nueva evidencia.", en: "No immediate action; wait for new evidence." }, language),
+    source: "policy-fallback"
+  };
+
+  if (!assignment) return fallback;
+
+  const dueAt = formatAssignmentDueAt(assignment.slaDueAt, language);
+  return {
+    ...fallback,
+    sla: dueAt ? `${assignment.slaTier || fallback.sla} / ${dueAt}` : assignment.slaTier || fallback.sla,
+    owner: formatAssignmentOwner(assignment, language) || fallback.owner,
+    reason: assignment.reason || fallback.reason,
+    status: assignment.status || "open",
+    source: assignment.source || "assignment"
+  };
+}
 function getPriority(opportunity) {
   if (opportunity.readinessKey === "committee-ready" && opportunity.riskLevel !== "high") return "committee-ready";
   if (opportunity.infoRequests?.some((request) => request.status === "open") || opportunity.riskLevel === "high") return "needs-information";
@@ -130,24 +187,7 @@ function buildCaseQueue(opportunities, source, language) {
         ...opportunity,
         priority,
         decisionSignals: buildDecisionSignals(opportunity, language),
-        triage: {
-          lane: priority === "committee-ready"
-            ? pickLang({ es: "Mesa", en: "Desk" }, language)
-            : priority === "needs-information"
-              ? pickLang({ es: "Subsanacion", en: "Remediation" }, language)
-              : pickLang({ es: "Observacion", en: "Watch" }, language),
-          sla: priority === "committee-ready" ? "24h" : priority === "needs-information" ? "48h" : "7d",
-          owner: priority === "committee-ready"
-            ? pickLang({ es: "Analista senior", en: "Senior analyst" }, language)
-            : priority === "needs-information"
-              ? pickLang({ es: "Relacion solicitante", en: "Applicant relations" }, language)
-              : pickLang({ es: "Monitoreo", en: "Monitoring" }, language),
-          reason: priority === "committee-ready"
-            ? pickLang({ es: "Readiness suficiente para memo humano.", en: "Enough readiness for a human memo." }, language)
-            : priority === "needs-information"
-              ? pickLang({ es: "Faltantes o riesgo impiden comite.", en: "Gaps or risk block committee." }, language)
-              : pickLang({ es: "Sin accion inmediata; esperar nueva evidencia.", en: "No immediate action; wait for new evidence." }, language)
-        },
+        triage: buildAssignmentAwareTriage(priority, opportunity.assignment, language),
         nextAction: priority === "committee-ready"
           ? pickLang({ es: "Preparar memo de comite y confirmar condiciones no vinculantes.", en: "Prepare the committee memo and confirm non-binding conditions." }, language)
           : priority === "needs-information"

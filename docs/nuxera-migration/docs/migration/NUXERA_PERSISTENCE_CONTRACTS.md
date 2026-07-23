@@ -117,7 +117,7 @@ Rules:
 - Controls do not directly enable automation, permissions or licensed market data.
 - Critical incident controls must be auditable and rollback-linked.
 
-### 5. `nuxera_case_assignments` (proposed 2026-07-22, draft only, not implemented)
+### 5. `nuxera_case_assignments` (proposed 2026-07-22, draft SQL; read-only pipeline integration added 2026-07-23)
 Real SLA deadline and assigned-reviewer state per expediente. Today `caseQueue.js`'s `triage.sla`/`triage.owner` are static per-priority policy labels (`24h`/`48h`/`7d`, "Analista senior"/"Relacion solicitante"/"Monitoreo"), not a per-case timestamp or a real assignee — this module would replace those labels with real data without changing the label-based UI contract.
 
 Suggested columns:
@@ -138,7 +138,7 @@ Rules:
 - Additive only; does not modify `service_orders` or any existing table/column.
 - Only one `status='open'` row per `order_id` (enforced by a partial unique index); reassignment closes the prior row instead of deleting it, preserving history for audit.
 - Read policies mirror the existing owner/authorized-grantor pattern already used by `nuxera_evidence_links` and `/otorgante/pipeline`; all writes go through `service_role` from the backend only, same as `nuxera_notification_outbox`.
-- SQL draft exists at `backend/sql_migrations_pendientes/2026-07-22_nuxera_case_assignments.sql` and passes `check:nuxera-sql`, but has not been applied to Supabase and has no backend service/route yet -- this is a schema/product proposal (who assigns reviewers, what the real SLA policy per priority is) pending a decision, not a code gap.
+- SQL draft exists at `backend/sql_migrations_pendientes/2026-07-22_nuxera_case_assignments.sql` and passes `check:nuxera-sql`, but has not been applied to Supabase. As of 2026-07-23, `/otorgante/pipeline` and `/nuxera/admin/grantor-cases` read the latest open assignment when the table exists and gracefully fall back to static SLA/owner labels when it does not. No write route, SQL application, reassignment workflow or delivery automation exists yet; who assigns reviewers and the real SLA policy remain product decisions.
 
 ## API contract draft
 All routes are proposed under `/nuxera` to avoid changing existing legacy endpoints.

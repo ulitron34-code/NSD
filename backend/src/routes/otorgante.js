@@ -148,8 +148,42 @@ async function getInformationRequestsForOrder(orderId) {
   return data || [];
 }
 
+function mapCaseAssignmentRow(row) {
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    orderId: row.order_id,
+    assignedReviewerId: row.assigned_reviewer_id || null,
+    assignedReviewerRole: row.assigned_reviewer_role || null,
+    slaTier: row.sla_tier || null,
+    slaDueAt: row.sla_due_at || null,
+    status: row.status || null,
+    reason: row.reason || '',
+    updatedAt: row.updated_at || null,
+    source: 'nuxera_case_assignments'
+  };
+}
+
+async function getActiveCaseAssignmentForOrder(orderId) {
+  const { data, error } = await supabaseAdmin
+    .from('nuxera_case_assignments')
+    .select('id, order_id, assigned_reviewer_id, assigned_reviewer_role, sla_tier, sla_due_at, status, reason, updated_at')
+    .eq('order_id', orderId)
+    .eq('status', 'open')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error?.message?.includes('nuxera_case_assignments')) {
+    return null;
+  }
+  if (error) throw error;
+
+  return mapCaseAssignmentRow(data);
+}
 async function buildPipelineItem(share) {
-  const [{ data: order, error: orderError }, { data: documents, error: documentsError }, { data: reviews, error: reviewsError }, interest, contactRequest, informationRequests] = await Promise.all([
+  const [{ data: order, error: orderError }, { data: documents, error: documentsError }, { data: reviews, error: reviewsError }, interest, contactRequest, informationRequests, assignment] = await Promise.all([
     supabaseAdmin
       .from('service_orders')
       .select('id, user_id, service_type, status, amount, created_at, completed_at, metadata, case_number, project_name, applicant_type, requested_amount, funding_purpose, stage, risk_level, readiness_grade, compliance_status')
@@ -167,7 +201,8 @@ async function buildPipelineItem(share) {
       .order('created_at', { ascending: false }),
     getInterestForShare(share),
     getContactRequestForShare(share),
-    getInformationRequestsForOrder(share.order_id)
+    getInformationRequestsForOrder(share.order_id),
+    getActiveCaseAssignmentForOrder(share.order_id)
   ]);
 
   if (orderError) throw orderError;
@@ -211,7 +246,8 @@ async function buildPipelineItem(share) {
       regulatoryValidation: scoring.regulatoryValidation
     },
     interest,
-    contactRequest
+    contactRequest,
+    assignment
   };
 }
 

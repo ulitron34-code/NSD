@@ -132,6 +132,7 @@ export function mapOrderToOpportunity(order, language = "es") {
     interest: metadata.interest || null,
     infoRequests: metadata.infoRequests || metadata.info_requests || [],
     contactRequest: metadata.contactRequest || metadata.contact_request || null,
+    assignment: metadata.assignment || null,
     documentsCount: Number(metadata.documentsCount || metadata.documents_count || documents.length),
     invitationStatus: metadata.share?.status || metadata.invitationStatus || metadata.invitation_status || null
   };
@@ -183,6 +184,7 @@ export function mapPipelineEntryToOpportunity(entry, language = "es") {
     readinessKey,
     invitationStatus: entry.share?.status || "accepted",
     status: statusKey ? pickLang(statusLabelByKey[statusKey], language) : opportunity.status,
+    assignment: entry.assignment || opportunity.assignment || null,
   };
 }
 

@@ -6,7 +6,8 @@ const tableRows = {
   service_orders: {},
   documents: [],
   document_reviews: [],
-  information_requests: []
+  information_requests: [],
+  nuxera_case_assignments: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -62,7 +63,11 @@ vi.mock('../config/supabase.js', () => {
       ilike: vi.fn(() => builder),
       order: vi.fn(() => builder),
       limit: vi.fn(() => builder),
-      maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+      maybeSingle: vi.fn(() => {
+        const rows = tableRows[table];
+        if (Array.isArray(rows)) return Promise.resolve({ data: rows[0] || null, error: null });
+        return Promise.resolve({ data: rows || null, error: null });
+      }),
       single: vi.fn(() => Promise.resolve({ data: tableRows[table], error: null })),
       then: (resolve) => resolve({ data: tableRows[table] || [], error: null })
     };
@@ -127,6 +132,7 @@ describe('otorgante pipeline route', () => {
     };
     tableRows.documents = [{ id: 'doc-1', filename: 'plan.pdf', uploaded_at: '2026-07-02T00:00:00.000Z' }];
     tableRows.document_reviews = [];
+    tableRows.nuxera_case_assignments = [];
     tableRows.information_requests = [
       { id: 'req-1', order_id: 'order-1', title: 'Estados financieros actualizados', status: 'open', priority: 'high', due_date: '2026-07-25', document_type: 'financial' }
     ];
@@ -170,6 +176,34 @@ describe('otorgante pipeline route', () => {
     expect(response.status).toBe(200);
     expect(body[0].informationRequests).toEqual([]);
   });
+  it('includes the active real assignment when nuxera_case_assignments is available', async () => {
+    tableRows.nuxera_case_assignments = [{
+      id: 'assignment-1',
+      order_id: 'order-1',
+      assigned_reviewer_id: 'reviewer-1',
+      assigned_reviewer_role: 'analista',
+      sla_tier: 'needs-information-48h',
+      sla_due_at: '2026-07-25T18:00:00.000Z',
+      status: 'open',
+      reason: 'Validar estados financieros',
+      updated_at: '2026-07-23T12:00:00.000Z'
+    }];
+
+    const response = await fetch(`${baseUrl}/api/otorgante/pipeline`, {
+      headers: { 'x-test-user-id': 'grantor-1', 'x-test-permissions': 'data_room:authorized:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body[0].assignment).toMatchObject({
+      id: 'assignment-1',
+      assignedReviewerId: 'reviewer-1',
+      assignedReviewerRole: 'analista',
+      slaTier: 'needs-information-48h',
+      status: 'open',
+      source: 'nuxera_case_assignments'
+    });
+  });
 });
 
 describe('admin-wide grantor cases route', () => {
@@ -189,6 +223,7 @@ describe('admin-wide grantor cases route', () => {
     };
     tableRows.documents = [];
     tableRows.document_reviews = [];
+    tableRows.nuxera_case_assignments = [];
     tableRows.information_requests = [];
 
     const app = createApp();
