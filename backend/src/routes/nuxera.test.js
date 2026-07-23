@@ -20,6 +20,7 @@ const serviceCalls = {
   continuationPack: [],
   aiProviderPolicy: [],
   tenTrackClosure: [],
+  tenTrackExecutionBacklog: [],
   notificationDryRun: [],
   notificationRules: [],
   notificationApprovalPlan: [],
@@ -334,6 +335,20 @@ vi.mock('../services/nuxeraTenTrackClosureService.js', () => ({
       guardrails: ['Ten-track closure read-only.']
     };
   })
+}));vi.mock('../services/nuxeraTenTrackExecutionBacklogService.js', () => ({
+  getNuxeraTenTrackExecutionBacklog: vi.fn(() => {
+    serviceCalls.tenTrackExecutionBacklog.push({ called: true });
+    return {
+      id: 'nuxera-ten-track-execution-backlog',
+      sourcePlanId: 'nuxera-ten-track-closure-plan',
+      status: 'blocked-by-critical-path',
+      summary: { total: 10, blocked: 10, criticalPath: 3, criticalBlocked: 3, highPriority: 3, averageCompletion: 74 },
+      items: [{ id: 'exec-sql-rls-non-production', sourceTrackId: 'sql-rls-non-production', priority: 'critical-path', status: 'blocked', nextGate: 'non-production-evidence' }],
+      milestones: [{ id: 'evidence-first', status: 'blocked' }],
+      nextDecision: 'Run controlled non-production evidence.',
+      guardrails: ['Execution backlog read-only.']
+    };
+  })
 }));
 vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
   buildNuxeraNotificationDryRunBatch: vi.fn((intents = []) => {
@@ -546,6 +561,7 @@ describe('nuxera routes', () => {
     serviceCalls.continuationPack = [];
     serviceCalls.aiProviderPolicy = [];
     serviceCalls.tenTrackClosure = [];
+    serviceCalls.tenTrackExecutionBacklog = [];
     serviceCalls.notificationDryRun = [];
     serviceCalls.notificationRules = [];
     serviceCalls.notificationApprovalPlan = [];
@@ -1254,6 +1270,21 @@ describe('nuxera routes', () => {
     expect(serviceCalls.tenTrackClosure).toEqual([{ called: true }]);
   });
 
+  it('returns ten-track execution backlog as admin read-only', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/ten-track-execution-backlog`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/ten-track-execution-backlog`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body.executionBacklog).toMatchObject({ summary: { total: 10, criticalBlocked: 3 } });
+    expect(body.guardrails.join(' ')).toContain('does not execute SQL');
+    expect(serviceCalls.tenTrackExecutionBacklog).toEqual([{ called: true }]);
+  });
   it("requires nuxera:admin:read before reading AI provider policy", async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/ai-provider-policy`, {
       headers: { "x-test-user-id": "admin-1", "x-test-permissions": "case:own:read" }

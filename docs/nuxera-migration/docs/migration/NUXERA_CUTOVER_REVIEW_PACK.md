@@ -84,3 +84,15 @@ New read-only admin endpoint: `GET /api/nuxera/admin/ten-track-closure`.
 Purpose: consolidate the ten remaining production blockers into a single closure plan before SQL/RLS execution or write enablement. The plan explicitly keeps production blocked until non-production evidence, write gates, release dossier and human approval are complete.
 
 No production action is performed by this endpoint.
+
+## Backlog Ejecutivo de 10 Frentes
+
+El cutover pack ahora tiene un artefacto admin adicional: `nuxera-ten-track-execution-backlog`. Su funcion es ordenar el cierre pendiente por prioridad y gate antes de una revision humana:
+
+1. Evidencia SQL/RLS no productiva.
+2. Write gate y service_role writes controlados.
+3. Release/cutover dossier.
+4. Ciclos operativos: notificaciones, chat/agente, SLA, solicitante.
+5. Hardening de riesgo/KYB y decision source-traced.
+
+No-go: ningun item de backlog puede usarse como aprobacion productiva automatica. Todo cambio real requiere evidencia observada, aprobador humano, ticket separado y rollback documentado.

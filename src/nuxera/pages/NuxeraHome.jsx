@@ -6,7 +6,7 @@ import { NavLink } from "react-router-dom";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { mergeAiProviderPolicyWithConsole, useAiProviderPolicy } from "../admin/aiProviderPolicyAdapter";
-import { useTenTrackClosure } from "../admin/tenTrackClosureAdapter";
+import { useTenTrackClosure, useTenTrackExecutionBacklog } from "../admin/tenTrackClosureAdapter";
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
@@ -922,6 +922,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const notificationDeliveryBatch = useNotificationDeliveryBatch({ enabled: isNuxeraExperienceEnabled(), maxBatchSize: 1, channels: ["email"] });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const tenTrackClosure = useTenTrackClosure({ enabled: isNuxeraExperienceEnabled() });
+  const tenTrackExecutionBacklog = useTenTrackExecutionBacklog({ enabled: isNuxeraExperienceEnabled() });
   const adminGrantorCases = useAdminGrantorCases({ enabled: isNuxeraExperienceEnabled(), language });
 
   const [caseAssignmentForm, setCaseAssignmentForm] = useState({
@@ -1805,6 +1806,39 @@ function AdminOperationsHome({ sectionLabel }) {
         </footer>
       </section>
 
+      <section className="nuxera-admin-go-no-go" aria-label={L("Backlog ejecutivo de diez frentes NUXERA", "NUXERA ten-track execution backlog")}>
+        <header>
+          <span>{tenTrackExecutionBacklog.loading ? L("Cargando backlog", "Loading backlog") : tenTrackExecutionBacklog.status}</span>
+          <h2>{L("Backlog ejecutivo", "Execution backlog")}</h2>
+        </header>
+        <p>{tenTrackExecutionBacklog.summary.criticalBlocked}/{tenTrackExecutionBacklog.summary.criticalPath} {L("criticos bloqueados", "critical blocked")}; {tenTrackExecutionBacklog.summary.highPriority} {L("alta prioridad", "high priority")}; {tenTrackExecutionBacklog.summary.averageCompletion}% {L("promedio", "average")}.</p>
+        <div>
+          {tenTrackExecutionBacklog.items.slice(0, 6).map((item) => (
+            <article key={item.id} data-status={item.status === "blocked" ? "warning" : "success"}>
+              <span>{item.priority} / {item.owner} / {item.nextGate}</span>
+              <strong>{item.percent}% - {item.label}</strong>
+              <p>{item.action}</p>
+              <small>{item.blocker || item.readyCriteria[0] || L("Listo para revision humana", "Ready for human review")}</small>
+            </article>
+          ))}
+        </div>
+        {tenTrackExecutionBacklog.milestones.length > 0 && (
+          <div>
+            {tenTrackExecutionBacklog.milestones.map((milestone) => (
+              <article key={milestone.id} data-status={milestone.status === "blocked" ? "warning" : "success"}>
+                <span>{milestone.status}</span>
+                <strong>{milestone.label}</strong>
+                <p>{milestone.outcome}</p>
+                <small>{milestone.items.length} {L("acciones relacionadas", "related actions")}</small>
+              </article>
+            ))}
+          </div>
+        )}
+        <footer>
+          <small>{tenTrackExecutionBacklog.error || tenTrackExecutionBacklog.nextDecision}</small>
+          {tenTrackExecutionBacklog.guardrails.slice(0, 2).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
+        </footer>
+      </section>
       <CaseTimelinePanel
         timeline={adminTimeline}
         title={L("Trazabilidad del expediente", "File traceability")}

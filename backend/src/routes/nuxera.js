@@ -14,6 +14,7 @@ import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteG
 import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness, runNuxeraConversationTurn } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
 import { getNuxeraTenTrackClosurePlan } from '../services/nuxeraTenTrackClosureService.js';
+import { getNuxeraTenTrackExecutionBacklog } from '../services/nuxeraTenTrackExecutionBacklogService.js';
 import { approveNuxeraNotificationRules, buildNuxeraNotificationApprovalPlan, buildNuxeraNotificationDryRunBatch, buildNuxeraNotificationRulesDryRun, enqueueNuxeraNotificationIntent, getNuxeraNotificationApprovalPersistenceReadiness, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, getNuxeraNotificationTemplateCatalog, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
@@ -60,6 +61,25 @@ router.get(
         guardrails: [
           'Ten-track closure is read-only and does not execute SQL, deploy, send notifications or enable writes.',
           'Completion percentages are operational estimates, not production approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/ten-track-execution-backlog',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: 'admin',
+        executionBacklog: getNuxeraTenTrackExecutionBacklog(),
+        guardrails: [
+          'Ten-track execution backlog is read-only and does not execute SQL, deploy, send notifications or enable writes.',
+          'Backlog priority is a review order, not production approval.'
         ]
       });
     } catch (error) {

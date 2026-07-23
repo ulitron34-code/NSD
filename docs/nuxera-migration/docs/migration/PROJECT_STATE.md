@@ -2084,3 +2084,18 @@ Runtime surface:
 - Frontend normalizer and backend route/service tests cover the plan as read-only.
 
 Guardrails: this does not apply SQL, enable flags, deploy production, persist new write rows, call providers or send notifications. It turns the remaining backlog into an operational closure dashboard so the next work can attack blockers in dependency order.
+
+### 2026-07-23 - Backlog ejecutivo derivado de 10 frentes
+
+Ultimo bloque agregado:
+- `backend/src/services/nuxeraTenTrackExecutionBacklogService.js`
+- `GET /api/nuxera/admin/ten-track-execution-backlog`
+- `src/nuxera/admin/tenTrackClosureAdapter.js` ahora normaliza closure y execution backlog.
+- Admin muestra `Backlog ejecutivo` debajo de `Cierre de 10 frentes`.
+
+Validacion enfocada:
+- Backend: `nuxeraTenTrackExecutionBacklogService.test.js` + `routes/nuxera.test.js` = 2 files / 71 tests passed.
+- Frontend: `nuxeraExperience.test.js` = 1 file / 125 tests passed.
+
+Siguiente punto real:
+- Usar el backlog para cerrar primero evidencia SQL/RLS no productiva y write gate antes de mover notificaciones/chat/agentes a persistencia real.

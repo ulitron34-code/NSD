@@ -6,7 +6,7 @@ import { getAdminWorkspaceConfig } from "../nuxera/adapters/AdminWorkspaceAdapte
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
 import { mergeGrantorCasesWithConsole, normalizeNuxeraAdminGrantorCasesResponse, normalizeNuxeraCaseAssignmentHistoryResponse, normalizeNuxeraCaseAssignmentPreviewResponse } from "../nuxera/admin/grantorCasesAdapter";
 import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledContinuationPackResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
-import { normalizeNuxeraTenTrackClosureResponse } from "../nuxera/admin/tenTrackClosureAdapter";
+import { normalizeNuxeraTenTrackClosureResponse, normalizeNuxeraTenTrackExecutionBacklogResponse } from "../nuxera/admin/tenTrackClosureAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { buildAdminOperationalModules, normalizeAdminOperationalSnapshot } from "../nuxera/admin/operationalSnapshotAdapter";
 import { getApplicantDocumentCenter } from "../nuxera/applicant/documentCenter";
@@ -57,6 +57,23 @@ describe("NUXERA admin operational snapshot", () => {
     expect(closure.tracks[0]).toMatchObject({ id: "sql-rls-non-production", readyForProduction: false });
   });
 
+  it("normalizes ten-track execution backlog as a prioritized admin action list", () => {
+    const backlog = normalizeNuxeraTenTrackExecutionBacklogResponse({
+      executionBacklog: {
+        status: "blocked-by-critical-path",
+        summary: { total: 10, blocked: 10, criticalPath: 3, criticalBlocked: 3, highPriority: 3, averageCompletion: 74 },
+        items: [
+          { id: "exec-sql", sourceTrackId: "sql-rls-non-production", label: "SQL/RLS", domain: "cutover", owner: "admin-platform", priority: "critical-path", status: "blocked", percent: 70, nextGate: "non-production-evidence", action: "run evidence", blocker: "pending evidence", dependencies: ["cutover-review-pack"] },
+        ],
+        milestones: [{ id: "evidence-first", label: "Evidencia primero", status: "blocked", items: ["exec-sql"], outcome: "Ready for review." }],
+        guardrails: ["Read-only."],
+      },
+    });
+
+    expect(backlog).toMatchObject({ source: "remote-read-only", summary: { total: 1, criticalBlocked: 3 } });
+    expect(backlog.items[0]).toMatchObject({ priority: "critical-path", nextGate: "non-production-evidence" });
+    expect(backlog.milestones[0]).toMatchObject({ id: "evidence-first", status: "blocked" });
+  });
   it("normalizes protected admin sources without inventing fallback records", () => {
     const snapshot = normalizeAdminOperationalSnapshot({
       users: { users: [{ id: "user-1", profile_type: "administrador" }], total: 12 },

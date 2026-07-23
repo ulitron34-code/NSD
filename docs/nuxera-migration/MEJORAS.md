@@ -311,3 +311,16 @@ Se agrego un tablero read-only para los 10 pendientes principales:
 10. Docs/continuidad.
 
 El tablero vive en Admin como `Cierre de 10 frentes` y resume porcentaje, blockers y siguiente accion por frente. No habilita produccion ni reemplaza la evidencia real; ordena el cierre para avanzar por dependencias.
+
+## Avance - Backlog Ejecutivo de 10 Frentes (2026-07-23)
+
+Se agrego un backlog ejecutivo derivado del cierre de 10 frentes para convertir el porcentaje general en una ruta de ejecucion revisable. El nuevo servicio `nuxeraTenTrackExecutionBacklogService` toma el plan de cierre como fuente unica y calcula prioridad, owner, siguiente gate, blocker principal, dependencias, criterios de ready y milestones.
+
+Elementos implementados:
+- Backend read-only `GET /api/nuxera/admin/ten-track-execution-backlog` protegido con `nuxera:admin:read`.
+- Servicio backend con orden critico: SQL/RLS no productivo, write gate y production cutover antes de notificaciones, agentes, riesgo o retencion.
+- Adapter frontend y hook `useTenTrackExecutionBacklog` con fallback local seguro.
+- Panel Admin `Backlog ejecutivo` despues de `Cierre de 10 frentes`, mostrando criticidad, owner, gate, accion y blocker por frente.
+- Tests backend y frontend para normalizacion, endpoint protegido y guardrails read-only.
+
+Guardrails: el backlog no aplica SQL, no habilita delivery, no persiste aprobaciones, no llama proveedores, no cambia flags y no despliega produccion. Solo ordena la ejecucion para revision humana.

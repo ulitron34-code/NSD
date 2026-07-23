@@ -318,6 +318,10 @@ export const nuxeraTenTrackClosureAPI = {
     api.get('/nuxera/admin/ten-track-closure')
 };
 
+export const nuxeraTenTrackExecutionBacklogAPI = {
+  getBacklog: () =>
+    api.get('/nuxera/admin/ten-track-execution-backlog')
+};
 export const nuxeraNotificationOutboxAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/notification-outbox-readiness'),
