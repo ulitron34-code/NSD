@@ -33,6 +33,69 @@ const ALLOWED_STATUSES = new Set(['preview', 'queued', 'sent', 'failed', 'suppre
 const DELIVERY_DISABLED_REASON = "NUXERA_NOTIFICATION_DELIVERY_ENABLED is not true";
 const EMAIL_DELIVERY_DISABLED_REASON = "NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED is not true";
 
+const TEMPLATE_DEFINITIONS = Object.freeze({
+  [NUXERA_NOTIFICATION_EVENTS.APPLICANT_MISSING_EVIDENCE]: {
+    id: 'applicant-missing-evidence-v1',
+    ctaLabel: 'Responder requerimiento',
+    title: 'Tu expediente requiere evidencia adicional',
+    body: 'Hay faltantes documentales o solicitudes abiertas que requieren tu atencion. Ingresa a NUXERA para revisar el detalle y cargar la evidencia desde tu expediente.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.APPLICANT_EVIDENCE_REJECTED]: {
+    id: 'applicant-evidence-rejected-v1',
+    ctaLabel: 'Revisar observaciones',
+    title: 'Hay observaciones sobre tu evidencia',
+    body: 'Una revision humana registro observaciones sobre evidencia cargada. Revisa el expediente y sube una correccion cuando corresponda.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.APPLICANT_MESSAGE_RECEIVED]: {
+    id: 'applicant-message-received-v1',
+    ctaLabel: 'Abrir conversacion',
+    title: 'Nuevo mensaje en tu expediente',
+    body: 'Tienes una actualizacion operativa relacionada con tu expediente. Revisa NUXERA para responder desde el canal autorizado.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.GRANTOR_FILE_SHARED]: {
+    id: 'grantor-file-shared-v1',
+    ctaLabel: 'Abrir expediente autorizado',
+    title: 'Nuevo expediente autorizado para revisar',
+    body: 'Se compartio un expediente con tus permisos actuales. La notificacion no incluye evidencia ni adjuntos; consulta NUXERA para revisar el data room autorizado.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.GRANTOR_INFORMATION_RESPONSE]: {
+    id: 'grantor-information-response-v1',
+    ctaLabel: 'Revisar respuesta',
+    title: 'Respuesta recibida para revision',
+    body: 'El solicitante respondio un requerimiento o cargo evidencia solicitada. Revisa el cambio desde Gestion de expedientes antes de moverlo a mesa.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.GRANTOR_DECISION_READY]: {
+    id: 'grantor-decision-ready-v1',
+    ctaLabel: 'Abrir mesa de decision',
+    title: 'Expediente listo para analisis de mesa',
+    body: 'El expediente tiene senales de evidencia y timeline suficientes para preparar revision humana. Este aviso no constituye aprobacion ni term sheet.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.GRANTOR_CASE_ASSIGNED]: {
+    id: 'grantor-case-assigned-v1',
+    ctaLabel: 'Abrir gestion de expedientes',
+    title: 'Tienes un expediente asignado en NUXERA',
+    body: 'Operaciones te asigno un expediente con seguimiento de SLA. Revisa faltantes, responsable y prioridad antes de iniciar la revision.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.GRANTOR_SLA_DUE_SOON]: {
+    id: 'grantor-sla-due-soon-v1',
+    ctaLabel: 'Atender SLA',
+    title: 'SLA NUXERA por vencer',
+    body: 'Un expediente asignado esta cerca de vencer. Atiende faltantes, documenta seguimiento o escala a operaciones si no puedes cerrarlo a tiempo.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.ADMIN_CASE_SLA_OVERDUE]: {
+    id: 'admin-case-sla-overdue-v1',
+    ctaLabel: 'Revisar asignacion',
+    title: 'SLA NUXERA vencido requiere seguimiento',
+    body: 'Hay un expediente con SLA vencido. Revisa historial, responsable y posibles bloqueos antes de reasignar o escalar.'
+  },
+  [NUXERA_NOTIFICATION_EVENTS.ADMIN_DELIVERY_FAILURE]: {
+    id: 'admin-delivery-failure-v1',
+    ctaLabel: 'Revisar outbox',
+    title: 'Fallo de entrega de notificacion NUXERA',
+    body: 'Se detectaron fallas de entrega en el outbox. Revisa dedupe, destinatario, canal y auditoria antes de reintentar.'
+  }
+});
+
 function escapeHtml(value) {
   return String(value || '')
     .replace(/&/g, '&amp;')
@@ -259,8 +322,20 @@ export function buildNuxeraNotificationDeliveryPlan(options = {}) {
 }
 
 function buildNuxeraNotificationEmailHtml(row) {
-  const body = escapeHtml(normalizeString(row.body_preview, 1200) || 'Tienes una actualizacion pendiente en NUXERA.');
-  const subject = escapeHtml(normalizeString(row.subject, 180) || 'NUXERA notification');
+  const rendered = renderNuxeraNotificationTemplate({
+    eventId: row.event_id,
+    subject: row.subject,
+    bodyPreview: row.body_preview,
+    orderId: row.order_id,
+    recipientRole: row.recipient_role,
+    recipientUserId: row.recipient_user_id,
+    recipientEmail: row.recipient_email,
+    channels: row.channels,
+    priority: row.priority,
+    metadata: row.metadata
+  });
+  const body = escapeHtml(rendered.body);
+  const subject = escapeHtml(rendered.subject);
   const orderLine = row.order_id ? `<p style="margin:0 0 12px;color:#506070;font-size:13px;">Expediente: <strong>${escapeHtml(row.order_id)}</strong></p>` : '';
   return `<!DOCTYPE html>
 <html lang="es">
@@ -279,6 +354,68 @@ function buildNuxeraNotificationEmailHtml(row) {
   </div>
 </body>
 </html>`;
+}
+
+export function getNuxeraNotificationTemplateCatalog() {
+  return {
+    id: 'nuxera-notification-template-catalog',
+    status: 'notification-templates-ready-no-delivery',
+    version: 'v1',
+    templates: Object.entries(TEMPLATE_DEFINITIONS).map(([eventId, template]) => ({
+      eventId,
+      templateId: template.id,
+      title: template.title,
+      ctaLabel: template.ctaLabel,
+      channels: normalizeChannels(eventId === NUXERA_NOTIFICATION_EVENTS.ADMIN_CASE_SLA_OVERDUE || eventId === NUXERA_NOTIFICATION_EVENTS.ADMIN_DELIVERY_FAILURE ? ['in_app'] : ['in_app', 'email']),
+      bodyPolicy: 'No evidence, attachments, scores, decisions or sensitive file contents.'
+    })),
+    guardrails: [
+      'Templates are operational notices only; they do not include evidence, attachments or binding decisions.',
+      'Email rendering uses subject/body preview and a link-to-platform posture.',
+      'Template catalog is read-only and does not queue or send notifications.'
+    ]
+  };
+}
+
+export function renderNuxeraNotificationTemplate(intent = {}) {
+  const normalized = normalizeNuxeraNotificationIntent({
+    ...intent,
+    recipientUserId: intent.recipientUserId || intent.recipient_user_id || 'template-preview-recipient',
+    recipientEmail: intent.recipientEmail || intent.recipient_email || null,
+    recipientRole: intent.recipientRole || intent.recipient_role,
+    orderId: intent.orderId || intent.order_id || 'template-preview-order',
+    eventId: intent.eventId || intent.event_id
+  });
+  const template = TEMPLATE_DEFINITIONS[normalized.eventId] || {
+    id: 'generic-operational-notice-v1',
+    ctaLabel: 'Abrir NUXERA',
+    title: normalized.subject || 'NUXERA notification',
+    body: 'Tienes una actualizacion operativa pendiente en NUXERA.'
+  };
+
+  return {
+    templateId: template.id,
+    eventId: normalized.eventId,
+    audience: normalized.audience,
+    subject: normalized.subject || template.title,
+    title: template.title,
+    body: [template.body, normalized.bodyPreview].filter(Boolean).join(' '),
+    bodyPreview: normalized.bodyPreview || template.body,
+    ctaLabel: template.ctaLabel,
+    channels: normalized.channels,
+    priority: normalized.priority,
+    policy: {
+      includeEvidence: false,
+      includeAttachments: false,
+      includeDecision: false,
+      humanApprovedBeforeQueue: true
+    },
+    guardrails: [
+      'Rendered template contains operational summary only.',
+      'Recipient must open NUXERA to view authorized evidence.',
+      'No automatic approval, access grant or delivery is implied.'
+    ]
+  };
 }
 
 async function updateOutboxDeliveryStatus(row, status, metadata = {}) {
@@ -847,6 +984,125 @@ export function buildNuxeraNotificationRulesDryRun(timeline = {}, context = {}) 
       'Notification rules dry-run is read-only and never queues outbox rows.',
       'Recipients must be provided by an authorized admin context before any real queueing.',
       'Rules generate operational notices only; no evidence, attachments, approval or decision is sent.'
+    ]
+  };
+}
+
+function buildApprovalItem(preview, index, approval = {}) {
+  const renderedTemplate = renderNuxeraNotificationTemplate(preview);
+  return {
+    id: `approval:${preview.dedupeKey || index}`,
+    index,
+    status: preview.duplicate ? 'suppressed-duplicate' : 'requires-human-approval',
+    eventId: preview.eventId,
+    audience: preview.audience,
+    recipientRole: preview.recipientRole,
+    recipientUserId: preview.recipientUserId,
+    recipientEmail: preview.recipientEmail,
+    orderId: preview.orderId,
+    subject: preview.subject,
+    channels: preview.channels,
+    priority: preview.priority,
+    dedupeKey: preview.dedupeKey,
+    duplicate: Boolean(preview.duplicate),
+    template: renderedTemplate,
+    approval: {
+      required: true,
+      approved: false,
+      approvedBy: approval.approvedBy || null,
+      reason: approval.reason || null
+    },
+    guardrails: [
+      'Human approval is required before queueing.',
+      'Approval item excludes evidence, attachments and binding decisions.',
+      'Duplicate items remain suppressed and are not queued.'
+    ]
+  };
+}
+
+export function buildNuxeraNotificationApprovalPlan(timeline = {}, context = {}) {
+  const rulesDryRun = buildNuxeraNotificationRulesDryRun(timeline, context);
+  const previews = Array.isArray(rulesDryRun.dryRun?.previews) ? rulesDryRun.dryRun.previews : [];
+  const approvalItems = previews.map((preview, index) => buildApprovalItem(preview, index, {
+    approvedBy: context.actorUserId || null,
+    reason: context.approvalReason || null
+  }));
+  const actionableItems = approvalItems.filter((item) => !item.duplicate);
+
+  return {
+    id: `nuxera-notification-approval-plan:${rulesDryRun.orderId || context.orderId || 'unknown'}`,
+    status: actionableItems.length ? 'notification-approval-required' : 'notification-approval-empty',
+    orderId: rulesDryRun.orderId,
+    workspaceRole: 'admin',
+    rulesDryRun,
+    approvalItems,
+    summary: {
+      generated: approvalItems.length,
+      actionable: actionableItems.length,
+      duplicates: approvalItems.filter((item) => item.duplicate).length,
+      rejected: rulesDryRun.dryRun?.summary?.rejected || 0,
+      byAudience: approvalItems.reduce((acc, item) => ({ ...acc, [item.audience]: (acc[item.audience] || 0) + 1 }), {})
+    },
+    guardrails: [
+      'Approval plan is read-only and does not queue or send messages.',
+      'Only non-duplicate approval items may be queued after admin approval and backend gates.',
+      'Templates contain operational copy only; no evidence, attachments or decisions.'
+    ]
+  };
+}
+
+export async function approveNuxeraNotificationRules({ timeline = {}, context = {}, actorUserId = null, req = null, deliveryEnabled = false } = {}) {
+  const approvalPlan = buildNuxeraNotificationApprovalPlan(timeline, { ...context, actorUserId });
+  const approvedItems = approvalPlan.approvalItems.filter((item) => !item.duplicate);
+  const results = [];
+
+  for (const item of approvedItems) {
+    const queued = await enqueueNuxeraNotificationIntent({
+      actorUserId,
+      req,
+      deliveryEnabled,
+      intent: {
+        eventId: item.eventId,
+        orderId: item.orderId,
+        recipientRole: item.recipientRole,
+        recipientUserId: item.recipientUserId,
+        recipientEmail: item.recipientEmail,
+        subject: item.template.subject,
+        bodyPreview: item.template.bodyPreview,
+        channels: item.channels,
+        priority: item.priority,
+        metadata: {
+          approvalStatus: 'human-approved',
+          approvalReason: context.approvalReason || null,
+          approvedBy: actorUserId || null,
+          approvedAt: new Date().toISOString(),
+          templateId: item.template.templateId,
+          source: 'nuxera-notification-approval-plan',
+          dryRunDedupeKey: item.dedupeKey
+        }
+      }
+    });
+    results.push({ approvalItemId: item.id, ...queued });
+  }
+
+  return {
+    id: 'nuxera-notification-approval-result',
+    status: deliveryEnabled ? 'notification-approval-queued-through-gated-outbox' : 'notification-approval-preview-only',
+    deliveryEnabled: Boolean(deliveryEnabled),
+    orderId: approvalPlan.orderId,
+    approvalPlan,
+    results,
+    summary: {
+      approved: approvedItems.length,
+      persisted: results.filter((result) => result.persisted).length,
+      previews: results.filter((result) => result.status === 'preview').length,
+      suppressed: results.filter((result) => result.status === 'suppressed').length,
+      duplicatesSkipped: approvalPlan.summary.duplicates
+    },
+    guardrails: [
+      deliveryEnabled ? 'Backend persistence gate is enabled; queued rows still require delivery worker gates before sending.' : 'Backend persistence gate is disabled; approval returns previews only and writes nothing.',
+      'Approval does not send email, WhatsApp or in-app messages.',
+      'Delivery remains a separate controlled worker action with audit requirements.'
     ]
   };
 }

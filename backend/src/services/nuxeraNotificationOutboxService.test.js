@@ -48,8 +48,12 @@ import {
   buildNuxeraNotificationDedupeKey,
   buildNuxeraNotificationDeliveryPlan,
   buildNuxeraNotificationDryRunBatch,
+  buildNuxeraNotificationApprovalPlan,
   buildNuxeraNotificationOutboxPreview,
   buildNuxeraNotificationRulesDryRun,
+  getNuxeraNotificationTemplateCatalog,
+  renderNuxeraNotificationTemplate,
+  approveNuxeraNotificationRules,
   enqueueNuxeraNotificationIntent,
   isNuxeraNotificationDeliveryEnabled,
   isNuxeraNotificationEmailDeliveryEnabled,
@@ -242,6 +246,31 @@ describe('nuxeraNotificationOutboxService', () => {
       orderId: 'order-1'
     });
   });
+  it('renders safe operational templates and approval plans without queueing', () => {
+    const catalog = getNuxeraNotificationTemplateCatalog();
+    const rendered = renderNuxeraNotificationTemplate({
+      eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_CASE_ASSIGNED,
+      orderId: 'order-1',
+      recipientUserId: 'grantor-1',
+      recipientRole: 'grantor',
+      subject: 'Expediente asignado',
+      bodyPreview: 'SLA 48h / revision requerida',
+      channels: ['email']
+    });
+    const plan = buildNuxeraNotificationApprovalPlan({
+      orderId: 'order-1',
+      workspaceRole: 'admin',
+      summary: { evidence: 1, blockers: 0, openInformationRequests: 0 },
+      events: [{ id: 'evidence:1', type: 'evidence', status: 'available' }]
+    }, { grantorRecipientUserId: 'grantor-1' });
+
+    expect(catalog.templates.length).toBeGreaterThan(5);
+    expect(rendered).toMatchObject({ templateId: 'grantor-case-assigned-v1', policy: { includeEvidence: false, includeAttachments: false, includeDecision: false } });
+    expect(plan).toMatchObject({ status: 'notification-approval-required', summary: { actionable: 1 } });
+    expect(plan.approvalItems[0].template.templateId).toBe('grantor-decision-ready-v1');
+    expect(state.inserted).toBeNull();
+  });
+
   it('builds notification rule dry-run intents from timeline signals without queueing', () => {
     const result = buildNuxeraNotificationRulesDryRun({
       orderId: 'order-1',
@@ -273,6 +302,29 @@ describe('nuxeraNotificationOutboxService', () => {
     expect(result.dryRun.deliveryEnabled).toBe(false);
     expect(state.inserted).toBeNull();
   });
+  it('approves notification rules as previews when backend persistence gate is disabled', async () => {
+    const result = await approveNuxeraNotificationRules({
+      actorUserId: 'admin-approval',
+      deliveryEnabled: false,
+      timeline: {
+        orderId: 'order-approval',
+        workspaceRole: 'admin',
+        summary: { evidence: 1, blockers: 0, openInformationRequests: 0 },
+        events: [{ id: 'evidence:approval', type: 'evidence', status: 'available' }]
+      },
+      context: { grantorRecipientUserId: 'grantor-approval', approvalReason: 'Revision manual' }
+    });
+
+    expect(result).toMatchObject({
+      status: 'notification-approval-preview-only',
+      deliveryEnabled: false,
+      summary: { approved: 1, persisted: 0, previews: 1 }
+    });
+    expect(result.results[0]).toMatchObject({ persisted: false, status: 'preview', eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_DECISION_READY });
+    expect(state.inserted).toBeNull();
+    expect(state.auditEvents).toEqual([]);
+  });
+
   it('builds a notification dry-run batch with duplicate suppression and no writes', () => {
     const result = buildNuxeraNotificationDryRunBatch([
       {

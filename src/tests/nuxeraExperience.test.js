@@ -28,7 +28,7 @@ import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpe
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
 import { normalizeNuxeraCaseTimelineResponse } from "../nuxera/orchestration/caseTimelineAdapter";
 import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraAssignmentNotificationIntents, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationDeliveryBatchResponse, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationApprovalPlanResponse, normalizeNuxeraNotificationApprovalResultResponse, normalizeNuxeraNotificationDeliveryBatchResponse, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse, normalizeNuxeraNotificationTemplateCatalogResponse } from "../nuxera/communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse, normalizeNuxeraConversationTurnResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
 
 describe("NUXERA admin operational snapshot", () => {
@@ -1534,6 +1534,38 @@ describe("NUXERA notification and conversation operating model", () => {
     const missing = normalizeNuxeraNotificationOutboxListResponse(null);
     expect(missing.entries).toEqual([]);
     expect(missing.error).toBe("nuxera-notification-outbox-list-missing");
+  });
+
+  it("normalizes notification templates and approval plans as gated admin actions", () => {
+    const templates = normalizeNuxeraNotificationTemplateCatalogResponse({
+      templateCatalog: {
+        status: "notification-templates-ready-no-delivery",
+        templates: [{ eventId: "grantor-case-assigned", templateId: "grantor-case-assigned-v1" }],
+        guardrails: ["Templates read-only."],
+      },
+    });
+    const plan = normalizeNuxeraNotificationApprovalPlanResponse({
+      approvalPlan: {
+        status: "notification-approval-required",
+        summary: { generated: 2, actionable: 1, duplicates: 1, rejected: 0 },
+        approvalItems: [{ id: "approval-1", template: { templateId: "grantor-case-assigned-v1" } }],
+        guardrails: ["Approval plan read-only."],
+      },
+    });
+    const result = normalizeNuxeraNotificationApprovalResultResponse({
+      approvalResult: {
+        status: "notification-approval-preview-only",
+        deliveryEnabled: false,
+        summary: { approved: 1, persisted: 0, previews: 1, suppressed: 0, duplicatesSkipped: 1 },
+        results: [{ status: "preview" }],
+      },
+    });
+
+    expect(templates.source).toBe("remote-template-catalog");
+    expect(templates.templates[0].templateId).toBe("grantor-case-assigned-v1");
+    expect(plan.summary).toMatchObject({ actionable: 1, duplicates: 1 });
+    expect(plan.approvalItems[0].template.templateId).toBe("grantor-case-assigned-v1");
+    expect(result).toMatchObject({ status: "notification-approval-preview-only", deliveryEnabled: false, summary: { previews: 1 } });
   });
 
   it("normalizes manual notification delivery batch responses as gated admin actions", () => {

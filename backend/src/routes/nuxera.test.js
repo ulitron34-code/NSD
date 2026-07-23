@@ -21,6 +21,9 @@ const serviceCalls = {
   aiProviderPolicy: [],
   notificationDryRun: [],
   notificationRules: [],
+  notificationApprovalPlan: [],
+  notificationApprove: [],
+  notificationTemplates: [],
   notificationQueue: [],
   notificationList: [],
   notificationHealth: [],
@@ -348,6 +351,18 @@ vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
     serviceCalls.notificationRules.push({ orderId: timeline.orderId, workspaceRole: timeline.workspaceRole, context });
     return { status: 'notification-rules-dry-run-ready', summary: { matchedRules: 1, generatedIntents: 1, accepted: 1, rejected: 0, duplicates: 0 }, matchedRules: [{ id: 'applicant-missing-evidence', audience: 'applicant', status: 'matched', reason: 'open-information-request' }], intents: [{ eventId: 'applicant-missing-evidence' }], dryRun: { status: 'notification-dry-run-ready', summary: { accepted: 1, rejected: 0, duplicates: 0 } }, guardrails: ['Rules dry-run read-only.'] };
   }),
+  getNuxeraNotificationTemplateCatalog: vi.fn(() => {
+    serviceCalls.notificationTemplates.push({ called: true });
+    return { status: 'notification-templates-ready-no-delivery', templates: [{ eventId: 'applicant-missing-evidence', templateId: 'applicant-missing-evidence-v1' }], guardrails: ['Templates read-only.'] };
+  }),
+  buildNuxeraNotificationApprovalPlan: vi.fn((timeline, context = {}) => {
+    serviceCalls.notificationApprovalPlan.push({ orderId: timeline.orderId, workspaceRole: timeline.workspaceRole, context });
+    return { status: 'notification-approval-required', summary: { generated: 1, actionable: 1, duplicates: 0, rejected: 0 }, approvalItems: [{ id: 'approval-1', eventId: 'applicant-missing-evidence', template: { templateId: 'applicant-missing-evidence-v1', subject: 'Falta evidencia' } }], guardrails: ['Approval plan read-only.'] };
+  }),
+  approveNuxeraNotificationRules: vi.fn(async ({ timeline, context, actorUserId, deliveryEnabled }) => {
+    serviceCalls.notificationApprove.push({ orderId: timeline.orderId, context, actorUserId, deliveryEnabled });
+    return { status: deliveryEnabled ? 'notification-approval-queued-through-gated-outbox' : 'notification-approval-preview-only', deliveryEnabled, summary: { approved: 1, persisted: 0, previews: 1, suppressed: 0, duplicatesSkipped: 0 }, results: [{ status: 'preview', eventId: 'applicant-missing-evidence' }], guardrails: ['Approval cannot send.'] };
+  }),
   enqueueNuxeraNotificationIntent: vi.fn(async ({ intent, actorUserId, deliveryEnabled }) => {
     serviceCalls.notificationQueue.push({ intent, actorUserId, deliveryEnabled });
     return deliveryEnabled
@@ -506,6 +521,9 @@ describe('nuxera routes', () => {
     serviceCalls.aiProviderPolicy = [];
     serviceCalls.notificationDryRun = [];
     serviceCalls.notificationRules = [];
+    serviceCalls.notificationApprovalPlan = [];
+    serviceCalls.notificationApprove = [];
+    serviceCalls.notificationTemplates = [];
     serviceCalls.notificationQueue = [];
     serviceCalls.notificationList = [];
     serviceCalls.notificationHealth = [];
@@ -997,6 +1015,46 @@ describe('nuxera routes', () => {
     expect(body.workspaceRole).toBe('admin');
     expect(serviceCalls.conversationTurn[0]).toMatchObject({ role: 'admin', orderId: null, authorized: true });
     expect(serviceCalls.conversationTurn[0].authorizedContext).toMatchObject({ scope: 'operations-monitor' });
+  });
+
+  it('returns notification templates and approval plans without queueing messages', async () => {
+    const templatesDenied = await fetch(`${baseUrl}/api/nuxera/admin/notification-templates`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const templates = await fetch(`${baseUrl}/api/nuxera/admin/notification-templates`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const plan = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/notification-approval-plan?grantorRecipientUserId=grantor-1`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+
+    expect(templatesDenied.status).toBe(403);
+    expect(templates.status).toBe(200);
+    expect((await templates.json()).templateCatalog.templates[0].templateId).toBe('applicant-missing-evidence-v1');
+    expect(plan.status).toBe(200);
+    expect((await plan.json()).approvalPlan).toMatchObject({ status: 'notification-approval-required', summary: { actionable: 1 } });
+    expect(serviceCalls.notificationTemplates).toEqual([{ called: true }]);
+    expect(serviceCalls.notificationApprovalPlan[0]).toMatchObject({ orderId: 'order-1' });
+  });
+
+  it('approves notification rules through backend gates without sending messages', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/notification-rules/approve`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({ grantorRecipientUserId: 'grantor-1' })
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/notification-rules/approve`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:update' },
+      body: JSON.stringify({ grantorRecipientUserId: 'grantor-1', approvalReason: 'Revision manual' })
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body.approvalResult).toMatchObject({ status: 'notification-approval-preview-only', deliveryEnabled: false, summary: { previews: 1 } });
+    expect(body.guardrails.join(' ')).toContain('cannot send');
+    expect(serviceCalls.notificationApprove[0]).toMatchObject({ orderId: 'order-1', actorUserId: 'admin-1', deliveryEnabled: false });
   });
 
   it('returns notification rules dry-run from admin timeline without queueing messages', async () => {

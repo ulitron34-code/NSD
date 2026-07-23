@@ -198,6 +198,73 @@ export function useNotificationOutboxHealth({ enabled = true, limit = 100 } = {}
 
   return state;
 }
+
+const LOCAL_NOTIFICATION_TEMPLATE_CATALOG = Object.freeze({
+  source: "local-fallback",
+  status: "notification-templates-unavailable",
+  loading: false,
+  error: null,
+  templates: [],
+  guardrails: ["Local fallback; no confirma plantillas backend ni queuea notificaciones."],
+});
+
+export function normalizeNuxeraNotificationTemplateCatalogResponse(response) {
+  const payload = response?.templateCatalog || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_NOTIFICATION_TEMPLATE_CATALOG,
+      error: "nuxera-notification-templates-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_NOTIFICATION_TEMPLATE_CATALOG,
+    ...payload,
+    source: "remote-template-catalog",
+    loading: false,
+    error: null,
+    templates: asArray(payload.templates),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useNotificationTemplateCatalog({ enabled = true } = {}) {
+  const [state, setState] = useState(LOCAL_NOTIFICATION_TEMPLATE_CATALOG);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled) {
+      setState(LOCAL_NOTIFICATION_TEMPLATE_CATALOG);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraNotificationOutboxAPI.getTemplates()
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraNotificationTemplateCatalogResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Notification templates unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_NOTIFICATION_TEMPLATE_CATALOG,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-notification-templates-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled]);
+
+  return state;
+}
+
 const LOCAL_NOTIFICATION_DRY_RUN = Object.freeze({
   source: "local-fallback",
   status: "notification-dry-run-local",
@@ -314,6 +381,155 @@ export function useNotificationRulesDryRun(orderId, { enabled = true, params = {
 
   return state;
 }
+
+const LOCAL_NOTIFICATION_APPROVAL_PLAN = Object.freeze({
+  source: "local-fallback",
+  status: "notification-approval-plan-unavailable",
+  loading: false,
+  error: null,
+  summary: { generated: 0, actionable: 0, duplicates: 0, rejected: 0, byAudience: {} },
+  approvalItems: [],
+  rulesDryRun: LOCAL_NOTIFICATION_RULES_DRY_RUN,
+  guardrails: ["Local fallback; no confirma plan de aprobacion ni queuea notificaciones."],
+});
+
+const LOCAL_NOTIFICATION_APPROVAL_RESULT = Object.freeze({
+  source: "local-fallback",
+  status: "notification-approval-idle",
+  loading: false,
+  error: null,
+  deliveryEnabled: false,
+  summary: { approved: 0, persisted: 0, previews: 0, suppressed: 0, duplicatesSkipped: 0 },
+  results: [],
+  guardrails: ["Local fallback; no aprueba ni queuea notificaciones."],
+});
+
+export function normalizeNuxeraNotificationApprovalPlanResponse(response) {
+  const payload = response?.approvalPlan || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_NOTIFICATION_APPROVAL_PLAN,
+      error: "nuxera-notification-approval-plan-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_NOTIFICATION_APPROVAL_PLAN,
+    ...payload,
+    source: "remote-approval-plan",
+    loading: false,
+    error: null,
+    summary: {
+      ...LOCAL_NOTIFICATION_APPROVAL_PLAN.summary,
+      ...asObject(payload.summary),
+    },
+    approvalItems: asArray(payload.approvalItems),
+    rulesDryRun: normalizeNuxeraNotificationRulesDryRunResponse(payload.rulesDryRun),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function normalizeNuxeraNotificationApprovalResultResponse(response) {
+  const payload = response?.approvalResult || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_NOTIFICATION_APPROVAL_RESULT,
+      error: "nuxera-notification-approval-result-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_NOTIFICATION_APPROVAL_RESULT,
+    ...payload,
+    source: "remote-approval-result",
+    loading: false,
+    error: null,
+    deliveryEnabled: Boolean(payload.deliveryEnabled),
+    summary: {
+      ...LOCAL_NOTIFICATION_APPROVAL_RESULT.summary,
+      ...asObject(payload.summary),
+    },
+    results: asArray(payload.results),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useNotificationApprovalPlan(orderId, { enabled = true, params = {} } = {}) {
+  const [state, setState] = useState(LOCAL_NOTIFICATION_APPROVAL_PLAN);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled || !orderId) {
+      setState(LOCAL_NOTIFICATION_APPROVAL_PLAN);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraNotificationOutboxAPI.getApprovalPlan(orderId, params)
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraNotificationApprovalPlanResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Notification approval plan unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_NOTIFICATION_APPROVAL_PLAN,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-notification-approval-plan-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled, orderId, params]);
+
+  return state;
+}
+
+export function useNotificationRulesApproval({ enabled = true, orderId = null, payload = {} } = {}) {
+  const [state, setState] = useState(LOCAL_NOTIFICATION_APPROVAL_RESULT);
+
+  const approve = async () => {
+    if (!enabled || !orderId) {
+      const disabled = {
+        ...LOCAL_NOTIFICATION_APPROVAL_RESULT,
+        error: "nuxera-notification-approval-disabled",
+      };
+      setState(disabled);
+      return disabled;
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+
+    try {
+      const { data } = await nuxeraNotificationOutboxAPI.approveRules(orderId, payload);
+      const normalized = normalizeNuxeraNotificationApprovalResultResponse(data);
+      setState(normalized);
+      return normalized;
+    } catch (error) {
+      warn("NUXERA", "Notification rules approval unavailable", error?.message || error);
+      const failed = {
+        ...LOCAL_NOTIFICATION_APPROVAL_RESULT,
+        loading: false,
+        error: error?.response?.data?.code || error?.message || "nuxera-notification-approval-unavailable",
+      };
+      setState(failed);
+      return failed;
+    }
+  };
+
+  return { ...state, approve };
+}
+
 const LOCAL_OUTBOX_LIST = Object.freeze({
   source: "local-fallback",
   status: "outbox-list-unverified",

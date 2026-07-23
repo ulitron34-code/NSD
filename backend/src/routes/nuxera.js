@@ -13,7 +13,7 @@ import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlle
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness, runNuxeraConversationTurn } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
-import { buildNuxeraNotificationDryRunBatch, buildNuxeraNotificationRulesDryRun, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
+import { approveNuxeraNotificationRules, buildNuxeraNotificationApprovalPlan, buildNuxeraNotificationDryRunBatch, buildNuxeraNotificationRulesDryRun, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, getNuxeraNotificationTemplateCatalog, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
@@ -150,6 +150,98 @@ router.post(
           "Conversation preview is read-only and does not call an LLM provider.",
           "Runtime remains disabled unless NUXERA_CONVERSATION_RUNTIME_ENABLED=true and context is authorized.",
           "The assistant cannot send notifications, approve financing, issue term sheets or change permissions."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  "/nuxera/admin/notification-templates",
+  authMiddleware,
+  requirePermission("nuxera:admin:read"),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: "admin",
+        templateCatalog: getNuxeraNotificationTemplateCatalog(),
+        guardrails: [
+          "Template catalog is read-only and does not queue or send notifications.",
+          "Templates intentionally exclude evidence, attachments, scores and decisions."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  "/nuxera/admin/orders/:orderId/notification-approval-plan",
+  authMiddleware,
+  requirePermission("nuxera:admin:read"),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({ orderId: req.params.orderId });
+      const approvalPlan = buildNuxeraNotificationApprovalPlan(timeline, {
+        orderId: req.params.orderId,
+        applicantRecipientUserId: req.query?.applicantRecipientUserId,
+        applicantRecipientEmail: req.query?.applicantRecipientEmail,
+        grantorRecipientUserId: req.query?.grantorRecipientUserId,
+        grantorRecipientEmail: req.query?.grantorRecipientEmail,
+        adminRecipientUserId: req.query?.adminRecipientUserId,
+        adminRecipientEmail: req.query?.adminRecipientEmail,
+        maxBatchSize: req.query?.maxBatchSize,
+        approvalReason: req.query?.approvalReason
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: "admin",
+        approvalPlan,
+        guardrails: [
+          "Approval plan is read-only and never queues, sends or updates outbox rows.",
+          "Approval items show rendered templates without evidence, attachments or decisions."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.post(
+  "/nuxera/admin/orders/:orderId/notification-rules/approve",
+  authMiddleware,
+  requirePermission("nuxera:admin:update"),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({ orderId: req.params.orderId });
+      const approvalResult = await approveNuxeraNotificationRules({
+        timeline,
+        actorUserId: req.userId,
+        req,
+        deliveryEnabled: isNuxeraNotificationDeliveryEnabled(),
+        context: {
+          orderId: req.params.orderId,
+          applicantRecipientUserId: req.body?.applicantRecipientUserId,
+          applicantRecipientEmail: req.body?.applicantRecipientEmail,
+          grantorRecipientUserId: req.body?.grantorRecipientUserId,
+          grantorRecipientEmail: req.body?.grantorRecipientEmail,
+          adminRecipientUserId: req.body?.adminRecipientUserId,
+          adminRecipientEmail: req.body?.adminRecipientEmail,
+          maxBatchSize: req.body?.maxBatchSize,
+          approvalReason: req.body?.approvalReason
+        }
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: "admin",
+        approvalResult,
+        guardrails: [
+          "Approval requires nuxera:admin:update but still cannot send messages.",
+          "Client input cannot enable persistence; backend delivery flag decides preview vs queued row.",
+          "Delivery worker remains a separate manual gated action."
         ]
       });
     } catch (error) {

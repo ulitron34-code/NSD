@@ -1,6 +1,13 @@
 import { generateJsonWithFallback } from './aiJsonProvider.js';
 import { logAuditEvent } from '../utils/audit.js';
 
+const CONVERSATION_OPERATIONAL_SOURCES = Object.freeze([
+  { id: 'case-timeline', table: 'virtual:nuxera_case_timeline', purpose: 'Chronological operational metadata by role.', sensitiveTextPersisted: false },
+  { id: 'evidence-links', table: 'nuxera_evidence_links', purpose: 'Authorized evidence references only, never file contents by default.', sensitiveTextPersisted: false },
+  { id: 'notification-outbox', table: 'nuxera_notification_outbox', purpose: 'Delivery status, failures, dedupe and manual review signals.', sensitiveTextPersisted: false },
+  { id: 'audit-metadata', table: 'audit_logs', purpose: 'Metadata-only compliance trace for agent turns and notification actions.', sensitiveTextPersisted: false }
+]);
+
 const ROLE_POLICIES = Object.freeze({
   applicant: {
     channel: 'applicant-file-assistant',
@@ -22,9 +29,9 @@ const ROLE_POLICIES = Object.freeze({
     channel: 'admin-agent-operations-monitor',
     requiredPermission: 'nuxera:admin:read',
     contextRequirement: 'Admin operational view only; no file-content chat without a selected authorized role path.',
-    allowedSources: ['audit_logs', 'nuxera_admin_controls', 'nuxera_notification_outbox'],
-    capabilities: ['monitor-agent-health', 'review-delivery-failures', 'prepare-controlled-runbook-notes'],
-    blockedActions: ['read-file-content-by-default', 'send-notifications', 'enable-delivery', 'change-rls']
+    allowedSources: ['audit_logs', 'nuxera_admin_controls', 'nuxera_notification_outbox', 'virtual:nuxera_case_timeline'],
+    capabilities: ['monitor-agent-health', 'review-delivery-failures', 'prepare-controlled-runbook-notes', 'explain-notification-approval-plan'],
+    blockedActions: ['read-file-content-by-default', 'send-notifications', 'approve-notification-delivery', 'enable-delivery', 'change-rls']
   }
 });
 
@@ -40,6 +47,7 @@ export function getNuxeraConversationAgentReadiness() {
     id: 'nuxera-conversation-agent-readiness',
     status: 'agent-contract-ready-no-chat-delivery',
     runtimeEnabled: false,
+    operationalSources: CONVERSATION_OPERATIONAL_SOURCES,
     assistantScope: 'Conversation agent can answer only from role-scoped, selected-file context after authorization checks.',
     roles,
     summary: {
@@ -48,7 +56,9 @@ export function getNuxeraConversationAgentReadiness() {
       blockedActions: [...new Set(roles.flatMap((role) => role.blockedActions))].length,
       runtimeEnabled: false,
       humanReviewRequired: true,
-      auditActions: 3
+      auditActions: 3,
+      notificationActions: 4,
+      operationalSources: CONVERSATION_OPERATIONAL_SOURCES.length
     },
     auditMetadata: {
       persistedText: false,
@@ -59,7 +69,8 @@ export function getNuxeraConversationAgentReadiness() {
     requiredBackendSteps: [
       'Add a selected-file conversation endpoint that resolves role, order and authorization before retrieval.',
       'Build retrieval from existing messages, document_extractions and nuxera_evidence_links without broad file reads.',
-      'Persist chat turns only after privacy, retention and audit rules are approved.'
+      'Persist chat turns only after privacy, retention and audit rules are approved.',
+      'Use notification approval plans as context, but never approve, queue or send notifications from chat.'
     ],
     guardrails: [
       'Readiness only; no chat runtime, provider call, notification send or database write is performed.',
@@ -113,6 +124,7 @@ function normalizeConversationMessage(value) {
 function buildAssistantDraft({ role, policy, message, selectedId, allowed }) {
   const topic = message.toLowerCase();
   const canDiscussEvidence = topic.includes('evidencia') || topic.includes('document') || topic.includes('faltante') || topic.includes('risk') || topic.includes('riesgo');
+  const canDiscussNotifications = topic.includes('notificacion') || topic.includes('notification') || topic.includes('correo') || topic.includes('email') || topic.includes('sla');
   const capabilities = allowed ? policy.capabilities : [];
 
   if (!allowed) {
@@ -126,9 +138,11 @@ function buildAssistantDraft({ role, policy, message, selectedId, allowed }) {
 
   return {
     mode: 'safe-preview',
-    answer: canDiscussEvidence
-      ? `Puedo ayudarte a ordenar evidencia y faltantes del expediente ${selectedId} usando solo fuentes autorizadas para ${role}. No emitire aprobaciones, term sheets ni envios automaticos.`
-      : `Puedo responder preguntas operativas del expediente ${selectedId} dentro del canal ${policy.channel}, citando fuentes autorizadas cuando esten disponibles.`,
+    answer: canDiscussNotifications
+      ? `Puedo revisar senales de SLA, outbox y plan de aprobacion del expediente ${selectedId} para explicar que esta pendiente. No puedo aprobar, encolar ni enviar notificaciones desde el chat.`
+      : canDiscussEvidence
+        ? `Puedo ayudarte a ordenar evidencia y faltantes del expediente ${selectedId} usando solo fuentes autorizadas para ${role}. No emitire aprobaciones, term sheets ni envios automaticos.`
+        : `Puedo responder preguntas operativas del expediente ${selectedId} dentro del canal ${policy.channel}, citando fuentes autorizadas cuando esten disponibles.`,
     suggestedActions: capabilities,
     citations: policy.allowedSources.map((source) => ({ source, scope: 'role-scoped-selected-file' }))
   };
@@ -153,6 +167,7 @@ function buildConversationSystemPrompt(role, policy, authorizedContext) {
     `Capacidades permitidas: ${policy.capabilities.join(', ')}.`,
     `Tienes prohibido: ${policy.blockedActions.join(', ')}.`,
     'Nunca apruebes financiamiento, emitas term sheets, otorgues accesos/permisos ni confirmes el envio de notificaciones.',
+    `Fuentes operativas permitidas: ${CONVERSATION_OPERATIONAL_SOURCES.map((source) => source.id).join(', ')}.`,
     `Contexto autorizado (JSON, puede estar vacio si no hay evidencia disponible): ${JSON.stringify(authorizedContext || {}).slice(0, 4000)}`
   ].join('\n');
 }

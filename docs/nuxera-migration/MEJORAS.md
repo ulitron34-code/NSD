@@ -277,3 +277,11 @@ Se agrego el primer motor de reglas operativo para notificaciones:
 - UI admin muestra reglas automaticas, intents aceptados y reglas matcheadas para revision humana.
 
 Siguiente gate: sustituir destinatarios operativos de preview por destinatarios autorizados reales del expediente antes de permitir cualquier queueing controlado.
+
+## Notification Approval + Agent Closure
+
+- Added a read-only notification template catalog for every operational event, with explicit no-evidence/no-attachment/no-binding-decision policy.
+- Added admin approval plans for rule-generated notifications: timeline signals become rendered, reviewable approval items before queueing.
+- Added controlled approval endpoint: with delivery persistence disabled it returns previews only; with backend gate enabled it queues rows but still does not send.
+- Admin UI now shows templates, actionable approval items and a controlled approval button tied to backend gates.
+- Conversation agent readiness now exposes operational sources (timeline, evidence links, outbox and audit metadata) and can explain notification/SLA plans while blocking approval, queueing and delivery from chat.

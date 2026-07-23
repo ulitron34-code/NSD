@@ -56,6 +56,23 @@ describe('nuxeraConversationAgentReadinessService', () => {
     expect(readiness.guardrails.join(' ')).toContain('no chat runtime');
   });
 
+  it('exposes operational sources and notification approval guardrails for chat', () => {
+    const readiness = getNuxeraConversationAgentReadiness();
+    const adminRole = readiness.roles.find((role) => role.role === 'admin');
+    const preview = buildNuxeraConversationPreview({
+      role: 'admin',
+      authorized: true,
+      runtimeEnabled: 'true',
+      message: 'Que notificaciones y SLA estan pendientes?'
+    });
+
+    expect(readiness.operationalSources.map((source) => source.id)).toEqual(expect.arrayContaining(['case-timeline', 'notification-outbox', 'audit-metadata']));
+    expect(readiness.summary).toMatchObject({ operationalSources: 4, notificationActions: 4 });
+    expect(adminRole.capabilities).toContain('explain-notification-approval-plan');
+    expect(adminRole.blockedActions).toContain('approve-notification-delivery');
+    expect(preview.draft.answer).toContain('No puedo aprobar');
+  });
+
   it('blocks conversation envelopes until both selected context and runtime are approved', () => {
     const blocked = buildNuxeraConversationAgentEnvelope({
       role: 'grantor',

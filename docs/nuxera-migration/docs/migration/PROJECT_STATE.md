@@ -2059,3 +2059,11 @@ Added operational notification rule engine in dry-run mode:
 Next resume point:
 - Validate route/service/frontend tests and build.
 - Commit and push if green.
+
+## Notification Approval and Conversation Agent Closure
+
+Implemented a controlled bridge from notification dry-run to human-approved queue preparation. New backend functions render safe operational templates, build approval plans from timeline-derived rules, and approve rule outputs through existing delivery gates. The default state remains preview-only when `NUXERA_NOTIFICATION_DELIVERY_ENABLED` is false; no email, WhatsApp or in-app delivery is triggered.
+
+Frontend Admin now surfaces template count, approval-plan actionable counts, rendered approval items and a controlled approval action. Conversation agent readiness now lists operational sources and clarifies that chat can explain SLA/outbox/approval posture but cannot approve, queue or send notifications.
+
+Validation snapshot: targeted frontend ESLint passed, frontend NUXERA Vitest passed (123 tests), backend NUXERA notification/conversation/routes Vitest passed (94 tests).

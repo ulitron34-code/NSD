@@ -17,7 +17,7 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness, useNotificationRulesDryRun } from "../communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationApprovalPlan, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness, useNotificationRulesApproval, useNotificationRulesDryRun, useNotificationTemplateCatalog } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
@@ -988,6 +988,19 @@ function AdminOperationsHome({ sectionLabel }) {
     enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
     params: notificationRulesParams,
   });
+  const notificationTemplateCatalog = useNotificationTemplateCatalog({ enabled: isNuxeraExperienceEnabled() });
+  const notificationApprovalPlan = useNotificationApprovalPlan(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+    params: notificationRulesParams,
+  });
+  const notificationRulesApproval = useNotificationRulesApproval({
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+    orderId: selectedAssignmentCaseId,
+    payload: {
+      ...notificationRulesParams,
+      approvalReason: "Aprobacion operativa controlada desde Admin NUXERA; no envia mensajes.",
+    },
+  });
   const adminRiskHealth = useNuxeraRiskHealth({ enabled: isNuxeraExperienceEnabled() });
   const caseAssignmentCanSubmit = Boolean(selectedAssignmentCaseId) && !caseAssignmentSubmitting;
   const updateCaseAssignmentForm = (field, value) => {
@@ -1592,6 +1605,21 @@ function AdminOperationsHome({ sectionLabel }) {
             <small>{notificationRulesDryRun.loading ? L("Evaluando reglas...", "Evaluating rules...") : notificationRulesDryRun.status}</small>
           </article>
           <article>
+            <span>{L("Plantillas", "Templates")}</span>
+            <strong>{notificationTemplateCatalog.templates.length}</strong>
+            <p>{L("Copys operativos por evento, sin evidencia ni decisiones vinculantes.", "Operational copy by event, without evidence or binding decisions.")}</p>
+            <small>{notificationTemplateCatalog.loading ? L("Cargando plantillas...", "Loading templates...") : notificationTemplateCatalog.status}</small>
+          </article>
+          <article>
+            <span>{L("Plan aprobable", "Approval plan")}</span>
+            <strong>{notificationApprovalPlan.summary.actionable}/{notificationApprovalPlan.summary.generated}</strong>
+            <p>{L("Muestra que se puede aprobar para encolar; si el gate backend esta apagado queda en preview.", "Shows what can be approved for queueing; with backend gate off it remains preview.")}</p>
+            <button type="button" onClick={() => notificationRulesApproval.approve()} disabled={notificationRulesApproval.loading || notificationApprovalPlan.summary.actionable === 0 || !isNuxeraExperienceEnabled()}>
+              {notificationRulesApproval.loading ? L("Aprobando...", "Approving...") : L("Aprobar controlado", "Controlled approve")}
+            </button>
+            <small>{notificationRulesApproval.error || (notificationRulesApproval.status + " / " + notificationRulesApproval.summary.persisted + " persistidas / " + notificationRulesApproval.summary.previews + " previews")}</small>
+          </article>
+          <article>
             <span>{L("Batch manual", "Manual batch")}</span>
             <strong>{notificationDeliveryBatch.sent}/{notificationDeliveryBatch.processed}</strong>
             <p>{L("Prueba el endpoint administrativo; si las banderas backend estan apagadas solo devuelve dry-run.", "Tests the admin endpoint; when backend flags are off it only returns dry-run.")}</p>
@@ -1631,6 +1659,18 @@ function AdminOperationsHome({ sectionLabel }) {
                 <strong>{rule.id}</strong>
                 <p>{rule.reason}</p>
                 <small>{rule.sourceEventId || L("Sin evento fuente", "No source event")}</small>
+              </article>
+            ))}
+          </div>
+        )}
+        {notificationApprovalPlan.approvalItems.length > 0 && (
+          <div>
+            {notificationApprovalPlan.approvalItems.slice(0, 6).map((item) => (
+              <article key={item.id}>
+                <span>{item.audience} / {item.status}</span>
+                <strong>{item.template?.subject || item.subject}</strong>
+                <p>{item.template?.bodyPreview || item.subject}</p>
+                <small>{item.template?.templateId} / {item.channels.join(", ")} / {item.dedupeKey}</small>
               </article>
             ))}
           </div>

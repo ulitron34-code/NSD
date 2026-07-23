@@ -316,10 +316,16 @@ export const nuxeraBackendReadinessAPI = {
 export const nuxeraNotificationOutboxAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/notification-outbox-readiness'),
+  getTemplates: () =>
+    api.get('/nuxera/admin/notification-templates'),
   getHealth: (params = {}) =>
     api.get('/nuxera/admin/notification-outbox-health', { params }),
   getRulesDryRun: (orderId, params = {}) =>
     api.get(`/nuxera/admin/orders/${orderId}/notification-rules-dry-run`, { params }),
+  getApprovalPlan: (orderId, params = {}) =>
+    api.get(`/nuxera/admin/orders/${orderId}/notification-approval-plan`, { params }),
+  approveRules: (orderId, payload = {}) =>
+    api.post(`/nuxera/admin/orders/${orderId}/notification-rules/approve`, payload),
   dryRun: (payload = {}) =>
     api.post('/nuxera/admin/notification-outbox-dry-run', payload),
   queue: (payload = {}) =>
