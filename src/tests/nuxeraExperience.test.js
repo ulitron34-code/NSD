@@ -936,7 +936,7 @@ describe("NUXERA case timeline adapter", () => {
         status: "timeline-ready",
         orderId: "order-1",
         workspaceRole: "grantor",
-        summary: { total: 2, blockers: 1, evidence: 1, availableSources: 4, unavailableSources: 1, byType: { evidence: 1, notification: 1 } },
+        summary: { total: 2, blockers: 1, evidence: 1, failedNotifications: 1, availableSources: 4, unavailableSources: 1, byType: { evidence: 1, notification: 1 }, typeFilters: [{ id: "evidence", label: "Evidencia", count: 1, active: true }], phases: [{ id: "evidence", label: "Evidencia", count: 1, blockers: 0, status: "active" }], health: { status: "notification-risk", label: "Riesgo de notificacion", signals: [{ id: "notifications", label: "Notificaciones", value: "1/0", status: "failed" }] } },
         sources: [{ id: "evidence-links", status: "available", count: 1 }],
         events: [
           { id: "ev-1", type: "evidence", source: "nuxera_evidence_links", title: "Evidencia", description: "Referencia autorizada", severity: "info", sensitiveContentExcluded: true },
@@ -952,8 +952,11 @@ describe("NUXERA case timeline adapter", () => {
       status: "timeline-ready",
       orderId: "order-1",
       workspaceRole: "grantor",
-      summary: { total: 2, blockers: 1, evidence: 1, notifications: 0, availableSources: 4, unavailableSources: 1 },
+      summary: { total: 2, blockers: 1, evidence: 1, notifications: 1, failedNotifications: 1, availableSources: 4, unavailableSources: 1 },
     });
+    expect(timeline.summary.health).toMatchObject({ status: "notification-risk" });
+    expect(timeline.summary.typeFilters[0]).toMatchObject({ id: "evidence", count: 1 });
+    expect(timeline.summary.phases[0]).toMatchObject({ id: "evidence", count: 1 });
     expect(timeline.events).toHaveLength(2);
     expect(timeline.events.every((event) => event.sensitiveContentExcluded)).toBe(true);
     expect(timeline.guardrails.join(" ")).toContain("No content payloads");

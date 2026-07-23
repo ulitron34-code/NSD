@@ -243,4 +243,4 @@ Bloque 1 ya inicio con el primer ciclo real read-only:
 - Agregacion de fuentes existentes sin SQL nueva: expediente, checklist, evidencia, solicitudes de informacion, asignaciones/SLA, outbox y audit logs.
 - Panel compartido de timeline en solicitante, otorgante y admin.
 
-Estado: implementado como agregador read-only inicial. Todavia falta enriquecer filtros, agrupacion visual y pruebas unitarias directas del servicio antes de pasar a eventos persistidos `nuxera_case_events`.
+Estado: Timeline 1.1 implementado como agregador read-only enriquecido. Ya incluye filtros por tipo, fases operativas, semaforo de salud (`ready`, `needs-evidence`, `blocked`, `sla-risk`, `notification-risk`) y prueba unitaria directa del servicio con degradacion por fuentes opcionales faltantes. Todavia falta disenar eventos persistidos `nuxera_case_events`, auditoria historica de acciones de timeline y una vista de health operacional mas profunda para notificaciones/proveedores.

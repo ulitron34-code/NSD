@@ -60,17 +60,71 @@ const roleCopy = {
 
 function CaseTimelinePanel({ timeline, title, emptyLabel }) {
   const { L } = useNuxeraLanguage();
-  const events = timeline.events.slice(0, 6);
+  const [activeType, setActiveType] = useState("all");
+  const health = timeline.summary.health || { status: timeline.status, label: timeline.status, signals: [] };
+  const typeFilters = [
+    { id: "all", label: L("Todos", "All"), count: timeline.summary.total, active: true },
+    ...timeline.summary.typeFilters.filter((filter) => filter.active),
+  ];
+  const filteredEvents = timeline.events
+    .filter((event) => activeType === "all" || event.type === activeType)
+    .slice(0, 6);
+  const events = filteredEvents.length ? filteredEvents : timeline.events.slice(0, 6);
+  const healthSignals = health.signals.slice(0, 5);
+  const phaseRows = timeline.summary.phases.filter((phase) => phase.count || phase.blockers).slice(0, 5);
+
   return (
     <section className="nuxera-case-timeline" aria-label={title}>
       <header>
         <div>
-          <span>{timeline.loading ? L("Cargando timeline", "Loading timeline") : timeline.status}</span>
+          <span>{timeline.loading ? L("Cargando timeline", "Loading timeline") : health.status}</span>
           <h2>{title}</h2>
-          <p>{timeline.error || `${timeline.summary.total} eventos / ${timeline.summary.availableSources} fuentes activas / ${timeline.summary.unavailableSources} no disponibles`}</p>
+          <p>{timeline.error || `${health.label} / ${timeline.summary.total} eventos / ${timeline.summary.availableSources} fuentes activas / ${timeline.summary.unavailableSources} no disponibles`}</p>
         </div>
         <strong>{timeline.summary.blockers} {L("blockers", "blockers")}</strong>
       </header>
+
+      {healthSignals.length > 0 && (
+        <div className="nuxera-case-timeline-health" aria-label={L("Salud operativa", "Operational health")}>
+          {healthSignals.map((signal) => (
+            <article key={signal.id} data-status={signal.status}>
+              <span>{signal.label}</span>
+              <strong>{signal.value}</strong>
+              <p>{signal.detail}</p>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {typeFilters.length > 1 && (
+        <div className="nuxera-case-timeline-filters" role="tablist" aria-label={L("Filtros de timeline", "Timeline filters")}>
+          {typeFilters.map((filter) => (
+            <button
+              key={filter.id}
+              type="button"
+              role="tab"
+              aria-selected={activeType === filter.id}
+              onClick={() => setActiveType(filter.id)}
+            >
+              <span>{filter.label}</span>
+              <strong>{filter.count}</strong>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {phaseRows.length > 0 && (
+        <div className="nuxera-case-timeline-phases" aria-label={L("Fases del expediente", "Case phases")}>
+          {phaseRows.map((phase) => (
+            <article key={phase.id} data-status={phase.status}>
+              <span>{phase.label}</span>
+              <strong>{phase.count}</strong>
+              <small>{phase.blockers} {L("blockers", "blockers")}</small>
+            </article>
+          ))}
+        </div>
+      )}
+
       {events.length === 0 ? (
         <article>
           <span>{timeline.source}</span>
@@ -81,7 +135,7 @@ function CaseTimelinePanel({ timeline, title, emptyLabel }) {
         <div>
           {events.map((event) => (
             <article key={event.id}>
-              <span>{event.type} / {event.status} / {event.severity}</span>
+              <span>{event.phase} / {event.type} / {event.status} / {event.severity}</span>
               <strong>{event.title}</strong>
               <p>{event.description}</p>
               <small>{event.timestamp || L("Sin fecha", "No date")} / {event.source}</small>
@@ -90,12 +144,11 @@ function CaseTimelinePanel({ timeline, title, emptyLabel }) {
         </div>
       )}
       <footer>
-        {timeline.guardrails.slice(0, 2).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
+        {[...timeline.guardrails, ...health.guardrails].slice(0, 3).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
       </footer>
     </section>
   );
 }
-
 
 function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
   const { L, language } = useNuxeraLanguage();

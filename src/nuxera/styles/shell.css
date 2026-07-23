@@ -2660,3 +2660,144 @@
     grid-template-columns: 1fr;
   }
 }
+
+.nuxera-case-timeline {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-case-timeline > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.nuxera-case-timeline h2 {
+  margin: 4px 0 0;
+  color: var(--nuxera-ink);
+  font-size: 1rem;
+}
+
+.nuxera-case-timeline p,
+.nuxera-case-timeline small {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nuxera-case-timeline span {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nuxera-case-timeline > header > strong {
+  min-width: 72px;
+  text-align: right;
+  color: var(--nuxera-ink);
+  font-size: 1.1rem;
+}
+
+.nuxera-case-timeline-health,
+.nuxera-case-timeline-phases {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nuxera-case-timeline-health article,
+.nuxera-case-timeline-phases article,
+.nuxera-case-timeline > div:not(.nuxera-case-timeline-health):not(.nuxera-case-timeline-phases):not(.nuxera-case-timeline-filters) article,
+.nuxera-case-timeline > article {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-case-timeline-health article[data-status="failed"],
+.nuxera-case-timeline-health article[data-status="overdue"],
+.nuxera-case-timeline-health article[data-status="attention"],
+.nuxera-case-timeline-phases article[data-status="attention"] {
+  border-color: rgba(185, 28, 28, 0.42);
+}
+
+.nuxera-case-timeline-health article[data-status="ready"],
+.nuxera-case-timeline-phases article[data-status="active"] {
+  border-color: rgba(21, 128, 61, 0.34);
+}
+
+.nuxera-case-timeline article strong {
+  color: var(--nuxera-ink);
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.nuxera-case-timeline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nuxera-case-timeline-filters button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 10px;
+  background: #ffffff;
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  color: var(--nuxera-ink);
+  cursor: pointer;
+}
+
+.nuxera-case-timeline-filters button[aria-selected="true"] {
+  border-color: var(--nuxera-gold);
+  background: var(--nuxera-gold-soft);
+}
+
+.nuxera-case-timeline-filters strong {
+  color: var(--nuxera-ink);
+  font-size: 0.85rem;
+}
+
+.nuxera-case-timeline footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+@media (max-width: 1100px) {
+  .nuxera-case-timeline-health,
+  .nuxera-case-timeline-phases {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .nuxera-case-timeline > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nuxera-case-timeline > header > strong {
+    text-align: left;
+  }
+
+  .nuxera-case-timeline-health,
+  .nuxera-case-timeline-phases {
+    grid-template-columns: 1fr;
+  }
+}

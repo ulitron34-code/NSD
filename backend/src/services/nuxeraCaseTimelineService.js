@@ -8,6 +8,36 @@ const ROLE_VISIBILITY = Object.freeze({
   admin: ['owner', 'authorized_grantor', 'internal']
 });
 
+const PHASES = Object.freeze([
+  { id: 'intake', label: 'Intake' },
+  { id: 'evidence', label: 'Evidencia' },
+  { id: 'grantor-review', label: 'Revision otorgante' },
+  { id: 'decision-desk', label: 'Mesa de decision' },
+  { id: 'notifications-audit', label: 'Notificaciones y auditoria' }
+]);
+
+const TYPE_FILTERS = Object.freeze([
+  { id: 'order', label: 'Expediente' },
+  { id: 'checklist', label: 'Checklist' },
+  { id: 'evidence', label: 'Evidencia' },
+  { id: 'information-request', label: 'Solicitudes' },
+  { id: 'assignment', label: 'SLA/asignaciones' },
+  { id: 'notification', label: 'Notificaciones' },
+  { id: 'audit', label: 'Auditoria' }
+]);
+
+const PHASE_BY_TYPE = Object.freeze({
+  order: 'intake',
+  checklist: 'evidence',
+  evidence: 'evidence',
+  'information-request': 'evidence',
+  assignment: 'grantor-review',
+  decision: 'decision-desk',
+  risk: 'decision-desk',
+  notification: 'notifications-audit',
+  audit: 'notifications-audit'
+});
+
 function asObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 }
@@ -52,10 +82,16 @@ function eventTimestamp(...values) {
   return values.map(normalizeDate).find(Boolean) || null;
 }
 
-function buildEvent({ id, type, source, title, description, timestamp, status = 'observed', severity = 'info', actorRole = 'system', metadata = {} }) {
+function resolveEventPhase(type, explicitPhase) {
+  if (explicitPhase) return explicitPhase;
+  return PHASE_BY_TYPE[type] || 'intake';
+}
+
+function buildEvent({ id, type, source, title, description, timestamp, status = 'observed', severity = 'info', actorRole = 'system', metadata = {}, phase = null }) {
   return {
     id,
     type,
+    phase: resolveEventPhase(type, phase),
     source,
     title,
     description,
@@ -193,20 +229,143 @@ function mapAuditEvents(rows) {
   }));
 }
 
+function hoursUntil(value) {
+  const date = normalizeDate(value);
+  if (!date) return null;
+  return (new Date(date).getTime() - Date.now()) / 36e5;
+}
+
+function countEvents(events, predicate) {
+  return events.filter(predicate).length;
+}
+
+function buildTypeFilters(byType) {
+  return TYPE_FILTERS.map((filter) => ({
+    ...filter,
+    count: byType[filter.id] || 0,
+    active: Boolean(byType[filter.id])
+  }));
+}
+
+function buildPhases(events) {
+  return PHASES.map((phase) => {
+    const phaseEvents = events.filter((event) => event.phase === phase.id);
+    const blockers = countEvents(phaseEvents, (event) => ['warning', 'critical'].includes(event.severity));
+    return {
+      ...phase,
+      count: phaseEvents.length,
+      blockers,
+      latestEventAt: phaseEvents.map((event) => event.timestamp).filter(Boolean).sort().at(-1) || null,
+      status: blockers ? 'attention' : phaseEvents.length ? 'active' : 'empty'
+    };
+  });
+}
+
+function buildHealth(summary, sources) {
+  let status = 'ready';
+  if (summary.failedNotifications > 0) status = 'notification-risk';
+  else if (summary.slaOverdue > 0 || summary.slaDueSoon > 0) status = 'sla-risk';
+  else if (summary.blockers > 0) status = 'blocked';
+  else if (summary.openInformationRequests > 0 || summary.evidence === 0) status = 'needs-evidence';
+
+  const labels = {
+    ready: 'Listo para revision',
+    'needs-evidence': 'Requiere evidencia',
+    blocked: 'Bloqueado por atencion',
+    'sla-risk': 'Riesgo SLA',
+    'notification-risk': 'Riesgo de notificacion'
+  };
+  const severity = status === 'ready' ? 'success' : ['sla-risk', 'notification-risk', 'blocked'].includes(status) ? 'warning' : 'info';
+  const available = summary.availableSources;
+  const totalSources = sources.length;
+
+  return {
+    status,
+    severity,
+    label: labels[status],
+    signals: [
+      {
+        id: 'sources',
+        status: summary.unavailableSources ? 'degraded' : 'ready',
+        label: 'Fuentes',
+        value: `${available}/${totalSources}`,
+        detail: summary.unavailableSources ? 'Alguna fuente opcional no esta disponible; timeline degrada sin romper.' : 'Fuentes opcionales disponibles.'
+      },
+      {
+        id: 'blockers',
+        status: summary.blockers ? 'attention' : 'ready',
+        label: 'Blockers',
+        value: String(summary.blockers),
+        detail: summary.criticalBlockers ? 'Hay eventos criticos que requieren revision humana.' : 'Sin eventos criticos detectados.'
+      },
+      {
+        id: 'information-requests',
+        status: summary.openInformationRequests ? 'attention' : 'ready',
+        label: 'Solicitudes abiertas',
+        value: String(summary.openInformationRequests),
+        detail: summary.openInformationRequests ? 'Hay faltantes pendientes para solicitante u otorgante.' : 'Sin solicitudes abiertas.'
+      },
+      {
+        id: 'sla',
+        status: summary.slaOverdue ? 'overdue' : summary.slaDueSoon ? 'attention' : 'ready',
+        label: 'SLA',
+        value: `${summary.slaOverdue}/${summary.slaDueSoon}`,
+        detail: summary.slaOverdue ? 'Asignaciones vencidas.' : summary.slaDueSoon ? 'Asignaciones por vencer en 48h.' : 'Sin riesgo SLA inmediato.'
+      },
+      {
+        id: 'notifications',
+        status: summary.failedNotifications ? 'failed' : summary.suppressedNotifications ? 'attention' : 'ready',
+        label: 'Notificaciones',
+        value: `${summary.failedNotifications}/${summary.suppressedNotifications}`,
+        detail: summary.failedNotifications ? 'Hay envios fallidos que deben revisarse.' : summary.suppressedNotifications ? 'Hay envios suprimidos por politica.' : 'Sin fallas de notificacion.'
+      }
+    ],
+    guardrails: [
+      'Semaforo calculado desde eventos y fuentes existentes; no ejecuta envios ni cambia estados.',
+      'SLA y notificaciones son senales operativas para revision humana, no dictamen automatico.'
+    ]
+  };
+}
+
 function summarizeTimeline(events, sources) {
   const byType = events.reduce((acc, event) => ({ ...acc, [event.type]: (acc[event.type] || 0) + 1 }), {});
-  return {
+  const openInformationRequests = countEvents(events, (event) => event.type === 'information-request' && ['open', 'pending', 'requested'].includes(String(event.status).toLowerCase()));
+  const failedNotifications = countEvents(events, (event) => event.type === 'notification' && String(event.status).toLowerCase() === 'failed');
+  const suppressedNotifications = countEvents(events, (event) => event.type === 'notification' && String(event.status).toLowerCase() === 'suppressed');
+  const openAssignments = events.filter((event) => event.type === 'assignment' && ['open', 'pending', 'assigned'].includes(String(event.status).toLowerCase()));
+  const slaOverdue = countEvents(openAssignments, (event) => {
+    const hours = hoursUntil(event.metadata?.slaDueAt);
+    return hours !== null && hours < 0;
+  });
+  const slaDueSoon = countEvents(openAssignments, (event) => {
+    const hours = hoursUntil(event.metadata?.slaDueAt);
+    return hours !== null && hours >= 0 && hours <= 48;
+  });
+
+  const summary = {
     total: events.length,
-    blockers: events.filter((event) => ['warning', 'critical'].includes(event.severity)).length,
+    blockers: countEvents(events, (event) => ['warning', 'critical'].includes(event.severity)),
+    criticalBlockers: countEvents(events, (event) => event.severity === 'critical'),
     evidence: byType.evidence || 0,
     notifications: byType.notification || 0,
     assignments: byType.assignment || 0,
     auditEvents: byType.audit || 0,
-    openInformationRequests: events.filter((event) => event.type === 'information-request' && ['open', 'pending', 'requested'].includes(String(event.status).toLowerCase())).length,
+    openInformationRequests,
+    failedNotifications,
+    suppressedNotifications,
+    slaOverdue,
+    slaDueSoon,
     availableSources: sources.filter((source) => source.status === 'available').length,
     unavailableSources: sources.filter((source) => source.status === 'unavailable').length,
     latestEventAt: events.map((event) => event.timestamp).filter(Boolean).sort().at(-1) || null,
     byType
+  };
+
+  return {
+    ...summary,
+    typeFilters: buildTypeFilters(byType),
+    phases: buildPhases(events),
+    health: buildHealth(summary, sources)
   };
 }
 

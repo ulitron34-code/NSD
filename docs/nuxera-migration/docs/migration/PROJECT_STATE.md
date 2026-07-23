@@ -1943,3 +1943,31 @@ Validation:
 
 Next recommended task:
 - Add a dedicated backend service test for `nuxeraCaseTimelineService` with mocked Supabase optional-source failures, then extend timeline with richer event grouping/filters before designing persisted `nuxera_case_events`.
+
+## NUXERA case timeline 1.1: filters, phases and operational health - 2026-07-23
+
+Extended the read-only case timeline from a flat event list into an operational health surface.
+
+Changed runtime surface:
+- Backend timeline events now include an operational phase: `intake`, `evidence`, `grantor-review`, `decision-desk`, or `notifications-audit`.
+- Timeline summary now includes type filters, phase summaries, critical blockers, failed/suppressed notifications, SLA overdue/due-soon counts, and a health object with `ready`, `needs-evidence`, `blocked`, `sla-risk`, or `notification-risk` status.
+- `CaseTimelinePanel` now renders health signal cards, phase counters and real type filters before the event list across applicant, grantor and admin NUXERA surfaces.
+- Frontend normalization preserves the enriched backend contract and continues to fall back to explicit empty local state when no real case exists.
+- Added `backend/src/services/nuxeraCaseTimelineService.test.js` with mocked Supabase tables and optional-source failure handling.
+
+Guardrails:
+- Still read-only: no SQL applied, no persisted timeline events created, no notifications sent, no state/status mutation added.
+- Missing optional sources degrade the health signal instead of failing the full timeline.
+- Health signals are operational cues for human review, not automated approvals, rejections, sends or permission changes.
+
+Validation:
+- `node --check backend/src/services/nuxeraCaseTimelineService.js`: passed.
+- `node --check backend/src/services/nuxeraCaseTimelineService.test.js`: passed.
+- `node --check src/nuxera/orchestration/caseTimelineAdapter.js`: passed.
+- Targeted frontend ESLint: passed.
+- Backend service test `vitest run src/services/nuxeraCaseTimelineService.test.js`: passed, 1 file / 2 tests, elevated due sandbox `spawn EPERM`.
+- Frontend NUXERA suite `vitest run src/tests/nuxeraExperience.test.js`: passed, 1 file / 122 tests, elevated due sandbox `spawn EPERM`.
+- `vite build`: passed elevated.
+
+Next recommended task:
+- Start Timeline 1.2: design the controlled `nuxera_case_events` contract and read-only event projection first, then add admin audit/history for timeline-producing actions before any write path is enabled.
