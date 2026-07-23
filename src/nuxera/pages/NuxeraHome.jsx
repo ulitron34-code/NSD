@@ -16,7 +16,7 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 
 const roleCopy = {
@@ -576,6 +576,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const conversationAgentReadiness = useConversationAgentReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const conversationPreview = useConversationPreview({ enabled: isNuxeraExperienceEnabled(), payload: conversationPreviewPayload });
   const notificationDryRun = useNotificationDryRun({ enabled: isNuxeraExperienceEnabled(), intents: notificationDryRunIntents, language });
+  const notificationOutboxList = useNotificationOutboxList({ enabled: isNuxeraExperienceEnabled(), limit: 10 });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const communicationModel = mergeCommunicationModelWithConversationAgent(
     mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language),
@@ -1172,6 +1173,22 @@ function AdminOperationsHome({ sectionLabel }) {
               <p>{event.trigger}</p>
               <small>{event.channels.join(", ")} / {event.agentMode}</small>
               <em>{event.action}</em>
+            </article>
+          ))}
+        </div>
+        <div>
+          <article>
+            <span>{L("Outbox persistido", "Persisted outbox")}</span>
+            <strong>{notificationOutboxList.entries.length}</strong>
+            <p>{L("Filas reales en nuxera_notification_outbox; requiere delivery habilitado para persistir.", "Real rows in nuxera_notification_outbox; requires delivery enabled to persist.")}</p>
+            <small>{notificationOutboxList.loading ? L("Cargando outbox...", "Loading outbox...") : notificationOutboxList.source}</small>
+          </article>
+          {notificationOutboxList.entries.slice(0, 5).map((entry) => (
+            <article key={entry.id}>
+              <span>{entry.audience} / {entry.status}</span>
+              <strong>{entry.subject}</strong>
+              <p>{entry.channels.join(", ")}</p>
+              <small>{entry.createdAt}</small>
             </article>
           ))}
         </div>

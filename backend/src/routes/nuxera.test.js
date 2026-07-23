@@ -19,7 +19,10 @@ const serviceCalls = {
   releaseDossier: [],
   continuationPack: [],
   aiProviderPolicy: [],
-  notificationDryRun: []
+  notificationDryRun: [],
+  notificationQueue: [],
+  notificationList: [],
+  conversationTurn: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -324,8 +327,35 @@ vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
     supportedChannels: ["in_app", "email", "whatsapp"],
     statuses: ["preview", "queued", "sent", "failed", "suppressed"],
     guardrails: ["Read-only notification outbox."]
-  }))
+  })),
+  enqueueNuxeraNotificationIntent: vi.fn(async ({ intent, actorUserId, deliveryEnabled }) => {
+    serviceCalls.notificationQueue.push({ intent, actorUserId, deliveryEnabled });
+    return deliveryEnabled
+      ? { persisted: true, status: 'queued', id: 'outbox-1', eventId: intent?.eventId }
+      : { persisted: false, status: 'preview', eventId: intent?.eventId };
+  }),
+  isNuxeraNotificationDeliveryEnabled: vi.fn(() => false),
+  listNuxeraNotificationOutbox: vi.fn(async (filters) => {
+    serviceCalls.notificationList.push(filters);
+    return { status: 'outbox-list-ready', entries: [], guardrails: ['Listado administrativo de outbox; no envia mensajes ni cambia estado.'] };
+  })
 }));
+vi.mock('../services/nuxeraConversationAgentReadinessService.js', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    runNuxeraConversationTurn: vi.fn(async (input) => {
+      serviceCalls.conversationTurn.push(input);
+      return {
+        id: 'nuxera-conversation-turn',
+        status: 'conversation-turn-ready',
+        answer: 'Respuesta simulada del proveedor.',
+        provider: 'anthropic',
+        persistence: { chatTurnPersisted: false, auditLogWritten: true }
+      };
+    })
+  };
+});
 vi.mock('../services/ragService.js', () => ({
   searchReferenceSources: vi.fn(async () => [])
 }));
@@ -399,6 +429,9 @@ describe('nuxera routes', () => {
     serviceCalls.continuationPack = [];
     serviceCalls.aiProviderPolicy = [];
     serviceCalls.notificationDryRun = [];
+    serviceCalls.notificationQueue = [];
+    serviceCalls.notificationList = [];
+    serviceCalls.conversationTurn = [];
     const listening = await listen(createApp());
     server = listening.server;
     baseUrl = listening.baseUrl;
@@ -819,6 +852,40 @@ describe('nuxera routes', () => {
     expect(body.guardrails.join(' ')).toContain('does not call an LLM provider');
   });
 
+  it('re-derives grantor authorization server-side from real evidence links instead of trusting the client flag', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/conversation/turn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'grantor-1', 'x-test-role': 'otorgante', 'x-test-email': 'grantor@example.com' },
+      body: JSON.stringify({ role: 'grantor', orderId: 'order-1', authorized: false, message: 'Que evidencia falta?' })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.turn).toMatchObject({ status: 'conversation-turn-ready', provider: 'anthropic' });
+    expect(serviceCalls.conversationTurn).toHaveLength(1);
+    expect(serviceCalls.conversationTurn[0]).toMatchObject({
+      role: 'grantor',
+      orderId: 'order-1',
+      authorized: true,
+      actorUserId: 'grantor-1'
+    });
+    expect(serviceCalls.grantorEvidence).toEqual([{ orderId: 'order-1', userId: 'grantor-1', email: 'grantor@example.com' }]);
+    expect(body.guardrails.join(' ')).toContain('never trusted');
+  });
+
+  it('does not derive authorization or call the turn service without an orderId', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/conversation/turn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'applicant-1', 'x-test-role': 'solicitante' },
+      body: JSON.stringify({ role: 'applicant', authorized: true, message: 'Hola' })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(serviceCalls.conversationTurn[0]).toMatchObject({ orderId: null, authorized: false });
+    expect(serviceCalls.evidence).toHaveLength(0);
+  });
+
   it('requires nuxera:admin:read before notification dry-run', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox-dry-run`, {
       method: 'POST',
@@ -844,6 +911,51 @@ describe('nuxera routes', () => {
     expect(body.dryRun).toMatchObject({ status: 'notification-dry-run-ready', deliveryEnabled: false, summary: { accepted: 1 } });
     expect(body.guardrails.join(' ')).toContain('never sends messages');
     expect(serviceCalls.notificationDryRun).toEqual([{ intents }]);
+  });
+  it('requires nuxera:admin:read before queueing a notification outbox intent', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      body: JSON.stringify({ intent: { eventId: 'applicant-missing-evidence' } })
+    });
+
+    expect(response.status).toBe(403);
+    expect(serviceCalls.notificationQueue).toHaveLength(0);
+  });
+
+  it('queues a notification outbox intent using the environment delivery flag, not a client-supplied one', async () => {
+    const intent = { eventId: 'grantor-file-shared', orderId: 'order-9', recipientEmail: 'grantor@example.com' };
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({ intent, deliveryEnabled: true })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.queued).toMatchObject({ persisted: false, status: 'preview' });
+    expect(serviceCalls.notificationQueue).toEqual([{ intent, actorUserId: 'admin-1', deliveryEnabled: false }]);
+    expect(body.guardrails.join(' ')).toContain('no email, WhatsApp or in-app message is ever sent');
+  });
+
+  it('requires nuxera:admin:read before listing the notification outbox', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox?status=queued`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+
+    expect(response.status).toBe(403);
+    expect(serviceCalls.notificationList).toHaveLength(0);
+  });
+
+  it('lists the notification outbox read-only with query filters', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox?status=queued&audience=grantor&limit=10`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.outbox.status).toBe('outbox-list-ready');
+    expect(serviceCalls.notificationList).toEqual([{ status: 'queued', audience: 'grantor', orderId: undefined, limit: '10' }]);
   });
   it("requires nuxera:admin:read before reading AI provider policy", async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/ai-provider-policy`, {

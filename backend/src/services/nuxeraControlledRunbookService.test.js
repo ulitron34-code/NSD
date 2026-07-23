@@ -11,7 +11,7 @@ describe('nuxeraControlledRunbookService', () => {
       readyForRun: false,
       summary: {
         identities: 4,
-        endpointRows: 9,
+        endpointRows: 13,
         missingMetadata: 6
       }
     });

@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const state = {
   inserted: null,
-  auditEvents: []
+  auditEvents: [],
+  existingByDedupeKey: null,
+  listRows: []
 };
 
 vi.mock('../config/supabase.js', () => {
@@ -13,6 +15,11 @@ vi.mock('../config/supabase.js', () => {
         return builder;
       }),
       select: vi.fn(() => builder),
+      eq: vi.fn(() => builder),
+      in: vi.fn(() => builder),
+      order: vi.fn(() => builder),
+      limit: vi.fn(() => Promise.resolve({ data: state.listRows, error: null })),
+      maybeSingle: vi.fn(() => Promise.resolve({ data: state.existingByDedupeKey, error: null })),
       single: vi.fn(() => Promise.resolve({
         data: { id: 'outbox-1', created_at: '2026-07-22T20:00:00.000Z', ...state.inserted.row },
         error: null
@@ -38,6 +45,8 @@ import {
   buildNuxeraNotificationDryRunBatch,
   buildNuxeraNotificationOutboxPreview,
   enqueueNuxeraNotificationIntent,
+  isNuxeraNotificationDeliveryEnabled,
+  listNuxeraNotificationOutbox,
   processNuxeraNotificationDeliveryBatch,
   getNuxeraNotificationOutboxReadiness
 } from './nuxeraNotificationOutboxService.js';
@@ -46,6 +55,8 @@ describe('nuxeraNotificationOutboxService', () => {
   beforeEach(() => {
     state.inserted = null;
     state.auditEvents = [];
+    state.existingByDedupeKey = null;
+    state.listRows = [];
   });
 
   it('builds a delivery-disabled preview without writing to Supabase', async () => {
@@ -187,6 +198,53 @@ describe('nuxeraNotificationOutboxService', () => {
     expect(state.inserted).toBeNull();
     expect(state.auditEvents).toEqual([]);
   });
+  it('rejects a duplicate active dedupe key without inserting a second row', async () => {
+    state.existingByDedupeKey = { id: 'outbox-existing', status: 'queued', created_at: '2026-07-22T18:00:00.000Z' };
+
+    const result = await enqueueNuxeraNotificationIntent({
+      actorUserId: 'admin-3',
+      deliveryEnabled: true,
+      intent: {
+        eventId: NUXERA_NOTIFICATION_EVENTS.APPLICANT_MESSAGE_RECEIVED,
+        orderId: 'order-3',
+        recipientUserId: 'applicant-1',
+        recipientRole: 'applicant',
+        subject: 'Nuevo mensaje',
+        channels: ['in_app']
+      }
+    });
+
+    expect(result).toMatchObject({ persisted: false, duplicate: true, status: 'suppressed', id: 'outbox-existing' });
+    expect(state.inserted).toBeNull();
+    expect(state.auditEvents[0]).toMatchObject({
+      action: 'nuxera_notification_duplicate_rejected',
+      entityType: 'nuxera_notification_outbox',
+      entityId: 'outbox-existing'
+    });
+  });
+
+  it('reads the delivery-enabled flag from environment', () => {
+    const original = process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED;
+    process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED = 'true';
+    expect(isNuxeraNotificationDeliveryEnabled()).toBe(true);
+    process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED = 'false';
+    expect(isNuxeraNotificationDeliveryEnabled()).toBe(false);
+    process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED = original;
+  });
+
+  it('lists persisted outbox rows read-only without sending anything', async () => {
+    state.listRows = [
+      { id: 'outbox-1', event_id: NUXERA_NOTIFICATION_EVENTS.GRANTOR_FILE_SHARED, audience: 'grantor', recipient_role: 'grantor', recipient_user_id: null, recipient_email: 'grantor@example.com', order_id: 'order-1', subject: 'Nuevo archivo', channels: ['email'], priority: 'normal', status: 'queued', dedupe_key: 'k1', attempts: 0, created_at: '2026-07-22T18:00:00.000Z', updated_at: '2026-07-22T18:00:00.000Z', sent_at: null }
+    ];
+
+    const result = await listNuxeraNotificationOutbox({ status: 'queued', limit: 10 });
+
+    expect(result.status).toBe('outbox-list-ready');
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0]).toMatchObject({ id: 'outbox-1', eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_FILE_SHARED, status: 'queued' });
+    expect(result.guardrails.join(' ')).toContain('no envia mensajes');
+  });
+
   it("exposes a read-only outbox readiness contract", () => {
     const readiness = getNuxeraNotificationOutboxReadiness();
 

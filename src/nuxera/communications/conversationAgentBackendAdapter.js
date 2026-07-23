@@ -196,6 +196,50 @@ export function normalizeNuxeraConversationPreviewResponse(response) {
   };
 }
 
+const LOCAL_CONVERSATION_TURN = Object.freeze({
+  source: "local-fallback",
+  status: "conversation-turn-local-blocked",
+  answer: null,
+  provider: null,
+  persistence: { chatTurnPersisted: false, auditLogWritten: false },
+  guardrails: ["Local fallback; no llama proveedor LLM ni persiste conversacion."],
+});
+
+export function normalizeNuxeraConversationTurnResponse(response) {
+  const payload = response?.turn || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_CONVERSATION_TURN,
+      error: "nuxera-conversation-turn-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_CONVERSATION_TURN,
+    ...payload,
+    source: "remote-turn",
+    error: null,
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export async function sendNuxeraConversationTurn(payload = {}) {
+  try {
+    const { data } = await nuxeraConversationAgentAPI.turn(payload);
+    return normalizeNuxeraConversationTurnResponse(data);
+  } catch (error) {
+    warn("NUXERA", "Conversation turn unavailable", error?.message || error);
+    return {
+      ...LOCAL_CONVERSATION_TURN,
+      error: error?.response?.data?.code || error?.message || "nuxera-conversation-turn-unavailable",
+    };
+  }
+}
+
 export function useConversationPreview({ enabled = true, payload = null } = {}) {
   const [state, setState] = useState(LOCAL_CONVERSATION_PREVIEW);
 

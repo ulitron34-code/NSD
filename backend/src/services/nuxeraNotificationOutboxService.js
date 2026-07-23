@@ -44,6 +44,10 @@ function isDeliveryEnabled(explicitValue = process.env.NUXERA_NOTIFICATION_DELIV
   return String(explicitValue || '').trim().toLowerCase() === 'true';
 }
 
+export function isNuxeraNotificationDeliveryEnabled() {
+  return isDeliveryEnabled();
+}
+
 function getAudience(eventId) {
   const audience = EVENT_AUDIENCE[eventId];
   if (!audience) throw new Error('Evento NUXERA notification invalido');
@@ -108,6 +112,18 @@ export function buildNuxeraNotificationOutboxPreview(intent = {}) {
   };
 }
 
+async function findActiveOutboxByDedupeKey(dedupeKey) {
+  const { data, error } = await supabaseAdmin
+    .from('nuxera_notification_outbox')
+    .select('id, status, created_at')
+    .eq('dedupe_key', dedupeKey)
+    .in('status', ['preview', 'queued', 'sent'])
+    .maybeSingle();
+
+  if (error) throw error;
+  return data || null;
+}
+
 export async function enqueueNuxeraNotificationIntent({ intent, actorUserId, req = null, deliveryEnabled = false }) {
   const preview = buildNuxeraNotificationOutboxPreview(intent);
 
@@ -116,6 +132,34 @@ export async function enqueueNuxeraNotificationIntent({ intent, actorUserId, req
       ...preview,
       persisted: false,
       status: 'preview'
+    };
+  }
+
+  const duplicate = await findActiveOutboxByDedupeKey(preview.dedupeKey);
+
+  if (duplicate) {
+    await logAuditEvent({
+      userId: actorUserId || null,
+      action: 'nuxera_notification_duplicate_rejected',
+      entityType: 'nuxera_notification_outbox',
+      entityId: duplicate.id,
+      orderId: preview.orderId,
+      req,
+      complianceRelevant: true,
+      metadata: {
+        eventId: preview.eventId,
+        audience: preview.audience,
+        dedupeKey: preview.dedupeKey,
+        existingStatus: duplicate.status
+      }
+    });
+
+    return {
+      ...preview,
+      id: duplicate.id,
+      persisted: false,
+      duplicate: true,
+      status: 'suppressed'
     };
   }
 
@@ -240,6 +284,52 @@ export function getNuxeraNotificationOutboxReadiness() {
       "Readiness solamente; no aplica SQL ni envia mensajes.",
       "Los correos no deben incluir evidencia sensible ni adjuntos.",
       "Todo cambio de estado debe quedar auditable."
+    ]
+  };
+}
+
+function mapOutboxRow(row) {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    audience: row.audience,
+    recipientRole: row.recipient_role,
+    recipientUserId: row.recipient_user_id || null,
+    recipientEmail: row.recipient_email || null,
+    orderId: row.order_id || null,
+    subject: row.subject,
+    channels: Array.isArray(row.channels) ? row.channels : [],
+    priority: row.priority,
+    status: row.status,
+    dedupeKey: row.dedupe_key,
+    attempts: row.attempts || 0,
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null,
+    sentAt: row.sent_at || null
+  };
+}
+
+export async function listNuxeraNotificationOutbox({ status, audience, orderId, limit = 50 } = {}) {
+  const parsedLimit = Math.max(1, Math.min(Number(limit) || 50, 100));
+  let query = supabaseAdmin
+    .from('nuxera_notification_outbox')
+    .select('id, event_id, audience, recipient_role, recipient_user_id, recipient_email, order_id, subject, channels, priority, status, dedupe_key, attempts, created_at, updated_at, sent_at');
+
+  if (status && ALLOWED_STATUSES.has(status)) query = query.eq('status', status);
+  if (audience && ['applicant', 'grantor', 'admin'].includes(audience)) query = query.eq('audience', audience);
+  if (orderId) query = query.eq('order_id', orderId);
+
+  const { data, error } = await query
+    .order('created_at', { ascending: false })
+    .limit(parsedLimit);
+  if (error) throw error;
+
+  return {
+    status: 'outbox-list-ready',
+    entries: (data || []).map(mapOutboxRow),
+    guardrails: [
+      'Listado administrativo de outbox; no envia mensajes ni cambia estado.',
+      'El envio real permanece deshabilitado hasta aprobar el worker de entrega.'
     ]
   };
 }

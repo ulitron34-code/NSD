@@ -160,6 +160,72 @@ export function normalizeNuxeraNotificationDryRunResponse(response) {
   };
 }
 
+const LOCAL_OUTBOX_LIST = Object.freeze({
+  source: "local-fallback",
+  status: "outbox-list-unverified",
+  loading: false,
+  error: null,
+  entries: [],
+  guardrails: ["Local fallback; no confirma filas persistidas de outbox."],
+});
+
+export function normalizeNuxeraNotificationOutboxListResponse(response) {
+  const payload = response?.outbox || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_OUTBOX_LIST,
+      error: "nuxera-notification-outbox-list-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_OUTBOX_LIST,
+    source: "remote",
+    status: payload.status || "outbox-list-ready",
+    loading: false,
+    error: null,
+    entries: asArray(payload.entries),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useNotificationOutboxList({ enabled = true, status, audience, orderId, limit = 20 } = {}) {
+  const [state, setState] = useState(LOCAL_OUTBOX_LIST);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled) {
+      setState(LOCAL_OUTBOX_LIST);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraNotificationOutboxAPI.list({ status, audience, orderId, limit })
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraNotificationOutboxListResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Notification outbox list unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_OUTBOX_LIST,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-notification-outbox-list-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled, status, audience, orderId, limit]);
+
+  return state;
+}
+
 export function useNotificationDryRun({ enabled = true, intents = [], language = "es" } = {}) {
   const [state, setState] = useState(LOCAL_NOTIFICATION_DRY_RUN);
 

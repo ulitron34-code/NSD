@@ -172,6 +172,7 @@ export function mapPipelineEntryToOpportunity(entry, language = "es") {
     interest: entry.interest || null,
     documentsCount: entry.documentsCount || 0,
     latestReview: entry.latestReview || null,
+    infoRequests: Array.isArray(entry.informationRequests) ? entry.informationRequests : opportunity.infoRequests,
     scoring: entry.scoring || null,
     financialScore: entry.scoring?.finalScore ?? opportunity.financialScore,
     complianceScore: entry.scoring?.regulatoryValidation?.status === "clear" ? Math.max(opportunity.complianceScore, 85) : opportunity.complianceScore,

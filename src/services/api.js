@@ -268,7 +268,13 @@ export const nuxeraBackendReadinessAPI = {
 
 export const nuxeraNotificationOutboxAPI = {
   getReadiness: () =>
-    api.get('/nuxera/admin/notification-outbox-readiness')
+    api.get('/nuxera/admin/notification-outbox-readiness'),
+  dryRun: (payload = {}) =>
+    api.post('/nuxera/admin/notification-outbox-dry-run', payload),
+  queue: (payload = {}) =>
+    api.post('/nuxera/admin/notification-outbox', payload),
+  list: (params = {}) =>
+    api.get('/nuxera/admin/notification-outbox', { params })
 };
 export const nuxeraAiProviderPolicyAPI = {
   getPolicy: () =>
@@ -279,7 +285,9 @@ export const nuxeraConversationAgentAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/conversation-agent-readiness'),
   preview: (payload = {}) =>
-    api.post('/nuxera/conversation/preview', payload)
+    api.post('/nuxera/conversation/preview', payload),
+  turn: (payload = {}) =>
+    api.post('/nuxera/conversation/turn', payload)
 };
 
 export const nuxeraControlledVerificationAPI = {

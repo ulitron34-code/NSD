@@ -133,8 +133,23 @@ async function getContactRequestForShare(share) {
   return data || null;
 }
 
+async function getInformationRequestsForOrder(orderId) {
+  const { data, error } = await supabaseAdmin
+    .from('information_requests')
+    .select('id, order_id, title, status, priority, due_date, document_type, created_at')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: false });
+
+  if (error?.message?.includes('information_requests')) {
+    return [];
+  }
+  if (error) throw error;
+
+  return data || [];
+}
+
 async function buildPipelineItem(share) {
-  const [{ data: order, error: orderError }, { data: documents, error: documentsError }, { data: reviews, error: reviewsError }, interest, contactRequest] = await Promise.all([
+  const [{ data: order, error: orderError }, { data: documents, error: documentsError }, { data: reviews, error: reviewsError }, interest, contactRequest, informationRequests] = await Promise.all([
     supabaseAdmin
       .from('service_orders')
       .select('id, user_id, service_type, status, amount, created_at, completed_at, metadata, case_number, project_name, applicant_type, requested_amount, funding_purpose, stage, risk_level, readiness_grade, compliance_status')
@@ -151,7 +166,8 @@ async function buildPipelineItem(share) {
       .eq('order_id', share.order_id)
       .order('created_at', { ascending: false }),
     getInterestForShare(share),
-    getContactRequestForShare(share)
+    getContactRequestForShare(share),
+    getInformationRequestsForOrder(share.order_id)
   ]);
 
   if (orderError) throw orderError;
@@ -179,6 +195,14 @@ async function buildPipelineItem(share) {
     order,
     documentsCount: documents?.length || 0,
     latestReview: reviews?.[0] || null,
+    informationRequests: (informationRequests || []).map((request) => ({
+      id: request.id,
+      title: request.title,
+      status: request.status,
+      priority: request.priority,
+      dueDate: request.due_date || null,
+      documentType: request.document_type || null
+    })),
     scoring: {
       finalScore: scoring.finalScore,
       readinessGrade: scoring.readinessGrade,

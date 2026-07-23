@@ -26,8 +26,8 @@ import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/s
 import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
 import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
-import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
+import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse, normalizeNuxeraConversationTurnResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
 
 describe("NUXERA admin operational snapshot", () => {
   it("maps each admin navigation lane to a specialized protected workspace", () => {
@@ -238,7 +238,7 @@ describe("NUXERA admin operations console", () => {
       ])
     );
     expect(consoleState.auditEvents).toEqual(
-      expect.arrayContaining([expect.stringContaining("Grantor queue")])
+      expect.arrayContaining([expect.stringContaining("Bandeja de expedientes")])
     );
   });
 
@@ -1331,6 +1331,42 @@ describe("NUXERA notification and conversation operating model", () => {
     expect(merged.guardrails.join(" ")).toContain("Delivery permanece apagado");
   });
 
+  it("normalizes a remote outbox list response without inventing rows", () => {
+    const withEntries = normalizeNuxeraNotificationOutboxListResponse({
+      outbox: {
+        status: "outbox-list-ready",
+        entries: [{ id: "outbox-1", eventId: "grantor-file-shared", status: "queued" }],
+        guardrails: ["Listado administrativo de outbox; no envia mensajes ni cambia estado."],
+      },
+    });
+    expect(withEntries.source).toBe("remote");
+    expect(withEntries.entries).toHaveLength(1);
+    expect(withEntries.guardrails.join(" ")).toContain("no envia mensajes");
+
+    const missing = normalizeNuxeraNotificationOutboxListResponse(null);
+    expect(missing.entries).toEqual([]);
+    expect(missing.error).toBe("nuxera-notification-outbox-list-missing");
+  });
+
+  it("normalizes a real conversation turn response without inventing an answer", () => {
+    const ready = normalizeNuxeraConversationTurnResponse({
+      turn: {
+        status: "conversation-turn-ready",
+        answer: "Falta el estado financiero mas reciente.",
+        provider: "anthropic",
+        persistence: { chatTurnPersisted: false, auditLogWritten: true },
+      },
+      guardrails: ["Chat turns are never persisted."],
+    });
+    expect(ready.source).toBe("remote-turn");
+    expect(ready.answer).toContain("estado financiero");
+    expect(ready.guardrails.join(" ")).toContain("never persisted");
+
+    const missing = normalizeNuxeraConversationTurnResponse(null);
+    expect(missing.answer).toBeNull();
+    expect(missing.error).toBe("nuxera-conversation-turn-missing");
+  });
+
   it("merges remote conversation agent readiness into the communications model without enabling chat", () => {
     const agent = normalizeNuxeraConversationAgentReadinessResponse({
       conversationAgent: {
@@ -1442,6 +1478,34 @@ describe("NUXERA grantor case queue", () => {
     expect(getGrantorCaseWorkbench("order-real-1", queue).case.id).toBe("order-real-1");
     expect(getGrantorDocumentSummary("order-real-1", queue).caseId).toBe("order-real-1");
     expect(getGrantorDecisionMemo("order-real-1", queue).case.id).toBe("order-real-1");
+  });
+
+  it("uses real backend information requests instead of order metadata for missing-evidence signals", () => {
+    const queue = buildGrantorCaseQueueFromPipeline([{
+      share: { id: "share-2", status: "accepted" },
+      order: {
+        id: "order-real-2",
+        project_name: "Planta solar",
+        service_type: "business-plan",
+        status: "pending",
+        requested_amount: 8000000,
+        metadata: { companyName: "Luz Real", sector: "Energia", country: "MX", infoRequests: [{ id: "stale-demo-request", status: "open", title: "No deberia aparecer" }] },
+      },
+      documentsCount: 3,
+      latestReview: null,
+      scoring: { finalScore: 60, regulatoryValidation: { status: "pending" } },
+      interest: null,
+      contactRequest: null,
+      informationRequests: [
+        { id: "req-real-1", title: "Estados financieros actualizados", status: "open", priority: "high", dueDate: "2026-07-25", documentType: "financial" }
+      ],
+    }]);
+
+    const caseItem = queue.cases.find((item) => item.id === "order-real-2");
+    expect(caseItem.infoRequests).toEqual([
+      { id: "req-real-1", title: "Estados financieros actualizados", status: "open", priority: "high", dueDate: "2026-07-25", documentType: "financial" }
+    ]);
+    expect(caseItem.priority).toBe("needs-information");
   });
 
   it("builds a local case queue with analytics and priorities", () => {
