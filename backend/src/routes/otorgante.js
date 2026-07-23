@@ -254,6 +254,37 @@ router.get('/otorgante/pipeline', authMiddleware, requirePermission('data_room:a
   }
 });
 
+// Admin-wide view across every accepted/shared data room, not just the requester's own
+// shares. Reuses buildPipelineItem so the shape matches /otorgante/pipeline exactly --
+// admin already has unrestricted read access to users/audit-logs/orders elsewhere in this
+// permission model (ROLE_PERMISSIONS.administrador = ['*']), so this does not introduce a
+// new visibility tier, only a real endpoint for a view operationsConsole.js previously had
+// to fake with local demo data.
+router.get('/nuxera/admin/grantor-cases', authMiddleware, requirePermission('nuxera:admin:read'), async (req, res) => {
+  try {
+    const { data: shares, error: sharesError } = await supabaseAdmin
+      .from('data_room_shares')
+      .select('id, order_id, recipient_user_id, recipient_name, recipient_email, status, created_at, accepted_at, expires_at, last_viewed_at')
+      .in('status', ['accepted', 'shared'])
+      .order('created_at', { ascending: false });
+
+    if (sharesError) throw sharesError;
+
+    const pipeline = await Promise.all((shares || []).map((share) => buildPipelineItem(share)));
+
+    res.json({
+      workspaceRole: 'admin',
+      pipeline,
+      guardrails: [
+        'Admin-wide pipeline view reuses the same real fields exposed to an authorized grantor; it does not add new columns or bypass data-room shares.',
+        'It does not approve financing, issue term sheets or change data-room permissions.'
+      ]
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 router.post('/otorgante/interests', authMiddleware, requirePermission('funder:interest:create'), async (req, res) => {
   try {
     const { orderId, status = 'interested', notes = '' } = req.body || {};

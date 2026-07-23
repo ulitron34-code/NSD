@@ -2300,3 +2300,118 @@
   cursor: not-allowed;
   opacity: 0.7;
 }
+
+.nuxera-conversation-chat {
+  border: 1px solid var(--nuxera-border);
+  border-radius: 12px;
+  background: var(--nuxera-panel);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nuxera-conversation-chat header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nuxera-conversation-chat header span {
+  color: var(--nuxera-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nuxera-conversation-chat header h2 {
+  margin: 0;
+  color: var(--nuxera-ink);
+}
+
+.nuxera-conversation-chat-disabled {
+  color: var(--nuxera-muted);
+  font-size: 0.85rem;
+}
+
+.nuxera-conversation-chat-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.nuxera-conversation-chat-user {
+  align-self: flex-end;
+  background: var(--nuxera-ink);
+  color: var(--nuxera-panel);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  max-width: 80%;
+  margin: 0;
+}
+
+.nuxera-conversation-chat-assistant {
+  border: 1px solid var(--nuxera-border);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  max-width: 80%;
+}
+
+.nuxera-conversation-chat-assistant span {
+  display: block;
+  color: var(--nuxera-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.nuxera-conversation-chat-assistant p {
+  margin: 0.25rem 0 0;
+}
+
+.nuxera-conversation-chat form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.nuxera-conversation-chat form label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.nuxera-conversation-chat form input {
+  flex: 1;
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  background: var(--nuxera-panel);
+  color: var(--nuxera-ink);
+  font: inherit;
+  padding: 0.5rem 0.7rem;
+}
+
+.nuxera-conversation-chat form button {
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  background: var(--nuxera-ink);
+  color: var(--nuxera-panel);
+  font: inherit;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.nuxera-conversation-chat form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.nuxera-conversation-chat footer small {
+  color: var(--nuxera-muted);
+}

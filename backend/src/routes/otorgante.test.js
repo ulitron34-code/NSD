@@ -171,3 +171,51 @@ describe('otorgante pipeline route', () => {
     expect(body[0].informationRequests).toEqual([]);
   });
 });
+
+describe('admin-wide grantor cases route', () => {
+  let server;
+  let baseUrl;
+
+  beforeEach(async () => {
+    tableRows.data_room_shares = [
+      { id: 'share-1', order_id: 'order-1', recipient_user_id: 'grantor-1', recipient_name: 'Grantor A', recipient_email: 'grantor-a@example.com', status: 'accepted', created_at: '2026-07-20T10:00:00.000Z', accepted_at: '2026-07-20T10:05:00.000Z', expires_at: null, last_viewed_at: null },
+      { id: 'share-2', order_id: 'order-2', recipient_user_id: 'grantor-2', recipient_name: 'Grantor B', recipient_email: 'grantor-b@example.com', status: 'shared', created_at: '2026-07-19T10:00:00.000Z', accepted_at: null, expires_at: null, last_viewed_at: null }
+    ];
+    tableRows.service_orders = {
+      id: 'order-1', user_id: 'applicant-1', service_type: 'combo-complete', status: 'in_progress', amount: 500000,
+      created_at: '2026-07-01T00:00:00.000Z', metadata: {}, case_number: 'C-1', project_name: 'Proyecto Prueba',
+      applicant_type: 'empresa', requested_amount: 500000, funding_purpose: 'capital', stage: 'review',
+      risk_level: 'medium', readiness_grade: 'fixable', compliance_status: 'in_review'
+    };
+    tableRows.documents = [];
+    tableRows.document_reviews = [];
+    tableRows.information_requests = [];
+
+    const app = createApp();
+    ({ server, baseUrl } = await listen(app));
+  });
+
+  afterEach(() => {
+    server?.close();
+  });
+
+  it('requires nuxera:admin:read to read the admin-wide grantor cases view', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/grantor-cases`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'data_room:authorized:read' }
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('aggregates every accepted/shared data room, not only the requesting grantor own shares', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/grantor-cases`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.workspaceRole).toBe('admin');
+    expect(body.pipeline).toHaveLength(2);
+    expect(body.pipeline.map((item) => item.share.id)).toEqual(['share-1', 'share-2']);
+  });
+});

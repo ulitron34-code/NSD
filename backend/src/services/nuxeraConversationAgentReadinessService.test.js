@@ -84,6 +84,30 @@ describe('nuxeraConversationAgentReadinessService', () => {
     expect(allowed.allowedSources).toEqual(expect.arrayContaining(['messages', 'nuxera_evidence_links']));
   });
 
+  it('allows the admin operations-monitor channel without a selected file, unlike applicant/grantor', () => {
+    const adminAllowed = buildNuxeraConversationAgentEnvelope({
+      role: 'admin',
+      authorized: true,
+      runtimeEnabled: 'true'
+    });
+    const adminBlocked = buildNuxeraConversationAgentEnvelope({
+      role: 'admin',
+      authorized: false,
+      runtimeEnabled: 'true'
+    });
+    const applicantStillNeedsFile = buildNuxeraConversationAgentEnvelope({
+      role: 'applicant',
+      authorized: true,
+      runtimeEnabled: 'true'
+    });
+
+    expect(adminAllowed).toMatchObject({ allowed: true, status: 'conversation-runtime-ready', selectedId: null });
+    expect(adminAllowed.blockers).toEqual([]);
+    expect(adminBlocked.allowed).toBe(false);
+    expect(applicantStillNeedsFile.allowed).toBe(false);
+    expect(applicantStillNeedsFile.blockers.join(' ')).toContain('Selected file is required');
+  });
+
   it('builds a blocked safe conversation preview without provider calls or persistence', () => {
     const preview = buildNuxeraConversationPreview({
       role: 'grantor',

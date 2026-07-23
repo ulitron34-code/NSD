@@ -162,7 +162,11 @@ router.post(
   authMiddleware,
   async (req, res) => {
     try {
-      const requestedRole = req.body?.role || (req.userRole === 'otorgante' || req.userRole === 'inversionista' ? 'grantor' : req.userRole === 'administrador' ? 'admin' : 'applicant');
+      // Unlike /conversation/preview, this route makes a real, billable LLM call, so the
+      // role is derived only from the authenticated session (req.userRole) and never from
+      // client-supplied req.body.role -- otherwise any authenticated user could claim the
+      // admin channel to consume provider quota under a different prompt scope.
+      const requestedRole = req.userRole === 'otorgante' || req.userRole === 'inversionista' ? 'grantor' : req.userRole === 'administrador' ? 'admin' : 'applicant';
       const orderId = req.body?.orderId || req.body?.selectedId || null;
       let authorizedContext = null;
       let authorized = false;
@@ -181,6 +185,12 @@ router.post(
         } catch {
           authorized = false;
         }
+      } else if (requestedRole === 'admin') {
+        authorized = true;
+        authorizedContext = {
+          scope: 'operations-monitor',
+          note: 'No file content access by default; limited to audit_logs, nuxera_admin_controls and nuxera_notification_outbox summaries.'
+        };
       }
 
       const turn = await runNuxeraConversationTurn({

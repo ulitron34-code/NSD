@@ -117,6 +117,29 @@ Rules:
 - Controls do not directly enable automation, permissions or licensed market data.
 - Critical incident controls must be auditable and rollback-linked.
 
+### 5. `nuxera_case_assignments` (proposed 2026-07-22, draft only, not implemented)
+Real SLA deadline and assigned-reviewer state per expediente. Today `caseQueue.js`'s `triage.sla`/`triage.owner` are static per-priority policy labels (`24h`/`48h`/`7d`, "Analista senior"/"Relacion solicitante"/"Monitoreo"), not a per-case timestamp or a real assignee — this module would replace those labels with real data without changing the label-based UI contract.
+
+Suggested columns:
+- `id uuid primary key`
+- `order_id uuid not null references service_orders(id) on delete cascade`
+- `assigned_reviewer_id uuid null`
+- `assigned_reviewer_role text not null check in ('analista','agente_interno','compliance_officer','administrador')`
+- `sla_tier text not null check in ('committee-ready-24h','needs-information-48h','watch-7d')`
+- `sla_due_at timestamptz not null`
+- `status text not null default 'open' check in ('open','completed','breached','reassigned')`
+- `reason text not null default ''`
+- `metadata jsonb not null default '{}'::jsonb`
+- `created_by uuid`
+- `created_at timestamptz default now()`
+- `updated_at timestamptz default now()`
+
+Rules:
+- Additive only; does not modify `service_orders` or any existing table/column.
+- Only one `status='open'` row per `order_id` (enforced by a partial unique index); reassignment closes the prior row instead of deleting it, preserving history for audit.
+- Read policies mirror the existing owner/authorized-grantor pattern already used by `nuxera_evidence_links` and `/otorgante/pipeline`; all writes go through `service_role` from the backend only, same as `nuxera_notification_outbox`.
+- SQL draft exists at `backend/sql_migrations_pendientes/2026-07-22_nuxera_case_assignments.sql` and passes `check:nuxera-sql`, but has not been applied to Supabase and has no backend service/route yet -- this is a schema/product proposal (who assigns reviewers, what the real SLA policy per priority is) pending a decision, not a code gap.
+
 ## API contract draft
 All routes are proposed under `/nuxera` to avoid changing existing legacy endpoints.
 

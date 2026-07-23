@@ -261,6 +261,11 @@ export const nuxeraAdminControlsAPI = {
     api.get('/nuxera/admin/controls')
 };
 
+export const nuxeraAdminGrantorCasesAPI = {
+  getCases: () =>
+    api.get('/nuxera/admin/grantor-cases')
+};
+
 export const nuxeraBackendReadinessAPI = {
   getReadiness: () =>
     api.get('/nuxera/admin/readiness')

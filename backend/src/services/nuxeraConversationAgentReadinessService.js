@@ -66,7 +66,11 @@ export function buildNuxeraConversationAgentEnvelope(context = {}) {
   const role = ROLE_POLICIES[context.role] ? context.role : 'applicant';
   const policy = ROLE_POLICIES[role];
   const selectedId = context.orderId || context.selectedId || null;
-  const hasAuthorizedContext = Boolean(selectedId && context.authorized === true);
+  // Admin channel scope is operations-monitor only (audit_logs/admin_controls/outbox),
+  // never file content, so it does not require a selected file like applicant/grantor do.
+  const hasAuthorizedContext = role === 'admin'
+    ? context.authorized === true
+    : Boolean(selectedId && context.authorized === true);
   const runtimeEnabled = String(context.runtimeEnabled || '').trim().toLowerCase() === 'true';
   const allowed = hasAuthorizedContext && runtimeEnabled;
 
@@ -82,7 +86,7 @@ export function buildNuxeraConversationAgentEnvelope(context = {}) {
     blockedSources: allowed ? [] : policy.allowedSources,
     capabilities: policy.capabilities,
     blockers: [
-      !selectedId ? 'Selected file is required.' : null,
+      role !== 'admin' && !selectedId ? 'Selected file is required.' : null,
       !hasAuthorizedContext ? 'Authorized role-scoped context is required.' : null,
       !runtimeEnabled ? 'Conversation runtime is disabled until separate approval.' : null
     ].filter(Boolean),

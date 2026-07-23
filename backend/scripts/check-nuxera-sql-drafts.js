@@ -111,6 +111,26 @@ const drafts = [
     policyCount: 1,
     forbiddenPolicyVerbs: ['FOR INSERT', 'FOR UPDATE', 'FOR DELETE'],
   },
+  {
+    label: 'case assignments',
+    path: 'sql_migrations_pendientes/2026-07-22_nuxera_case_assignments.sql',
+    requiredSnippets: [
+      ['table', 'CREATE TABLE IF NOT EXISTS nuxera_case_assignments'],
+      ['service order fk', 'order_id              UUID        NOT NULL REFERENCES service_orders(id) ON DELETE CASCADE'],
+      ['reviewer role check', "assigned_reviewer_role TEXT       NOT NULL DEFAULT 'analista' CHECK (assigned_reviewer_role IN ('analista', 'agente_interno', 'compliance_officer', 'administrador'))"],
+      ['sla tier check', "sla_tier              TEXT        NOT NULL CHECK (sla_tier IN ('committee-ready-24h', 'needs-information-48h', 'watch-7d'))"],
+      ['status check', "status                TEXT        NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'completed', 'breached', 'reassigned'))"],
+      ['active unique index', 'idx_nuxera_case_assignments_active_unique'],
+      ['active unique predicate', "WHERE status = 'open'"],
+      ['rls enabled', 'ALTER TABLE nuxera_case_assignments ENABLE ROW LEVEL SECURITY'],
+      ['owner read policy', 'nuxera_case_assignments_owner_read'],
+      ['owner gate', 'so.user_id = auth.uid()'],
+      ['grantor read policy', 'nuxera_case_assignments_authorized_grantor_read'],
+      ['grantor share gate', "drs.status IN ('accepted', 'shared')"],
+    ],
+    policyCount: 2,
+    forbiddenPolicyVerbs: ['FOR INSERT', 'FOR UPDATE', 'FOR DELETE'],
+  },
 ];
 
 const forbiddenPatterns = [

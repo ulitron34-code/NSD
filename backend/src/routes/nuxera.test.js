@@ -886,6 +886,33 @@ describe('nuxera routes', () => {
     expect(serviceCalls.evidence).toHaveLength(0);
   });
 
+  it('ignores a client-supplied role and derives it from the authenticated session for the real turn endpoint', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/conversation/turn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'applicant-1', 'x-test-role': 'solicitante' },
+      body: JSON.stringify({ role: 'admin', orderId: 'order-1', authorized: true, message: 'Hola' })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.workspaceRole).toBe('applicant');
+    expect(serviceCalls.conversationTurn[0]).toMatchObject({ role: 'applicant' });
+  });
+
+  it('authorizes the admin operations-monitor turn scope without requiring an orderId', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/conversation/turn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-role': 'administrador' },
+      body: JSON.stringify({ message: 'Cuantas fallas de entrega hubo hoy?' })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.workspaceRole).toBe('admin');
+    expect(serviceCalls.conversationTurn[0]).toMatchObject({ role: 'admin', orderId: null, authorized: true });
+    expect(serviceCalls.conversationTurn[0].authorizedContext).toMatchObject({ scope: 'operations-monitor' });
+  });
+
   it('requires nuxera:admin:read before notification dry-run', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox-dry-run`, {
       method: 'POST',

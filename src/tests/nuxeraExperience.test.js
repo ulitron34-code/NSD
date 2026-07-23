@@ -4,6 +4,7 @@ import { EXPERIENCE_STORAGE_KEY, EXPERIENCE_VALUES, readExperience, writeExperie
 import { getFinanceAdapterConfig } from "../nuxera/adapters/FinanceWorkspaceAdapter";
 import { getAdminWorkspaceConfig } from "../nuxera/adapters/AdminWorkspaceAdapter";
 import { mergeAdminControlsWithConsole, normalizeNuxeraAdminControlsResponse } from "../nuxera/admin/adminControlsAdapter";
+import { mergeGrantorCasesWithConsole, normalizeNuxeraAdminGrantorCasesResponse } from "../nuxera/admin/grantorCasesAdapter";
 import { mergeBackendReadinessWithConsole, normalizeNuxeraBackendReadinessResponse, normalizeNuxeraControlledApprovalPackageResponse, normalizeNuxeraControlledChangeRequestResponse, normalizeNuxeraControlledContinuationPackResponse, normalizeNuxeraControlledEvidenceReviewResponse, normalizeNuxeraControlledEvidenceScaffoldResponse, normalizeNuxeraControlledReleaseDossierResponse, normalizeNuxeraControlledRunbookResponse, normalizeNuxeraControlledVerificationPlanResponse, normalizeNuxeraControlledWriteGateResponse } from "../nuxera/admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../nuxera/admin/operationsConsole";
 import { buildAdminOperationalModules, normalizeAdminOperationalSnapshot } from "../nuxera/admin/operationalSnapshotAdapter";
@@ -240,6 +241,43 @@ describe("NUXERA admin operations console", () => {
     expect(consoleState.auditEvents).toEqual(
       expect.arrayContaining([expect.stringContaining("Bandeja de expedientes")])
     );
+  });
+
+  it("replaces the demo grantor document readiness with the real admin-wide pipeline when available", () => {
+    const base = getAdminOperationsConsole();
+    const demoReadiness = base.grantorDocumentReadiness;
+
+    const withoutRemote = mergeGrantorCasesWithConsole(base, normalizeNuxeraAdminGrantorCasesResponse(null));
+    expect(withoutRemote.grantorDocumentReadiness).toBe(demoReadiness);
+    expect(withoutRemote.policies.join(" ")).toContain("fallback local/demo");
+
+    const remoteState = normalizeNuxeraAdminGrantorCasesResponse({
+      pipeline: [{
+        share: { id: "share-1", status: "accepted" },
+        order: {
+          id: "order-admin-1",
+          project_name: "Planta industrial",
+          service_type: "combo-complete",
+          status: "in_progress",
+          requested_amount: 15000000,
+          metadata: { companyName: "Empresa Admin", sector: "Manufactura", country: "MX" },
+        },
+        documentsCount: 5,
+        latestReview: null,
+        scoring: { finalScore: 70, regulatoryValidation: { status: "clear" } },
+        interest: null,
+        contactRequest: null,
+        informationRequests: [],
+      }],
+      guardrails: ["Admin-wide pipeline view reuses the same real fields."],
+    });
+    const withRemote = mergeGrantorCasesWithConsole(base, remoteState);
+
+    expect(withRemote.grantorDocumentReadiness).not.toBe(demoReadiness);
+    expect(withRemote.grantorDocumentReadiness).toHaveLength(1);
+    expect(withRemote.grantorDocumentReadiness[0]).toMatchObject({ caseId: "order-admin-1", applicant: "Empresa Admin" });
+    expect(withRemote.summary).toMatchObject({ grantorCasesSource: "remote-authorized-pipeline", grantorCasesTotal: 1 });
+    expect(withRemote.policies.join(" ")).toContain("pipeline real");
   });
 
   it("tracks rollout readiness, incident controls and compliance evidence", () => {

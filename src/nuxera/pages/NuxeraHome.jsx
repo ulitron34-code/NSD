@@ -9,6 +9,7 @@ import { mergeAiProviderPolicyWithConsole, useAiProviderPolicy } from "../admin/
 import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
+import { mergeGrantorCasesWithConsole, useAdminGrantorCases } from "../admin/grantorCasesAdapter";
 import { getApplicantDocumentCenter } from "../applicant/documentCenter";
 import { getApplicantDataRoomChecklist, getApplicantGuidedMission, getApplicantMissionReadiness, getApplicantOnboardingWizard } from "../applicant/guidedMission";
 import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspace";
@@ -18,6 +19,7 @@ import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorC
 import { getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
+import ConversationChat from "../communications/ConversationChat";
 
 const roleCopy = {
   applicant: {
@@ -294,6 +296,7 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
           <h2>Guardrails</h2>
           {mission.guardrails.map((guardrail) => <p key={guardrail}>{guardrail}</p>)}
         </section>
+        <ConversationChat role="applicant" orderId={isDemo ? null : orderId} isDemo={isDemo} language={language} />
       </div>
     </section>
   );
@@ -544,6 +547,7 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
         <h2>{isInboxView ? L("Politicas de bandeja", "Inbox policies") : L("Politicas de mesa", "Desk policies")}</h2>
         {queue.policies.map((policy) => <p key={policy}>{policy}</p>)}
       </section>
+      <ConversationChat role="grantor" orderId={isDemo ? null : orderId} isDemo={isDemo} language={language} />
     </section>
   );
 }
@@ -578,6 +582,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const notificationDryRun = useNotificationDryRun({ enabled: isNuxeraExperienceEnabled(), intents: notificationDryRunIntents, language });
   const notificationOutboxList = useNotificationOutboxList({ enabled: isNuxeraExperienceEnabled(), limit: 10 });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
+  const adminGrantorCases = useAdminGrantorCases({ enabled: isNuxeraExperienceEnabled(), language });
   const communicationModel = mergeCommunicationModelWithConversationAgent(
     mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(language), notificationOutboxReadiness, language),
     conversationAgentReadiness,
@@ -585,7 +590,11 @@ function AdminOperationsHome({ sectionLabel }) {
   );
   const consoleState = mergeAiProviderPolicyWithConsole(
     mergeBackendReadinessWithConsole(
-      mergeAdminControlsWithConsole(getAdminOperationsConsole(language), adminControls, language),
+      mergeAdminControlsWithConsole(
+        mergeGrantorCasesWithConsole(getAdminOperationsConsole(language), adminGrantorCases, language),
+        adminControls,
+        language
+      ),
       backendReadiness,
       controlledVerificationPlan,
       language
@@ -1314,6 +1323,7 @@ function AdminOperationsHome({ sectionLabel }) {
           {consoleState.policies.map((policy) => <p key={policy}>{policy}</p>)}
         </section>
       </div>
+      <ConversationChat role="admin" language={language} />
     </section>
   );
 }
