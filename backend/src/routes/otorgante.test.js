@@ -204,6 +204,48 @@ describe('otorgante pipeline route', () => {
       source: 'nuxera_case_assignments'
     });
   });
+  it('requires nuxera:admin:update before previewing or writing a case assignment', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/case-assignments`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      body: JSON.stringify({ orderId: 'order-1', slaTier: 'needs-information-48h', slaDueAt: '2026-07-25T18:00:00.000Z' })
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:update' });
+  });
+
+  it('returns a no-write assignment preview while the backend write flag is disabled', async () => {
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/case-assignments`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:update' },
+      body: JSON.stringify({
+        orderId: 'order-1',
+        assignedReviewerId: 'reviewer-1',
+        assignedReviewerRole: 'analista',
+        slaTier: 'needs-information-48h',
+        slaDueAt: '2026-07-25T18:00:00.000Z',
+        reason: 'Validar estados financieros'
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.writeEnabled).toBe(false);
+    expect(body.assignment).toMatchObject({
+      status: 'case-assignment-preview',
+      persisted: false,
+      assignment: {
+        orderId: 'order-1',
+        assignedReviewerId: 'reviewer-1',
+        assignedReviewerRole: 'analista',
+        slaTier: 'needs-information-48h',
+        reason: 'Validar estados financieros',
+        source: 'preview-no-write'
+      }
+    });
+    expect(body.guardrails.join(' ')).toContain('preview/no-write');
+  });
 });
 
 describe('admin-wide grantor cases route', () => {

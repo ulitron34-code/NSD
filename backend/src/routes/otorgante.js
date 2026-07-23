@@ -5,6 +5,118 @@ import { scoreExpedient } from '../services/scoringEngine.js';
 import { logAuditEvent } from '../utils/audit.js';
 
 const router = express.Router();
+const CASE_ASSIGNMENT_WRITE_ENABLED = String(process.env.NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED || 'false').toLowerCase() === 'true';
+const ALLOWED_ASSIGNMENT_ROLES = new Set(['analista', 'agente_interno', 'compliance_officer', 'administrador']);
+const ALLOWED_SLA_TIERS = new Set(['committee-ready-24h', 'needs-information-48h', 'watch-7d']);
+
+function normalizeCaseAssignmentIntent(input = {}) {
+  const orderId = String(input.orderId || input.order_id || '').trim();
+  const assignedReviewerId = input.assignedReviewerId || input.assigned_reviewer_id || null;
+  const assignedReviewerRole = String(input.assignedReviewerRole || input.assigned_reviewer_role || 'analista').trim();
+  const slaTier = String(input.slaTier || input.sla_tier || '').trim();
+  const reason = String(input.reason || '').trim().slice(0, 1000);
+  const slaDueAt = input.slaDueAt || input.sla_due_at || null;
+
+  if (!orderId) throw new Error('orderId es requerido para asignacion NUXERA');
+  if (!ALLOWED_ASSIGNMENT_ROLES.has(assignedReviewerRole)) throw new Error('Rol de revisor NUXERA invalido');
+  if (!ALLOWED_SLA_TIERS.has(slaTier)) throw new Error('SLA NUXERA invalido');
+
+  const dueDate = new Date(slaDueAt);
+  if (!slaDueAt || Number.isNaN(dueDate.getTime())) throw new Error('Fecha SLA NUXERA invalida');
+
+  return {
+    orderId,
+    assignedReviewerId: assignedReviewerId ? String(assignedReviewerId) : null,
+    assignedReviewerRole,
+    slaTier,
+    slaDueAt: dueDate.toISOString(),
+    reason,
+    metadata: input.metadata && typeof input.metadata === 'object' ? input.metadata : {}
+  };
+}
+
+function buildCaseAssignmentPreview(intent, actorUserId) {
+  return {
+    id: 'nuxera-case-assignment-preview',
+    status: 'case-assignment-preview',
+    persisted: false,
+    assignment: {
+      ...intent,
+      status: 'open',
+      createdBy: actorUserId || null,
+      source: 'preview-no-write'
+    },
+    guardrails: [
+      'Case assignment preview only; no Supabase row is inserted by default.',
+      'Persisting assignments requires NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED=true and nuxera:admin:update.',
+      'Reassignment must preserve prior rows for audit instead of deleting history.'
+    ]
+  };
+}
+
+async function queueNuxeraCaseAssignment({ input, actorUserId, req }) {
+  const intent = normalizeCaseAssignmentIntent(input);
+
+  if (!CASE_ASSIGNMENT_WRITE_ENABLED) {
+    return buildCaseAssignmentPreview(intent, actorUserId);
+  }
+
+  const existing = await getActiveCaseAssignmentForOrder(intent.orderId);
+
+  if (existing?.id) {
+    const { error: updateError } = await supabaseAdmin
+      .from('nuxera_case_assignments')
+      .update({ status: 'reassigned', updated_at: new Date().toISOString() })
+      .eq('id', existing.id);
+    if (updateError) throw updateError;
+  }
+
+  const row = {
+    order_id: intent.orderId,
+    assigned_reviewer_id: intent.assignedReviewerId,
+    assigned_reviewer_role: intent.assignedReviewerRole,
+    sla_tier: intent.slaTier,
+    sla_due_at: intent.slaDueAt,
+    status: 'open',
+    reason: intent.reason,
+    metadata: intent.metadata,
+    created_by: actorUserId || null
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from('nuxera_case_assignments')
+    .insert([row])
+    .select('id, order_id, assigned_reviewer_id, assigned_reviewer_role, sla_tier, sla_due_at, status, reason, updated_at')
+    .single();
+  if (error) throw error;
+
+  await logAuditEvent({
+    userId: actorUserId || null,
+    action: existing?.id ? 'nuxera_case_assignment_reassigned' : 'nuxera_case_assignment_created',
+    entityType: 'nuxera_case_assignments',
+    entityId: data.id,
+    orderId: intent.orderId,
+    req,
+    complianceRelevant: true,
+    metadata: {
+      assignedReviewerRole: intent.assignedReviewerRole,
+      slaTier: intent.slaTier,
+      priorAssignmentId: existing?.id || null
+    }
+  });
+
+  return {
+    id: data.id,
+    status: existing?.id ? 'case-assignment-reassigned' : 'case-assignment-created',
+    persisted: true,
+    assignment: mapCaseAssignmentRow(data),
+    guardrails: [
+      'Assignment persisted only because backend write flag is enabled.',
+      'Prior active assignment is marked reassigned before inserting the new open row.',
+      'Audit metadata is recorded without exposing sensitive document contents.'
+    ]
+  };
+}
 
 const ALLOWED_INTEREST_STATUSES = new Set([
   'interested',
@@ -321,6 +433,28 @@ router.get('/nuxera/admin/grantor-cases', authMiddleware, requirePermission('nux
   }
 });
 
+router.post('/nuxera/admin/case-assignments', authMiddleware, requirePermission('nuxera:admin:update'), async (req, res) => {
+  try {
+    const assignment = await queueNuxeraCaseAssignment({
+      input: req.body?.assignment || req.body,
+      actorUserId: req.userId,
+      req
+    });
+
+    res.json({
+      workspaceRole: 'admin',
+      assignment,
+      writeEnabled: CASE_ASSIGNMENT_WRITE_ENABLED,
+      guardrails: [
+        'Admin case assignment endpoint requires nuxera:admin:update.',
+        'Default mode is preview/no-write until NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED=true.',
+        'No credit decision, data-room permission change or notification send is performed.'
+      ]
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 router.post('/otorgante/interests', authMiddleware, requirePermission('funder:interest:create'), async (req, res) => {
   try {
     const { orderId, status = 'interested', notes = '' } = req.body || {};

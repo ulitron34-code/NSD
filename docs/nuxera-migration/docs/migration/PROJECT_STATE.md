@@ -1850,3 +1850,6 @@ Commit scope: convert the `nuxera_case_assignments` draft from documentation-onl
 Frontend: `src/data/otorgantePipeline.js` preserves `entry.assignment`, and `src/nuxera/grantor/caseQueue.js` uses real `slaTier`, `slaDueAt`, reviewer role/id, reason and status when present. Without a real assignment row, the UI keeps the existing static policy labels (`24h`/`48h`/`7d`, `Analista senior`/`Relacion solicitante`/`Monitoreo`).
 
 Guardrails: no SQL was applied; no assignment create/update/reassign route was added; no service-role write path was exposed. Tests added in `backend/src/routes/otorgante.test.js` and `src/tests/nuxeraExperience.test.js` cover the real-assignment read path and fallback behavior.
+## Controlled case assignment queue endpoint - 2026-07-23
+
+Added `POST /api/nuxera/admin/case-assignments` behind `nuxera:admin:update` and `NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED`. Default mode is preview/no-write: it validates `orderId`, reviewer role, SLA tier and SLA due date, then returns the assignment intent without inserting a row. When the backend flag is explicitly enabled in a controlled environment, the route will mark the existing open assignment as `reassigned`, insert the new open assignment row, and record a metadata-only audit event. No SQL was applied and no production flag was enabled in this commit.
