@@ -27,7 +27,7 @@ import { NUXERA_SECTION_TYPES, resolveNuxeraSection } from "../nuxera/sections/s
 import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpedient, getStrategyActionPlan, getStrategyDecisionPackage, getStrategyWorkspace } from "../nuxera/strategy/strategyWorkspace";
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
 import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraAssignmentNotificationIntents, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationDeliveryBatchResponse, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse } from "../nuxera/communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse, normalizeNuxeraConversationTurnResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
 
 describe("NUXERA admin operational snapshot", () => {
@@ -1455,6 +1455,7 @@ describe("NUXERA notification and conversation operating model", () => {
         status: "outbox-contract-ready-delivery-disabled",
         table: "nuxera_notification_outbox",
         deliveryEnabled: false,
+        emailDeliveryEnabled: false,
         supportedEvents: ["grantor-information-response"],
         supportedChannels: ["in_app", "email", "whatsapp"],
         statuses: ["preview", "queued", "sent", "failed", "suppressed"],
@@ -1466,6 +1467,7 @@ describe("NUXERA notification and conversation operating model", () => {
     const merged = mergeNotificationCatalogWithOutboxReadiness(getNuxeraNotificationCatalog(), outbox);
 
     expect(outbox.source).toBe("remote-delivery-disabled");
+    expect(outbox.emailDeliveryEnabled).toBe(false);
     expect(merged.summary).toMatchObject({
       automatedDeliveryEnabled: false,
       outboxReady: true,
@@ -1491,6 +1493,36 @@ describe("NUXERA notification and conversation operating model", () => {
     const missing = normalizeNuxeraNotificationOutboxListResponse(null);
     expect(missing.entries).toEqual([]);
     expect(missing.error).toBe("nuxera-notification-outbox-list-missing");
+  });
+
+  it("normalizes manual notification delivery batch responses as gated admin actions", () => {
+    const batch = normalizeNuxeraNotificationDeliveryBatchResponse({
+      batch: {
+        status: "email-delivery-disabled-dry-run",
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        suppressed: 0,
+        deliveryEnabled: true,
+        emailDeliveryEnabled: false,
+        results: [],
+        guardrails: ["Email adapter disabled; no outbox row was read or updated."],
+      },
+      guardrails: ["No cron or automatic delivery is triggered by this endpoint."],
+    });
+
+    expect(batch).toMatchObject({
+      source: "remote",
+      status: "email-delivery-disabled-dry-run",
+      deliveryEnabled: true,
+      emailDeliveryEnabled: false,
+      processed: 0,
+      sent: 0,
+    });
+    expect(batch.guardrails.join(" ")).toContain("No cron");
+
+    const missing = normalizeNuxeraNotificationDeliveryBatchResponse(null);
+    expect(missing.error).toBe("nuxera-notification-delivery-batch-missing");
   });
 
   it("normalizes a real conversation turn response without inventing an answer", () => {

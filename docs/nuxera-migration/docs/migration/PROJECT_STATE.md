@@ -1890,3 +1890,25 @@ Guardrails: no env var was enabled locally, in Render or in Vercel; no SQL was a
 Added `POST /api/nuxera/admin/notification-delivery-batch` behind `nuxera:admin:update`. The route executes `processNuxeraNotificationDeliveryBatch` manually, passes `actorUserId`, `channels` and `maxBatchSize`, and derives delivery state only from backend configuration via `isNuxeraNotificationDeliveryEnabled`; it does not trust client-supplied `deliveryEnabled` or `emailDeliveryEnabled`. No cron, scheduler or automatic worker was added.
 
 Added `NUXERA_NOTIFICATION_DELIVERY_RUNBOOK.md` covering required gates, preflight, manual execution, post-run verification, rollback and explicitly-not-implemented channels. Also registered the endpoint in `NUXERA_PERSISTENCE_CONTRACTS.md`. Tests cover permission denial and the no-client-flag behavior.
+
+## NUXERA admin notification delivery panel update - 2026-07-23
+
+Added the first admin-facing control for the protected notification delivery worker.
+
+Changed runtime surface:
+- Added frontend API binding for `POST /api/nuxera/admin/notification-delivery-batch`.
+- Added a notification delivery batch adapter/hook that normalizes dry-run, disabled and processed batch responses without inventing sends.
+- Added an Admin communications card for `Batch manual`, showing sent/processed/failure/suppression counters and invoking only the protected admin endpoint.
+- Surfaced `emailDeliveryEnabled` in notification outbox readiness so the UI separates general delivery readiness from the email worker gate.
+- Kept delivery controlled by backend flags; the UI cannot enable delivery or bypass server guardrails.
+
+Validation:
+- `node --check src/nuxera/communications/notificationBackendAdapter.js`: passed.
+- `node --check backend/src/services/nuxeraNotificationOutboxService.js`: passed.
+- `git diff --check`: passed.
+- Targeted ESLint on changed frontend files: passed; backend service is ignored by root ESLint config.
+- `vitest run src/tests/nuxeraExperience.test.js`: passed, 1 file / 121 tests, elevated because sandboxed Vite startup hit `spawn EPERM`.
+- `vite build`: passed elevated because sandboxed Vite/Rolldown can hit `spawn EPERM` on Windows.
+
+Next recommended task:
+- Add an admin audit/history view for delivery batch attempts and suppression reasons, then wire a read-only operational health summary for notification errors before considering any scheduled worker.

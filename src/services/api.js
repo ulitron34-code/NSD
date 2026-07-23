@@ -285,6 +285,8 @@ export const nuxeraNotificationOutboxAPI = {
     api.post('/nuxera/admin/notification-outbox-dry-run', payload),
   queue: (payload = {}) =>
     api.post('/nuxera/admin/notification-outbox', payload),
+  runDeliveryBatch: (payload = {}) =>
+    api.post('/nuxera/admin/notification-delivery-batch', payload),
   list: (params = {}) =>
     api.get('/nuxera/admin/notification-outbox', { params })
 };

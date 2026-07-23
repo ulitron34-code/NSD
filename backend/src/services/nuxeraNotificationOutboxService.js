@@ -439,6 +439,7 @@ export function getNuxeraNotificationOutboxReadiness() {
     status: "outbox-contract-ready-delivery-disabled",
     table: "nuxera_notification_outbox",
     deliveryEnabled: false,
+    emailDeliveryEnabled: isEmailDeliveryEnabled(),
     deliveryWorkerEnabled: worker.enabled,
     workerMode: worker.mode,
     workerGuardrails: worker.guardrails,

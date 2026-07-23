@@ -17,7 +17,7 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxList, useNotificationOutboxReadiness } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 
@@ -662,6 +662,7 @@ function AdminOperationsHome({ sectionLabel }) {
   );
   const notificationDryRun = useNotificationDryRun({ enabled: isNuxeraExperienceEnabled(), intents: notificationDryRunIntents, language });
   const notificationOutboxList = useNotificationOutboxList({ enabled: isNuxeraExperienceEnabled(), limit: 10 });
+  const notificationDeliveryBatch = useNotificationDeliveryBatch({ enabled: isNuxeraExperienceEnabled(), maxBatchSize: 1, channels: ["email"] });
   const aiProviderPolicy = useAiProviderPolicy({ enabled: isNuxeraExperienceEnabled(), language });
   const adminGrantorCases = useAdminGrantorCases({ enabled: isNuxeraExperienceEnabled(), language });
 
@@ -1268,6 +1269,7 @@ function AdminOperationsHome({ sectionLabel }) {
             <span>{L("Delivery", "Delivery")}</span>
             <strong>{communicationModel.summary.automatedDeliveryEnabled ? L("Activo", "Enabled") : L("No activo", "Disabled")}</strong>
             <p>{L("El agente redacta o resume; el envio real requiere outbox, auditoria y reglas anti-duplicado.", "The agent drafts or summarizes; real delivery requires outbox, audit and dedupe rules.")}</p>
+            <small>{communicationModel.outbox.emailDeliveryEnabled ? L("Email worker activo", "Email worker enabled") : L("Email worker apagado", "Email worker disabled")}</small>
           </article>
           <article>
             <span>{L("Chat runtime", "Chat runtime")}</span>
@@ -1286,6 +1288,15 @@ function AdminOperationsHome({ sectionLabel }) {
             <strong>{notificationDryRun.summary.accepted}/{notificationDryRun.summary.accepted + notificationDryRun.summary.rejected}</strong>
             <p>{L("Previsualiza notificaciones y duplicados sin insertar filas ni enviar mensajes.", "Previews notifications and duplicates without inserting rows or sending messages.")}</p>
             <small>{notificationDryRun.loading ? L("Ejecutando dry-run...", "Running dry-run...") : notificationDryRun.status}</small>
+          </article>
+          <article>
+            <span>{L("Batch manual", "Manual batch")}</span>
+            <strong>{notificationDeliveryBatch.sent}/{notificationDeliveryBatch.processed}</strong>
+            <p>{L("Prueba el endpoint administrativo; si las banderas backend estan apagadas solo devuelve dry-run.", "Tests the admin endpoint; when backend flags are off it only returns dry-run.")}</p>
+            <button type="button" onClick={() => notificationDeliveryBatch.runBatch()} disabled={notificationDeliveryBatch.loading || !isNuxeraExperienceEnabled()}>
+              {notificationDeliveryBatch.loading ? L("Ejecutando...", "Running...") : L("Probar batch", "Run batch")}
+            </button>
+            <small>{notificationDeliveryBatch.error || `${notificationDeliveryBatch.status} / ${notificationDeliveryBatch.failed} fallidos / ${notificationDeliveryBatch.suppressed} suprimidos`}</small>
           </article>
         </div>
         <div>

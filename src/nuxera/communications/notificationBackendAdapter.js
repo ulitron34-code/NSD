@@ -9,6 +9,7 @@ const LOCAL_OUTBOX_READINESS = Object.freeze({
   status: "outbox-readiness-unverified",
   table: "nuxera_notification_outbox",
   deliveryEnabled: false,
+  emailDeliveryEnabled: false,
   loading: false,
   error: null,
   supportedEvents: [],
@@ -48,6 +49,7 @@ export function normalizeNuxeraNotificationOutboxReadinessResponse(response, lan
     status: payload.status || "outbox-contract-ready-delivery-disabled",
     table: payload.table || LOCAL_OUTBOX_READINESS.table,
     deliveryEnabled: Boolean(payload.deliveryEnabled),
+    emailDeliveryEnabled: Boolean(payload.emailDeliveryEnabled),
     loading: false,
     error: null,
     supportedEvents: asArray(payload.supportedEvents),
@@ -169,6 +171,51 @@ const LOCAL_OUTBOX_LIST = Object.freeze({
   guardrails: ["Local fallback; no confirma filas persistidas de outbox."],
 });
 
+const LOCAL_DELIVERY_BATCH = Object.freeze({
+  source: "local-fallback",
+  status: "delivery-batch-idle",
+  loading: false,
+  error: null,
+  deliveryEnabled: false,
+  emailDeliveryEnabled: false,
+  processed: 0,
+  sent: 0,
+  failed: 0,
+  suppressed: 0,
+  results: [],
+  guardrails: ["Local fallback; no ejecuta batch ni envia mensajes."],
+});
+
+export function normalizeNuxeraNotificationDeliveryBatchResponse(response) {
+  const payload = response?.batch || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_DELIVERY_BATCH,
+      error: "nuxera-notification-delivery-batch-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_DELIVERY_BATCH,
+    ...payload,
+    source: "remote",
+    loading: false,
+    error: null,
+    deliveryEnabled: Boolean(payload.deliveryEnabled),
+    emailDeliveryEnabled: Boolean(payload.emailDeliveryEnabled),
+    processed: Number(payload.processed || 0),
+    sent: Number(payload.sent || 0),
+    failed: Number(payload.failed || 0),
+    suppressed: Number(payload.suppressed || 0),
+    results: asArray(payload.results),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
 export function normalizeNuxeraNotificationOutboxListResponse(response) {
   const payload = response?.outbox || response || null;
 
@@ -224,6 +271,41 @@ export function useNotificationOutboxList({ enabled = true, status, audience, or
   }, [enabled, status, audience, orderId, limit]);
 
   return state;
+}
+
+export function useNotificationDeliveryBatch({ enabled = true, maxBatchSize = 1, channels = ["email"] } = {}) {
+  const [state, setState] = useState(LOCAL_DELIVERY_BATCH);
+
+  const runBatch = async () => {
+    if (!enabled) {
+      const disabled = {
+        ...LOCAL_DELIVERY_BATCH,
+        error: "nuxera-experience-disabled",
+      };
+      setState(disabled);
+      return disabled;
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+
+    try {
+      const { data } = await nuxeraNotificationOutboxAPI.runDeliveryBatch({ maxBatchSize, channels });
+      const normalized = normalizeNuxeraNotificationDeliveryBatchResponse(data);
+      setState(normalized);
+      return normalized;
+    } catch (error) {
+      warn("NUXERA", "Notification delivery batch unavailable", error?.message || error);
+      const failed = {
+        ...LOCAL_DELIVERY_BATCH,
+        loading: false,
+        error: error?.response?.data?.code || error?.message || "nuxera-notification-delivery-batch-unavailable",
+      };
+      setState(failed);
+      return failed;
+    }
+  };
+
+  return { ...state, runBatch };
 }
 
 export function useNotificationDryRun({ enabled = true, intents = [], language = "es" } = {}) {
