@@ -23,7 +23,8 @@ what `aiJsonProvider.js`, `nuxeraNotificationOutboxService.js` and
 | Variable | Default | Effect |
 | --- | --- | --- |
 | `NUXERA_CONVERSATION_RUNTIME_ENABLED` | `false` | Read directly in `backend/src/routes/nuxera.js` for both `POST /nuxera/conversation/preview` and `POST /nuxera/conversation/turn`. When not `true`, the conversation agent envelope is blocked before any LLM provider is called (`nuxeraConversationAgentReadinessService.js`). When `true`, `/conversation/turn` still requires server-side authorization (real evidence-link lookup, not a client-supplied flag) before calling `generateJsonWithFallback`. |
-| `NUXERA_NOTIFICATION_DELIVERY_ENABLED` | `false` | Read by `nuxeraNotificationOutboxService.js` (`isNuxeraNotificationDeliveryEnabled`). Gates whether `POST /nuxera/admin/notification-outbox` actually inserts a row into `nuxera_notification_outbox` (bypassing RLS via `supabaseAdmin`/service role) or only returns an unpersisted preview. The route requires `nuxera:admin:update`; read-only admin permission is enough only for dry-run/readiness/listing. It does **not** gate a send worker: `processNuxeraNotificationDeliveryBatch` always returns `delivery-worker-not-implemented` regardless of this flag, because no email/WhatsApp delivery adapter exists yet. |
+| `NUXERA_NOTIFICATION_DELIVERY_ENABLED` | `false` | Read by `nuxeraNotificationOutboxService.js` (`isNuxeraNotificationDeliveryEnabled`). Gates whether `POST /nuxera/admin/notification-outbox` actually inserts a row into `nuxera_notification_outbox` (bypassing RLS via `supabaseAdmin`/service role) or only returns an unpersisted preview. It also gates whether `processNuxeraNotificationDeliveryBatch` may read queued outbox rows. If not `true`, the worker returns `delivery-disabled-dry-run` and performs no reads, updates or sends. |
+| `NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED` | `false` | Second delivery gate for the email adapter inside `processNuxeraNotificationDeliveryBatch`. Even when outbox delivery is enabled, queued rows are not read or updated unless this is also `true`. When both gates are true, only rows with `channels` containing `email` and `recipient_email` are sent via `emailService.sendEmail`; bodies are generated from `subject`/`body_preview` only, with no attachments or evidence content. |
 | `NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED` | `false` | Read by `backend/src/routes/otorgante.js`. Gates whether `POST /nuxera/admin/case-assignments` actually reassigns the prior open row and inserts a new `nuxera_case_assignments` row, or only returns a no-write preview. The route requires `nuxera:admin:update`; it never approves financing, changes data-room permissions or sends notifications. |
 
 ## AI provider keys (`backend/.env.example`, shared by `aiJsonProvider.js` / `aiEngine.js`)
@@ -52,12 +53,12 @@ are read only by the manual operator script
 `backend/scripts/verify-nuxera-http-readiness.js`; they are not part of the
 running application and must never be set in Render/Vercel.
 
-## Production status as of 2026-07-22
+## Production status as of 2026-07-23
 
-Neither `NUXERA_CONVERSATION_RUNTIME_ENABLED` nor
-`NUXERA_NOTIFICATION_DELIVERY_ENABLED` is set in Render production or preview
-environments. No AI provider key is confirmed present in Render either (see
-`project_backend_ai_infraestructura` operator notes). Until an operator sets
-these explicitly in a controlled environment, both the conversation runtime
-and the notification outbox persistence path stay in their safe/disabled
-default state described above.
+`NUXERA_CONVERSATION_RUNTIME_ENABLED`, `NUXERA_NOTIFICATION_DELIVERY_ENABLED`
+and `NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED` are not confirmed enabled in
+Render production or preview environments. No AI provider key is confirmed
+present in Render either (see `project_backend_ai_infraestructura` operator
+notes). Until an operator sets these explicitly in a controlled environment,
+the conversation runtime, notification outbox persistence path and email
+delivery worker stay in their safe/disabled default state described above.

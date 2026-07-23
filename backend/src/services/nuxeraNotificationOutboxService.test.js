@@ -4,7 +4,8 @@ const state = {
   inserted: null,
   auditEvents: [],
   existingByDedupeKey: null,
-  listRows: []
+  listRows: [],
+  updates: []
 };
 
 vi.mock('../config/supabase.js', () => {
@@ -12,6 +13,10 @@ vi.mock('../config/supabase.js', () => {
     const builder = {
       insert: vi.fn((rows) => {
         state.inserted = { table, row: rows[0] };
+        return builder;
+      }),
+      update: vi.fn((patch) => {
+        state.updates.push({ table, patch });
         return builder;
       }),
       select: vi.fn(() => builder),
@@ -46,6 +51,7 @@ import {
   buildNuxeraNotificationOutboxPreview,
   enqueueNuxeraNotificationIntent,
   isNuxeraNotificationDeliveryEnabled,
+  isNuxeraNotificationEmailDeliveryEnabled,
   listNuxeraNotificationOutbox,
   processNuxeraNotificationDeliveryBatch,
   getNuxeraNotificationOutboxReadiness
@@ -57,6 +63,7 @@ describe('nuxeraNotificationOutboxService', () => {
     state.auditEvents = [];
     state.existingByDedupeKey = null;
     state.listRows = [];
+    state.updates = [];
   });
 
   it('builds a delivery-disabled preview without writing to Supabase', async () => {
@@ -184,6 +191,56 @@ describe('nuxeraNotificationOutboxService', () => {
     expect(state.auditEvents).toEqual([]);
   });
 
+  it("does not read or update outbox rows when email delivery is not explicitly enabled", async () => {
+    state.listRows = [
+      { id: 'outbox-email-1', event_id: NUXERA_NOTIFICATION_EVENTS.APPLICANT_MISSING_EVIDENCE, audience: 'applicant', recipient_role: 'applicant', recipient_email: 'applicant@example.com', order_id: 'order-1', subject: 'Falta evidencia', body_preview: 'Carga documento faltante', channels: ['email'], priority: 'normal', status: 'queued', dedupe_key: 'k-email-1', attempts: 0, metadata: {} }
+    ];
+
+    const result = await processNuxeraNotificationDeliveryBatch({ deliveryEnabled: true });
+
+    expect(result).toMatchObject({
+      status: "email-delivery-disabled-dry-run",
+      processed: 0,
+      sent: 0,
+      failed: 0,
+      suppressed: 0,
+      deliveryEnabled: true,
+      emailDeliveryEnabled: false
+    });
+    expect(result.reason).toContain("NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED");
+    expect(state.updates).toEqual([]);
+    expect(state.auditEvents).toEqual([]);
+  });
+
+  it("delivers queued email notifications only when both delivery gates are enabled", async () => {
+    const sent = [];
+    state.listRows = [
+      { id: 'outbox-email-1', event_id: NUXERA_NOTIFICATION_EVENTS.APPLICANT_MISSING_EVIDENCE, audience: 'applicant', recipient_role: 'applicant', recipient_email: 'applicant@example.com', order_id: 'order-1', subject: 'Falta evidencia', body_preview: 'Carga documento faltante', channels: ['email'], priority: 'normal', status: 'queued', dedupe_key: 'k-email-1', attempts: 0, metadata: {} }
+    ];
+
+    const result = await processNuxeraNotificationDeliveryBatch({
+      deliveryEnabled: true,
+      emailDeliveryEnabled: true,
+      actorUserId: 'admin-1',
+      emailSender: vi.fn(async (payload) => {
+        sent.push(payload);
+        return { id: 'resend-message-1' };
+      })
+    });
+
+    expect(result).toMatchObject({ status: "delivery-worker-completed", processed: 1, sent: 1, failed: 0, suppressed: 0 });
+    expect(sent[0]).toMatchObject({ to: 'applicant@example.com', subject: 'Falta evidencia' });
+    expect(sent[0].html).toContain('NUXERA');
+    expect(sent[0].html).not.toContain('attachment');
+    expect(state.updates[0]).toMatchObject({ table: 'nuxera_notification_outbox' });
+    expect(state.updates[0].patch).toMatchObject({ status: 'sent', attempts: 1 });
+    expect(state.auditEvents[0]).toMatchObject({
+      action: 'nuxera_notification_email_sent',
+      entityType: 'nuxera_notification_outbox',
+      entityId: 'outbox-email-1',
+      orderId: 'order-1'
+    });
+  });
   it('builds a notification dry-run batch with duplicate suppression and no writes', () => {
     const result = buildNuxeraNotificationDryRunBatch([
       {
@@ -242,11 +299,17 @@ describe('nuxeraNotificationOutboxService', () => {
 
   it('reads the delivery-enabled flag from environment', () => {
     const original = process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED;
+    const originalEmail = process.env.NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED;
     process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED = 'true';
+    process.env.NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED = 'true';
     expect(isNuxeraNotificationDeliveryEnabled()).toBe(true);
+    expect(isNuxeraNotificationEmailDeliveryEnabled()).toBe(true);
     process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED = 'false';
+    process.env.NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED = 'false';
     expect(isNuxeraNotificationDeliveryEnabled()).toBe(false);
+    expect(isNuxeraNotificationEmailDeliveryEnabled()).toBe(false);
     process.env.NUXERA_NOTIFICATION_DELIVERY_ENABLED = original;
+    process.env.NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED = originalEmail;
   });
 
   it('lists persisted outbox rows read-only without sending anything', async () => {

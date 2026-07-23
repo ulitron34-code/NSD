@@ -1876,3 +1876,11 @@ Added a read-only handoff preparation layer between `Gestion de expedientes` and
 Frontend: the grantor `Gestion de expedientes` view now shows a `Paquete de envio a Mesa` panel for the active case, with live criteria cards and a CTA that becomes `Preparar Mesa` while blockers remain or `Enviar a Mesa` once the case is ready. This makes the operational tab materially different from Mesa: Gestion prepares and clears blockers; Mesa keeps analysis, memo, evidence questions and human review. Reviewer role labels were also expanded for `grantor_analyst`, `grantor_senior`, `compliance_reviewer`, and `risk_committee` so real assignments do not leak technical ids in the UI.
 
 Guardrails: no backend write route was added, no SQL was applied, no status mutation occurs, no notification/email is sent, and the handoff remains a local read-only preview until the controlled write path is explicitly designed and approved.
+
+## Controlled NUXERA email notification worker - 2026-07-23
+
+Implemented the first real delivery adapter for `nuxera_notification_outbox` without enabling production sends. `processNuxeraNotificationDeliveryBatch` now has two independent backend gates: `NUXERA_NOTIFICATION_DELIVERY_ENABLED=true` is required before any queued outbox rows are read, and `NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED=true` is required before the email adapter can process rows. If either gate is off, the worker returns a dry-run status and performs no Supabase reads, updates, audit inserts or provider calls.
+
+When both gates are explicitly enabled, the worker reads queued rows, processes only entries that request the `email` channel and have `recipient_email`, renders a minimal NUXERA email from `subject` and `body_preview`, calls `emailService.sendEmail`/Resend, updates the outbox row to `sent`, `failed` or `suppressed`, increments attempts, and writes metadata-only audit events for sent/failed/suppressed transitions. Unsupported channels remain gated; WhatsApp and in-app delivery adapters were not implemented in this block.
+
+Guardrails: no env var was enabled locally, in Render or in Vercel; no SQL was applied; no cron/route was added to trigger the worker automatically; email content excludes evidence, attachments and hidden file context. The worker exists as controlled backend plumbing for a later operator-approved runbook.

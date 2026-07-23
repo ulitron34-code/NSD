@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { logAuditEvent } from '../utils/audit.js';
+import { sendEmail } from './emailService.js';
 
 export const NUXERA_NOTIFICATION_EVENTS = Object.freeze({
   APPLICANT_MISSING_EVIDENCE: 'applicant-missing-evidence',
@@ -30,7 +31,16 @@ const EVENT_AUDIENCE = Object.freeze({
 const ALLOWED_CHANNELS = new Set(['in_app', 'email', 'whatsapp']);
 const ALLOWED_STATUSES = new Set(['preview', 'queued', 'sent', 'failed', 'suppressed']);
 const DELIVERY_DISABLED_REASON = "NUXERA_NOTIFICATION_DELIVERY_ENABLED is not true";
+const EMAIL_DELIVERY_DISABLED_REASON = "NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED is not true";
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 function normalizeString(value, maxLength = 240) {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
@@ -50,8 +60,16 @@ function isDeliveryEnabled(explicitValue = process.env.NUXERA_NOTIFICATION_DELIV
   return String(explicitValue || '').trim().toLowerCase() === 'true';
 }
 
+function isEmailDeliveryEnabled(explicitValue = process.env.NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED) {
+  return String(explicitValue || '').trim().toLowerCase() === 'true';
+}
+
 export function isNuxeraNotificationDeliveryEnabled() {
   return isDeliveryEnabled();
+}
+
+export function isNuxeraNotificationEmailDeliveryEnabled() {
+  return isEmailDeliveryEnabled();
 }
 
 function getAudience(eventId) {
@@ -240,8 +258,68 @@ export function buildNuxeraNotificationDeliveryPlan(options = {}) {
   };
 }
 
+function buildNuxeraNotificationEmailHtml(row) {
+  const body = escapeHtml(normalizeString(row.body_preview, 1200) || 'Tienes una actualizacion pendiente en NUXERA.');
+  const subject = escapeHtml(normalizeString(row.subject, 180) || 'NUXERA notification');
+  const orderLine = row.order_id ? `<p style="margin:0 0 12px;color:#506070;font-size:13px;">Expediente: <strong>${escapeHtml(row.order_id)}</strong></p>` : '';
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:Arial,sans-serif;background:#F6F7F9;margin:0;padding:24px;">
+  <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #D9DEE7;border-radius:10px;overflow:hidden;">
+    <div style="background:#172B45;padding:22px 28px;"><h1 style="color:#fff;margin:0;font-size:20px;">NUXERA</h1><p style="color:#D8B25A;margin:6px 0 0;font-size:13px;">Notificacion operativa</p></div>
+    <div style="padding:26px 28px;">
+      ${orderLine}
+      <h2 style="margin:0 0 12px;color:#172B45;font-size:18px;">${subject}</h2>
+      <p style="margin:0;color:#344054;font-size:14px;line-height:1.55;">${body}</p>
+      <div style="margin-top:20px;padding:14px;background:#F8FAFC;border-left:4px solid #D8B25A;border-radius:6px;">
+        <p style="margin:0;color:#667085;font-size:12px;line-height:1.45;">Este mensaje no incluye evidencia sensible ni adjuntos. Revisa NUXERA para consultar el expediente con tus permisos vigentes.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+async function updateOutboxDeliveryStatus(row, status, metadata = {}) {
+  const attempts = Number(row.attempts || 0) + 1;
+  const patch = {
+    status,
+    attempts,
+    updated_at: new Date().toISOString(),
+    metadata: {
+      ...(row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? row.metadata : {}),
+      delivery: metadata
+    }
+  };
+
+  if (status === 'sent') patch.sent_at = patch.updated_at;
+
+  const { error } = await supabaseAdmin
+    .from('nuxera_notification_outbox')
+    .update(patch)
+    .eq('id', row.id);
+
+  if (error) throw error;
+  return patch;
+}
+
+async function fetchQueuedNotificationOutboxRows(limit) {
+  const { data, error } = await supabaseAdmin
+    .from('nuxera_notification_outbox')
+    .select('id, event_id, audience, recipient_role, recipient_user_id, recipient_email, order_id, subject, body_preview, channels, priority, status, dedupe_key, attempts, metadata, created_at, updated_at, sent_at')
+    .eq('status', 'queued')
+    .order('created_at', { ascending: true })
+    .limit(limit);
+
+  if (error) throw error;
+  return data || [];
+}
+
 export async function processNuxeraNotificationDeliveryBatch(options = {}) {
   const plan = buildNuxeraNotificationDeliveryPlan(options);
+  const emailDeliveryEnabled = isEmailDeliveryEnabled(options.emailDeliveryEnabled);
+  const emailSender = options.emailSender || sendEmail;
 
   if (!plan.enabled) {
     return {
@@ -251,23 +329,109 @@ export async function processNuxeraNotificationDeliveryBatch(options = {}) {
       failed: 0,
       suppressed: 0,
       deliveryEnabled: false,
+      emailDeliveryEnabled: false,
       reason: DELIVERY_DISABLED_REASON,
       guardrails: plan.guardrails
     };
   }
 
+  if (!emailDeliveryEnabled) {
+    return {
+      status: "email-delivery-disabled-dry-run",
+      processed: 0,
+      sent: 0,
+      failed: 0,
+      suppressed: 0,
+      deliveryEnabled: true,
+      emailDeliveryEnabled: false,
+      reason: EMAIL_DELIVERY_DISABLED_REASON,
+      guardrails: [
+        ...plan.guardrails,
+        "Email adapter disabled; no outbox row was read or updated."
+      ]
+    };
+  }
+
+  const rows = await fetchQueuedNotificationOutboxRows(plan.maxBatchSize);
+  const summary = { processed: 0, sent: 0, failed: 0, suppressed: 0 };
+  const results = [];
+
+  for (const row of rows) {
+    summary.processed += 1;
+    const channels = normalizeChannels(row.channels);
+    const hasEmailChannel = channels.includes('email');
+
+    if (!hasEmailChannel || !row.recipient_email) {
+      const reason = !hasEmailChannel ? 'email-channel-not-requested' : 'recipient-email-missing';
+      await updateOutboxDeliveryStatus(row, 'suppressed', { channel: 'email', reason });
+      await logAuditEvent({
+        userId: options.actorUserId || null,
+        action: 'nuxera_notification_delivery_suppressed',
+        entityType: 'nuxera_notification_outbox',
+        entityId: row.id,
+        orderId: row.order_id || null,
+        req: options.req || null,
+        complianceRelevant: true,
+        metadata: { eventId: row.event_id, audience: row.audience, reason }
+      });
+      summary.suppressed += 1;
+      results.push({ id: row.id, status: 'suppressed', reason });
+      continue;
+    }
+
+    try {
+      const providerResult = await emailSender({
+        to: row.recipient_email,
+        subject: row.subject || 'NUXERA notification',
+        html: buildNuxeraNotificationEmailHtml(row)
+      });
+      await updateOutboxDeliveryStatus(row, 'sent', {
+        channel: 'email',
+        provider: providerResult?.simulated ? 'resend-simulated' : 'resend',
+        providerMessageId: providerResult?.id || providerResult?.data?.id || null
+      });
+      await logAuditEvent({
+        userId: options.actorUserId || null,
+        action: 'nuxera_notification_email_sent',
+        entityType: 'nuxera_notification_outbox',
+        entityId: row.id,
+        orderId: row.order_id || null,
+        req: options.req || null,
+        complianceRelevant: true,
+        metadata: { eventId: row.event_id, audience: row.audience, channel: 'email' }
+      });
+      summary.sent += 1;
+      results.push({ id: row.id, status: 'sent' });
+    } catch (error) {
+      await updateOutboxDeliveryStatus(row, 'failed', { channel: 'email', reason: error.message });
+      await logAuditEvent({
+        userId: options.actorUserId || null,
+        action: 'nuxera_notification_email_failed',
+        entityType: 'nuxera_notification_outbox',
+        entityId: row.id,
+        orderId: row.order_id || null,
+        req: options.req || null,
+        complianceRelevant: true,
+        metadata: { eventId: row.event_id, audience: row.audience, channel: 'email', reason: error.message }
+      });
+      summary.failed += 1;
+      results.push({ id: row.id, status: 'failed', reason: error.message });
+    }
+  }
+
   return {
-    status: "delivery-worker-not-implemented",
-    processed: 0,
-    sent: 0,
-    failed: 0,
-    suppressed: 0,
+    status: "delivery-worker-completed",
+    ...summary,
     deliveryEnabled: true,
-    reason: "Delivery adapters require separate approved implementation.",
-    guardrails: plan.guardrails
+    emailDeliveryEnabled: true,
+    results,
+    guardrails: [
+      ...plan.guardrails,
+      "Only queued rows with the email channel and recipient_email are delivered.",
+      "Email body uses subject/body_preview only; no evidence, attachments or hidden file content are included."
+    ]
   };
 }
-
 export function getNuxeraNotificationOutboxReadiness() {
   const worker = buildNuxeraNotificationDeliveryPlan();
 
@@ -284,10 +448,11 @@ export function getNuxeraNotificationOutboxReadiness() {
     requiredBackendSteps: [
       "Aplicar SQL nuxera_notification_outbox en entorno controlado.",
       "Verificar RLS/readiness antes de habilitar writes.",
-      "Conectar worker de entrega con RESEND_API_KEY/Twilio solo despues de aprobacion."
+      "Configurar RESEND_API_KEY, NUXERA_NOTIFICATION_EMAIL_DELIVERY_ENABLED y un runbook/cron solo despues de aprobacion."
     ],
     guardrails: [
       "Readiness solamente; no aplica SQL ni envia mensajes.",
+      "El worker de email permanece apagado hasta habilitar dos banderas backend.",
       "Los correos no deben incluir evidencia sensible ni adjuntos.",
       "Todo cambio de estado debe quedar auditable."
     ]
