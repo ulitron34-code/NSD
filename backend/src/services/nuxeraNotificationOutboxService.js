@@ -356,6 +356,51 @@ function buildNuxeraNotificationEmailHtml(row) {
 </html>`;
 }
 
+export function getNuxeraNotificationApprovalPersistenceReadiness() {
+  return {
+    id: 'nuxera-notification-approval-persistence-readiness',
+    status: 'notification-approval-persistence-draft-ready',
+    table: 'nuxera_notification_approvals',
+    sqlDraft: 'backend/sql_migrations_pendientes/2026-07-23_nuxera_notification_approvals.sql',
+    writeEnabled: false,
+    deliveryEnabled: isNuxeraNotificationDeliveryEnabled(),
+    approvalHistoryPersisted: false,
+    requiredColumns: [
+      'order_id',
+      'outbox_id',
+      'event_id',
+      'audience',
+      'recipient_role',
+      'template_id',
+      'approval_status',
+      'approved_by',
+      'approved_at',
+      'delivery_enabled_at_approval',
+      'dedupe_key',
+      'sensitive_content_excluded'
+    ],
+    rlsPolicies: ['owner-read', 'authorized-grantor-read', 'admin-read'],
+    protectedActions: ['approve', 'queue', 'send', 'retry', 'delete'],
+    summary: {
+      tables: 1,
+      policies: 3,
+      writePolicies: 0,
+      destructiveOperations: 0,
+      protectedActions: 5
+    },
+    requiredBackendSteps: [
+      'Run npm run check:nuxera-sql and attach the SQL draft evidence.',
+      'Verify RLS with applicant, authorized grantor and admin identities in non-production.',
+      'Only after approval, wire approveNuxeraNotificationRules to persist ledger rows via service_role.'
+    ],
+    guardrails: [
+      'Readiness only; no SQL is applied and no approval row is written.',
+      'Approval history persistence requires separate SQL/RLS evidence and change approval.',
+      'Chat and agents may explain approval posture but cannot approve, queue or send notifications.'
+    ]
+  };
+}
+
 export function getNuxeraNotificationTemplateCatalog() {
   return {
     id: 'nuxera-notification-template-catalog',

@@ -22,6 +22,7 @@ const serviceCalls = {
   notificationDryRun: [],
   notificationRules: [],
   notificationApprovalPlan: [],
+  notificationApprovalReadiness: [],
   notificationApprove: [],
   notificationTemplates: [],
   notificationQueue: [],
@@ -336,6 +337,17 @@ vi.mock("../services/nuxeraNotificationOutboxService.js", () => ({
     statuses: ["preview", "queued", "sent", "failed", "suppressed"],
     guardrails: ["Read-only notification outbox."]
   })),
+  getNuxeraNotificationApprovalPersistenceReadiness: vi.fn(() => {
+    serviceCalls.notificationApprovalReadiness.push({ called: true });
+    return {
+      status: 'notification-approval-persistence-draft-ready',
+      table: 'nuxera_notification_approvals',
+      writeEnabled: false,
+      approvalHistoryPersisted: false,
+      summary: { tables: 1, policies: 3, writePolicies: 0, destructiveOperations: 0 },
+      guardrails: ['Approval persistence readiness read-only.']
+    };
+  }),
   getNuxeraNotificationOutboxHealth: vi.fn(async (input = {}) => {
     serviceCalls.notificationHealth.push(input);
     return {
@@ -522,6 +534,7 @@ describe('nuxera routes', () => {
     serviceCalls.notificationDryRun = [];
     serviceCalls.notificationRules = [];
     serviceCalls.notificationApprovalPlan = [];
+    serviceCalls.notificationApprovalReadiness = [];
     serviceCalls.notificationApprove = [];
     serviceCalls.notificationTemplates = [];
     serviceCalls.notificationQueue = [];
@@ -1035,6 +1048,22 @@ describe('nuxera routes', () => {
     expect((await plan.json()).approvalPlan).toMatchObject({ status: 'notification-approval-required', summary: { actionable: 1 } });
     expect(serviceCalls.notificationTemplates).toEqual([{ called: true }]);
     expect(serviceCalls.notificationApprovalPlan[0]).toMatchObject({ orderId: 'order-1' });
+  });
+
+  it('returns notification approval persistence readiness without enabling writes', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/notification-approval-readiness`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-approval-readiness`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body.approvalPersistence).toMatchObject({ table: 'nuxera_notification_approvals', writeEnabled: false, summary: { policies: 3, writePolicies: 0 } });
+    expect(body.guardrails.join(' ')).toContain('does not apply SQL');
+    expect(serviceCalls.notificationApprovalReadiness).toEqual([{ called: true }]);
   });
 
   it('approves notification rules through backend gates without sending messages', async () => {

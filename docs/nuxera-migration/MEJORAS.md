@@ -285,3 +285,13 @@ Siguiente gate: sustituir destinatarios operativos de preview por destinatarios 
 - Added controlled approval endpoint: with delivery persistence disabled it returns previews only; with backend gate enabled it queues rows but still does not send.
 - Admin UI now shows templates, actionable approval items and a controlled approval button tied to backend gates.
 - Conversation agent readiness now exposes operational sources (timeline, evidence links, outbox and audit metadata) and can explain notification/SLA plans while blocking approval, queueing and delivery from chat.
+
+## Avance - Notification Approval Persistence Readiness (2026-07-23)
+
+Se agrego el contrato controlado para persistir historial de aprobaciones de notificaciones sin activar writes:
+- Draft SQL `backend/sql_migrations_pendientes/2026-07-23_nuxera_notification_approvals.sql` con RLS de lectura para owner, otorgante autorizado y admin.
+- Checker `npm run check:nuxera-sql` actualizado para validar tabla, indices, 3 policies select y ausencia de insert/update/delete policies.
+- Endpoint admin read-only `GET /api/nuxera/admin/notification-approval-readiness`.
+- UI admin muestra `Historial aprobaciones` junto al plan aprobable: estado SQL draft, tabla, policies y writePolicies=0.
+
+Sigue pendiente antes de produccion: ejecutar SQL solo en non-production, validar RLS con identidades reales, y despues disenar el write path service_role que registre aprobaciones sin enviar mensajes automaticamente.

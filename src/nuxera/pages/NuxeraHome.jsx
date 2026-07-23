@@ -17,7 +17,7 @@ import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState }
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, useNotificationApprovalPlan, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness, useNotificationRulesApproval, useNotificationRulesDryRun, useNotificationTemplateCatalog } from "../communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, useNotificationApprovalPlan, useNotificationApprovalReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness, useNotificationRulesApproval, useNotificationRulesDryRun, useNotificationTemplateCatalog } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
@@ -904,6 +904,7 @@ function AdminOperationsHome({ sectionLabel }) {
   }), []);
   const notificationOutboxReadiness = useNotificationOutboxReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const notificationOutboxHealth = useNotificationOutboxHealth({ enabled: isNuxeraExperienceEnabled(), limit: 100 });
+  const notificationApprovalReadiness = useNotificationApprovalReadiness({ enabled: isNuxeraExperienceEnabled() });
   const conversationAgentReadiness = useConversationAgentReadiness({ enabled: isNuxeraExperienceEnabled(), language });
   const conversationPreview = useConversationPreview({ enabled: isNuxeraExperienceEnabled(), payload: conversationPreviewPayload });
   const caseAssignmentHistory = useCaseAssignmentHistory({ enabled: isNuxeraExperienceEnabled(), limit: 20 });
@@ -1618,6 +1619,12 @@ function AdminOperationsHome({ sectionLabel }) {
               {notificationRulesApproval.loading ? L("Aprobando...", "Approving...") : L("Aprobar controlado", "Controlled approve")}
             </button>
             <small>{notificationRulesApproval.error || (notificationRulesApproval.status + " / " + notificationRulesApproval.summary.persisted + " persistidas / " + notificationRulesApproval.summary.previews + " previews")}</small>
+          </article>
+          <article>
+            <span>{L("Historial aprobaciones", "Approval history")}</span>
+            <strong>{notificationApprovalReadiness.writeEnabled ? L("Write activo", "Write enabled") : L("Draft SQL", "SQL draft")}</strong>
+            <p>{notificationApprovalReadiness.table} / {notificationApprovalReadiness.summary.policies} RLS / {notificationApprovalReadiness.summary.writePolicies} writes.</p>
+            <small>{notificationApprovalReadiness.error || (notificationApprovalReadiness.loading ? L("Cargando readiness aprobaciones...", "Loading approval readiness...") : notificationApprovalReadiness.status)}</small>
           </article>
           <article>
             <span>{L("Batch manual", "Manual batch")}</span>

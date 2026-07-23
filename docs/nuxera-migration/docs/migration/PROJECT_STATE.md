@@ -2067,3 +2067,9 @@ Implemented a controlled bridge from notification dry-run to human-approved queu
 Frontend Admin now surfaces template count, approval-plan actionable counts, rendered approval items and a controlled approval action. Conversation agent readiness now lists operational sources and clarifies that chat can explain SLA/outbox/approval posture but cannot approve, queue or send notifications.
 
 Validation snapshot: targeted frontend ESLint passed, frontend NUXERA Vitest passed (123 tests), backend NUXERA notification/conversation/routes Vitest passed (94 tests).
+
+## Notification approval persistence readiness - 2026-07-23
+
+Added the next controlled notification block: approval history persistence readiness. The new SQL draft `2026-07-23_nuxera_notification_approvals.sql` defines an additive approval ledger with owner/grantor/admin read policies and zero write policies. Backend exposes `GET /api/nuxera/admin/notification-approval-readiness` as read-only, frontend Admin surfaces the status as `Historial aprobaciones`, and tests cover service, route and frontend normalization.
+
+No production SQL was executed, no approval history rows are written, no delivery flags were enabled and no notifications are sent by this block. Next resume point: validate RLS in non-production before wiring service_role ledger inserts.

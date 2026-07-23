@@ -340,3 +340,15 @@ Connected the grantor NUXERA home to the new endpoint the same session:
 Remaining gaps updated 2026-07-22: the real authenticated HTTP test for `GET /api/nuxera/orders/:orderId/grantor-evidence` is now closed in the evidence template, including deployed-preview verification. `nuxera_review_artifacts` (grantor memo persistence) and new write paths remain contract-only, unchanged by this note. Resolved locally 2026-07-22: authorized-grantor evidence reads should emit `audit_logs` like legacy data-room views. Pending: push/deploy the local route change and confirm one real deployed `nuxera_grantor_evidence_read` row.
 
 Notification catalog now includes assignment/SLA dry-run events (`grantor-case-assigned`, `grantor-sla-due-soon`, `admin-case-sla-overdue`). These events are accepted by dry-run validation only; delivery remains disabled until the outbox worker and flags are separately approved.
+
+## NU-NOTIF-APPROVALS-001 implementation note - 2026-07-23
+
+Notification approval history now has a controlled persistence-readiness contract, but writes remain disabled.
+
+- SQL draft: `backend/sql_migrations_pendientes/2026-07-23_nuxera_notification_approvals.sql`.
+- Table: `nuxera_notification_approvals`, anchored to `service_orders` and optionally `nuxera_notification_outbox`.
+- RLS: three read-only policies for owner, authorized grantor and admin; no insert/update/delete policies are exposed.
+- API: `GET /api/nuxera/admin/notification-approval-readiness` guarded by `nuxera:admin:read`.
+- Frontend: Admin communications shows `Historial aprobaciones` with draft status, table name and write policy count.
+
+This does not apply SQL, persist approval rows, queue notifications or send email/WhatsApp/in-app messages. The next controlled step is non-production SQL/RLS evidence, then a separate service-role write design for approval ledger rows.

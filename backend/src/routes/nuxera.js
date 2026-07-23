@@ -13,7 +13,7 @@ import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlle
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
 import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness, runNuxeraConversationTurn } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
-import { approveNuxeraNotificationRules, buildNuxeraNotificationApprovalPlan, buildNuxeraNotificationDryRunBatch, buildNuxeraNotificationRulesDryRun, enqueueNuxeraNotificationIntent, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, getNuxeraNotificationTemplateCatalog, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
+import { approveNuxeraNotificationRules, buildNuxeraNotificationApprovalPlan, buildNuxeraNotificationDryRunBatch, buildNuxeraNotificationRulesDryRun, enqueueNuxeraNotificationIntent, getNuxeraNotificationApprovalPersistenceReadiness, getNuxeraNotificationOutboxHealth, getNuxeraNotificationOutboxReadiness, getNuxeraNotificationTemplateCatalog, isNuxeraNotificationDeliveryEnabled, listNuxeraNotificationOutbox, processNuxeraNotificationDeliveryBatch } from '../services/nuxeraNotificationOutboxService.js';
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
@@ -150,6 +150,26 @@ router.post(
           "Conversation preview is read-only and does not call an LLM provider.",
           "Runtime remains disabled unless NUXERA_CONVERSATION_RUNTIME_ENABLED=true and context is authorized.",
           "The assistant cannot send notifications, approve financing, issue term sheets or change permissions."
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  "/nuxera/admin/notification-approval-readiness",
+  authMiddleware,
+  requirePermission("nuxera:admin:read"),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: "admin",
+        approvalPersistence: getNuxeraNotificationApprovalPersistenceReadiness(),
+        guardrails: [
+          "Approval persistence readiness is read-only and does not apply SQL or write approval history.",
+          "nuxera_notification_approvals remains a pending SQL/RLS contract until separate review approves it.",
+          "Agents and chat can explain the approval posture but cannot approve or queue notifications."
         ]
       });
     } catch (error) {

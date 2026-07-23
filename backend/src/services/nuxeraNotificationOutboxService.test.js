@@ -59,7 +59,8 @@ import {
   isNuxeraNotificationEmailDeliveryEnabled,
   listNuxeraNotificationOutbox,
   processNuxeraNotificationDeliveryBatch,
-  getNuxeraNotificationOutboxReadiness
+  getNuxeraNotificationOutboxReadiness,
+  getNuxeraNotificationApprovalPersistenceReadiness
 } from './nuxeraNotificationOutboxService.js';
 
 describe('nuxeraNotificationOutboxService', () => {
@@ -407,6 +408,20 @@ describe('nuxeraNotificationOutboxService', () => {
     expect(result.entries).toHaveLength(1);
     expect(result.entries[0]).toMatchObject({ id: 'outbox-1', eventId: NUXERA_NOTIFICATION_EVENTS.GRANTOR_FILE_SHARED, status: 'queued' });
     expect(result.guardrails.join(' ')).toContain('no envia mensajes');
+  });
+
+  it("exposes approval persistence readiness without enabling writes", () => {
+    const readiness = getNuxeraNotificationApprovalPersistenceReadiness();
+
+    expect(readiness).toMatchObject({
+      status: 'notification-approval-persistence-draft-ready',
+      table: 'nuxera_notification_approvals',
+      writeEnabled: false,
+      approvalHistoryPersisted: false,
+      summary: { policies: 3, writePolicies: 0, destructiveOperations: 0 }
+    });
+    expect(readiness.requiredColumns).toEqual(expect.arrayContaining(['order_id', 'template_id', 'dedupe_key']));
+    expect(readiness.guardrails.join(' ')).toContain('no SQL is applied');
   });
 
   it("exposes a read-only outbox readiness contract", () => {

@@ -28,7 +28,7 @@ import { buildStrategyDecisionPackageForWorkspace, buildStrategyWorkspaceForExpe
 import { buildCaseOrchestration, buildContextAccessEnvelope } from "../nuxera/orchestration/caseOrchestration";
 import { normalizeNuxeraCaseTimelineResponse } from "../nuxera/orchestration/caseTimelineAdapter";
 import { NUXERA_COMMUNICATION_EVENT_IDS, buildNuxeraAssignmentNotificationIntents, buildNuxeraConversationEnvelope, buildNuxeraNotificationEvent, getNuxeraNotificationCatalog } from "../nuxera/communications/notificationOperatingModel";
-import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationApprovalPlanResponse, normalizeNuxeraNotificationApprovalResultResponse, normalizeNuxeraNotificationDeliveryBatchResponse, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse, normalizeNuxeraNotificationTemplateCatalogResponse } from "../nuxera/communications/notificationBackendAdapter";
+import { mergeNotificationCatalogWithOutboxReadiness, normalizeNuxeraNotificationApprovalPlanResponse, normalizeNuxeraNotificationApprovalReadinessResponse, normalizeNuxeraNotificationApprovalResultResponse, normalizeNuxeraNotificationDeliveryBatchResponse, normalizeNuxeraNotificationOutboxListResponse, normalizeNuxeraNotificationOutboxReadinessResponse, normalizeNuxeraNotificationTemplateCatalogResponse } from "../nuxera/communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, normalizeNuxeraConversationAgentReadinessResponse, normalizeNuxeraConversationTurnResponse } from "../nuxera/communications/conversationAgentBackendAdapter";
 
 describe("NUXERA admin operational snapshot", () => {
@@ -1552,6 +1552,16 @@ describe("NUXERA notification and conversation operating model", () => {
         guardrails: ["Approval plan read-only."],
       },
     });
+    const readiness = normalizeNuxeraNotificationApprovalReadinessResponse({
+      approvalPersistence: {
+        status: "notification-approval-persistence-draft-ready",
+        table: "nuxera_notification_approvals",
+        writeEnabled: false,
+        approvalHistoryPersisted: false,
+        summary: { tables: 1, policies: 3, writePolicies: 0, destructiveOperations: 0 },
+        requiredColumns: ["order_id", "template_id", "dedupe_key"],
+      },
+    });
     const result = normalizeNuxeraNotificationApprovalResultResponse({
       approvalResult: {
         status: "notification-approval-preview-only",
@@ -1565,6 +1575,7 @@ describe("NUXERA notification and conversation operating model", () => {
     expect(templates.templates[0].templateId).toBe("grantor-case-assigned-v1");
     expect(plan.summary).toMatchObject({ actionable: 1, duplicates: 1 });
     expect(plan.approvalItems[0].template.templateId).toBe("grantor-case-assigned-v1");
+    expect(readiness).toMatchObject({ source: "remote-approval-readiness", table: "nuxera_notification_approvals", writeEnabled: false, summary: { policies: 3, writePolicies: 0 } });
     expect(result).toMatchObject({ status: "notification-approval-preview-only", deliveryEnabled: false, summary: { previews: 1 } });
   });
 

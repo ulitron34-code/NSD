@@ -199,6 +199,91 @@ export function useNotificationOutboxHealth({ enabled = true, limit = 100 } = {}
   return state;
 }
 
+const LOCAL_NOTIFICATION_APPROVAL_READINESS = Object.freeze({
+  source: "local-fallback",
+  status: "notification-approval-persistence-unverified",
+  table: "nuxera_notification_approvals",
+  sqlDraft: "backend/sql_migrations_pendientes/2026-07-23_nuxera_notification_approvals.sql",
+  loading: false,
+  error: null,
+  writeEnabled: false,
+  deliveryEnabled: false,
+  approvalHistoryPersisted: false,
+  summary: { tables: 0, policies: 0, writePolicies: 0, destructiveOperations: 0, protectedActions: 0 },
+  requiredColumns: [],
+  rlsPolicies: [],
+  protectedActions: [],
+  requiredBackendSteps: ["Verificar SQL/RLS antes de guardar historial de aprobaciones."],
+  guardrails: ["Local fallback; no confirma tabla de aprobaciones ni habilita escritura."],
+});
+
+export function normalizeNuxeraNotificationApprovalReadinessResponse(response) {
+  const payload = response?.approvalPersistence || response || null;
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...LOCAL_NOTIFICATION_APPROVAL_READINESS,
+      error: "nuxera-notification-approval-readiness-missing",
+    };
+  }
+
+  return {
+    ...LOCAL_NOTIFICATION_APPROVAL_READINESS,
+    ...payload,
+    source: "remote-approval-readiness",
+    loading: false,
+    error: null,
+    writeEnabled: Boolean(payload.writeEnabled),
+    deliveryEnabled: Boolean(payload.deliveryEnabled),
+    approvalHistoryPersisted: Boolean(payload.approvalHistoryPersisted),
+    summary: {
+      ...LOCAL_NOTIFICATION_APPROVAL_READINESS.summary,
+      ...asObject(payload.summary),
+    },
+    requiredColumns: asArray(payload.requiredColumns),
+    rlsPolicies: asArray(payload.rlsPolicies),
+    protectedActions: asArray(payload.protectedActions),
+    requiredBackendSteps: asArray(payload.requiredBackendSteps),
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useNotificationApprovalReadiness({ enabled = true } = {}) {
+  const [state, setState] = useState(LOCAL_NOTIFICATION_APPROVAL_READINESS);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!enabled) {
+      setState(LOCAL_NOTIFICATION_APPROVAL_READINESS);
+      return () => { alive = false; };
+    }
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+    nuxeraNotificationOutboxAPI.getApprovalReadiness()
+      .then(({ data }) => {
+        if (!alive) return;
+        setState(normalizeNuxeraNotificationApprovalReadinessResponse(data));
+      })
+      .catch((error) => {
+        warn("NUXERA", "Notification approval readiness unavailable", error?.message || error);
+        if (!alive) return;
+        setState({
+          ...LOCAL_NOTIFICATION_APPROVAL_READINESS,
+          loading: false,
+          error: error?.response?.data?.code || error?.message || "nuxera-notification-approval-readiness-unavailable",
+        });
+      });
+
+    return () => { alive = false; };
+  }, [enabled]);
+
+  return state;
+}
+
 const LOCAL_NOTIFICATION_TEMPLATE_CATALOG = Object.freeze({
   source: "local-fallback",
   status: "notification-templates-unavailable",

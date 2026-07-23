@@ -318,6 +318,8 @@ export const nuxeraNotificationOutboxAPI = {
     api.get('/nuxera/admin/notification-outbox-readiness'),
   getTemplates: () =>
     api.get('/nuxera/admin/notification-templates'),
+  getApprovalReadiness: () =>
+    api.get('/nuxera/admin/notification-approval-readiness'),
   getHealth: (params = {}) =>
     api.get('/nuxera/admin/notification-outbox-health', { params }),
   getRulesDryRun: (orderId, params = {}) =>

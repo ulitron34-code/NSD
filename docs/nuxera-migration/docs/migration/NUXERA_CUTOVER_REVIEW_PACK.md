@@ -65,3 +65,14 @@ Este documento prepara revision, no ejecucion. El objetivo es que admin/engineer
 - No se ejecuto SQL.
 - No se activo delivery real.
 - No se envio ningun correo.
+
+## Addendum - Notification approval ledger draft (2026-07-23)
+
+Additional pending SQL draft:
+- `backend/sql_migrations_pendientes/2026-07-23_nuxera_notification_approvals.sql`
+  - Creates `nuxera_notification_approvals` for human approval metadata tied to notification plans/outbox.
+  - Includes recipient requirement, dedupe index, status index, outbox FK and delivery-enabled-at-approval flag.
+  - RLS select for owner, authorized grantor and admin.
+  - No insert/update/delete policies; backend writes remain a future service-role design after SQL/RLS evidence.
+
+Review impact: this closes the design gap between approval previews and a future auditable approval ledger, but it does not change runtime delivery behavior.
