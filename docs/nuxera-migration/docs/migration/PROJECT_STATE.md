@@ -2036,3 +2036,15 @@ Next resume point:
 1. Run targeted syntax checks, SQL draft check, backend route/timeline tests, frontend NUXERA tests and build.
 2. Fix any lint/test failures locally.
 3. Ask before commit/push/deploy.
+
+## Local continuation - case_events persistence plan
+
+Added after Vercel preview responded 200 OK for the branch URL:
+- Admin dry-run persistence plan for `nuxera_case_events`.
+- Frontend admin panel for insert-ready and blocked candidates.
+- Route and service tests pending validation in this run.
+
+Still not done:
+- No SQL executed.
+- No production write path enabled.
+- No deployment promotion.

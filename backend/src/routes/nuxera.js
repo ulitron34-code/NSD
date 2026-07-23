@@ -17,7 +17,7 @@ import { buildNuxeraNotificationDryRunBatch, enqueueNuxeraNotificationIntent, ge
 import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../services/nuxeraEvidenceLinkService.js';
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
-import { buildNuxeraCaseEventsProjection } from '../services/nuxeraCaseEventsProjectionService.js';
+import { buildNuxeraCaseEventsPersistencePlan, buildNuxeraCaseEventsProjection } from '../services/nuxeraCaseEventsProjectionService.js';
 import { getAdminEvidenceCoverage, getGrantorDecisionEvidencePackage } from '../services/nuxeraDecisionEvidencePackageService.js';
 import { getAdminRiskHealth, getAdminRiskProfile, getApplicantRiskProfile, getGrantorRiskProfile } from '../services/nuxeraRiskOrchestrationService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
@@ -804,6 +804,33 @@ router.get(
   }
 );
 
+router.get(
+  '/nuxera/admin/orders/:orderId/case-events/persistence-plan',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({ orderId: req.params.orderId });
+      const caseEvents = buildNuxeraCaseEventsProjection(timeline);
+      const persistencePlan = buildNuxeraCaseEventsPersistencePlan(caseEvents, {
+        orderId: req.params.orderId,
+        workspaceRole: 'admin'
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'admin',
+        persistencePlan,
+        guardrails: [
+          'case_events persistence plan is dry-run only; no insert/update/delete is performed.',
+          'Client input cannot enable writes; production persistence requires separate SQL/RLS evidence and approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
 router.get(
   '/nuxera/orders/:orderId/grantor-decision-package',
   authMiddleware,

@@ -25,7 +25,8 @@ const serviceCalls = {
   notificationHealth: [],
   notificationBatch: [],
   conversationTurn: [],
-  timeline: []
+  timeline: [],
+  caseEventsPlan: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -399,7 +400,11 @@ vi.mock('../services/nuxeraCaseTimelineService.js', () => ({
 vi.mock('../services/nuxeraCaseEventsProjectionService.js', () => ({
   buildNuxeraCaseEventsProjection: vi.fn((timeline) => {
     serviceCalls.caseEvents.push({ orderId: timeline.orderId, workspaceRole: timeline.workspaceRole });
-    return { status: 'case-events-projection-ready', orderId: timeline.orderId, workspaceRole: timeline.workspaceRole, summary: { total: 1 }, events: [{ id: 'projected-1', persistenceStatus: 'virtual-read-only' }], guardrails: ['case_events projection read-only.'] };
+    return { status: 'case-events-projection-ready', orderId: timeline.orderId, workspaceRole: timeline.workspaceRole, summary: { total: 1 }, events: [{ id: 'projected-1', eventType: 'audit', phase: 'notifications-audit', severity: 'info', persistenceStatus: 'virtual-read-only' }], guardrails: ['case_events projection read-only.'] };
+  }),
+  buildNuxeraCaseEventsPersistencePlan: vi.fn((projection) => {
+    serviceCalls.caseEventsPlan.push({ orderId: projection.orderId, workspaceRole: projection.workspaceRole });
+    return { status: 'case-events-persistence-plan-ready', mode: 'dry-run-only', table: 'nuxera_case_events', summary: { totalProjected: 1, insertReady: 1, blocked: 0 }, candidates: [{ id: 'candidate-1', insertReady: true, dedupeKey: 'order-1:audit:audit_logs:audit-1:2026' }], guardrails: ['Persistence plan is read-only.'] };
   })
 }));
 vi.mock('../services/nuxeraDecisionEvidencePackageService.js', () => ({
@@ -501,6 +506,7 @@ describe('nuxera routes', () => {
     serviceCalls.conversationTurn = [];
     serviceCalls.timeline = [];
     serviceCalls.caseEvents = [];
+    serviceCalls.caseEventsPlan = [];
     serviceCalls.decisionPackage = [];
     serviceCalls.evidenceCoverage = [];
     serviceCalls.riskProfile = [];
@@ -1345,6 +1351,21 @@ describe('nuxera routes', () => {
     expect(serviceCalls.caseEvents.map((call) => call.workspaceRole)).toEqual(['applicant', 'grantor', 'admin']);
   });
 
+  it('returns admin case_events persistence plan as dry-run only', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/case-events/persistence-plan`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/case-events/persistence-plan`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body.persistencePlan).toMatchObject({ status: 'case-events-persistence-plan-ready', mode: 'dry-run-only', table: 'nuxera_case_events' });
+    expect(body.guardrails.join(' ')).toContain('dry-run only');
+    expect(serviceCalls.caseEventsPlan).toEqual([{ orderId: 'order-1', workspaceRole: 'admin' }]);
+  });
   it('returns grantor decision package and admin evidence coverage without writes', async () => {
     const grantor = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-decision-package`, {
       headers: { 'x-test-user-id': 'grantor-1', 'x-test-permissions': 'data_room:authorized:read', 'x-test-email': 'grantor@example.com' }

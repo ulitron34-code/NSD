@@ -259,3 +259,11 @@ Lo que sigue antes de produccion:
 - Definir si `nuxera_case_events` sera ledger persistido o seguira como proyeccion virtual hasta tener evidencia suficiente.
 - Completar historial de delivery real solo despues de aprobar flags, runbook y proveedor de email.
 - Definir retencion del chat antes de persistir cualquier conversacion completa.
+
+## Avance Local - Case Events Persistence Dry Run
+
+Se agrego el puente entre timeline virtual y SQL no productivo:
+- Endpoint admin `GET /api/nuxera/admin/orders/:orderId/case-events/persistence-plan`.
+- Servicio `buildNuxeraCaseEventsPersistencePlan` que prepara candidatos de insert para `nuxera_case_events` sin escribir filas.
+- UI admin muestra candidatos listos, bloqueados, dedupe keys y modo `dry-run-only`.
+- El cliente no puede habilitar writes desde este contrato; requiere SQL/RLS en non-production y aprobacion separada.

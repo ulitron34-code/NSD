@@ -21,7 +21,7 @@ import { mergeNotificationCatalogWithOutboxReadiness, useNotificationDeliveryBat
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
-import { useNuxeraCaseEvents, useNuxeraDecisionPackage, useNuxeraEvidenceCoverage, useNuxeraRiskHealth, useNuxeraRiskProfile } from "../orchestration/operationalBlocksAdapter";
+import { useNuxeraCaseEvents, useNuxeraCaseEventsPersistencePlan, useNuxeraDecisionPackage, useNuxeraEvidenceCoverage, useNuxeraRiskHealth, useNuxeraRiskProfile } from "../orchestration/operationalBlocksAdapter";
 
 const roleCopy = {
   applicant: {
@@ -206,7 +206,7 @@ function DecisionPackagePanel({ decisionPackage, title }) {
   );
 }
 
-function CaseEventsProjectionPanel({ caseEvents, title }) {
+function CaseEventsProjectionPanel({ caseEvents, persistencePlan = null, title }) {
   const { L } = useNuxeraLanguage();
   return (
     <section className="nuxera-operational-block" aria-label={title}>
@@ -227,6 +227,23 @@ function CaseEventsProjectionPanel({ caseEvents, title }) {
           </article>
         ))}
       </div>
+      {persistencePlan && (
+        <div>
+          <article data-status={persistencePlan.summary.blocked ? "warning" : "success"}>
+            <span>{persistencePlan.loading ? L("Calculando plan", "Calculating plan") : persistencePlan.status}</span>
+            <strong>{persistencePlan.summary.insertReady}/{persistencePlan.summary.totalProjected}</strong>
+            <p>{L("Candidatos listos para SQL no productivo; este panel no inserta filas.", "Candidates ready for non-production SQL; this panel does not insert rows.")}</p>
+            <small>{persistencePlan.mode} / {persistencePlan.table}</small>
+          </article>
+          {persistencePlan.candidates.slice(0, 3).map((candidate) => (
+            <article key={candidate.id} data-status={candidate.insertReady ? "success" : "warning"}>
+              <span>{candidate.status}</span>
+              <strong>{candidate.dedupeKey}</strong>
+              <p>{candidate.blockers.length ? candidate.blockers.join(", ") : L("Listo para dry-run controlado", "Ready for controlled dry-run")}</p>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -950,6 +967,9 @@ function AdminOperationsHome({ sectionLabel }) {
   const adminCaseEvents = useNuxeraCaseEvents(selectedAssignmentCaseId, {
     enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
     role: "admin",
+  });
+  const adminCaseEventsPersistencePlan = useNuxeraCaseEventsPersistencePlan(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
   });
   const adminEvidenceCoverage = useNuxeraEvidenceCoverage(selectedAssignmentCaseId, {
     enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
@@ -1694,7 +1714,7 @@ function AdminOperationsHome({ sectionLabel }) {
       <RiskHealthPanel riskHealth={adminRiskHealth} title={L("Health de riesgo operativo", "Operational risk health")} />
       <DecisionPackagePanel decisionPackage={adminEvidenceCoverage} title={L("Coverage de evidencia", "Evidence coverage")} />
       <RiskProfilePanel profile={adminRiskProfile} title={L("Perfil de riesgo admin", "Admin risk profile")} />
-      <CaseEventsProjectionPanel caseEvents={adminCaseEvents} title={L("Proyeccion case_events", "case_events projection")} />
+      <CaseEventsProjectionPanel caseEvents={adminCaseEvents} persistencePlan={adminCaseEventsPersistencePlan} title={L("Proyeccion case_events", "case_events projection")} />
 
       <section className="nuxera-admin-case-assignment" aria-label={L("Previsualizacion de asignacion de expedientes NUXERA", "NUXERA case assignment preview")}>
         <header>

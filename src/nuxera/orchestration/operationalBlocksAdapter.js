@@ -48,6 +48,19 @@ const LOCAL_CASE_EVENTS = Object.freeze({
   guardrails: ["case_events local vacio; no crea eventos persistidos."],
 });
 
+
+const LOCAL_CASE_EVENTS_PERSISTENCE_PLAN = Object.freeze({
+  source: "local-fallback",
+  status: "case-events-persistence-plan-unavailable",
+  loading: false,
+  error: null,
+  table: "nuxera_case_events",
+  mode: "dry-run-only",
+  summary: { totalProjected: 0, insertReady: 0, blocked: 0, warnings: 0, critical: 0, humanReviewRequired: 0, uniqueDedupeKeys: 0 },
+  candidates: [],
+  requiredGates: [],
+  guardrails: ["Persistence plan local vacio; no crea eventos persistidos."],
+});
 const LOCAL_RISK_HEALTH = Object.freeze({
   source: "local-fallback",
   status: "risk-health-unavailable",
@@ -111,6 +124,22 @@ function normalizeCaseEvents(response) {
   };
 }
 
+
+function normalizeCaseEventsPersistencePlan(response) {
+  const data = response?.persistencePlan || response || null;
+  if (!data || typeof data !== "object") return { ...LOCAL_CASE_EVENTS_PERSISTENCE_PLAN, error: "nuxera-case-events-persistence-plan-missing" };
+  return {
+    ...LOCAL_CASE_EVENTS_PERSISTENCE_PLAN,
+    ...data,
+    source: "remote",
+    loading: false,
+    error: null,
+    summary: { ...LOCAL_CASE_EVENTS_PERSISTENCE_PLAN.summary, ...asObject(data.summary) },
+    candidates: asArray(data.candidates),
+    requiredGates: asArray(data.requiredGates),
+    guardrails: [...asArray(data.guardrails), ...asArray(response?.guardrails)].filter(Boolean),
+  };
+}
 function normalizeRiskHealth(response) {
   const data = response?.riskHealth || response || null;
   if (!data || typeof data !== "object") return { ...LOCAL_RISK_HEALTH, error: "nuxera-risk-health-missing" };
@@ -204,6 +233,16 @@ export function useNuxeraCaseEvents(orderId, { enabled = true, role = "applicant
   });
 }
 
+
+export function useNuxeraCaseEventsPersistencePlan(orderId, { enabled = true } = {}) {
+  return useRemoteState({
+    enabled: enabled && Boolean(orderId),
+    seed: LOCAL_CASE_EVENTS_PERSISTENCE_PLAN,
+    onLoad: () => nuxeraCaseTimelineAPI.getAdminCaseEventsPersistencePlan(orderId).then(({ data }) => ({ data: normalizeCaseEventsPersistencePlan(data) })),
+    onErrorLabel: "Case events persistence plan unavailable",
+    deps: [enabled, orderId],
+  });
+}
 export function useNuxeraRiskHealth({ enabled = true } = {}) {
   return useRemoteState({
     enabled,

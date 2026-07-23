@@ -261,7 +261,9 @@ export const nuxeraCaseTimelineAPI = {
   getGrantorCaseEvents: (orderId) =>
     api.get(`/nuxera/orders/${orderId}/grantor-case-events`),
   getAdminCaseEvents: (orderId) =>
-    api.get(`/nuxera/admin/orders/${orderId}/case-events`)
+    api.get(`/nuxera/admin/orders/${orderId}/case-events`),
+  getAdminCaseEventsPersistencePlan: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/case-events/persistence-plan`)
 };
 
 export const nuxeraDecisionPackageAPI = {
