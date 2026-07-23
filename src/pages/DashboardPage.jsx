@@ -83,6 +83,7 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
   const { allowedExperiences, experience, setExperience } = useExperience();
   const nuxeraEnabled = allowedExperiences.includes(EXPERIENCE_VALUES.NUXERA);
+  const nuxeraPathRequested = window.location.pathname.startsWith("/dashboard/nuxera");
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (value) => translateCopy(value, i18n.language);
@@ -525,8 +526,9 @@ export default function DashboardPage() {
     return <ServiceOrdersPage />;
   };
 
-  if (experience === EXPERIENCE_VALUES.NUXERA) {
-    return <NuxeraWorkspaceRouter demoMode={user?.demo ? userMode : null} onExit={exitNuxeraExperience} />;
+  if (experience === EXPERIENCE_VALUES.NUXERA || (nuxeraEnabled && nuxeraPathRequested)) {
+    const directGrantorDemoMode = import.meta.env.DEV && window.location.pathname.startsWith("/dashboard/nuxera/queue") ? "otorgante" : null;
+    return <NuxeraWorkspaceRouter demoMode={directGrantorDemoMode || (user?.demo ? userMode : null)} onExit={exitNuxeraExperience} />;
   }
 
   const railWidth = "76px";
