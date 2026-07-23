@@ -223,7 +223,7 @@ router.post(
 router.post(
   "/nuxera/admin/notification-outbox",
   authMiddleware,
-  requirePermission("nuxera:admin:read"),
+  requirePermission("nuxera:admin:update"),
   async (req, res) => {
     try {
       const queued = await enqueueNuxeraNotificationIntent({
@@ -237,6 +237,7 @@ router.post(
         workspaceRole: "admin",
         queued,
         guardrails: [
+          "Queueing requires nuxera:admin:update because it may create an outbox row when backend delivery persistence is enabled.",
           "Queueing only persists a row when NUXERA_NOTIFICATION_DELIVERY_ENABLED=true; otherwise it stays a preview.",
           "Duplicate dedupe keys are rejected and audited instead of creating a second row.",
           "The delivery worker remains disabled; no email, WhatsApp or in-app message is ever sent from this route."

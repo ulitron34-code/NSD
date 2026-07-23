@@ -939,14 +939,15 @@ describe('nuxera routes', () => {
     expect(body.guardrails.join(' ')).toContain('never sends messages');
     expect(serviceCalls.notificationDryRun).toEqual([{ intents }]);
   });
-  it('requires nuxera:admin:read before queueing a notification outbox intent', async () => {
+  it('requires nuxera:admin:update before queueing a notification outbox intent', async () => {
     const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' },
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
       body: JSON.stringify({ intent: { eventId: 'applicant-missing-evidence' } })
     });
 
     expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ requiredPermission: 'nuxera:admin:update' });
     expect(serviceCalls.notificationQueue).toHaveLength(0);
   });
 
@@ -954,7 +955,7 @@ describe('nuxera routes', () => {
     const intent = { eventId: 'grantor-file-shared', orderId: 'order-9', recipientEmail: 'grantor@example.com' };
     const response = await fetch(`${baseUrl}/api/nuxera/admin/notification-outbox`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' },
+      headers: { 'content-type': 'application/json', 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:update' },
       body: JSON.stringify({ intent, deliveryEnabled: true })
     });
     const body = await response.json();
@@ -962,6 +963,7 @@ describe('nuxera routes', () => {
     expect(response.status).toBe(200);
     expect(body.queued).toMatchObject({ persisted: false, status: 'preview' });
     expect(serviceCalls.notificationQueue).toEqual([{ intent, actorUserId: 'admin-1', deliveryEnabled: false }]);
+    expect(body.guardrails.join(' ')).toContain('nuxera:admin:update');
     expect(body.guardrails.join(' ')).toContain('no email, WhatsApp or in-app message is ever sent');
   });
 

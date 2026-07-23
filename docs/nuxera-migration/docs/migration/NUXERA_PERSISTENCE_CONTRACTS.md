@@ -155,6 +155,8 @@ All routes are proposed under `/nuxera` to avoid changing existing legacy endpoi
 | `POST` | `/nuxera/orders/:orderId/artifacts/:artifactId/export` | Internal/admin only for external export | Export artifact with audit event. |
 | `GET` | `/nuxera/admin/controls` | `*` or future `nuxera:admin:read` | Read admin controls. |
 | `PATCH` | `/nuxera/admin/controls/:controlId` | `*` or future `nuxera:admin:update` | Update release/incident control. |
+| `GET` | `/nuxera/admin/notification-outbox` | `*` or `nuxera:admin:read` | Read outbox rows without changing state or sending messages. |
+| `POST` | `/nuxera/admin/notification-outbox` | `*` or `nuxera:admin:update` | Queue a notification intent only when backend delivery persistence is explicitly enabled; otherwise returns preview. |
 
 ## Permission additions draft
 Do not replace existing permissions. Add only when implementation starts.
@@ -167,7 +169,7 @@ Do not replace existing permissions. Add only when implementation starts.
 | `nuxera:artifact:draft` | otorgante, inversionista, analista, administrador | Draft non-binding artifacts. |
 | `nuxera:artifact:export` | analista, compliance_officer, administrador | Export only after human review. |
 | `nuxera:admin:read` | administrador, auditor_interno, compliance_officer | Read controls. |
-| `nuxera:admin:update` | administrador | Update controls. |
+| `nuxera:admin:update` | administrador | Update controls or queue controlled admin write intents such as notification outbox rows. |
 
 ## Role access matrix
 
