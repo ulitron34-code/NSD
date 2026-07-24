@@ -1,7 +1,7 @@
 import { EXPERIENCE_VALUES } from "./experienceStorage";
 
 export function isNuxeraExperienceEnabled() {
-  return import.meta.env.VITE_NUXERA_EXPERIENCE_ENABLED === "true";
+  return import.meta.env.VITE_NUXERA_EXPERIENCE_ENABLED !== "false";
 }
 
 export function getAllowedExperiences() {

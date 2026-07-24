@@ -338,13 +338,13 @@ export default function DocumentIntelligenceTab() {
     }
 
     reportMd += `\n=========================================\n`;
-    reportMd += `${BRAND.legalName} - Platform compliance Audit`;
+    reportMd += `${BRAND.legalName} - Platform Compliance Audit`;
 
     const blob = new Blob([reportMd], { type: "text/markdown;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `NSD-Reporte-Ejecutivo-${selectedExpedienteId.slice(0, 8)}.md`);
+    link.setAttribute("download", `NUXERA-Executive-Report-${selectedExpedienteId.slice(0, 8)}.md`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

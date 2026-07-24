@@ -2,9 +2,8 @@ import { isNuxeraExperienceEnabled } from "../experience/experienceFlags";
 
 // Fe de erratas y adenda de identidad (NUXERA_Fe_de_Erratas_Identidad_y_Nomenclatura_v1,
 // 2026-07-17): NUXERA Financial Intelligence sustituye a NEXUS como nombre oficial de
-// trabajo. Se mantiene NEXUS como marca visible por defecto -- el cambio de marca en
-// vivo se activa con el mismo flag que ya gobierna la experiencia NUXERA, para que
-// encender/apagar la identidad nueva sea reversible en un solo lugar.
+// trabajo. NUXERA es la identidad visible por defecto; NEXUS queda como fallback
+// reversible solo si VITE_NUXERA_EXPERIENCE_ENABLED se configura explicitamente en false.
 const NEXUS_BRAND = {
   name: "NEXUS",
   legalName: "NEXUS Secure Due-Diligence Unit",

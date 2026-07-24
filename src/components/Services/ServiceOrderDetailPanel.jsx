@@ -980,7 +980,7 @@ export default function ServiceOrderDetailPanel({ order, onClose }) {
             textTransform: "uppercase",
             letterSpacing: "0.06em",
           }}>
-            {order.caseNumber || `NSD-${String(order.id).substring(0, 8).toUpperCase()}`}
+            {order.caseNumber || `NUX-${String(order.id).substring(0, 8).toUpperCase()}`}
           </p>
           <h2 style={{
             color: COLORS.navy,

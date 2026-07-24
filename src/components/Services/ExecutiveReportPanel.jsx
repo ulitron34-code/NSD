@@ -78,7 +78,7 @@ export default function ExecutiveReportPanel({ order }) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${report.memo.title || "memo-institucional-nsd"}.md`.replace(/[\\/:*?"<>|]/g, "-");
+    link.download = `${report.memo.title || "nuxera-institutional-memo"}.md`.replace(/[\\/:*?"<>|]/g, "-");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

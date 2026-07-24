@@ -358,7 +358,7 @@ function SectorPage({ industry }) {
         {/* Módulos + Regulaciones + Docs en 3 columnas */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.25rem" }}>
 
-          {/* Módulos NEXUS */}
+          {/* Modulos NUXERA */}
           <div style={{ ...softCardStyle, padding: "1.4rem 1.5rem" }}>
             <p style={{ color: COLORS.gold, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
               MÓDULOS {BRAND.name} APLICABLES

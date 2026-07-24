@@ -108,7 +108,7 @@ export default function RemediationPlanPanel({ scoring, shareReadiness }) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "plan-subsanacion-nsd.md";
+    anchor.download = "nuxera-remediation-plan.md";
     anchor.click();
     URL.revokeObjectURL(url);
   };

@@ -1,5 +1,5 @@
 // ============================================
-// NEXUS PLATFORM - BREADCRUMBS COMPONENT
+// NUXERA PLATFORM - BREADCRUMBS COMPONENT
 // Navigation breadcrumbs for better UX
 // ============================================
 
