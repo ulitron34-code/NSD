@@ -51,11 +51,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_nuxera_notification_approvals_dedupe
 
 ALTER TABLE nuxera_notification_approvals ENABLE ROW LEVEL SECURITY;
 
+-- Scoped to audience = 'applicant'/'grantor' respectively, matching the
+-- recipient-based scoping already used by nuxera_notification_outbox. Without
+-- this filter, any party on the order (owner or authorized grantor) could
+-- read subject/body_preview/approval_reason for notification approvals meant
+-- for a different audience on the same case.
+
 CREATE POLICY nuxera_notification_approvals_owner_read
   ON nuxera_notification_approvals
   FOR SELECT
   USING (
     sensitive_content_excluded = true
+    AND audience = 'applicant'
     AND EXISTS (
       SELECT 1
       FROM service_orders so
@@ -69,6 +76,7 @@ CREATE POLICY nuxera_notification_approvals_authorized_grantor_read
   FOR SELECT
   USING (
     sensitive_content_excluded = true
+    AND audience = 'grantor'
     AND EXISTS (
       SELECT 1
       FROM data_room_shares drs
