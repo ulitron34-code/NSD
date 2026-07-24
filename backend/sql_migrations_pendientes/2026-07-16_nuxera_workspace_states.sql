@@ -31,10 +31,17 @@ ALTER TABLE nuxera_workspace_states ENABLE ROW LEVEL SECURITY;
 
 -- RLS draft only. Backend service-role authorization remains the first
 -- implementation gate until production schema and data-room policies are reviewed.
+-- Scoped to workspace_role = 'applicant': only applicant-owned surfaces (e.g.
+-- checklist) are readable by the order owner. Grantor/admin surfaces such as
+-- 'memo' or 'workbench' are internal-only until a dedicated grantor/admin
+-- read policy is designed and reviewed alongside their write paths -- without
+-- this filter, the order owner could read the grantor's internal decision
+-- memo for their own case the moment that surface is persisted here.
 CREATE POLICY "owners_select_nuxera_workspace_states"
   ON nuxera_workspace_states FOR SELECT
   USING (
-    EXISTS (
+    workspace_role = 'applicant'
+    AND EXISTS (
       SELECT 1 FROM service_orders so
       WHERE so.id = order_id AND so.user_id = auth.uid()
     )
