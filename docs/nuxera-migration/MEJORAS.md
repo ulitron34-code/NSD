@@ -324,3 +324,26 @@ Elementos implementados:
 - Tests backend y frontend para normalizacion, endpoint protegido y guardrails read-only.
 
 Guardrails: el backlog no aplica SQL, no habilita delivery, no persiste aprobaciones, no llama proveedores, no cambia flags y no despliega produccion. Solo ordena la ejecucion para revision humana.
+
+## Avance - Production Readiness Gate (2026-07-24)
+
+Se agrego una compuerta productiva read-only que consolida el cierre real del 12% pendiente en cuatro dominios auditables:
+- SQL/RLS y backend readiness: ahora el preflight revisa 7 contratos NUXERA (`workspace_states`, `evidence_links`, `admin_controls`, `notification_outbox`, `notification_approvals`, `case_events`, `case_assignments`).
+- Notificaciones: combina readiness, health del outbox, delivery flags, filas fallidas y queued antes de permitir cualquier revision de entrega.
+- Agente/chat e IA: exige runtime aprobado, proveedor primario sensible disponible y guardrails de acciones bloqueadas; Kimi/DeepSeek permanecen secundarios para bajo riesgo anonimizado.
+- Cutover: cruza el backlog ejecutivo y bloquea produccion si hay critical-path abierto.
+
+Elementos implementados:
+- Servicio backend `nuxeraProductionReadinessGateService`.
+- Endpoint admin `GET /api/nuxera/admin/production-readiness-gate` protegido con `nuxera:admin:read`.
+- Cliente frontend `nuxeraBackendReadinessAPI.getProductionReadinessGate`.
+- Hook `useProductionReadinessGate` con fallback local seguro.
+- Panel Admin `Go/no-go productivo` ahora usa la senal real del backend en vez de una estimacion solo frontend.
+- Tests unitarios para readiness ampliado y production gate.
+
+Validacion ejecutada:
+- `vitest run src/services/nuxeraBackendReadinessService.test.js src/services/nuxeraProductionReadinessGateService.test.js` en backend: 2 archivos, 5 tests pasando.
+- `vite build` frontend: build productivo exitoso.
+- `git diff --check`: sin errores de whitespace.
+
+Guardrails: la compuerta no aplica SQL, no cambia RLS, no activa delivery, no llama proveedores IA y no despliega produccion. Aunque todos los dominios esten listos, solo devuelve `ready-for-human-production-review`; nunca aprueba produccion automaticamente.

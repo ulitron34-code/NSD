@@ -31,7 +31,10 @@ describe('nuxeraBackendReadinessService', () => {
       nuxera_workspace_states: { count: 2 },
       nuxera_evidence_links: { count: 3 },
       nuxera_admin_controls: { count: 1 },
-      nuxera_notification_outbox: { count: 0 }
+      nuxera_notification_outbox: { count: 0 },
+      nuxera_notification_approvals: { count: 0 },
+      nuxera_case_events: { count: 8 },
+      nuxera_case_assignments: { count: 4 }
     };
   });
 
@@ -41,13 +44,16 @@ describe('nuxeraBackendReadinessService', () => {
     expect(readiness).toMatchObject({
       status: 'backend-readiness-visible',
       ready: true,
-      summary: { total: 4, available: 4, unavailable: 0, readiness: 100 }
+      summary: { total: 7, available: 7, unavailable: 0, readiness: 100 }
     });
     expect(readiness.signals.map((signal) => signal.table)).toEqual([
       'nuxera_workspace_states',
       'nuxera_evidence_links',
       'nuxera_admin_controls',
-      'nuxera_notification_outbox'
+      'nuxera_notification_outbox',
+      'nuxera_notification_approvals',
+      'nuxera_case_events',
+      'nuxera_case_assignments'
     ]);
     expect(readiness.guardrails.join(' ')).toContain('no aplica SQL');
   });
@@ -60,7 +66,7 @@ describe('nuxeraBackendReadinessService', () => {
     const readiness = await getNuxeraBackendReadiness();
 
     expect(readiness.ready).toBe(false);
-    expect(readiness.summary).toMatchObject({ total: 4, available: 3, unavailable: 1, readiness: 75 });
+    expect(readiness.summary).toMatchObject({ total: 7, available: 6, unavailable: 1, readiness: 86 });
     expect(readiness.signals.find((signal) => signal.table === 'nuxera_evidence_links')).toMatchObject({
       status: 'unavailable',
       ready: false,
@@ -73,7 +79,10 @@ describe('nuxeraBackendReadinessService', () => {
       'workspace-states',
       'evidence-links',
       'admin-controls',
-      'notification-outbox'
+      'notification-outbox',
+      'notification-approvals',
+      'case-events',
+      'case-assignments'
     ]);
   });
 });

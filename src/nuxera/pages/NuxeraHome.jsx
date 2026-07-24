@@ -7,7 +7,7 @@ import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { mergeAdminControlsWithConsole, useAdminControls } from "../admin/adminControlsAdapter";
 import { mergeAiProviderPolicyWithConsole, useAiProviderPolicy } from "../admin/aiProviderPolicyAdapter";
 import { useTenTrackClosure, useTenTrackExecutionBacklog } from "../admin/tenTrackClosureAdapter";
-import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate } from "../admin/backendReadinessAdapter";
+import { mergeBackendReadinessWithConsole, useBackendReadiness, useControlledApprovalPackage, useControlledChangeRequest, useControlledContinuationPack, useControlledEvidenceReview, useControlledEvidenceScaffold, useControlledReleaseDossier, useControlledRunbook, useControlledVerificationPlan, useControlledWriteGate, useProductionReadinessGate } from "../admin/backendReadinessAdapter";
 import { getAdminOperationsConsole } from "../admin/operationsConsole";
 import { useAdminOperationalSnapshot } from "../admin/operationalSnapshotAdapter";
 import { mergeGrantorCasesWithConsole, previewNuxeraCaseAssignment, useAdminGrantorCases, useCaseAssignmentHistory } from "../admin/grantorCasesAdapter";
@@ -884,6 +884,7 @@ function AdminOperationsHome({ sectionLabel }) {
   const operationalSnapshot = useAdminOperationalSnapshot({ enabled: isNuxeraExperienceEnabled(), language });
   const adminControls = useAdminControls({ enabled: isNuxeraExperienceEnabled(), language });
   const backendReadiness = useBackendReadiness({ enabled: isNuxeraExperienceEnabled(), language });
+  const productionReadinessGate = useProductionReadinessGate({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledVerificationPlan = useControlledVerificationPlan({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledContinuationPack = useControlledContinuationPack({ enabled: isNuxeraExperienceEnabled(), language });
   const controlledEvidenceScaffold = useControlledEvidenceScaffold({ enabled: isNuxeraExperienceEnabled(), language });
@@ -1031,23 +1032,19 @@ function AdminOperationsHome({ sectionLabel }) {
     setCaseAssignmentSubmitting(false);
   };
   const productionGoNoGo = {
-    status: controlledReleaseDossier.readyForReleaseReview && controlledChangeRequest.readyForChangeReview && controlledWriteGate.readyForControlledWriteChange ? "ready-for-final-human-review" : "no-go-controlled-preview",
-    checks: [
-      { id: "backend", label: "Backend/RLS", ready: backendReadiness.ready, detail: backendReadiness.status },
-      { id: "evidence", label: "Evidencia controlada", ready: controlledEvidenceReview.readyForHumanReview, detail: controlledEvidenceReview.status },
-      { id: "approval", label: "Aprobacion humana", ready: controlledApprovalPackage.readyForReleaseDecision, detail: controlledApprovalPackage.status },
-      { id: "write-gate", label: "Write gate", ready: controlledWriteGate.readyForControlledWriteChange, detail: controlledWriteGate.status },
-      { id: "change", label: "Change request", ready: controlledChangeRequest.readyForChangeReview, detail: controlledChangeRequest.status },
-      { id: "release", label: "Release dossier", ready: controlledReleaseDossier.readyForReleaseReview, detail: controlledReleaseDossier.status },
-      { id: "ai", label: "IA sensible", ready: aiProviderPolicy.sensitiveRuntimeReady, detail: aiProviderPolicy.status },
-      { id: "outbox", label: "Delivery automatico", ready: !notificationOutboxReadiness.deliveryEnabled, detail: notificationOutboxReadiness.deliveryEnabled ? "delivery-enabled-review-required" : "delivery-disabled-safe" },
-      { id: "chat", label: "Chat runtime", ready: !conversationAgentReadiness.runtimeEnabled, detail: conversationAgentReadiness.runtimeEnabled ? "runtime-enabled-review-required" : "runtime-disabled-safe" }
-    ]
-  };
-  productionGoNoGo.summary = {
-    ready: productionGoNoGo.checks.filter((check) => check.ready).length,
-    total: productionGoNoGo.checks.length,
-    blockers: productionGoNoGo.checks.filter((check) => !check.ready).length
+    status: productionReadinessGate.loading ? "loading-production-readiness" : productionReadinessGate.status,
+    checks: productionReadinessGate.domains.map((domain) => ({
+      id: domain.id,
+      label: domain.label,
+      ready: domain.ready,
+      detail: domain.blockers?.[0] || domain.nextAction || domain.status,
+    })),
+    summary: {
+      ready: productionReadinessGate.summary.ready,
+      total: productionReadinessGate.summary.domains,
+      blockers: productionReadinessGate.summary.blocked,
+    },
+    guardrails: productionReadinessGate.guardrails,
   };
   return (
     <section className="nuxera-home" aria-labelledby="nuxera-home-title">
@@ -1781,7 +1778,7 @@ function AdminOperationsHome({ sectionLabel }) {
           ))}
         </div>
         <footer>
-          <small>{L("Esta consola no habilita producción: solo consolida señales para revisión humana y cambio separado.", "This console does not enable production: it only consolidates signals for human review and a separate change.")}</small>
+          {productionGoNoGo.guardrails.slice(0, 2).map((guardrail) => <small key={guardrail}>{guardrail}</small>)}
         </footer>
       </section>
       <section className="nuxera-admin-go-no-go" aria-label={L("Cierre de diez frentes NUXERA", "NUXERA ten-track closure")}>

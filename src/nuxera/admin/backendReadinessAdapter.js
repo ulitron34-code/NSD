@@ -1449,3 +1449,90 @@ export function useControlledVerificationPlan({ enabled = true, fallbackPackage 
 
   return verificationPlanState;
 }
+
+function buildLocalProductionReadinessGate(language = "es") {
+  return {
+    id: "nuxera-production-readiness-gate",
+    source: "local-fallback",
+    loading: false,
+    error: null,
+    status: "production-readiness-unverified",
+    readyForProductionReview: false,
+    readyForAutomaticProduction: false,
+    readinessPercent: 0,
+    summary: { domains: 4, ready: 0, blocked: 4, criticalBlocked: 4, readinessPercent: 0 },
+    domains: [
+      { id: "sql-rls-backend", label: "SQL/RLS", ready: false, status: "blocked", blockers: [pickLang({ es: "Backend no verificado", en: "Backend not verified" }, language)], nextAction: pickLang({ es: "Cargar production readiness gate desde backend.", en: "Load production readiness gate from backend." }, language) },
+      { id: "notifications", label: "Notificaciones", ready: false, status: "blocked", blockers: [pickLang({ es: "Delivery no verificado", en: "Delivery not verified" }, language)], nextAction: pickLang({ es: "Mantener dry-run hasta evidencia.", en: "Keep dry-run until evidence." }, language) },
+      { id: "agent-chat", label: "Agente/chat", ready: false, status: "blocked", blockers: [pickLang({ es: "Runtime no verificado", en: "Runtime not verified" }, language)], nextAction: pickLang({ es: "Mantener chat en preview.", en: "Keep chat in preview." }, language) },
+      { id: "cutover", label: "Cutover", ready: false, status: "blocked", blockers: [pickLang({ es: "Release dossier no verificado", en: "Release dossier not verified" }, language)], nextAction: pickLang({ es: "Cerrar change/release package.", en: "Close change/release package." }, language) },
+    ],
+    guardrails: [pickLang({ es: "Fallback local; no aplica SQL, RLS, delivery ni deploy.", en: "Local fallback; it does not apply SQL, RLS, delivery or deploy." }, language)],
+  };
+}
+
+export function normalizeNuxeraProductionReadinessGateResponse(response, fallbackGate = null, language = "es") {
+  const payload = response?.productionReadinessGate || response || null;
+  const fallback = fallbackGate || buildLocalProductionReadinessGate(language);
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      ...fallback,
+      source: "remote-missing-fallback",
+      error: "nuxera-production-readiness-gate-missing",
+    };
+  }
+
+  return {
+    ...fallback,
+    ...payload,
+    source: payload.readyForProductionReview ? "remote-ready-for-human-review" : "remote-blocked",
+    loading: false,
+    error: null,
+    domains: asArray(payload.domains).length ? payload.domains : fallback.domains,
+    summary: {
+      ...fallback.summary,
+      ...asObject(payload.summary),
+    },
+    guardrails: [
+      ...asArray(payload.guardrails),
+      ...asArray(response?.guardrails),
+    ].filter(Boolean),
+  };
+}
+
+export function useProductionReadinessGate({ enabled = true, fallbackGate = null, language = "es" } = {}) {
+  const [gateState, setGateState] = useState(fallbackGate || buildLocalProductionReadinessGate(language));
+
+  useEffect(() => {
+    if (!enabled) {
+      setGateState(fallbackGate || buildLocalProductionReadinessGate(language));
+      return undefined;
+    }
+
+    let active = true;
+    const fallback = fallbackGate || buildLocalProductionReadinessGate(language);
+    setGateState({ ...fallback, source: "remote-loading", loading: true });
+
+    nuxeraBackendReadinessAPI.getProductionReadinessGate()
+      .then(({ data }) => {
+        if (!active) return;
+        setGateState(normalizeNuxeraProductionReadinessGateResponse(data, fallback, language));
+      })
+      .catch((err) => {
+        if (!active) return;
+        warn("NUXERA", "No se pudo cargar production readiness gate; usando fallback local", err);
+        setGateState({
+          ...fallback,
+          source: "remote-error-fallback",
+          error: "nuxera-production-readiness-gate-unavailable",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, fallbackGate, language]);
+
+  return gateState;
+}

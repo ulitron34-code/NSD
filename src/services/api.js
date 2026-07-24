@@ -310,7 +310,9 @@ export const nuxeraCaseAssignmentsAPI = {
 
 export const nuxeraBackendReadinessAPI = {
   getReadiness: () =>
-    api.get('/nuxera/admin/readiness')
+    api.get('/nuxera/admin/readiness'),
+  getProductionReadinessGate: () =>
+    api.get('/nuxera/admin/production-readiness-gate')
 };
 
 export const nuxeraTenTrackClosureAPI = {

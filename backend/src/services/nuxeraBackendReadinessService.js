@@ -28,6 +28,27 @@ const READINESS_TABLES = Object.freeze([
     label: 'Notification outbox',
     owner: 'communications',
     requiredFor: ['notification-delivery-readiness']
+  },
+  {
+    id: 'notification-approvals',
+    table: 'nuxera_notification_approvals',
+    label: 'Notification approval ledger',
+    owner: 'communications',
+    requiredFor: ['notification-human-approval-history', 'notification-delivery-cutover']
+  },
+  {
+    id: 'case-events',
+    table: 'nuxera_case_events',
+    label: 'Persisted case events',
+    owner: 'backend-persistence',
+    requiredFor: ['timeline-persistence', 'case-events-audit']
+  },
+  {
+    id: 'case-assignments',
+    table: 'nuxera_case_assignments',
+    label: 'Grantor case assignments',
+    owner: 'case-ops',
+    requiredFor: ['grantor-sla-routing', 'assignment-notifications']
   }
 ]);
 

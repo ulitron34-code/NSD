@@ -11,6 +11,7 @@ import { getNuxeraControlledReleaseDossier } from '../services/nuxeraControlledR
 import { getNuxeraControlledRunbook } from '../services/nuxeraControlledRunbookService.js';
 import { getNuxeraControlledVerificationPlan } from '../services/nuxeraControlledVerificationService.js';
 import { getNuxeraControlledWriteGate } from '../services/nuxeraControlledWriteGateService.js';
+import { getNuxeraProductionReadinessGate } from '../services/nuxeraProductionReadinessGateService.js';
 import { buildNuxeraConversationPreview, getNuxeraConversationAgentReadiness, runNuxeraConversationTurn } from "../services/nuxeraConversationAgentReadinessService.js";
 import { getNuxeraAiProviderPolicy } from "../services/nuxeraAiProviderPolicyService.js";
 import { getNuxeraTenTrackClosurePlan } from '../services/nuxeraTenTrackClosureService.js';
@@ -61,6 +62,26 @@ router.get(
         guardrails: [
           'Ten-track closure is read-only and does not execute SQL, deploy, send notifications or enable writes.',
           'Completion percentages are operational estimates, not production approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/production-readiness-gate',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      res.json({
+        workspaceRole: 'admin',
+        productionReadinessGate: await getNuxeraProductionReadinessGate(),
+        guardrails: [
+          'Production readiness gate is read-only and does not apply SQL, change RLS, send notifications, call AI providers or deploy production.',
+          'Ready-for-human-production-review is not automatic deployment approval.',
+          'Any blocked domain keeps production writes, email delivery and broad chat runtime disabled.'
         ]
       });
     } catch (error) {
