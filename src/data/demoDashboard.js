@@ -1,4 +1,5 @@
 import { COLORS } from "../utils/constants";
+import { BRAND } from "../config/brand";
 
 // ============================================
 // NEXUS PLATFORM - REALISTIC DEMO DATA
@@ -248,8 +249,8 @@ export const demoUsers = {
   admin: {
     id: "user-003",
     email: "admin@nsd.com",
-    name: "Admin NEXUS",
-    company: "NEXUS Platform",
+    name: `Admin ${BRAND.name}`,
+    company: BRAND.productName,
     role: "administrador",
     avatar: "AN",
     usersManaged: 156,

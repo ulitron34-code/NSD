@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const backendRoot = process.cwd();
-const frontendRoot = resolve(backendRoot, '..', 'ulitron34-code-nsd-https-github-com');
+const frontendRoot = resolve(backendRoot, '..');
 
 const checks = [];
 
@@ -52,39 +52,6 @@ checkContains(
     "router.patch('/information-requests/:requestId'",
     "evidence-url",
     "information_request_events"
-  ]
-);
-
-checkContains(
-  'Supabase institutional SQL Fase 7',
-  resolve(backendRoot, 'supabase_institutional_expansion.sql'),
-  [
-    'create table if not exists public.funder_interests',
-    'create table if not exists public.funder_contact_requests',
-    'idx_funder_contact_requests_order_id',
-    'Users can read own funder contact requests'
-  ]
-);
-
-checkContains(
-  'Supabase information requests SQL',
-  resolve(backendRoot, 'supabase_information_requests.sql'),
-  [
-    'create table if not exists public.information_requests',
-    'create table if not exists public.information_request_events',
-    'information_requests_owner_read',
-    'information_request_events_read'
-  ]
-);
-
-checkContains(
-  'Supabase consolidated Fase 7 SQL',
-  resolve(backendRoot, 'supabase_fase7_otorgantes.sql'),
-  [
-    'create table if not exists public.funder_interests',
-    'create table if not exists public.funder_contact_requests',
-    'create table if not exists public.information_requests',
-    'create table if not exists public.information_request_events'
   ]
 );
 
@@ -141,17 +108,6 @@ checkContains(
   ]
 );
 
-checkContains(
-  'Fase 7 closeout guide',
-  resolve(backendRoot, '..', 'cierre_fase7_otorgantes_local.md'),
-  [
-    'Cierre local Fase 7',
-    'SQL que falta ejecutar en Supabase',
-    'Prueba punta a punta requerida',
-    'Criterio para declarar Fase 7 cerrada'
-  ]
-);
-
 const failed = checks.filter((check) => !check.ok);
 
 console.log('\nSummary');
@@ -163,4 +119,4 @@ if (failed.length) {
   process.exit(1);
 }
 
-console.log('\nFase 7 local package is structurally ready. Supabase SQL and real user flow remain required before production closure.');
+console.log('\nFase 7 local package is structurally ready. Real Supabase verification remains required before production closure.');

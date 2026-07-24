@@ -35,13 +35,14 @@ test.describe('Services Catalog', () => {
 });
 
 test.describe('Landing Page Pricing Section', () => {
-  test('landing page has pricing section with plan names', async ({ page }) => {
+  test('landing page has current implementation modalities', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText(/Básico|Profesional|Empresarial/i).first()).toBeVisible();
+    await expect(page.getByText(/Núcleo de Cumplimiento|Orquestación Avanzada|Infraestructura Institucional/i).first()).toBeVisible();
   });
 
-  test('landing page shows monthly prices', async ({ page }) => {
+  test('landing page avoids unsupported fixed monthly pricing claims', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText(/\$299|\$699|\$899/i).first()).toBeVisible();
+    await expect(page.getByText(/Modalidades de implementación/i).first()).toBeVisible();
+    await expect(page.getByText(/\$299|\$699|\$899/i)).toHaveCount(0);
   });
 });

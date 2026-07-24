@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { translateCopy, uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const tractionSignals = [
   ["Producto", "Demo funcional con tres perfiles, data room, scoring A-E, otorgantes, solicitantes y admin.", "Fuerte"],
@@ -14,7 +15,7 @@ const tractionSignals = [
 
 const investorNarrative = [
   ["1. Dolor", "El financiamiento se retrasa porque solicitantes llegan con documentos incompletos y otorgantes pierden tiempo revisando casos no comparables."],
-  ["2. Producto", "NEXUS estructura el expediente, revisa faltantes con IA, ordena data room, genera scoring y permite trazabilidad de requerimientos."],
+  ["2. Producto", `${BRAND.name} estructura el expediente, revisa faltantes con IA, ordena data room, genera scoring y permite trazabilidad de requerimientos.`],
   ["3. Comprador", "Otorgantes, asesores financieros, SOFOMES, fintechs, fondos y empresas que preparan solicitudes de credito o capital."],
   ["4. Modelo", "SaaS + fee por expediente + servicios profesionales + integraciones premium de verificacion, OCR, KYB y biometria."],
   ["5. Proxima meta", "Piloto con entidades financieras, 50 expedientes controlados, conversion a interes institucional y evidencia de ahorro de tiempo."],
@@ -23,7 +24,7 @@ const investorNarrative = [
 const evidenceChecklist = [
   ["Demo end-to-end", "Mostrar solicitante, otorgante y admin sin cambiar de producto.", true],
   ["Caso de uso claro", "Subir proyecto, revisar con IA, liberar data room y generar decision 360.", true],
-  ["Riesgos mitigados", "Aclarar que NEXUS no aprueba credito; organiza evidencia y reduce friccion.", true],
+  ["Riesgos mitigados", `Aclarar que ${BRAND.name} no aprueba credito; organiza evidencia y reduce friccion.`, true],
   ["Pricing final", "Definir paquete piloto y precio por expediente antes de hablar con clientes.", false],
   ["Metrica dura", "Medir dias ahorrados, faltantes detectados y conversion a revision interna.", false],
   ["Aliado piloto", "Conseguir carta de interes o prueba con entidad/asesor.", false],
@@ -57,7 +58,7 @@ export default function InvestorWarRoomTab() {
           {L("Ronda de inversion / War Room", "Fundraising / War Room")}
         </p>
         <h1 style={{ margin: "0.35rem 0", color: COLORS.white, fontSize: "1.7rem" }}>
-          {L("Tablero para defender NEXUS como startup SaaS", "Board to defend NEXUS as a SaaS startup")}
+          {L(`Tablero para defender ${BRAND.name} como startup SaaS`, `Board to defend ${BRAND.name} as a SaaS startup`)}
         </h1>
         <p style={{ margin: 0, maxWidth: "900px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(

@@ -1,10 +1,12 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { ExperienceProvider } from "./experience/ExperienceContext";
 import ProtectedRoute from "./components/Layout/ProtectedRoute";
 import Header from "./components/Layout/Header";
 import Toast from "./components/Shared/Toast";
+import { BRAND } from "./config/brand";
 import "./App.css";
 import "./utils/i18n";
 
@@ -35,6 +37,10 @@ const ComplianceIntelPage    = lazy(() => import("./pages/ComplianceIntelligence
 const IntegracionesPage      = lazy(() => import("./pages/IntegracionesPage"));
 const IndustriasPage         = lazy(() => import("./pages/IndustriasPage"));
 const RecursosPage           = lazy(() => import("./pages/RecursosPage"));
+const ForApplicantsPage      = lazy(() => import("./pages/ForApplicantsPage"));
+const ForFundersPage         = lazy(() => import("./pages/ForFundersPage"));
+const InternationalPage      = lazy(() => import("./pages/InternationalPage"));
+const SecurityTraceabilityPage = lazy(() => import("./pages/SecurityTraceabilityPage"));
 
 const Loader = () => (
   <div style={{
@@ -46,6 +52,10 @@ const Loader = () => (
 );
 
 function AppContent() {
+  useEffect(() => {
+    document.title = `${BRAND.legalName} — Plataforma Global de Cumplimiento y Riesgo`;
+  }, []);
+
   return (
     <Router>
       <Suspense fallback={<Loader />}>
@@ -76,6 +86,10 @@ function AppContent() {
           <Route path="/industrias"       element={<><Header isLanding={true} /><IndustriasPage /></>} />
           <Route path="/industrias/:sector" element={<><Header isLanding={true} /><IndustriasPage /></>} />
           <Route path="/recursos"         element={<><Header isLanding={true} /><RecursosPage /></>} />
+          <Route path="/for-applicants"   element={<><Header isLanding={true} /><ForApplicantsPage /></>} />
+          <Route path="/for-funders"      element={<><Header isLanding={true} /><ForFundersPage /></>} />
+          <Route path="/international"    element={<><Header isLanding={true} /><InternationalPage /></>} />
+          <Route path="/security"         element={<><Header isLanding={true} /><SecurityTraceabilityPage /></>} />
 
           {/* Redirects de URLs anteriores */}
           <Route path="/pricing" element={<Navigate to="/modalidades" replace />} />
@@ -127,7 +141,9 @@ export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <AppContent />
+        <ExperienceProvider>
+          <AppContent />
+        </ExperienceProvider>
       </NotificationProvider>
     </AuthProvider>
   );

@@ -1,13 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const frontendRoot = 'E:\\CODEX\\ulitron34-code-nsd-https-github-com';
+const frontendRoot = resolve(process.cwd(), '..');
 
 const checks = [
   {
     name: 'Solicitante profile readiness',
     file: resolve(frontendRoot, 'src/components/Dashboard/Solicitante/MiPerfilTab.jsx'),
-    patterns: ['Brechas antes de compartir', 'Plan de subsanacion', 'readinessPlan', 'remediationSteps']
+    patterns: ['Brechas antes de compartir', 'Plan de subsanación', 'readinessPlan', 'remediationSteps']
   },
   {
     name: 'Solicitante project share readiness',

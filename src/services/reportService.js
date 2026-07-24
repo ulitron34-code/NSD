@@ -1,5 +1,6 @@
 import { error, debug, info, warn } from '../utils/logger';
 import { escapeHtml as esc } from '../utils/htmlEscape';
+import { BRAND } from '../config/brand';
 // ============================================
 // GENERADOR DE REPORTES
 // Crea PDF/HTML/Markdown de expedientes
@@ -350,7 +351,7 @@ function buildExpedienteHTML(expedient, score, documents, requirements, timestam
     </div>
 
     <div class="footer">
-      <p>Este reporte fue generado automáticamente por el sistema NEXUS.</p>
+      <p>Este reporte fue generado automáticamente por el sistema ${BRAND.name}.</p>
       <p>Para más información, contacte al administrador de cumplimiento.</p>
     </div>
   </div>

@@ -1,34 +1,80 @@
+import { BRAND } from "../config/brand";
+import { pickLang } from "./requisitosMinimos";
+
 const statusLabels = {
-  pending: "Nuevo",
-  paid: "Data room abierto",
-  in_progress: "En revision",
-  completed: "Reporte listo",
-  cancelled: "Observado"
+  pending: { es: "Nuevo", en: "New" },
+  paid: { es: "Data room abierto", en: "Data room open" },
+  in_progress: { es: "En revision", en: "In review" },
+  completed: { es: "Reporte listo", en: "Report ready" },
+  cancelled: { es: "Observado", en: "Flagged" }
 };
 
 const serviceLabels = {
-  "combo-complete": "Expediente integral",
-  "financial-analysis": "Analisis financiero",
-  "business-plan": "Business plan",
-  "pitch-deck": "Presentacion ejecutiva"
+  "combo-complete": { es: "Expediente integral", en: "Full file" },
+  "financial-analysis": { es: "Analisis financiero", en: "Financial analysis" },
+  "business-plan": { es: "Business plan", en: "Business plan" },
+  "pitch-deck": { es: "Presentacion ejecutiva", en: "Executive presentation" }
 };
 
 const documentTemplates = {
-  "combo-complete": ["Business plan", "Modelo financiero", "Pitch deck", "KYC/KYB", "Estados financieros"],
-  "financial-analysis": ["Estados financieros", "Flujo de caja", "Supuestos financieros", "KYC/KYB"],
-  "business-plan": ["Resumen ejecutivo", "Business plan", "Uso de fondos", "KYC/KYB"],
-  "pitch-deck": ["Pitch deck", "Teaser", "Resumen financiero", "KYC/KYB"]
+  "combo-complete": [
+    { es: "Business plan", en: "Business plan" },
+    { es: "Modelo financiero", en: "Financial model" },
+    { es: "Pitch deck", en: "Pitch deck" },
+    { es: "KYC/KYB", en: "KYC/KYB" },
+    { es: "Estados financieros", en: "Financial statements" },
+  ],
+  "financial-analysis": [
+    { es: "Estados financieros", en: "Financial statements" },
+    { es: "Flujo de caja", en: "Cash flow" },
+    { es: "Supuestos financieros", en: "Financial assumptions" },
+    { es: "KYC/KYB", en: "KYC/KYB" },
+  ],
+  "business-plan": [
+    { es: "Resumen ejecutivo", en: "Executive summary" },
+    { es: "Business plan", en: "Business plan" },
+    { es: "Uso de fondos", en: "Use of funds" },
+    { es: "KYC/KYB", en: "KYC/KYB" },
+  ],
+  "pitch-deck": [
+    { es: "Pitch deck", en: "Pitch deck" },
+    { es: "Teaser", en: "Teaser" },
+    { es: "Resumen financiero", en: "Financial summary" },
+    { es: "KYC/KYB", en: "KYC/KYB" },
+  ],
 };
+
+const defaultDocumentTemplate = [
+  { es: "Resumen ejecutivo", en: "Executive summary" },
+  { es: "KYC/KYB", en: "KYC/KYB" },
+  { es: "Soporte financiero", en: "Financial support" },
+];
+
+const readinessLabels = {
+  "committee-ready": { es: "Listo para comite", en: "Ready for committee" },
+  fixable: { es: "Subsanable", en: "Fixable" },
+  "initial-prep": { es: "Preparacion inicial", en: "Initial preparation" },
+};
+
+const riskLabels = {
+  low: { es: "Bajo", en: "Low" },
+  medium: { es: "Medio", en: "Medium" },
+  high: { es: "Alto", en: "High" },
+};
+
+function localizeList(items, language) {
+  return items.map((item) => (typeof item === "object" && item !== null ? pickLang(item, language) : item));
+}
 
 function normalizeAmount(amount = 0) {
   const numeric = Number(amount || 0);
   return numeric > 1000000 ? numeric / 100 : numeric;
 }
 
-function inferReadinessLevel(score = 0, status = "") {
-  if (score >= 82 || status === "completed") return "Listo para comite";
-  if (score >= 65 || status === "in_progress") return "Subsanable";
-  return "Preparacion inicial";
+function inferReadinessKey(score = 0, status = "") {
+  if (score >= 82 || status === "completed") return "committee-ready";
+  if (score >= 65 || status === "in_progress") return "fixable";
+  return "initial-prep";
 }
 
 export function formatCurrency(amount = 0) {
@@ -39,55 +85,60 @@ export function formatCurrency(amount = 0) {
   });
 }
 
-export function mapOrderToOpportunity(order) {
+export function mapOrderToOpportunity(order, language = "es") {
   const metadata = order.metadata || {};
   const normalizedStatus = order.status === "paid" ? "in_progress" : order.status;
-  const amount = normalizeAmount(order.amount);
-  const sector = metadata.sector || "No especificado";
-  const targetEntity = metadata.targetEntity || metadata.target_entity || "Otorgante por definir";
-  const structure = metadata.structure || metadata.fundingStructure || serviceLabels[order.service_type] || "Estructura por definir";
+  const amount = normalizeAmount(order.requested_amount ?? order.amount);
+  const sector = metadata.sector || pickLang({ es: "No especificado", en: "Not specified" }, language);
+  const targetEntity = metadata.targetEntity || metadata.target_entity || pickLang({ es: "Otorgante por definir", en: "Grantor to be defined" }, language);
+  const structure = metadata.structure || metadata.fundingStructure || pickLang(serviceLabels[order.service_type], language) || pickLang({ es: "Estructura por definir", en: "Structure to be defined" }, language);
   const baseScore = normalizedStatus === "completed" ? 88 : normalizedStatus === "in_progress" ? 76 : 58;
   const complianceScore = Number(metadata.complianceScore || metadata.compliance_score || 0) || (metadata.country || metadata.rfc ? Math.min(baseScore + 8, 96) : baseScore);
   const financialScore = Number(metadata.financialScore || metadata.financial_score || 0) || (amount >= 75000 ? Math.max(baseScore - 4, 45) : baseScore);
   const averageScore = Math.round((financialScore + complianceScore) / 2);
-  const risk = averageScore >= 82 ? "Bajo" : averageScore >= 65 ? "Medio" : "Alto";
+  const riskLevel = averageScore >= 82 ? "low" : averageScore >= 65 ? "medium" : "high";
+  const readinessKey = inferReadinessKey(averageScore, normalizedStatus);
   const documents = Array.isArray(metadata.documents) && metadata.documents.length
     ? metadata.documents
-    : documentTemplates[order.service_type] || ["Resumen ejecutivo", "KYC/KYB", "Soporte financiero"];
+    : localizeList(documentTemplates[order.service_type] || defaultDocumentTemplate, language);
+  const statusLabel = pickLang(statusLabels[normalizedStatus], language) || normalizedStatus || pickLang({ es: "Nuevo", en: "New" }, language);
 
   return {
     id: order.id,
     order,
-    name: order.projectName || metadata.projectName || `Expediente ${String(order.id).slice(0, 8)}`,
-    applicant: metadata.companyName || metadata.email || "Solicitante NEXUS",
+    name: order.project_name || order.projectName || metadata.projectName || `${pickLang({ es: "Expediente", en: "File" }, language)} ${String(order.id).slice(0, 8)}`,
+    applicant: metadata.companyName || metadata.email || order.applicant_type || `${pickLang({ es: "Solicitante", en: "Applicant" }, language)} ${BRAND.name}`,
     sector,
     country: metadata.country || "MX",
     amount,
     amountLabel: formatCurrency(amount),
-    use: metadata.description || metadata.useOfFunds || "Uso de fondos pendiente de confirmar",
-    stage: statusLabels[normalizedStatus] || normalizedStatus || "Nuevo",
+    use: metadata.description || metadata.useOfFunds || pickLang({ es: "Uso de fondos pendiente de confirmar", en: "Use of funds pending confirmation" }, language),
+    stage: statusLabel,
     financialScore,
     complianceScore,
     averageScore,
-    risk,
-    guarantee: metadata.guarantee || "Soporte documental por validar",
+    risk: order.risk_level || pickLang(riskLabels[riskLevel], language),
+    riskLevel,
+    guarantee: metadata.guarantee || pickLang({ es: "Soporte documental por validar", en: "Documentary support to be validated" }, language),
     targetEntity,
     structure,
-    readinessLevel: metadata.readinessLevel || metadata.readiness_level || inferReadinessLevel(averageScore, normalizedStatus),
+    readinessLevel: order.readiness_grade || metadata.readinessLevel || metadata.readiness_level || pickLang(readinessLabels[readinessKey], language),
+    readinessKey,
     documents,
-    status: statusLabels[normalizedStatus] || normalizedStatus || "Nuevo",
+    status: statusLabel,
     rawStatus: normalizedStatus,
     createdAt: order.created_at,
     share: metadata.share || null,
     interest: metadata.interest || null,
     infoRequests: metadata.infoRequests || metadata.info_requests || [],
     contactRequest: metadata.contactRequest || metadata.contact_request || null,
+    assignment: metadata.assignment || null,
     documentsCount: Number(metadata.documentsCount || metadata.documents_count || documents.length),
     invitationStatus: metadata.share?.status || metadata.invitationStatus || metadata.invitation_status || null
   };
 }
 
-export function mapPipelineEntryToOpportunity(entry) {
+export function mapPipelineEntryToOpportunity(entry, language = "es") {
   const opportunity = mapOrderToOpportunity({
     ...entry.order,
     metadata: {
@@ -95,7 +146,26 @@ export function mapPipelineEntryToOpportunity(entry) {
       sharedWith: entry.share?.recipientName,
       shareStatus: entry.share?.status
     }
-  });
+  }, language);
+
+  const averageScore = entry.scoring?.finalScore ?? opportunity.averageScore;
+  const riskLevel = averageScore >= 82 ? "low" : averageScore >= 65 ? "medium" : "high";
+  const readinessKey = inferReadinessKey(averageScore, opportunity.rawStatus);
+  const statusKey = entry.interest?.status === "term_sheet"
+    ? "report-ready"
+    : entry.interest?.status === "under_review"
+      ? "in-review"
+      : entry.interest?.status === "declined"
+        ? "flagged"
+        : entry.share?.status === "invited"
+          ? "invited"
+          : null;
+  const statusLabelByKey = {
+    "report-ready": { es: "Reporte listo", en: "Report ready" },
+    "in-review": { es: "En revision", en: "In review" },
+    flagged: { es: "Observado", en: "Flagged" },
+    invited: { es: "Invitado", en: "Invited" },
+  };
 
   return {
     ...opportunity,
@@ -103,38 +173,34 @@ export function mapPipelineEntryToOpportunity(entry) {
     interest: entry.interest || null,
     documentsCount: entry.documentsCount || 0,
     latestReview: entry.latestReview || null,
+    infoRequests: Array.isArray(entry.informationRequests) ? entry.informationRequests : opportunity.infoRequests,
     scoring: entry.scoring || null,
     financialScore: entry.scoring?.finalScore ?? opportunity.financialScore,
     complianceScore: entry.scoring?.regulatoryValidation?.status === "clear" ? Math.max(opportunity.complianceScore, 85) : opportunity.complianceScore,
-    averageScore: entry.scoring?.finalScore ?? opportunity.averageScore,
-    risk: (entry.scoring?.finalScore ?? opportunity.averageScore) >= 82 ? "Bajo" : (entry.scoring?.finalScore ?? opportunity.averageScore) >= 65 ? "Medio" : "Alto",
-    readinessLevel: inferReadinessLevel(entry.scoring?.finalScore ?? opportunity.averageScore, opportunity.rawStatus),
+    averageScore,
+    risk: pickLang(riskLabels[riskLevel], language),
+    riskLevel,
+    readinessLevel: pickLang(readinessLabels[readinessKey], language),
+    readinessKey,
     invitationStatus: entry.share?.status || "accepted",
-    status: entry.interest?.status === "term_sheet"
-      ? "Reporte listo"
-      : entry.interest?.status === "under_review"
-        ? "En revision"
-        : entry.interest?.status === "declined"
-          ? "Observado"
-          : entry.share?.status === "invited"
-            ? "Invitado"
-            : opportunity.status
+    status: statusKey ? pickLang(statusLabelByKey[statusKey], language) : opportunity.status,
+    assignment: entry.assignment || opportunity.assignment || null,
   };
 }
 
-export function buildOtorgantePipeline(orders = []) {
-  return orders.map(mapOrderToOpportunity);
+export function buildOtorgantePipeline(orders = [], language = "es") {
+  return orders.map((order) => mapOrderToOpportunity(order, language));
 }
 
-export function buildOtorgantePipelineFromEntries(entries = []) {
-  return entries.map(mapPipelineEntryToOpportunity);
+export function buildOtorgantePipelineFromEntries(entries = [], language = "es") {
+  return entries.map((entry) => mapPipelineEntryToOpportunity(entry, language));
 }
 
-export function buildOtorganteAnalytics(opportunities = []) {
+export function buildOtorganteAnalytics(opportunities = [], language = "es") {
   const total = opportunities.length;
   const dataRooms = opportunities.filter((item) => ["in_progress", "completed"].includes(item.rawStatus)).length;
   const offers = opportunities.filter((item) => item.rawStatus === "completed").length;
-  const observed = opportunities.filter((item) => item.risk === "Alto").length;
+  const observed = opportunities.filter((item) => (item.riskLevel ? item.riskLevel === "high" : item.risk === "Alto")).length;
   const totalAmount = opportunities.reduce((sum, item) => sum + item.amount, 0);
   const averageTicket = total ? totalAmount / total : 0;
 
@@ -158,14 +224,14 @@ export function buildOtorganteAnalytics(opportunities = []) {
     observed,
     totalAmount,
     averageTicket,
-    lowRisk: opportunities.filter((item) => item.risk === "Bajo").length,
-    mediumRisk: opportunities.filter((item) => item.risk === "Medio").length,
+    lowRisk: opportunities.filter((item) => (item.riskLevel ? item.riskLevel === "low" : item.risk === "Bajo")).length,
+    mediumRisk: opportunities.filter((item) => (item.riskLevel ? item.riskLevel === "medium" : item.risk === "Medio")).length,
     highRisk: observed,
     funnel: [
-      { label: "Expedientes recibidos", value: total, width: 100 },
-      { label: "Data rooms abiertos", value: dataRooms, width: total ? Math.max(Math.round((dataRooms / total) * 100), 12) : 12 },
-      { label: "Reportes listos", value: offers, width: total ? Math.max(Math.round((offers / total) * 100), 12) : 12 },
-      { label: "Riesgo alto", value: observed, width: total ? Math.max(Math.round((observed / total) * 100), 12) : 12 }
+      { label: pickLang({ es: "Expedientes recibidos", en: "Files received" }, language), value: total, width: 100 },
+      { label: pickLang({ es: "Data rooms abiertos", en: "Data rooms opened" }, language), value: dataRooms, width: total ? Math.max(Math.round((dataRooms / total) * 100), 12) : 12 },
+      { label: pickLang({ es: "Reportes listos", en: "Reports ready" }, language), value: offers, width: total ? Math.max(Math.round((offers / total) * 100), 12) : 12 },
+      { label: pickLang({ es: "Riesgo alto", en: "High risk" }, language), value: observed, width: total ? Math.max(Math.round((observed / total) * 100), 12) : 12 }
     ],
     sectorExposure
   };

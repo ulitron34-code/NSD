@@ -10,6 +10,9 @@ import PricingSection from "../components/Landing/PricingSection";
 import FAQSection from "../components/Landing/FAQSection";
 import CTASection from "../components/Landing/CTASection";
 import Footer from "../components/Landing/Footer";
+import OperatingModelSection from "../components/Landing/OperatingModelSection";
+import ResponsibleAISection from "../components/Landing/ResponsibleAISection";
+import { BRAND } from "../config/brand";
 
 export default function LandingPage() {
   const location = useLocation();
@@ -29,6 +32,8 @@ export default function LandingPage() {
 
       <HowItWorksSection />
 
+      <OperatingModelSection />
+
       <ClientsSection />
 
       <div id="nosotros">
@@ -42,7 +47,7 @@ export default function LandingPage() {
       <div style={{ position: "relative", height: "clamp(320px, 42vw, 480px)", overflow: "hidden" }}>
         <img
           src="/about-full.jpg"
-          alt="NEXUS Secure Due-Diligence Unit"
+          alt={BRAND.legalName}
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         />
       </div>
@@ -55,6 +60,7 @@ export default function LandingPage() {
         <FAQSection />
       </div>
 
+      <ResponsibleAISection />
       <CTASection />
       <Footer />
     </div>

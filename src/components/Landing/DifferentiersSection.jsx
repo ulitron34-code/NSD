@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import Icon from "../common/icons";
+import { BRAND } from "../../config/brand";
 
 const icons = ["target", "checklist", "network", "microscope"];
 const numbers = ["01", "02", "03", "04"];
@@ -17,7 +18,7 @@ export default function DifferentiersSection() {
             color: "#C9A84C", fontWeight: 700, fontSize: "0.8rem",
             letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem",
           }}>
-            {t("differentiators.eyebrow")}
+            {t("differentiators.eyebrow", { brand: BRAND.name })}
           </p>
           <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#1B3A5C", fontWeight: 800 }}>
             {t("differentiators.title")}

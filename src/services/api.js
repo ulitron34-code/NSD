@@ -237,6 +237,169 @@ export const checklistAPI = {
     api.get(`/orders/${orderId}/checklist`)
 };
 
+export const nuxeraWorkspaceStateAPI = {
+  getOrderState: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/state`),
+  updateChecklistState: (orderId, payload) =>
+    api.patch(`/nuxera/orders/${orderId}/state/checklist`, payload)
+};
+
+export const nuxeraProjectBuilderAPI = {
+  draft: (answers, language) =>
+    api.post('/nuxera/applicant/project-builder/draft', { answers, language })
+};
+
+export const nuxeraCaseTimelineAPI = {
+  getApplicantTimeline: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/timeline`),
+  getGrantorTimeline: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-timeline`),
+  getAdminTimeline: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/timeline`),
+  getApplicantCaseEvents: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/case-events`),
+  getGrantorCaseEvents: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-case-events`),
+  getAdminCaseEvents: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/case-events`),
+  getAdminCaseEventsPersistencePlan: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/case-events/persistence-plan`)
+};
+
+export const nuxeraDecisionPackageAPI = {
+  getGrantorDecisionPackage: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-decision-package`),
+  getAdminEvidenceCoverage: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/evidence-coverage`)
+};
+
+export const nuxeraRiskOrchestrationAPI = {
+  getApplicantRiskProfile: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/risk-profile`),
+  getGrantorRiskProfile: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-risk-profile`),
+  getAdminRiskProfile: (orderId) =>
+    api.get(`/nuxera/admin/orders/${orderId}/risk-profile`),
+  getAdminRiskHealth: () =>
+    api.get('/nuxera/admin/risk-health')
+};
+
+export const nuxeraEvidenceAPI = {
+  getOrderEvidence: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/evidence`),
+  getGrantorOrderEvidence: (orderId) =>
+    api.get(`/nuxera/orders/${orderId}/grantor-evidence`)
+};
+
+export const nuxeraAdminControlsAPI = {
+  getControls: () =>
+    api.get('/nuxera/admin/controls')
+};
+
+export const nuxeraAdminGrantorCasesAPI = {
+  getCases: () =>
+    api.get('/nuxera/admin/grantor-cases')
+};
+
+export const nuxeraCaseAssignmentsAPI = {
+  list: (params = {}) =>
+    api.get('/nuxera/admin/case-assignments', { params }),
+  preview: (payload = {}) =>
+    api.post('/nuxera/admin/case-assignments', payload)
+};
+
+export const nuxeraBackendReadinessAPI = {
+  getReadiness: () =>
+    api.get('/nuxera/admin/readiness')
+};
+
+export const nuxeraTenTrackClosureAPI = {
+  getPlan: () =>
+    api.get('/nuxera/admin/ten-track-closure')
+};
+
+export const nuxeraTenTrackExecutionBacklogAPI = {
+  getBacklog: () =>
+    api.get('/nuxera/admin/ten-track-execution-backlog')
+};
+export const nuxeraNotificationOutboxAPI = {
+  getReadiness: () =>
+    api.get('/nuxera/admin/notification-outbox-readiness'),
+  getTemplates: () =>
+    api.get('/nuxera/admin/notification-templates'),
+  getApprovalReadiness: () =>
+    api.get('/nuxera/admin/notification-approval-readiness'),
+  getHealth: (params = {}) =>
+    api.get('/nuxera/admin/notification-outbox-health', { params }),
+  getRulesDryRun: (orderId, params = {}) =>
+    api.get(`/nuxera/admin/orders/${orderId}/notification-rules-dry-run`, { params }),
+  getApprovalPlan: (orderId, params = {}) =>
+    api.get(`/nuxera/admin/orders/${orderId}/notification-approval-plan`, { params }),
+  approveRules: (orderId, payload = {}) =>
+    api.post(`/nuxera/admin/orders/${orderId}/notification-rules/approve`, payload),
+  dryRun: (payload = {}) =>
+    api.post('/nuxera/admin/notification-outbox-dry-run', payload),
+  queue: (payload = {}) =>
+    api.post('/nuxera/admin/notification-outbox', payload),
+  runDeliveryBatch: (payload = {}) =>
+    api.post('/nuxera/admin/notification-delivery-batch', payload),
+  list: (params = {}) =>
+    api.get('/nuxera/admin/notification-outbox', { params })
+};
+export const nuxeraAiProviderPolicyAPI = {
+  getPolicy: () =>
+    api.get('/nuxera/admin/ai-provider-policy')
+};
+
+export const nuxeraConversationAgentAPI = {
+  getReadiness: () =>
+    api.get('/nuxera/admin/conversation-agent-readiness'),
+  preview: (payload = {}) =>
+    api.post('/nuxera/conversation/preview', payload),
+  turn: (payload = {}) =>
+    api.post('/nuxera/conversation/turn', payload)
+};
+
+export const nuxeraControlledVerificationAPI = {
+  getPlan: () =>
+    api.get('/nuxera/admin/verification-plan')
+};
+
+export const nuxeraControlledEvidenceScaffoldAPI = {
+  getScaffold: (params = {}) =>
+    api.get('/nuxera/admin/verification-evidence-scaffold', { params })
+};
+export const nuxeraControlledContinuationPackAPI = {
+  getPack: (params = {}) =>
+    api.get('/nuxera/admin/verification-continuation-pack', { params })
+};
+
+export const nuxeraControlledRunbookAPI = {
+  getRunbook: (params = {}) =>
+    api.get('/nuxera/admin/verification-runbook', { params })
+};
+
+export const nuxeraControlledEvidenceReviewAPI = {
+  review: (markdown) =>
+    api.post('/nuxera/admin/verification-evidence-review', { markdown })
+};
+
+export const nuxeraControlledApprovalPackageAPI = {
+  build: (payload = {}) =>
+    api.post('/nuxera/admin/verification-approval-package', payload)
+};
+
+export const nuxeraControlledWriteGateAPI = {
+  evaluate: (payload = {}) =>
+    api.post('/nuxera/admin/verification-write-gate', payload)
+};
+export const nuxeraControlledChangeRequestAPI = {
+  build: (payload = {}) =>
+    api.post('/nuxera/admin/verification-change-request', payload)
+};export const nuxeraControlledReleaseDossierAPI = {
+  build: (payload = {}) =>
+    api.post('/nuxera/admin/verification-release-dossier', payload)
+};
 export const apiKeysAPI = {
   list: () =>
     api.get('/api-keys'),

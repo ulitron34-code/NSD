@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
 import SectionBackground from "../components/common/SectionBackground";
+import { BRAND } from "../config/brand";
 import { overlays, softCardStyle } from "../utils/visualStyle";
 
 const INDUSTRIES = [
@@ -331,7 +332,7 @@ function SectorPage({ industry }) {
             CASOS DE USO
           </p>
           <h2 style={{ color: COLORS.navy, fontSize: "1.3rem", fontWeight: 800, marginBottom: "1.5rem" }}>
-            Cómo NEXUS resuelve los retos de su sector
+            Cómo {BRAND.name} resuelve los retos de su sector
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(430px, 1fr))", gap: "1.1rem" }}>
             {content.casos.map((caso, i) => (
@@ -360,7 +361,7 @@ function SectorPage({ industry }) {
           {/* Módulos NEXUS */}
           <div style={{ ...softCardStyle, padding: "1.4rem 1.5rem" }}>
             <p style={{ color: COLORS.gold, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-              MÓDULOS NEXUS APLICABLES
+              MÓDULOS {BRAND.name} APLICABLES
             </p>
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {content.modulos.map((m) => (
@@ -447,7 +448,7 @@ export default function IndustriasPage() {
             Cumplimiento configurado para su industria
           </h1>
           <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "1rem", maxWidth: "620px", margin: "0 auto", lineHeight: 1.65 }}>
-            NEXUS se adapta a los requerimientos regulatorios de 21 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
+            {BRAND.name} se adapta a los requerimientos regulatorios de 21 sectores con checklists, reglas, fuentes y flujos específicos para cada industria y jurisdicción.
           </p>
         </section>
 

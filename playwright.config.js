@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'html',
   
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.BASE_URL || 'http://localhost:5188',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -40,10 +40,15 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    command: 'npm run dev -- --port 5188',
+    url: 'http://localhost:5188',
+    reuseExistingServer: false,
     timeout: 120 * 1000,
+    env: {
+      ...process.env,
+      VITE_NUXERA_EXPERIENCE_ENABLED: 'true',
+      VITE_DEMO_MODE: 'true',
+    },
   },
   
   timeout: 30 * 1000,

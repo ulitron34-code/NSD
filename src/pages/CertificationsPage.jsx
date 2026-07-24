@@ -1,6 +1,7 @@
 import React from "react";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
+import { BRAND } from "../config/brand";
 
 export default function CertificationsPage() {
   return (
@@ -16,7 +17,7 @@ export default function CertificationsPage() {
           Certificaciones y Cumplimiento
         </h1>
         <p style={{color: COLORS.textMuted, marginBottom: "3rem", fontSize: "1.1rem"}}>
-          NEXUS cumple con los más altos estándares internacionales de seguridad y privacidad.
+          {BRAND.name} cumple con los más altos estándares internacionales de seguridad y privacidad.
         </p>
 
         {/* Certifications */}

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { sharesAPI } from "../services/api";
 import { COLORS } from "../utils/constants";
 import { formatDocumentStatus, formatDocumentType, formatReadinessGrade } from "../utils/institutional";
+import { BRAND } from "../config/brand";
 
 const serviceLabels = {
   "combo-complete": "Paquete Completo",
@@ -89,7 +90,7 @@ export default function SharedDataRoomPage() {
       }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <p style={{ color: COLORS.goldLight, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", fontSize: "0.78rem", marginBottom: "0.75rem" }}>
-            NEXUS Data Room Compartido
+            {BRAND.name} Data Room Compartido
           </p>
           <h1 style={{ fontSize: "2.4rem", marginBottom: "0.75rem" }}>
             Expediente para revision de otorgante
@@ -154,7 +155,7 @@ export default function SharedDataRoomPage() {
               </div>
               <div>
                 <p style={{ color: COLORS.textMuted, fontSize: "0.76rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "0.25rem" }}>
-                  Resumen institucional NEXUS
+                  Resumen institucional {BRAND.name}
                 </p>
                 <h2 style={{ color: COLORS.navy, fontSize: "1.25rem", marginBottom: "0.35rem" }}>
                   {scoring.readinessGrade?.label || "Preparacion pendiente"}
