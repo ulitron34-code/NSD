@@ -149,3 +149,57 @@ Of the eight no-go criteria listed above:
 | Approver | Not yet — user (`ulitron34`) authorized the SQL *application* to production explicitly in chat, and is now recorded as operator/reviewer/rollback owner, but has not yet given the formal "approved to enable writes" decision this row asks for. |
 | Approval date | N/A |
 | Remaining blockers | Only the formal write-enablement approval decision and the standard external gates remain (UAT with pilot users, formal external security review, a stable-metrics pilot window) — none of these are technical/code gaps. Everything technical — all 4 RLS identities, all read and write HTTP endpoints against both the local backend and the actually deployed preview infrastructure, audit_logs evidence, rollback rehearsal (5/5), operator/reviewer/rollback-owner names, and the grantor-authorized evidence policy itself — is now resolved and documented in this file. Pending deployment confirmation: the grantor-evidence read route now has local audit instrumentation, but PR #3 must be updated and the deployed path must produce one real `audit_logs` row before this evidence is fully closed. |
+
+## 2026-07-24 update — first real non-production run, plus a production finding
+
+The 2026-07-18/19/20 evidence above was captured directly against production (this org had no non-production Supabase project at the time, noted explicitly in Run metadata). This update adds the first run against an actual isolated non-production project, and documents a real finding made while preparing it.
+
+### Finding: `nuxera_workspace_states` owner-read policy was missing a `workspace_role` filter
+
+While cloning the production schema to build the non-production project, the live policy on `nuxera_workspace_states` was inspected directly (`pg_policies.qual`) and found to only check order ownership:
+
+```sql
+-- live in production before this fix
+CREATE POLICY "owners_select_nuxera_workspace_states" ON nuxera_workspace_states FOR SELECT
+  USING (EXISTS (SELECT 1 FROM service_orders so WHERE so.id = order_id AND so.user_id = auth.uid()));
+```
+
+This was not caught by the 2026-07-18 evidence run above because that run tested cross-**order** isolation (applicant-owner vs. different-applicant), not cross-**role** isolation within the same order. `workspace_role` includes `applicant`, `grantor` and `admin`, and this table's `surface` values include `memo`/`workbench` (the grantor's internal, non-binding decision memo per `NU-GRA-004`). With the policy above, the order owner (applicant) could read a grantor's internal memo for their own case the moment that surface is persisted — currently dormant only because `nuxeraWorkspaceStateService.js` has only ever written `workspace_role='applicant', surface='checklist'` rows (confirmed by code inspection, not just absence of data).
+
+**Fixed in production the same session**, via the Supabase Management API (`POST /v1/projects/{ref}/database/query`, authenticated with a personal access token — the CLI's own `db dump`/`db link` role, `cli_login_postgres`, is read-only and cannot `ALTER POLICY`):
+
+```sql
+ALTER POLICY "owners_select_nuxera_workspace_states" ON public.nuxera_workspace_states
+  USING (
+    workspace_role = 'applicant'
+    AND EXISTS (SELECT 1 FROM public.service_orders so WHERE so.id = order_id AND so.user_id = auth.uid())
+  );
+```
+
+Verified immediately after via `SELECT policyname, qual FROM pg_policies WHERE tablename = 'nuxera_workspace_states'`: new `qual` confirmed live, and the table's other two policies (`owners_insert_applicant_checklist_states`, `owners_update_applicant_checklist_states`, both already correctly scoped to `workspace_role = 'applicant'`) confirmed unchanged. The equivalent gap in the still-unapplied `2026-07-23_nuxera_notification_approvals.sql` draft (SELECT policies not filtering by `audience`) was fixed in the same PR before it was ever applied anywhere — see PR #4.
+
+Also confirmed while comparing the production dump against the draft files: `nuxera_evidence_links` and `nuxera_admin_controls` (also already live in production) do **not** have this class of gap — both correctly scope by `visibility`/admin role respectively. `nuxera_case_events`, `nuxera_notification_approvals`, `nuxera_notification_outbox` and `nuxera_case_assignments` were confirmed **not yet applied** to production as of this session.
+
+### First non-production Supabase run
+
+| Field | Value |
+|---|---|
+| Non-production project | `nsd-staging` (ref `suotfpajujcmegmpiulr`, region `ca-central-1`, created 2026-07-24) |
+| Schema source | `pg_dump --schema-only --schema=public` against production (`iafwnrootbtlsdqfioiu`), no customer data, restored into `nsd-staging` via the Management API. Confirmed 41/41 tables present with matching `rowsecurity=true`. |
+| SQL drafts applied to staging | The workspace_states fix above, plus all 5 NUXERA drafts not yet in production: `2026-07-22_nuxera_case_assignments.sql`, `2026-07-22_nuxera_notification_outbox.sql`, `2026-07-23_nuxera_case_events.sql`, `2026-07-23_nuxera_evidence_provenance_columns.sql`, `2026-07-23_nuxera_notification_approvals.sql` (post-fix version, `audience`-scoped) |
+| Backend | Local `backend/src/server.js` run against `nsd-staging` credentials (`.env`, not committed) |
+| Test identities | 4 real Supabase Auth users created via `POST /api/auth/register` (`mailer_autoconfirm` enabled on `nsd-staging` only, so signup returns a usable session token with no email round-trip): applicant owner, authorized grantor, a different/foreign applicant, and an administrador |
+| Test data | Order A (owned by the applicant identity) with an accepted `data_room_shares` row to the grantor identity; Order F (owned by the foreign-applicant identity), never shared — used as the foreign/unauthorized target for every deny scenario |
+
+Full run of `backend/scripts/verify-nuxera-http-readiness.js` (extended with the `denyChecks` matrix from PR #5) against this environment:
+
+| Scenario | Checks | Result |
+|---|---:|---|
+| mustAllow (applicant/grantor/admin own reads) | 9 | **9/9 GO** |
+| mustDeny (foreign applicant, unauthorized grantor, non-admin on admin routes) | 8 | **8/8 GO** |
+
+All 4 identity scenarios from the "Required RLS identities" table above (`applicant-owner`, `different-applicant`, `authorized-grantor`, `admin-internal`) and their `mustAllow`/`mustDeny` expectations are covered by this run, executed end-to-end over real HTTP against a real non-production database — not RLS-layer-only and not production. No-go criteria re-checked: none observed.
+
+Test users, test orders and the `data_room_shares` row above were left in `nsd-staging` (a non-production project with no real customer data) rather than torn down, so this run can be repeated or extended without regenerating fixtures.
+
+**This closes ten-track item #1 ("Evidencia SQL/RLS no productiva") from `nuxeraTenTrackClosureService.js`/`ULTIMO_AVANCE.md`** at the RLS-and-endpoint layer. Remaining items on that list (controlled `service_role` writes, notification/chat persistence, KYB/KYC shadow-run, formal cutover approval) are unchanged by this update.
