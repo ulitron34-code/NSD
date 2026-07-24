@@ -2099,3 +2099,20 @@ Validacion enfocada:
 
 Siguiente punto real:
 - Usar el backlog para cerrar primero evidencia SQL/RLS no productiva y write gate antes de mover notificaciones/chat/agentes a persistencia real.
+
+## Evidencia SQL/RLS no productiva - 2026-07-24
+
+Cerrado el frente #1 del backlog ejecutivo (evidencia SQL/RLS no productiva).
+
+Hallazgo real en produccion: `nuxera_workspace_states` tenia la politica de SELECT sin filtrar por `workspace_role`, permitiendo en teoria que el dueno del expediente leyera el memo interno del otorgante (`surface='memo'`) en cuanto esa surface se persista ahi. Corregido en produccion via la Management API de Supabase (rol de la CLI para dump/link es solo lectura, no puede alterar politicas). El mismo hueco en el draft de `nuxera_notification_approvals` (falta de filtro por `audience`) se corrigio antes de aplicarse en ningun entorno.
+
+Primer entorno no productivo real: proyecto Supabase `nsd-staging` (ref `suotfpajujcmegmpiulr`), esquema clonado de produccion via `pg_dump --schema-only` (sin datos de clientes), con las 5 migraciones NUXERA restantes aplicadas ahi (`case_assignments`, `notification_outbox`, `case_events`, `evidence_provenance_columns`, `notification_approvals` ya corregido). Backend local corriendo contra ese proyecto, 4 identidades reales (solicitante, otorgante autorizado, solicitante ajeno, administrador), 2 ordenes de prueba.
+
+Corrida completa de `backend/scripts/verify-nuxera-http-readiness.js` (extendido con matriz `denyChecks`, ver PR #5): 9/9 mustAllow, 8/8 mustDeny. Los 4 escenarios de identidad del template de evidencia (`applicant-owner`, `different-applicant`, `authorized-grantor`, `admin-internal`) quedaron cubiertos end-to-end contra una base de datos real no productiva.
+
+Detalle completo en `docs/nuxera-migration/docs/migration/NUXERA_CONTROLLED_RLS_ENDPOINT_EVIDENCE_TEMPLATE.md` (seccion "2026-07-24 update").
+
+Guardrails: no se aplico ningun SQL productivo mas alla del fix puntual de la politica ya vulnerable; no se habilito ningun flag de produccion; no se toco delivery de notificaciones ni writes de `service_role`.
+
+Siguiente punto real:
+- Con evidencia SQL/RLS cerrada, el frente #2 del backlog (writes controlados con `service_role` para `nuxera_case_events` y el ledger de aprobaciones) es el que sigue en el orden critico ya definido.
