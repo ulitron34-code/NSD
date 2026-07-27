@@ -284,6 +284,14 @@ export const nuxeraRiskOrchestrationAPI = {
     api.get('/nuxera/admin/risk-health')
 };
 
+
+export const nuxeraJurisdictionIntelligenceAPI = {
+  getGrantorJurisdictionEvidence: (orderId, language = 'es') =>
+    api.get(`/nuxera/orders/${orderId}/grantor-jurisdiction-evidence`, { params: { language } }),
+  getAdminJurisdictionEvidence: (orderId, language = 'es') =>
+    api.get(`/nuxera/admin/orders/${orderId}/jurisdiction-evidence`, { params: { language } })
+};
+
 export const nuxeraEvidenceAPI = {
   getOrderEvidence: (orderId) =>
     api.get(`/nuxera/orders/${orderId}/evidence`),

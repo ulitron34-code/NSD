@@ -80,6 +80,38 @@ const grantorDemoOrdersSource = [
       infoRequests: [{ id: "req-permits", status: "open", title: { es: "Permisos y conexion", en: "Permits & grid connection" } }],
     },
   },
+  {
+    id: "nuxera-gra-004",
+    projectName: { es: "Expansion fintech Dubai", en: "Dubai fintech expansion" },
+    service_type: "combo-complete",
+    status: "in_progress",
+    amount: 32000000,
+    created_at: "2026-07-12T10:15:00.000Z",
+    metadata: {
+      companyName: "GulfPay MENA FZ-LLC",
+      sector: { es: "Pagos y activos virtuales", en: "Payments and virtual assets" },
+      country: "AE",
+      emirate: "Dubai",
+      province: "Dubai",
+      city: "Dubai",
+      municipality: "Business Bay",
+      description: { es: "Capital para expansion regional de wallet, pagos B2B y servicios de activos digitales sujetos a licenciamiento.", en: "Capital for regional expansion of wallet, B2B payments and digital-asset services subject to licensing." },
+      targetEntity: { es: "Fondo MENA / deuda venture", en: "MENA fund / venture debt" },
+      structure: { es: "Deuda venture con covenants regulatorios y condiciones previas de licencia", en: "Venture debt with regulatory covenants and license conditions precedent" },
+      complianceScore: 72,
+      financialScore: 81,
+      documentsCount: 12,
+      regulatoryClaims: ["payments", "virtual assets", "VASP", "Dubai", "trade license", "TRN"],
+      documents: [
+        { es: "Trade license", en: "Trade license" },
+        { es: "TRN / evidencia fiscal", en: "TRN / tax evidence" },
+        { es: "Politica AML", en: "AML policy" },
+        { es: "UBO declaration", en: "UBO declaration" },
+        { es: "Licencia VARA/CBUAE si aplica", en: "VARA/CBUAE license if applicable" },
+      ],
+      infoRequests: [{ id: "req-uae-license", status: "open", title: { es: "Licencias UAE y alcance regulado", en: "UAE licenses and regulated scope" } }],
+    },
+  },
 ];
 
 function localizeValue(value, language) {

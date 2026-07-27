@@ -17,12 +17,13 @@ import { getApplicantCompanyProjectWorkspace } from "../applicant/projectWorkspa
 import { mergeApplicantChecklistWithWorkspaceState, useApplicantWorkspaceState } from "../applicant/workspaceStateAdapter";
 import { useAuthorizedGrantorEvidenceLedger, useOwnerEvidenceLedger } from "../evidence/evidenceBackendAdapter";
 import { buildGrantorCaseQueueFromPipeline, filterGrantorInboxCases, getGrantorCaseManagementBoard, getGrantorCaseQueue, getGrantorCaseWorkbench, getGrantorDecisionMemo, getGrantorDeskHandoffPreview, getGrantorDocumentSummary, getGrantorInboxFilters, getGrantorQueueSummary, resolveSelectedGrantorCase } from "../grantor/caseQueue";
+import { buildGrantorJurisdictionEvidence } from "../grantor/jurisdictionEvidence";
 import { buildNuxeraAssignmentNotificationIntents, getNuxeraNotificationCatalog } from "../communications/notificationOperatingModel";
 import { mergeNotificationCatalogWithOutboxReadiness, useNotificationApprovalPlan, useNotificationApprovalReadiness, useNotificationDeliveryBatch, useNotificationDryRun, useNotificationOutboxHealth, useNotificationOutboxList, useNotificationOutboxReadiness, useNotificationRulesApproval, useNotificationRulesDryRun, useNotificationTemplateCatalog } from "../communications/notificationBackendAdapter";
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
-import { useNuxeraCaseEvents, useNuxeraCaseEventsPersistencePlan, useNuxeraDecisionPackage, useNuxeraEvidenceCoverage, useNuxeraRiskHealth, useNuxeraRiskProfile } from "../orchestration/operationalBlocksAdapter";
+import { useNuxeraCaseEvents, useNuxeraCaseEventsPersistencePlan, useNuxeraDecisionPackage, useNuxeraEvidenceCoverage, useNuxeraJurisdictionEvidence, useNuxeraRiskHealth, useNuxeraRiskProfile } from "../orchestration/operationalBlocksAdapter";
 
 const roleCopy = {
   applicant: {
@@ -207,6 +208,94 @@ function DecisionPackagePanel({ decisionPackage, title }) {
   );
 }
 
+function RegulatoryJurisdictionEvidencePanel({ model }) {
+  const { L } = useNuxeraLanguage();
+  if (!model) return null;
+
+  return (
+    <section className="nuxera-grantor-jurisdiction" aria-label={model.title} data-risk={model.riskTier}>
+      <header>
+        <div>
+          <span>{model.status} / {model.datasetVersion}</span>
+          <h2>{model.title}</h2>
+          <p>{model.countryName} ({model.country}) / {model.region} / {model.territory.label}</p>
+        </div>
+        <strong>{model.riskLabel}</strong>
+      </header>
+
+      <div className="nuxera-jurisdiction-summary">
+        <article><span>{L("Impacto", "Impact")}</span><p>{model.decisionImpact}</p></article>
+        <article><span>{L("Cobertura", "Coverage")}</span><strong>{model.coverage.reviewed}</strong><p>{model.coverage.mode}</p></article>
+        <article><span>{L("No disponibles", "Unavailable")}</span><strong>{model.coverage.unavailable}</strong><p>{L("requieren documento, convenio o revision manual", "require document, agreement or manual review")}</p></article>
+        <article><span>{L("Condicionales", "Conditional")}</span><strong>{model.coverage.conditional}</strong><p>{L("fuentes dependen de actividad/jurisdiccion", "sources depend on activity/jurisdiction")}</p></article>
+      </div>
+
+      <div className="nuxera-jurisdiction-brief">
+        <section>
+          <h3>{L("Pais, economia y entorno", "Country, economy and context")}</h3>
+          <p><strong>{L("Economia", "Economy")}:</strong> {model.countryBrief.economy}</p>
+          <p><strong>{L("Politico/regulatorio", "Political/regulatory")}:</strong> {model.countryBrief.politics}</p>
+          <p><strong>{L("Social/territorial", "Social/territorial")}:</strong> {model.countryBrief.social}</p>
+        </section>
+        <section>
+          <h3>{L("Provincia/estado/ciudad", "Province/state/city")}</h3>
+          <p><strong>{model.territory.label}</strong> / {model.territory.risk}</p>
+          <p>{model.territory.focus}</p>
+          {model.territory.signals.slice(0, 3).map((signal) => <small key={signal}>{signal}</small>)}
+        </section>
+      </div>
+
+      {model.countryBrief.indicators.length > 0 && (
+        <div className="nuxera-jurisdiction-indicators">
+          {model.countryBrief.indicators.map((indicator) => (
+            <article key={`${indicator.label}-${indicator.value}`}>
+              <span>{indicator.label}</span>
+              <strong>{indicator.value}</strong>
+              <p>{indicator.interpretation}</p>
+            </article>
+          ))}
+        </div>
+      )}
+
+      <section className="nuxera-jurisdiction-sources">
+        <h3>{L("Hallazgos por fuente aplicable", "Findings by applicable source")}</h3>
+        {model.findings.map((source) => (
+          <article key={source.id} data-result={source.result}>
+            <header>
+              <div>
+                <span>{source.jurisdiction} / {source.sourceMode}</span>
+                <strong>{source.name}</strong>
+              </div>
+              <em>{source.resultLabel}</em>
+            </header>
+            <p><b>{L("Que revisa", "What it checks")}:</b> {source.checked}</p>
+            <p><b>{L("Alcance", "Scope")}:</b> {source.coverage}</p>
+            <p><b>{L("Que significa", "Meaning")}:</b> {source.meaning}</p>
+            <p><b>{L("Limite", "Limitation")}:</b> {source.limitation}</p>
+            <footer><span>{source.decisionImpact}</span><small>{source.nextAction}</small></footer>
+          </article>
+        ))}
+      </section>
+
+      <div className="nuxera-jurisdiction-actions">
+        <section>
+          <h3>{L("Checklist humano", "Human checklist")}</h3>
+          {model.humanReviewChecklist.map((item) => <p key={item}>{item}</p>)}
+        </section>
+        <section>
+          <h3>{L("Impacto en score", "Score impact")}</h3>
+          {model.scoreImpacts.map((item) => <p key={item}>{item}</p>)}
+        </section>
+        <section>
+          <h3>{L("Fuentes condicionadas", "Conditional sources")}</h3>
+          {model.conditionalSources.length ? model.conditionalSources.map((source) => <p key={source.id}><strong>{source.name}</strong>: {source.reason}</p>) : <p>{L("Sin fuentes condicionadas relevantes.", "No relevant conditional sources.")}</p>}
+        </section>
+      </div>
+
+      <footer>{model.guardrails.map((guardrail) => <small key={guardrail}>{guardrail}</small>)}</footer>
+    </section>
+  );
+}
 function CaseEventsProjectionPanel({ caseEvents, persistencePlan = null, title }) {
   const { L } = useNuxeraLanguage();
   return (
@@ -566,6 +655,13 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
     enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
     role: "grantor",
   });
+  const localJurisdictionEvidence = useMemo(() => selectedCase ? buildGrantorJurisdictionEvidence(selectedCase, language) : null, [selectedCase, language]);
+  const jurisdictionEvidence = useNuxeraJurisdictionEvidence(orderId, {
+    enabled: isNuxeraExperienceEnabled() && !isDemo && Boolean(orderId),
+    role: "grantor",
+    language,
+    fallback: localJurisdictionEvidence,
+  });
   const inboxFilters = getGrantorInboxFilters(queue, language);
   const caseManagementBoard = getGrantorCaseManagementBoard(queue, language);
   const managementByCaseId = new Map(caseManagementBoard.items.map((item) => [item.caseId, item]));
@@ -607,6 +703,7 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
       />
       <DecisionPackagePanel decisionPackage={grantorDecisionPackage} title={L("Paquete de decision trazable", "Traceable decision package")} />
       <RiskProfilePanel profile={grantorRiskProfile} title={L("Riesgo autorizado", "Authorized risk")} />
+      <RegulatoryJurisdictionEvidencePanel model={jurisdictionEvidence} />
 
       {isInboxView ? (
         <section className="nuxera-grantor-inbox" aria-label={L("Gestion operativa de expedientes otorgante", "Grantor operational case management")}>

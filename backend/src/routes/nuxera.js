@@ -22,6 +22,7 @@ import { getApplicantChecklistState, upsertApplicantChecklistState } from '../se
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
 import { buildNuxeraCaseEventsPersistencePlan, buildNuxeraCaseEventsProjection } from '../services/nuxeraCaseEventsProjectionService.js';
 import { getAdminEvidenceCoverage, getGrantorDecisionEvidencePackage } from '../services/nuxeraDecisionEvidencePackageService.js';
+import { buildJurisdictionEvidenceFromTimeline } from '../services/nuxeraJurisdictionIntelligenceService.js';
 import { getAdminRiskHealth, getAdminRiskProfile, getApplicantRiskProfile, getGrantorRiskProfile } from '../services/nuxeraRiskOrchestrationService.js';
 import { draftProjectFromAnswers } from '../agents/projectBuilderAgent.js';
 import { logAuditEvent } from '../utils/audit.js';
@@ -1140,6 +1141,38 @@ router.get(
 );
 
 router.get(
+  '/nuxera/orders/:orderId/grantor-jurisdiction-evidence',
+  authMiddleware,
+  requirePermission('data_room:authorized:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getGrantorCaseTimeline({
+        orderId: req.params.orderId,
+        userId: req.userId,
+        email: req.user?.email
+      });
+      const language = req.query?.language === 'en' ? 'en' : 'es';
+      const jurisdictionEvidence = buildJurisdictionEvidenceFromTimeline(timeline, {
+        language,
+        workspaceRole: 'grantor'
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'grantor',
+        jurisdictionEvidence,
+        guardrails: [
+          'Grantor jurisdiction evidence uses authorized case metadata only.',
+          'Jurisdiction intelligence can request human review but cannot approve/reject automatically.',
+          'Live public/API source calls remain disabled until allowlists, provenance logs and provider agreements are approved.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
   '/nuxera/admin/orders/:orderId/risk-profile',
   authMiddleware,
   requirePermission('nuxera:admin:read'),
@@ -1162,6 +1195,34 @@ router.get(
   }
 );
 
+router.get(
+  '/nuxera/admin/orders/:orderId/jurisdiction-evidence',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({ orderId: req.params.orderId });
+      const language = req.query?.language === 'en' ? 'en' : 'es';
+      const jurisdictionEvidence = buildJurisdictionEvidenceFromTimeline(timeline, {
+        language,
+        workspaceRole: 'admin'
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'admin',
+        jurisdictionEvidence,
+        guardrails: [
+          'Admin jurisdiction evidence is read-only and provider-call-free.',
+          'Country, municipality/province and regulator signals are routing inputs for human review.',
+          'Production source connectors require approved credentials, allowlists and audit provenance.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
 router.get(
   '/nuxera/admin/risk-health',
   authMiddleware,

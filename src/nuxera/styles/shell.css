@@ -2912,3 +2912,177 @@
     grid-template-columns: 1fr;
   }
 }
+
+.nuxera-grantor-jurisdiction {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--nuxera-panel);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.nuxera-grantor-jurisdiction > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.nuxera-grantor-jurisdiction > header span,
+.nuxera-grantor-jurisdiction span,
+.nuxera-grantor-jurisdiction small,
+.nuxera-grantor-jurisdiction footer {
+  color: var(--nuxera-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.nuxera-grantor-jurisdiction h2,
+.nuxera-grantor-jurisdiction h3,
+.nuxera-grantor-jurisdiction strong {
+  margin: 0;
+  color: var(--nuxera-ink);
+}
+
+.nuxera-grantor-jurisdiction h2 {
+  font-size: 1.05rem;
+}
+
+.nuxera-grantor-jurisdiction h3 {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.nuxera-grantor-jurisdiction p {
+  margin: 0;
+  color: var(--nuxera-muted);
+  font-size: 0.82rem;
+  line-height: 1.48;
+}
+
+.nuxera-grantor-jurisdiction > header > strong {
+  min-width: 92px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: center;
+  background: rgba(201, 168, 76, 0.16);
+  color: var(--nuxera-ink);
+}
+
+.nuxera-grantor-jurisdiction[data-risk="high"] > header > strong {
+  background: rgba(198, 40, 40, 0.12);
+  color: #9f1239;
+}
+
+.nuxera-jurisdiction-summary,
+.nuxera-jurisdiction-indicators,
+.nuxera-jurisdiction-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nuxera-jurisdiction-summary article,
+.nuxera-jurisdiction-indicators article,
+.nuxera-jurisdiction-actions section,
+.nuxera-jurisdiction-brief section,
+.nuxera-jurisdiction-sources article {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  background: var(--nuxera-bg);
+  border: 1px solid var(--nuxera-border);
+  border-radius: 8px;
+}
+
+.nuxera-jurisdiction-brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nuxera-jurisdiction-brief small {
+  display: block;
+  color: var(--nuxera-muted);
+  text-transform: none;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.nuxera-jurisdiction-sources {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nuxera-jurisdiction-sources > h3 {
+  margin-top: 0;
+}
+
+.nuxera-jurisdiction-sources article > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.nuxera-jurisdiction-sources article em {
+  min-width: 150px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(27, 58, 92, 0.08);
+  color: var(--nuxera-ink);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  text-align: center;
+}
+
+.nuxera-jurisdiction-sources article[data-result="manual-review-required"] em,
+.nuxera-jurisdiction-sources article[data-result="provider-required"] em,
+.nuxera-jurisdiction-sources article[data-result="document-required"] em {
+  background: rgba(201, 168, 76, 0.18);
+}
+
+.nuxera-jurisdiction-sources article footer {
+  display: grid;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nuxera-border);
+}
+
+.nuxera-jurisdiction-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.nuxera-grantor-jurisdiction > footer {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .nuxera-grantor-jurisdiction > header,
+  .nuxera-jurisdiction-sources article > header {
+    display: grid;
+  }
+
+  .nuxera-jurisdiction-summary,
+  .nuxera-jurisdiction-indicators,
+  .nuxera-jurisdiction-actions,
+  .nuxera-jurisdiction-brief {
+    grid-template-columns: 1fr;
+  }
+
+  .nuxera-jurisdiction-sources article em {
+    width: fit-content;
+    min-width: 0;
+    text-align: left;
+  }
+}

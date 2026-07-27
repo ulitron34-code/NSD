@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { nuxeraCaseTimelineAPI, nuxeraDecisionPackageAPI, nuxeraRiskOrchestrationAPI } from "../../services/api";
+import { nuxeraCaseTimelineAPI, nuxeraDecisionPackageAPI, nuxeraJurisdictionIntelligenceAPI, nuxeraRiskOrchestrationAPI } from "../../services/api";
 import { warn } from "../../utils/logger";
 
 function asArray(value) {
@@ -22,6 +22,29 @@ const LOCAL_DECISION_PACKAGE = Object.freeze({
   questions: [],
   conditions: [],
   guardrails: ["Decision package local vacio; no inventa hallazgos ni decisiones."],
+});
+
+const LOCAL_JURISDICTION_EVIDENCE = Object.freeze({
+  source: "local-fallback",
+  status: "jurisdiction-evidence-unavailable",
+  loading: false,
+  error: null,
+  title: "Regulatory & Jurisdiction Evidence",
+  country: "",
+  countryName: "",
+  region: "",
+  riskTier: "unknown",
+  riskLabel: "Sin perfil real",
+  territory: { label: "", risk: "unknown", focus: "", signals: [] },
+  coverage: { reviewed: 0, unavailable: 0, conditional: 0, mode: "Sin cobertura remota" },
+  countryBrief: { economy: "", politics: "", social: "", indicators: [] },
+  sourceMap: [],
+  findings: [],
+  conditionalSources: [],
+  humanReviewChecklist: [],
+  scoreImpacts: [],
+  providerPlan: { publicApis: [], privateOrAgreement: [], runtimePolicy: "disabled" },
+  guardrails: ["Jurisdiction evidence local vacio; no consulta proveedores externos ni aprueba decisiones."],
 });
 
 const LOCAL_RISK_PROFILE = Object.freeze({
@@ -91,6 +114,29 @@ function normalizeDecisionPackage(response) {
   };
 }
 
+function normalizeJurisdictionEvidence(response, fallback = LOCAL_JURISDICTION_EVIDENCE) {
+  const seed = fallback && typeof fallback === "object" ? fallback : LOCAL_JURISDICTION_EVIDENCE;
+  const data = response?.jurisdictionEvidence || response || null;
+  if (!data || typeof data !== "object") return { ...seed, error: "nuxera-jurisdiction-evidence-missing" };
+  return {
+    ...seed,
+    ...data,
+    source: "remote",
+    loading: false,
+    error: null,
+    territory: { ...asObject(seed.territory), ...asObject(data.territory) },
+    coverage: { ...asObject(seed.coverage), ...asObject(data.coverage) },
+    countryBrief: { ...asObject(seed.countryBrief), ...asObject(data.countryBrief), indicators: asArray(data.countryBrief?.indicators) },
+    sourceMap: asArray(data.sourceMap),
+    findings: asArray(data.findings),
+    conditionalSources: asArray(data.conditionalSources),
+    humanReviewChecklist: asArray(data.humanReviewChecklist),
+    scoreImpacts: asArray(data.scoreImpacts),
+    providerPlan: { ...asObject(seed.providerPlan), ...asObject(data.providerPlan) },
+    guardrails: [...asArray(data.guardrails), ...asArray(response?.guardrails)].filter(Boolean),
+  };
+}
+
 function normalizeRiskProfile(response) {
   const data = response?.riskProfile || response || null;
   if (!data || typeof data !== "object") return { ...LOCAL_RISK_PROFILE, error: "nuxera-risk-profile-missing" };
@@ -156,6 +202,11 @@ function normalizeRiskHealth(response) {
   };
 }
 
+function fetchJurisdictionEvidence(role, orderId, language) {
+  if (role === "admin") return nuxeraJurisdictionIntelligenceAPI.getAdminJurisdictionEvidence(orderId, language);
+  return nuxeraJurisdictionIntelligenceAPI.getGrantorJurisdictionEvidence(orderId, language);
+}
+
 function fetchRiskProfile(role, orderId) {
   if (role === "grantor") return nuxeraRiskOrchestrationAPI.getGrantorRiskProfile(orderId);
   if (role === "admin") return nuxeraRiskOrchestrationAPI.getAdminRiskProfile(orderId);
@@ -210,6 +261,17 @@ export function useNuxeraEvidenceCoverage(orderId, { enabled = true } = {}) {
     onLoad: () => nuxeraDecisionPackageAPI.getAdminEvidenceCoverage(orderId).then(({ data }) => ({ data: normalizeDecisionPackage(data) })),
     onErrorLabel: "Evidence coverage unavailable",
     deps: [enabled, orderId],
+  });
+}
+
+export function useNuxeraJurisdictionEvidence(orderId, { enabled = true, role = "grantor", language = "es", fallback = null } = {}) {
+  const seed = fallback && typeof fallback === "object" ? fallback : LOCAL_JURISDICTION_EVIDENCE;
+  return useRemoteState({
+    enabled: enabled && Boolean(orderId),
+    seed,
+    onLoad: () => fetchJurisdictionEvidence(role, orderId, language).then(({ data }) => ({ data: normalizeJurisdictionEvidence(data, seed) })),
+    onErrorLabel: "Jurisdiction evidence unavailable",
+    deps: [enabled, orderId, role, language, seed],
   });
 }
 
