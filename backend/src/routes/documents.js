@@ -498,7 +498,7 @@ router.post('/documents/:orderId/:documentId/review', authMiddleware, requirePer
 
     const { data: document, error: documentError } = await supabaseAdmin
       .from('documents')
-      .select('id, order_id, filename, storage_path, uploaded_at, document_type')
+      .select('id, order_id, filename, storage_path, uploaded_at, document_type, metadata')
       .eq('id', req.params.documentId)
       .eq('order_id', req.params.orderId)
       .single();
