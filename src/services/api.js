@@ -288,6 +288,8 @@ export const nuxeraRiskOrchestrationAPI = {
 
 
 export const nuxeraJurisdictionIntelligenceAPI = {
+  getApplicantJurisdictionReadiness: (orderId, language = 'es') =>
+    api.get(`/nuxera/orders/${orderId}/jurisdiction-readiness`, { params: { language } }),
   getGrantorJurisdictionEvidence: (orderId, language = 'es') =>
     api.get(`/nuxera/orders/${orderId}/grantor-jurisdiction-evidence`, { params: { language } }),
   getAdminJurisdictionEvidence: (orderId, language = 'es') =>

@@ -8,6 +8,47 @@ const CONVERSATION_OPERATIONAL_SOURCES = Object.freeze([
   { id: 'audit-metadata', table: 'audit_logs', purpose: 'Metadata-only compliance trace for agent turns and notification actions.', sensitiveTextPersisted: false }
 ]);
 
+function buildContextManifest(role, authorizedContext = {}) {
+  const context = authorizedContext && typeof authorizedContext === 'object' && !Array.isArray(authorizedContext) ? authorizedContext : {};
+  const timeline = context.timeline || context.caseTimeline || null;
+  const evidence = context.evidence || context.evidenceLinks || context.links || null;
+  const jurisdiction = context.jurisdictionEvidence || context.jurisdiction || null;
+  const notifications = context.notificationApprovalPlan || context.notificationRules || context.notificationHealth || null;
+
+  return {
+    role,
+    selectedOrderId: context.orderId || timeline?.orderId || null,
+    availableContext: {
+      timeline: Boolean(timeline),
+      evidenceReferences: Boolean(evidence),
+      jurisdictionEvidence: Boolean(jurisdiction),
+      notificationSignals: Boolean(notifications),
+      adminOperationalScope: context.scope === 'operations-monitor'
+    },
+    retrievalPriority: [
+      'case-timeline metadata',
+      'authorized evidence references',
+      'jurisdiction source map and limitations',
+      'notification approval/dry-run signals',
+      'audit metadata'
+    ],
+    allowedUse: [
+      'summarize operational state',
+      'explain missing information',
+      'draft non-binding questions',
+      'explain source limitations and next checks'
+    ],
+    forbiddenUse: [
+      'send notifications',
+      'approve or reject financing',
+      'issue term sheets',
+      'grant document access',
+      'store sensitive chat text'
+    ],
+    retention: { chatTextPersisted: false, auditMetadataOnly: true }
+  };
+}
+
 const ROLE_POLICIES = Object.freeze({
   applicant: {
     channel: 'applicant-file-assistant',
@@ -50,6 +91,7 @@ export function getNuxeraConversationAgentReadiness() {
     operationalSources: CONVERSATION_OPERATIONAL_SOURCES,
     assistantScope: 'Conversation agent can answer only from role-scoped, selected-file context after authorization checks.',
     roles,
+    contextManifest: buildContextManifest('admin', { scope: 'operations-monitor' }),
     summary: {
       roles: roles.length,
       allowedSources: [...new Set(roles.flatMap((role) => role.allowedSources))].length,
@@ -108,6 +150,7 @@ export function buildNuxeraConversationAgentEnvelope(context = {}) {
       !hasAuthorizedContext ? 'Authorized role-scoped context is required.' : null,
       !runtimeEnabled ? 'Conversation runtime is disabled until separate approval.' : null
     ].filter(Boolean),
+    contextManifest: buildContextManifest(role, context.authorizedContext),
     guardrails: [
       'No automatic email, WhatsApp or in-app send.',
       'No binding decision, term sheet or permission change.',
@@ -161,6 +204,7 @@ function violatesConversationOutputGuardrails(text = '') {
 }
 
 function buildConversationSystemPrompt(role, policy, authorizedContext) {
+  const manifest = buildContextManifest(role, authorizedContext);
   return [
     `Eres el asistente NUXERA para el rol ${role} en el canal ${policy.channel}.`,
     'Responde unicamente con base en el contexto autorizado provisto; si falta informacion, dilo explicitamente en vez de inventar datos.',
@@ -168,6 +212,7 @@ function buildConversationSystemPrompt(role, policy, authorizedContext) {
     `Tienes prohibido: ${policy.blockedActions.join(', ')}.`,
     'Nunca apruebes financiamiento, emitas term sheets, otorgues accesos/permisos ni confirmes el envio de notificaciones.',
     `Fuentes operativas permitidas: ${CONVERSATION_OPERATIONAL_SOURCES.map((source) => source.id).join(', ')}.`,
+    `Manifiesto de contexto (JSON): ${JSON.stringify(manifest).slice(0, 2000)}`,
     `Contexto autorizado (JSON, puede estar vacio si no hay evidencia disponible): ${JSON.stringify(authorizedContext || {}).slice(0, 4000)}`
   ].join('\n');
 }
@@ -293,7 +338,8 @@ export function buildNuxeraConversationPreview(input = {}) {
     orderId: input.orderId || input.selectedId,
     selectedId: input.selectedId,
     authorized: input.authorized,
-    runtimeEnabled: input.runtimeEnabled
+    runtimeEnabled: input.runtimeEnabled,
+    authorizedContext: input.authorizedContext
   });
   const policy = ROLE_POLICIES[envelope.role];
   const message = normalizeConversationMessage(input.message);
@@ -310,6 +356,7 @@ export function buildNuxeraConversationPreview(input = {}) {
     status: envelope.allowed ? 'conversation-preview-ready' : 'conversation-preview-blocked',
     message,
     envelope,
+    contextManifest: envelope.contextManifest,
     draft,
     persistence: {
       chatTurnsPersisted: false,

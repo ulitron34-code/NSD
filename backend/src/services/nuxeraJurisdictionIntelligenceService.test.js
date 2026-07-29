@@ -29,13 +29,19 @@ describe('nuxeraJurisdictionIntelligenceService', () => {
     expect(evidence.country).toBe('AE');
     expect(evidence.territory.label).toBe('Dubai');
     expect(evidence.riskTier).toBe('high');
+    expect(sourceIds).toContain('uae-pass');
     expect(sourceIds).toContain('eocn-uae');
+    expect(sourceIds).toContain('sca-cma');
     expect(sourceIds).toContain('cbuae');
     expect(sourceIds).toContain('vara');
     expect(sourceIds).toContain('fta-trn');
     expect(sourceIds).toContain('ner-ded');
     expect(evidence.coverage.reviewed).toBeGreaterThanOrEqual(5);
     expect(evidence.providerPlan.privateOrAgreement).toContain('UAE PASS');
+    expect(evidence.providerPlan.privateOrAgreement).toContain('SCA/CMA structured register');
+    expect(evidence.sourceAcquisitionPlan.status).toBe('partial-public-plus-agreement-required');
+    expect(evidence.sourceAcquisitionPlan.sourceRows.map((source) => source.sourceId)).toContain('uae-pass');
+    expect(evidence.sourceAcquisitionPlan.operationalCycle.join(' ')).toContain('Applicant uploads');
     expect(evidence.guardrails.join(' ')).toContain('cannot approve');
   });
 

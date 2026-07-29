@@ -128,7 +128,7 @@ function normalizeDecisionPackage(response) {
 
 function normalizeJurisdictionEvidence(response, fallback = LOCAL_JURISDICTION_EVIDENCE) {
   const seed = fallback && typeof fallback === "object" ? fallback : LOCAL_JURISDICTION_EVIDENCE;
-  const data = response?.jurisdictionEvidence || response || null;
+  const data = response?.jurisdictionEvidence || response?.jurisdictionReadiness || response || null;
   if (!data || typeof data !== "object") return { ...seed, error: "nuxera-jurisdiction-evidence-missing" };
   return {
     ...seed,
@@ -231,6 +231,7 @@ function normalizeRiskHealth(response) {
 
 function fetchJurisdictionEvidence(role, orderId, language) {
   if (role === "admin") return nuxeraJurisdictionIntelligenceAPI.getAdminJurisdictionEvidence(orderId, language);
+  if (role === "applicant") return nuxeraJurisdictionIntelligenceAPI.getApplicantJurisdictionReadiness(orderId, language);
   return nuxeraJurisdictionIntelligenceAPI.getGrantorJurisdictionEvidence(orderId, language);
 }
 

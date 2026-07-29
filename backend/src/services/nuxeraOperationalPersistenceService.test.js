@@ -50,6 +50,9 @@ describe('buildNuxeraOperationalPersistencePlan', () => {
     expect(plan.summary.caseEventCandidates).toBeGreaterThan(0);
     expect(plan.summary.notificationApprovalCandidates).toBeGreaterThan(0);
     expect(plan.summary.evidenceProvenanceCandidates).toBeGreaterThan(0);
+    expect(plan.writeGate).toMatchObject({ status: 'write-gate-blocked', writeEnabled: false, dryRunOnly: true });
+    expect(plan.writeGate.workerContract.auditActions).toContain('nuxera_operational_persistence_batch_completed');
+    expect(plan.writeGate.summary.insertCandidates).toBeGreaterThan(0);
     expect(plan.guardrails.join(' ')).toContain('read-only');
   });
 
@@ -60,5 +63,6 @@ describe('buildNuxeraOperationalPersistencePlan', () => {
     expect(plan.mode).toBe('dry-run-only');
     expect(plan.summary.caseEventCandidates).toBe(0);
     expect(plan.summary.evidenceProvenanceCandidates).toBe(0);
+    expect(plan.writeGate.blockers).toContain('Missing order id for controlled persistence');
   });
 });

@@ -53,6 +53,8 @@ describe('nuxeraConversationAgentReadinessService', () => {
       runtimeEnabled: false,
       humanReviewRequired: true
     });
+    expect(readiness.contextManifest.availableContext.adminOperationalScope).toBe(true);
+    expect(readiness.contextManifest.forbiddenUse).toContain('send notifications');
     expect(readiness.guardrails.join(' ')).toContain('no chat runtime');
   });
 
@@ -99,6 +101,7 @@ describe('nuxeraConversationAgentReadinessService', () => {
       requiredPermission: 'data_room:authorized:read'
     });
     expect(allowed.allowedSources).toEqual(expect.arrayContaining(['messages', 'nuxera_evidence_links']));
+    expect(allowed.contextManifest.retention).toMatchObject({ chatTextPersisted: false, auditMetadataOnly: true });
   });
 
   it('allows the admin operations-monitor channel without a selected file, unlike applicant/grantor', () => {
@@ -157,6 +160,7 @@ describe('nuxeraConversationAgentReadinessService', () => {
     expect(preview.envelope.allowedSources).toEqual(expect.arrayContaining(['document_reviews', 'nuxera_evidence_links']));
     expect(preview.draft.citations.map((citation) => citation.source)).toEqual(expect.arrayContaining(['messages', 'nuxera_evidence_links']));
     expect(preview.draft.answer).toContain('No emitire aprobaciones');
+    expect(preview.contextManifest.retrievalPriority).toContain('jurisdiction source map and limitations');
   });
 
   it('blocks a conversation turn before calling any provider when context is not authorized', async () => {

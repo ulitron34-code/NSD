@@ -114,6 +114,61 @@ function buildNotificationApprovalLedger(timeline, context) {
   };
 }
 
+function buildControlledOperationalWriteGate(ledgers, context = {}) {
+  const enabled = String(context.writeEnabled || process.env.NUXERA_OPERATIONAL_PERSISTENCE_WRITE_ENABLED || '').trim().toLowerCase() === 'true';
+  const rlsEvidenceAccepted = context.rlsEvidenceAccepted === true || String(process.env.NUXERA_OPERATIONAL_PERSISTENCE_RLS_ACCEPTED || '').trim().toLowerCase() === 'true';
+  const rollbackRehearsed = context.rollbackRehearsed === true || String(process.env.NUXERA_OPERATIONAL_PERSISTENCE_ROLLBACK_REHEARSED || '').trim().toLowerCase() === 'true';
+  const serviceRoleApproved = context.serviceRoleApproved === true || String(process.env.NUXERA_OPERATIONAL_PERSISTENCE_SERVICE_ROLE_APPROVED || '').trim().toLowerCase() === 'true';
+  const orderId = context.orderId || context.expedientId || ledgers.find((ledger) => ledger.orderId)?.orderId || null;
+  const insertCandidates = ledgers.flatMap((ledger) => asArray(ledger.candidates).filter((candidate) => candidate.insertReady).map((candidate) => ({
+    ledger: ledger.table,
+    candidateId: candidate.id,
+    dedupeKey: candidate.dedupeKey,
+    insertPayload: candidate.insertPayload
+  })));
+  const blockers = [
+    !orderId ? 'Missing order id for controlled persistence' : null,
+    !enabled ? 'NUXERA_OPERATIONAL_PERSISTENCE_WRITE_ENABLED is not true' : null,
+    !rlsEvidenceAccepted ? 'RLS/endpoint evidence has not been accepted' : null,
+    !rollbackRehearsed ? 'Rollback rehearsal has not been accepted' : null,
+    !serviceRoleApproved ? 'Service-role write path has not been approved' : null,
+    insertCandidates.length === 0 ? 'No insert-ready candidates are available' : null
+  ].filter(Boolean);
+
+  return {
+    id: 'nuxera-operational-persistence-write-gate',
+    status: blockers.length ? 'write-gate-blocked' : 'write-gate-ready-for-controlled-worker',
+    writeEnabled: enabled && blockers.length === 0,
+    dryRunOnly: blockers.length > 0,
+    requiredFlags: {
+      NUXERA_OPERATIONAL_PERSISTENCE_WRITE_ENABLED: enabled,
+      NUXERA_OPERATIONAL_PERSISTENCE_RLS_ACCEPTED: rlsEvidenceAccepted,
+      NUXERA_OPERATIONAL_PERSISTENCE_ROLLBACK_REHEARSED: rollbackRehearsed,
+      NUXERA_OPERATIONAL_PERSISTENCE_SERVICE_ROLE_APPROVED: serviceRoleApproved
+    },
+    blockers,
+    workerContract: {
+      mode: 'service-role-controlled-batch',
+      maxBatchSize: Math.max(1, Math.min(Number(context.maxBatchSize || 25) || 25, 100)),
+      idempotency: 'dedupe_key required per candidate before insert',
+      auditActions: ['nuxera_operational_persistence_batch_started', 'nuxera_operational_persistence_candidate_inserted', 'nuxera_operational_persistence_candidate_failed', 'nuxera_operational_persistence_batch_completed'],
+      rollback: 'disable flag, stop worker, preserve audit_logs, archive bad nuxera_* rows instead of deleting'
+    },
+    summary: {
+      ledgers: ledgers.length,
+      insertCandidates: insertCandidates.length,
+      uniqueDedupeKeys: getUniqueCount(insertCandidates, 'dedupeKey'),
+      blockedByGates: blockers.length
+    },
+    insertCandidates: insertCandidates.slice(0, 25),
+    guardrails: [
+      'This gate describes the controlled worker contract; it does not insert rows.',
+      'Writes require backend flags, accepted RLS evidence, rollback rehearsal and service-role approval.',
+      'Frontend input cannot enable operational persistence.'
+    ]
+  };
+}
+
 export function buildNuxeraOperationalPersistencePlan(timeline = {}, context = {}) {
   const caseEventsProjection = buildNuxeraCaseEventsProjection(timeline);
   const caseEventsLedger = buildNuxeraCaseEventsPersistencePlan(caseEventsProjection, {
@@ -123,6 +178,7 @@ export function buildNuxeraOperationalPersistencePlan(timeline = {}, context = {
   const notificationApprovalsLedger = buildNotificationApprovalLedger(timeline, context);
   const evidenceProvenanceLedger = buildEvidenceProvenanceLedger(timeline);
   const ledgers = [caseEventsLedger, notificationApprovalsLedger, evidenceProvenanceLedger];
+  const writeGate = buildControlledOperationalWriteGate(ledgers, context);
   const insertReady = ledgers.reduce((total, ledger) => total + (ledger.summary?.insertReady || 0), 0);
   const blocked = ledgers.reduce((total, ledger) => total + (ledger.summary?.blocked || 0), 0);
 
@@ -130,7 +186,7 @@ export function buildNuxeraOperationalPersistencePlan(timeline = {}, context = {
     id: `nuxera-operational-persistence-plan:${timeline.orderId || 'unknown'}`,
     status: insertReady ? 'operational-persistence-dry-run-ready' : 'operational-persistence-needs-real-case-data',
     mode: 'dry-run-only',
-    writeEnabled: false,
+    writeEnabled: writeGate.writeEnabled,
     orderId: timeline.orderId || null,
     workspaceRole: 'admin',
     summary: {
@@ -142,6 +198,7 @@ export function buildNuxeraOperationalPersistencePlan(timeline = {}, context = {
       evidenceProvenanceCandidates: evidenceProvenanceLedger.summary?.insertReady || 0
     },
     ledgers,
+    writeGate,
     requiredGates: [
       'Run SQL drafts in non-production and archive migration evidence.',
       'Run HTTP/RLS mustAllow and mustDeny evidence with real applicant, grantor and admin tokens.',

@@ -40,7 +40,9 @@ const PROFILES = {
 const FALLBACK = { name: ['Pais no perfilado', 'Unprofiled country'], region: 'Global', risk: 'medium', economy: ['NUXERA requiere fuentes economicas y regulatorias adicionales antes de concluir una lectura del pais.', 'NUXERA requires additional economic and regulatory sources before concluding a country view.'], politics: ['Sin perfil local versionado; usar FATF, sanciones, Banco Mundial/IMF y revision humana.', 'No versioned local profile; use FATF, sanctions, World Bank/IMF and human review.'], social: ['Riesgo territorial pendiente de fuente local o proveedor especializado.', 'Territorial risk pending local source or specialized provider.'], indicators: [], territories: {} };
 
 const SOURCES = [
+  ['uae-pass', 'AE', 'UAE PASS', 'UAE federal', 'approved-api-required', () => true, 'provider-required', 'scoring-and-review', ['Identidad digital, autenticacion, datos verificados del usuario y firma electronica.', 'Digital identity, authentication, verified user data and electronic signature.'], ['Representante autorizado, identidad, firma, autorizaciones y consistencia contra documentos corporativos.', 'Authorized representative, identity, signature, authorizations and consistency against corporate documents.'], ['Relevante para onboarding y firma; produccion requiere registro, aprobacion y alcance contractual.', 'Relevant for onboarding and signature; production requires registration, approval and contractual scope.'], ['No debe usarse como fuente de decision crediticia; valida identidad/representacion bajo consentimiento.', 'Must not be used as a credit decision source; validates identity/representation with consent.'], ['Definir flujo de consentimiento, callback, atributos permitidos y evidencia de firma.', 'Define consent flow, callback, permitted attributes and signature evidence.']],
   ['eocn-uae', 'AE', 'EOCN UAE / UN Sanctions', 'UAE / UN', 'public-feed', () => true, 'no-adverse-match', 'blocking-if-hit', ['Lista local de terroristas de EAU y sanciones del Consejo de Seguridad de Naciones Unidas.', 'UAE local terrorist list and United Nations Security Council sanctions.'], ['Nombre legal, aliases, UBO, representantes, nacionalidad y coincidencias difusas.', 'Legal name, aliases, UBO, representatives, nationality and fuzzy matches.'], ['No hay coincidencia adversa en el dataset controlado; una coincidencia potencial seria bloqueo hasta confirmar identidad.', 'No adverse match in the controlled dataset; a potential match would block until identity is confirmed.'], ['La ausencia de coincidencia no certifica cumplimiento; debe revalidarse contra fuente oficial antes de comite.', 'Absence of a match does not certify compliance; revalidate against the official source before committee.'], ['Revalidar con nombre legal, UBO y pasaportes antes de decision vinculante.', 'Revalidate with legal name, UBO and passports before any binding decision.']],
+  ['sca-cma', 'AE', 'Securities and Commodities Authority / Capital Market Authority', 'UAE federal', 'public-register-plus-private-api', (c) => any(c, ['capital market', 'securities', 'broker', 'fund', 'asset management', 'investment', 'cma', 'sca', 'finance', 'fintech', 'payment', 'payments', 'virtual assets']), 'manual-review-required', 'scoring-and-review', ['Empresas financieras, intermediarios, fondos y proveedores regulados fuera/perimetro UAE federal.', 'Financial firms, intermediaries, funds and regulated providers in the UAE federal perimeter.'], ['Licencia, actividad autorizada, restricciones, fondo/intermediario, personas clave y enforcement.', 'License, authorized activity, restrictions, fund/intermediary status, key persons and enforcement.'], ['Si el proyecto toca valores, fondos o intermediacion, la fuente debe alimentar score y revision humana.', 'If the project touches securities, funds or intermediation, the source must feed score and human review.'], ['El acceso estructurado puede requerir solicitud privada; registro publico no siempre es suficiente para screening continuo.', 'Structured access may require a private request; public register is not always enough for continuous screening.'], ['Pedir licencia SCA/CMA, numero de registro, actividad autorizada y evidencia de no enforcement.', 'Request SCA/CMA license, registration number, authorized activity and no-enforcement evidence.']],
   ['cbuae', 'AE', 'Central Bank of the UAE', 'UAE federal', 'public-register-plus-provider', (c) => any(c, ['finance', 'fintech', 'payment', 'payments', 'bank', 'insurance', 'exchange']), 'manual-review-required', 'scoring-and-review', ['Bancos, financieras, aseguradoras, casas de cambio y proveedores de pagos licenciados.', 'Licensed banks, finance companies, insurers, exchange houses and payment service providers.'], ['Licencia, actividad autorizada, estatus y coincidencia con actividad declarada.', 'License, authorized activity, status and match against declared activity.'], ['La actividad declarada toca servicios financieros/pagos; el otorgante debe confirmar licencia o no aplicabilidad.', 'Declared activity touches financial/payment services; the grantor must confirm license or non-applicability.'], ['La verificacion automatica avanzada puede requerir convenio o fuente estructurada autorizada.', 'Advanced automated verification may require an agreement or authorized structured source.'], ['Pedir numero de licencia CBUAE o declaracion de no actividad regulada.', 'Request CBUAE license number or a statement of no regulated activity.']],
   ['vara', 'AE', 'VARA Public Register', 'Dubai', 'public-register', (c) => any(c, ['virtual', 'vasp', 'crypto', 'digital asset', 'asset']), 'manual-review-required', 'blocking-if-unauthorized', ['Proveedores de servicios de activos virtuales, actividades autorizadas, estatus y enforcement.', 'Virtual asset service providers, authorized activities, status and enforcement.'], ['Registro publico, enforcement, actividad VASP, nombre comercial y licencia.', 'Public register, enforcement, VASP activity, trade name and license.'], ['Por sector, VARA es fuente decision-relevante; sin licencia exacta, el resultado no debe leerse como validacion.', 'By sector, VARA is decision-relevant; without exact license, result should not be read as validation.'], ['Nombre parecido no basta. Debe cruzarse licencia, actividad autorizada y direccion/jurisdiccion.', 'Similar name is not enough. Cross-check license, authorized activity and address/jurisdiction.'], ['Solicitar licencia VARA, actividad autorizada y evidencia de no enforcement.', 'Request VARA license, authorized activity and evidence of no enforcement.']],
   ['dfsa', 'AE', 'DFSA Public Register', 'DIFC / Dubai', 'public-register', (c) => any(c, ['difc', 'fund', 'finance', 'investment', 'asset management']), 'conditional-not-applicable', 'conditional', ['Firmas, fondos, personas autorizadas y acciones regulatorias dentro del DIFC.', 'Firms, funds, authorized individuals and regulatory actions within DIFC.'], ['Presencia en DIFC, autorizaciones, personas aprobadas, restricciones y enforcement.', 'DIFC presence, authorizations, approved persons, restrictions and enforcement.'], ['Aplicable si la entidad opera o declara presencia en DIFC; si no, queda como fuente condicionada.', 'Applicable if the entity operates or declares presence in DIFC; otherwise it remains conditional.'], ['No cubre todo EAU; solo el perimetro DIFC.', 'Does not cover all UAE; only the DIFC perimeter.'], ['Confirmar si la entidad esta incorporada o regulada en DIFC.', 'Confirm whether the entity is incorporated or regulated in DIFC.']],
@@ -100,6 +102,54 @@ function localizeSource(row, context, language) {
 }
 
 function riskLabel(language, risk) { return L(language, { low: 'Bajo', medium: 'Medio', high: 'Alto' }[risk] || 'Medio', { low: 'Low', medium: 'Medium', high: 'High' }[risk] || 'Medium'); }
+
+function buildSourceAcquisitionPlan(context, active, language) {
+  const sourceRows = active.map((source) => ({
+    sourceId: source.id,
+    sourceName: source.name,
+    mode: source.sourceMode,
+    productionStatus: ['public-feed', 'public-list', 'public-register'].includes(source.sourceMode)
+      ? 'allowlist-and-provenance-required'
+      : 'agreement-or-provider-required',
+    queryInputs: [
+      'legal_name',
+      'trade_name',
+      'registration_number',
+      'tax_number',
+      'ubo_names',
+      'representative_names',
+      'country',
+      'city_state_province'
+    ],
+    evidenceToStore: ['source_url_or_endpoint', 'query_hash', 'queried_at', 'result_summary', 'match_confidence', 'operator_or_job_id'],
+    forbiddenStorage: ['raw_document_body', 'passport_image', 'full_api_payload_without_review', 'binding_credit_decision']
+  }));
+
+  return {
+    id: `jurisdiction-source-acquisition:${context.country}`,
+    status: sourceRows.some((row) => row.productionStatus === 'agreement-or-provider-required')
+      ? 'partial-public-plus-agreement-required'
+      : 'public-allowlist-ready',
+    country: context.country,
+    territory: context.city || context.province || context.state || context.emirate || null,
+    publicDataFeeds: sourceRows.filter((row) => row.productionStatus === 'allowlist-and-provenance-required').length,
+    agreementFeeds: sourceRows.filter((row) => row.productionStatus === 'agreement-or-provider-required').length,
+    sourceRows,
+    operationalCycle: [
+      L(language, 'Solicitante carga evidencia base de identidad, registro, licencia, TRN/impuestos y actividad.', 'Applicant uploads baseline identity, registry, license, TRN/tax and activity evidence.'),
+      L(language, 'Backend normaliza pais, territorio, actividad, UBO y representantes sin exponer cuerpos documentales.', 'Backend normalizes country, territory, activity, UBO and representatives without exposing document bodies.'),
+      L(language, 'Fuentes publicas/API autorizadas generan resultados con fecha, fuente, query y resumen.', 'Authorized public/API sources generate timestamped source, query and summary results.'),
+      L(language, 'Otorgante ve score impact, blockers, limitaciones y siguiente evidencia requerida.', 'Funding provider sees score impact, blockers, limitations and next required evidence.'),
+      L(language, 'Admin monitorea cobertura, frescura, errores de proveedor y excepciones antes de cutover.', 'Admin monitors coverage, freshness, provider errors and exceptions before cutover.')
+    ],
+    guardrails: [
+      'Provider acquisition plan is read-only and does not call external services.',
+      'Every live source must be allowlisted, provenance-logged and reviewed before committee use.',
+      'Absence of a hit cannot be represented as certification.'
+    ]
+  };
+}
+
 function computeRisk(profileRisk, caseRisk, sources) {
   const weights = { low: 1, medium: 2, high: 3 };
   const pressure = sources.filter((source) => source.applicable && ['manual-review-required', 'provider-required', 'document-required'].includes(source.result)).length;
@@ -146,9 +196,10 @@ export function buildJurisdictionEvidenceFromTimeline(timeline, { language = 'es
     ],
     providerPlan: {
       publicApis: ['World Bank Indicators', 'World Governance Indicators', 'IMF DataMapper', 'FATF public lists', 'UN/EOCN sanctions feeds'],
-      privateOrAgreement: ['UAE PASS', 'CBUAE structured register', 'ADGM/FSRA structured access', 'FTA advanced TRN verification', 'NER/DET/DED full electronic connection'],
+      privateOrAgreement: ['UAE PASS', 'SCA/CMA structured register', 'CBUAE structured register', 'ADGM/FSRA structured access', 'FTA advanced TRN verification', 'NER/DET/DED full electronic connection'],
       runtimePolicy: 'allowlisted-sources-only; store source URL, timestamp, query and response summary; no approval from absence of match'
     },
+    sourceAcquisitionPlan: buildSourceAcquisitionPlan(context, active, language),
     guardrails: [
       'Jurisdiction evidence is read-only and cannot approve, reject, issue a term sheet or send notifications.',
       'Absence of a public match is not certification of compliance; official source revalidation and human review remain required.',

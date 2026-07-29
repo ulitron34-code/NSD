@@ -1593,6 +1593,25 @@ describe('nuxera routes', () => {
     expect(serviceCalls.evidenceCoverage[0]).toEqual({ role: 'admin', orderId: 'order-1' });
   });
 
+  it('returns applicant jurisdiction readiness without exposing grantor decision controls', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/orders/order-1/jurisdiction-readiness?language=en`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:update' }
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/orders/order-1/jurisdiction-readiness?language=en`, {
+      headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ orderId: 'order-1', workspaceRole: 'applicant' });
+    expect(body.jurisdictionReadiness.title).toBe('Jurisdiction readiness');
+    expect(body.jurisdictionReadiness.requiredEvidence.length).toBeGreaterThan(0);
+    expect(body.jurisdictionReadiness.sourceAcquisitionPlan.guardrails.join(' ')).toContain('does not call external services');
+    expect(body.jurisdictionReadiness.guardrails.join(' ')).toContain('Internal grantor rationale');
+    expect(serviceCalls.timeline[0]).toEqual({ role: 'applicant', orderId: 'order-1', userId: 'user-1' });
+  });
+
   it('returns risk profiles by role and admin risk health', async () => {
     const applicant = await fetch(`${baseUrl}/api/nuxera/orders/order-1/risk-profile`, {
       headers: { 'x-test-user-id': 'user-1', 'x-test-permissions': 'case:own:read' }

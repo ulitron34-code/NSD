@@ -1169,6 +1169,61 @@ router.get(
 );
 
 router.get(
+  '/nuxera/orders/:orderId/jurisdiction-readiness',
+  authMiddleware,
+  requirePermission('case:own:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getApplicantCaseTimeline({
+        orderId: req.params.orderId,
+        userId: req.userId
+      });
+      const language = req.query?.language === 'en' ? 'en' : 'es';
+      const jurisdictionEvidence = buildJurisdictionEvidenceFromTimeline(timeline, {
+        language,
+        workspaceRole: 'applicant'
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'applicant',
+        jurisdictionReadiness: {
+          id: jurisdictionEvidence.id,
+          status: jurisdictionEvidence.status,
+          title: language === 'en' ? 'Jurisdiction readiness' : 'Readiness jurisdiccional',
+          country: jurisdictionEvidence.country,
+          countryName: jurisdictionEvidence.countryName,
+          region: jurisdictionEvidence.region,
+          territory: jurisdictionEvidence.territory,
+          riskLabel: jurisdictionEvidence.riskLabel,
+          coverage: jurisdictionEvidence.coverage,
+          countryBrief: jurisdictionEvidence.countryBrief,
+          requiredEvidence: jurisdictionEvidence.findings.map((source) => ({
+            id: source.id,
+            name: source.name,
+            resultLabel: source.resultLabel,
+            nextAction: source.nextAction,
+            limitation: source.limitation
+          })),
+          sourceAcquisitionPlan: jurisdictionEvidence.sourceAcquisitionPlan,
+          scoreImpacts: jurisdictionEvidence.scoreImpacts,
+          guardrails: [
+            'Applicant jurisdiction readiness is document-preparation guidance only.',
+            'Internal grantor rationale, sanctions details and committee notes are not exposed here.',
+            'No automatic approval, rejection, score override or notification delivery is performed.'
+          ]
+        },
+        guardrails: [
+          'Applicant receives preparation guidance and source limitations only.',
+          'Grantor/admin decision support remains role-scoped.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
   '/nuxera/orders/:orderId/grantor-jurisdiction-evidence',
   authMiddleware,
   requirePermission('data_room:authorized:read'),
