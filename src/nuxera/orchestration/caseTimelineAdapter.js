@@ -32,14 +32,14 @@ const LOCAL_CASE_TIMELINE = Object.freeze({
     health: {
       status: "needs-evidence",
       severity: "info",
-      label: "Sin expediente real",
+      label: "No real file selected",
       signals: [],
       guardrails: [],
     },
   },
   sources: [],
   events: [],
-  guardrails: ["Timeline local vacio; no inventa eventos ni lee evidencia sensible."],
+  guardrails: ["Local timeline is empty; it does not invent events or read sensitive evidence."],
 });
 
 function asArray(value) {
@@ -55,13 +55,13 @@ function normalizeHealth(health = {}) {
   return {
     status: data.status || "needs-evidence",
     severity: data.severity || "info",
-    label: data.label || "Sin salud operativa",
+    label: data.label || "No operational health available",
     signals: asArray(data.signals).map((signal) => ({
       id: signal.id || signal.label || "signal",
       status: signal.status || "observed",
-      label: signal.label || "Senal",
+      label: signal.label || "Signal",
       value: String(signal.value ?? "0"),
-      detail: signal.detail || "Sin detalle disponible.",
+      detail: signal.detail || "No detail available.",
     })),
     guardrails: asArray(data.guardrails),
   };
@@ -90,13 +90,13 @@ function normalizeSummary(summary = {}) {
     byType,
     typeFilters: asArray(data.typeFilters).map((filter) => ({
       id: filter.id || "event",
-      label: filter.label || filter.id || "Evento",
+      label: filter.label || filter.id || "Event",
       count: Number(filter.count || 0),
       active: Boolean(filter.active),
     })),
     phases: asArray(data.phases).map((phase) => ({
       id: phase.id || "phase",
-      label: phase.label || phase.id || "Fase",
+      label: phase.label || phase.id || "Phase",
       count: Number(phase.count || 0),
       blockers: Number(phase.blockers || 0),
       latestEventAt: phase.latestEventAt || null,
@@ -113,8 +113,8 @@ function normalizeEvent(event = {}) {
     type: data.type || "event",
     phase: data.phase || "intake",
     source: data.source || "unknown",
-    title: data.title || "Evento NUXERA",
-    description: data.description || "Evento operacional read-only.",
+    title: data.title || "NUXERA event",
+    description: data.description || "Read-only operational event.",
     timestamp: data.timestamp || null,
     status: data.status || "observed",
     severity: data.severity || "info",

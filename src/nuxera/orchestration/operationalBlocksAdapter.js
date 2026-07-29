@@ -21,7 +21,7 @@ const LOCAL_DECISION_PACKAGE = Object.freeze({
   gaps: [],
   questions: [],
   conditions: [],
-  guardrails: ["Decision package local vacio; no inventa hallazgos ni decisiones."],
+  guardrails: ["Local decision package is empty; it does not invent findings or decisions."],
 });
 
 const LOCAL_JURISDICTION_EVIDENCE = Object.freeze({
@@ -34,9 +34,9 @@ const LOCAL_JURISDICTION_EVIDENCE = Object.freeze({
   countryName: "",
   region: "",
   riskTier: "unknown",
-  riskLabel: "Sin perfil real",
+  riskLabel: "No real profile",
   territory: { label: "", risk: "unknown", focus: "", signals: [] },
-  coverage: { reviewed: 0, unavailable: 0, conditional: 0, mode: "Sin cobertura remota" },
+  coverage: { reviewed: 0, unavailable: 0, conditional: 0, mode: "No remote coverage" },
   countryBrief: { economy: "", politics: "", social: "", indicators: [] },
   sourceMap: [],
   findings: [],
@@ -44,7 +44,7 @@ const LOCAL_JURISDICTION_EVIDENCE = Object.freeze({
   humanReviewChecklist: [],
   scoreImpacts: [],
   providerPlan: { publicApis: [], privateOrAgreement: [], runtimePolicy: "disabled" },
-  guardrails: ["Jurisdiction evidence local vacio; no consulta proveedores externos ni aprueba decisiones."],
+  guardrails: ["Local jurisdiction evidence is empty; it does not call external providers or approve decisions."],
 });
 
 const LOCAL_RISK_PROFILE = Object.freeze({
@@ -53,11 +53,11 @@ const LOCAL_RISK_PROFILE = Object.freeze({
   loading: false,
   error: null,
   riskTier: "unknown",
-  policyOutcome: { policy: "refer", automatedDecision: false, label: "Sin perfil real", reasons: [], blockedActions: [] },
+  policyOutcome: { policy: "refer", automatedDecision: false, label: "No real profile", reasons: [], blockedActions: [] },
   summary: { blockers: 0, evidenceLinks: 0, openInformationRequests: 0, failedNotifications: 0, slaOverdue: 0, sourceHealth: 0, totalSources: 0 },
   signals: [],
   sources: [],
-  guardrails: ["Risk profile local vacio; no ejecuta proveedores ni decisiones."],
+  guardrails: ["Local risk profile is empty; it does not execute providers or decisions."],
 });
 
 const LOCAL_CASE_EVENTS = Object.freeze({
@@ -68,7 +68,7 @@ const LOCAL_CASE_EVENTS = Object.freeze({
   summary: { total: 0, warning: 0, critical: 0, humanReviewRequired: 0 },
   contract: null,
   events: [],
-  guardrails: ["case_events local vacio; no crea eventos persistidos."],
+  guardrails: ["Local case_events fallback is empty; it does not create persisted events."],
 });
 
 
@@ -82,7 +82,7 @@ const LOCAL_CASE_EVENTS_PERSISTENCE_PLAN = Object.freeze({
   summary: { totalProjected: 0, insertReady: 0, blocked: 0, warnings: 0, critical: 0, humanReviewRequired: 0, uniqueDedupeKeys: 0 },
   candidates: [],
   requiredGates: [],
-  guardrails: ["Persistence plan local vacio; no crea eventos persistidos."],
+  guardrails: ["Local persistence plan is empty; it does not create persisted events."],
 });
 const LOCAL_OPERATIONAL_PERSISTENCE_PLAN = Object.freeze({
   source: "local-fallback",
@@ -94,7 +94,7 @@ const LOCAL_OPERATIONAL_PERSISTENCE_PLAN = Object.freeze({
   summary: { ledgers: 0, insertReady: 0, blocked: 0, caseEventCandidates: 0, notificationApprovalCandidates: 0, evidenceProvenanceCandidates: 0 },
   ledgers: [],
   requiredGates: [],
-  guardrails: ["Operational persistence local vacio; no habilita escrituras."],
+  guardrails: ["Local operational persistence is empty; it does not enable writes."],
 });
 const LOCAL_RISK_HEALTH = Object.freeze({
   source: "local-fallback",
@@ -104,7 +104,7 @@ const LOCAL_RISK_HEALTH = Object.freeze({
   summary: { failedNotifications: 0, suppressedNotifications: 0, openAssignments: 0, overdueAssignments: 0, auditEvents: 0, availableSources: 0, unavailableSources: 0 },
   signals: [],
   sources: [],
-  guardrails: ["Risk health local vacio; no consulta proveedores externos."],
+  guardrails: ["Local risk health is empty; it does not call external providers."],
 });
 
 function normalizeDecisionPackage(response) {

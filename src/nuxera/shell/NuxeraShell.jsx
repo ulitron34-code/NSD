@@ -14,6 +14,12 @@ export default function NuxeraShell({ workspaceRole, onExit }) {
   const isEnglish = i18n.language?.startsWith("en");
   const items = getNavigationByRole(workspaceRole, isEnglish);
   const current = items.find((item) => item.path === location.pathname) || items[0];
+  const toggleLanguage = () => {
+    const nextLanguage = isEnglish ? "es" : "en";
+    i18n.changeLanguage(nextLanguage);
+    localStorage.setItem("language", nextLanguage);
+  };
+
   const roleLabel = {
     applicant: isEnglish ? "Applicant" : "Solicitante",
     grantor: isEnglish ? "Funding provider" : "Otorgante",
@@ -61,7 +67,7 @@ export default function NuxeraShell({ workspaceRole, onExit }) {
           </div>
           <div className="nuxera-header-actions">
             <span className="nuxera-agent-status"><i aria-hidden="true" />{isEnglish ? "Agents guarded" : "Agentes protegidos"}</span>
-            <button type="button" onClick={() => i18n.changeLanguage(isEnglish ? "es" : "en")} aria-label={isEnglish ? "Cambiar idioma a español" : "Switch language to English"}>
+            <button type="button" onClick={toggleLanguage} aria-label={isEnglish ? "Cambiar idioma a español" : "Switch language to English"}>
               {isEnglish ? "ES" : "EN"}
             </button>
             <a href="/contact" className="nuxera-help">{isEnglish ? "Help" : "Ayuda"}</a>

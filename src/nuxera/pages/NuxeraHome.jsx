@@ -82,7 +82,7 @@ function CaseTimelinePanel({ timeline, title, emptyLabel }) {
         <div>
           <span>{timeline.loading ? L("Cargando timeline", "Loading timeline") : health.status}</span>
           <h2>{title}</h2>
-          <p>{timeline.error || `${health.label} / ${timeline.summary.total} eventos / ${timeline.summary.availableSources} fuentes activas / ${timeline.summary.unavailableSources} no disponibles`}</p>
+          <p>{timeline.error || `${health.label} / ${timeline.summary.total} ${L("eventos", "events")} / ${timeline.summary.availableSources} ${L("fuentes activas", "active sources")} / ${timeline.summary.unavailableSources} ${L("no disponibles", "unavailable")}`}</p>
         </div>
         <strong>{timeline.summary.blockers} {L("blockers", "blockers")}</strong>
       </header>

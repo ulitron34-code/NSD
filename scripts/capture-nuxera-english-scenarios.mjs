@@ -4,16 +4,24 @@ import path from 'node:path';
 
 const baseUrl = String(process.env.NUXERA_PUBLIC_BASE_URL || 'https://nsd-pi.vercel.app').replace(/\/$/, '');
 const outDir = process.env.NUXERA_ENGLISH_QA_OUT || path.join('artifacts', 'nuxera-english-qa');
+const browserCandidates = [
+  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+].filter(Boolean);
 const scenarios = [
   { id: 'public-home', path: '/', user: null, expected: ['NUXERA Financial Intelligence'] },
   { id: 'applicant-dashboard-en', path: '/dashboard', profile: 'solicitante', user: { id: 'qa-applicant-en', role: 'solicitante', demo: true, email: 'applicant.qa@nuxera.local' }, expected: ['NUXERA Financial Intelligence', 'Applicant'] },
-  { id: 'grantor-workspace-en', path: '/dashboard/nuxera/cases', profile: 'otorgante', user: { id: 'qa-grantor-en', role: 'otorgante', demo: true, email: 'grantor.qa@nuxera.local' }, expected: ['NUXERA Financial Intelligence', 'Grantor'] },
+  { id: 'grantor-workspace-en', path: '/dashboard/nuxera/cases', profile: 'otorgante', user: { id: 'qa-grantor-en', role: 'otorgante', demo: true, email: 'grantor.qa@nuxera.local' }, expected: ['NUXERA Financial Intelligence', 'Funding provider'] },
   { id: 'admin-operations-en', path: '/dashboard/nuxera/operations', profile: 'administrador', user: { id: 'qa-admin-en', role: 'administrador', demo: false, email: 'admin.qa@nuxera.local' }, expected: ['NUXERA Financial Intelligence', 'Admin'] }
 ];
 
 async function seedNuxeraEnglish(page, scenario) {
   await page.addInitScript(({ user, profile }) => {
     localStorage.setItem('nsd_ui_view', 'nuxera');
+    localStorage.setItem('language', 'en');
     localStorage.setItem('nuxera_language', 'en');
     localStorage.setItem('i18nextLng', 'en');
     if (user) {
@@ -26,20 +34,27 @@ async function seedNuxeraEnglish(page, scenario) {
 
 async function run() {
   await fs.mkdir(outDir, { recursive: true });
-  const browser = await chromium.launch();
+  const executablePath = await findBrowserExecutable();
+  const browser = await chromium.launch(executablePath ? { executablePath } : {});
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
   const results = [];
 
   for (const scenario of scenarios) {
     await seedNuxeraEnglish(page, scenario);
     const url = `${baseUrl}${scenario.path}`;
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto(url, { waitUntil: 'load', timeout: 45000 });
+    await page.waitForFunction((expected) => {
+      const text = document.body?.innerText || '';
+      if (!text || text.trim() === 'Loading...') return false;
+      return expected.some((needle) => text.toLowerCase().includes(String(needle).toLowerCase()));
+    }, scenario.expected, { timeout: 20000 }).catch(() => undefined);
     const title = await page.title();
     const bodyText = await page.locator('body').innerText({ timeout: 10000 }).catch(() => '');
     const screenshot = path.join(outDir, `${scenario.id}.png`);
     await page.screenshot({ path: screenshot, fullPage: true });
-    const missing = scenario.expected.filter((needle) => !`${title}\n${bodyText}`.includes(needle));
-    results.push({ ...scenario, url, title, screenshot, passed: missing.length === 0, missing });
+    const haystack = `${title}\n${bodyText}`.toLowerCase();
+    const missing = scenario.expected.filter((needle) => !haystack.includes(String(needle).toLowerCase()));
+    results.push({ ...scenario, url, title, screenshot, passed: missing.length === 0, missing, visibleNexus: /\bNEXUS\b/i.test(bodyText), textExcerpt: bodyText.slice(0, 900) });
     await page.evaluate(() => localStorage.clear());
   }
 
@@ -51,13 +66,26 @@ async function run() {
     summary: {
       total: results.length,
       passed: results.filter((result) => result.passed).length,
-      failed: results.filter((result) => !result.passed).length
+      failed: results.filter((result) => !result.passed).length,
+      visibleNexus: results.filter((result) => result.visibleNexus).length
     },
     results
   };
   await fs.writeFile(path.join(outDir, 'english-qa-evidence.json'), `${JSON.stringify(evidence, null, 2)}\n`, 'utf8');
   console.log(JSON.stringify(evidence.summary, null, 2));
   if (evidence.summary.failed) process.exitCode = 1;
+}
+
+async function findBrowserExecutable() {
+  for (const candidate of browserCandidates) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch {
+      // Try the next local browser before falling back to Playwright-managed Chromium.
+    }
+  }
+  return null;
 }
 
 run().catch((error) => {
