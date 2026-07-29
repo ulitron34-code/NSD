@@ -88,7 +88,7 @@ export function buildReadinessMemo(checklistResult, order = {}) {
     `- Score global ponderado: ${data.globalScore.score}/100 — ${data.globalScore.label}`,
     `- Completados: ${data.completados}/${data.total} (${data.progreso}%)`,
     `- Requisitos críticos pendientes: ${data.criticosPendientesLabels.length}`,
-    `- Listo para prevalidación NEXUS: ${data.listoParaEnviar ? 'Sí' : 'No'}`,
+    `- Listo para prevalidación NUXERA: ${data.listoParaEnviar ? 'Sí' : 'No'}`,
     '',
     '## 2. Requisitos críticos pendientes',
     ...(data.criticosPendientesLabels.length ? data.criticosPendientesLabels.map((label) => `- ${label}`) : ['- Ninguno.']),
@@ -143,7 +143,7 @@ export function buildReadinessMemoPdf(checklistResult, order = {}) {
   doc.text(`Score global ponderado: ${data.globalScore.score}/100 — ${data.globalScore.label}`);
   doc.text(`Completados: ${data.completados}/${data.total} (${data.progreso}%)`);
   doc.text(`Requisitos críticos pendientes: ${data.criticosPendientesLabels.length}`);
-  doc.text(`Listo para prevalidación NEXUS: ${data.listoParaEnviar ? 'Sí' : 'No'}`);
+  doc.text(`Listo para prevalidación NUXERA: ${data.listoParaEnviar ? 'Sí' : 'No'}`);
   doc.moveDown(1);
 
   doc.font('Helvetica-Bold').fontSize(12).text('2. Requisitos críticos pendientes');

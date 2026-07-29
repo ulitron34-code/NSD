@@ -9,3 +9,5 @@ dist.zip
 Thumbs.db
 playwright-report/
 test-results/
+.vercel
+.env*

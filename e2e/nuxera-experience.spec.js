@@ -35,7 +35,7 @@ test.describe('NUXERA controlled experience', () => {
     await seedSession(page, { id: 'demo-grantor', role: 'otorgante', demo: true }, 'otorgante');
     await page.goto('/dashboard/nuxera/queue');
     await expect(page.getByText('NUXERA Financial Intelligence / Otorgante')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Cola de casos priorizada' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Gestion de expedientes' })).toBeVisible();
   });
 
   test('mobile shell exposes keyboard-friendly navigation and language control', async ({ page }) => {
