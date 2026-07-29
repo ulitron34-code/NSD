@@ -35,6 +35,7 @@
     "check:solicitante": "node scripts/check-solicitante-local.js",
     "check:public-pages": "node scripts/check-public-pages-local.js",
     "check:nuxera-public-identity": "node scripts/check-nuxera-public-identity.js",
+    "review:nuxera-security-data": "node scripts/generate-nuxera-security-data-review.js",
     "verify:nuxera-http:plan": "node scripts/verify-nuxera-http-readiness.js --plan",
     "verify:nuxera-http": "node scripts/verify-nuxera-http-readiness.js",
     "go-nogo:local": "node scripts/go-nogo-local.js",
