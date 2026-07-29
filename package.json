@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:chromium": "playwright test --project=chromium",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "qa:nuxera:english": "node scripts/capture-nuxera-english-scenarios.mjs"
   },
   "dependencies": {
     "@sentry/browser": "^7.109.0",

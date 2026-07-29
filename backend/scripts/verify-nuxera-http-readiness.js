@@ -1,4 +1,8 @@
+import fs from 'node:fs';
 const planMode = process.argv.includes('--plan');
+const jsonMode = process.argv.includes('--json');
+const outIndex = process.argv.indexOf('--out');
+const outPath = outIndex >= 0 ? process.argv[outIndex + 1] : process.env.NUXERA_HTTP_EVIDENCE_OUT;
 
 const baseUrl = String(process.env.NUXERA_HTTP_BASE_URL || '').replace(/\/$/, '');
 
@@ -99,6 +103,11 @@ function resolvedPath(check) {
   return check.order ? check.path.replace(':orderId', process.env[check.order] || ':orderId') : check.path;
 }
 
+function writeEvidence(payload) {
+  if (!outPath) return;
+  fs.writeFileSync(outPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+}
+
 function printPlan() {
   console.log('# NUXERA HTTP readiness plan (mustAllow, GET-only)');
   console.log('No requests were sent and no credentials were read.');
@@ -145,7 +154,6 @@ async function execute() {
   const allowResults = [];
   for (const check of checks) {
     const { path, status } = await runCheck(check);
-    const contentType = String(status);
     const ok = typeof status === 'number' && status >= 200 && status < 300;
     allowResults.push({ role: check.role, path, ok, status });
   }
@@ -165,7 +173,18 @@ async function execute() {
     console.log(`- ${result.ok ? 'GO' : 'NO-GO'} | ${result.role} | ${result.method} ${result.path} | ${result.status} | ${result.reason}`);
   }
 
-  if (allowResults.some((result) => !result.ok) || denyResults.some((result) => !result.ok)) {
+  const summary = {
+    status: allowResults.some((result) => !result.ok) || denyResults.some((result) => !result.ok) ? 'NO-GO' : 'GO',
+    baseUrl,
+    generatedAt: new Date().toISOString(),
+    allow: { total: allowResults.length, passed: allowResults.filter((result) => result.ok).length, failed: allowResults.filter((result) => !result.ok).length },
+    deny: { total: denyResults.length, passed: denyResults.filter((result) => result.ok).length, failed: denyResults.filter((result) => !result.ok).length }
+  };
+  const evidence = { id: 'nuxera-http-rls-evidence', summary, allowResults, denyResults };
+  writeEvidence(evidence);
+  if (jsonMode) console.log(JSON.stringify(evidence, null, 2));
+
+  if (summary.status !== 'GO') {
     process.exitCode = 1;
   }
 }

@@ -23,7 +23,7 @@ import { mergeNotificationCatalogWithOutboxReadiness, useNotificationApprovalPla
 import { mergeCommunicationModelWithConversationAgent, useConversationAgentReadiness, useConversationPreview } from "../communications/conversationAgentBackendAdapter";
 import ConversationChat from "../communications/ConversationChat";
 import { useNuxeraCaseTimeline } from "../orchestration/caseTimelineAdapter";
-import { useNuxeraCaseEvents, useNuxeraCaseEventsPersistencePlan, useNuxeraDecisionPackage, useNuxeraEvidenceCoverage, useNuxeraJurisdictionEvidence, useNuxeraRiskHealth, useNuxeraRiskProfile } from "../orchestration/operationalBlocksAdapter";
+import { useNuxeraCaseEvents, useNuxeraCaseEventsPersistencePlan, useNuxeraDecisionPackage, useNuxeraEvidenceCoverage, useNuxeraJurisdictionEvidence, useNuxeraOperationalPersistencePlan, useNuxeraRiskHealth, useNuxeraRiskProfile } from "../orchestration/operationalBlocksAdapter";
 
 const roleCopy = {
   applicant: {
@@ -338,6 +338,38 @@ function CaseEventsProjectionPanel({ caseEvents, persistencePlan = null, title }
   );
 }
 
+function OperationalPersistencePanel({ plan, title }) {
+  const { L } = useNuxeraLanguage();
+  return (
+    <section className="nuxera-operational-block" aria-label={title}>
+      <header>
+        <div>
+          <span>{plan.loading ? L("Calculando persistencia", "Calculating persistence") : plan.status}</span>
+          <h2>{title}</h2>
+          <p>{plan.error || plan.guardrails[0]}</p>
+        </div>
+        <strong>{plan.summary.insertReady}</strong>
+      </header>
+      <div>
+        <article data-status={plan.writeEnabled ? "warning" : "success"}>
+          <span>{plan.mode}</span>
+          <strong>{plan.writeEnabled ? L("Write activo", "Write enabled") : L("Sin escritura", "No write")}</strong>
+          <p>{L("Candidatos listos/bloqueados antes de habilitar service_role.", "Ready/blocked candidates before enabling service_role.")}</p>
+          <small>{plan.summary.blocked} {L("bloqueados", "blocked")}</small>
+        </article>
+        {plan.ledgers.map((ledger) => (
+          <article key={ledger.id || ledger.table} data-status={ledger.summary?.blocked ? "warning" : "success"}>
+            <span>{ledger.status || ledger.mode}</span>
+            <strong>{ledger.table}</strong>
+            <p>{ledger.summary?.insertReady || 0} {L("candidatos dry-run", "dry-run candidates")}; {ledger.summary?.blocked || 0} {L("bloqueados", "blocked")}.</p>
+            <small>{ledger.requiredGates?.[0] || ledger.guardrails?.[0]}</small>
+          </article>
+        ))}
+      </div>
+      <footer>{plan.requiredGates.slice(0, 3).map((gate) => <small key={gate}>{gate}</small>)}</footer>
+    </section>
+  );
+}
 function RiskHealthPanel({ riskHealth, title }) {
   const { L } = useNuxeraLanguage();
   return (
@@ -1072,6 +1104,10 @@ function AdminOperationsHome({ sectionLabel }) {
   });
   const adminCaseEventsPersistencePlan = useNuxeraCaseEventsPersistencePlan(selectedAssignmentCaseId, {
     enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+  });
+  const adminOperationalPersistencePlan = useNuxeraOperationalPersistencePlan(selectedAssignmentCaseId, {
+    enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
+    language,
   });
   const adminEvidenceCoverage = useNuxeraEvidenceCoverage(selectedAssignmentCaseId, {
     enabled: isNuxeraExperienceEnabled() && Boolean(selectedAssignmentCaseId),
@@ -1942,6 +1978,7 @@ function AdminOperationsHome({ sectionLabel }) {
       <DecisionPackagePanel decisionPackage={adminEvidenceCoverage} title={L("Coverage de evidencia", "Evidence coverage")} />
       <RiskProfilePanel profile={adminRiskProfile} title={L("Perfil de riesgo admin", "Admin risk profile")} />
       <CaseEventsProjectionPanel caseEvents={adminCaseEvents} persistencePlan={adminCaseEventsPersistencePlan} title={L("Proyeccion case_events", "case_events projection")} />
+      <OperationalPersistencePanel plan={adminOperationalPersistencePlan} title={L("Persistencia operativa", "Operational persistence")} />
 
       <section className="nuxera-admin-case-assignment" aria-label={L("Previsualizacion de asignacion de expedientes NUXERA", "NUXERA case assignment preview")}>
         <header>

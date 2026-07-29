@@ -21,6 +21,7 @@ import { getAuthorizedGrantorEvidenceLinks, getOwnerEvidenceLinks } from '../ser
 import { getApplicantChecklistState, upsertApplicantChecklistState } from '../services/nuxeraWorkspaceStateService.js';
 import { getAdminCaseTimeline, getApplicantCaseTimeline, getGrantorCaseTimeline } from '../services/nuxeraCaseTimelineService.js';
 import { buildNuxeraCaseEventsPersistencePlan, buildNuxeraCaseEventsProjection } from '../services/nuxeraCaseEventsProjectionService.js';
+import { buildNuxeraOperationalPersistencePlan } from '../services/nuxeraOperationalPersistenceService.js';
 import { getAdminEvidenceCoverage, getGrantorDecisionEvidencePackage } from '../services/nuxeraDecisionEvidencePackageService.js';
 import { buildJurisdictionEvidenceFromTimeline } from '../services/nuxeraJurisdictionIntelligenceService.js';
 import { getAdminRiskHealth, getAdminRiskProfile, getApplicantRiskProfile, getGrantorRiskProfile } from '../services/nuxeraRiskOrchestrationService.js';
@@ -1030,6 +1031,33 @@ router.get(
         guardrails: [
           'case_events persistence plan is dry-run only; no insert/update/delete is performed.',
           'Client input cannot enable writes; production persistence requires separate SQL/RLS evidence and approval.'
+        ]
+      });
+    } catch (error) {
+      sendNuxeraError(res, error);
+    }
+  }
+);
+router.get(
+  '/nuxera/admin/orders/:orderId/operational-persistence-plan',
+  authMiddleware,
+  requirePermission('nuxera:admin:read'),
+  async (req, res) => {
+    try {
+      const timeline = await getAdminCaseTimeline({ orderId: req.params.orderId });
+      const operationalPersistencePlan = buildNuxeraOperationalPersistencePlan(timeline, {
+        actorUserId: req.userId,
+        language: req.query?.language === 'en' ? 'en' : 'es',
+        adminRecipientUserId: req.userId || 'admin-operations'
+      });
+
+      res.json({
+        orderId: req.params.orderId,
+        workspaceRole: 'admin',
+        operationalPersistencePlan,
+        guardrails: [
+          'Operational persistence plan is dry-run only across case events, notification approvals and evidence provenance.',
+          'Production writes remain blocked until SQL/RLS evidence, rollback rehearsal and service_role approval are accepted.'
         ]
       });
     } catch (error) {

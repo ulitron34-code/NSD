@@ -33,7 +33,8 @@ const serviceCalls = {
   notificationBatch: [],
   conversationTurn: [],
   timeline: [],
-  caseEventsPlan: []
+  caseEventsPlan: [],
+  operationalPersistencePlan: []
 };
 
 vi.mock('../middleware/auth.js', () => ({
@@ -469,7 +470,24 @@ vi.mock('../services/nuxeraCaseEventsProjectionService.js', () => ({
     return { status: 'case-events-persistence-plan-ready', mode: 'dry-run-only', table: 'nuxera_case_events', summary: { totalProjected: 1, insertReady: 1, blocked: 0 }, candidates: [{ id: 'candidate-1', insertReady: true, dedupeKey: 'order-1:audit:audit_logs:audit-1:2026' }], guardrails: ['Persistence plan is read-only.'] };
   })
 }));
-vi.mock('../services/nuxeraDecisionEvidencePackageService.js', () => ({
+vi.mock('../services/nuxeraOperationalPersistenceService.js', () => ({
+  buildNuxeraOperationalPersistencePlan: vi.fn((timeline, context = {}) => {
+    serviceCalls.operationalPersistencePlan.push({ orderId: timeline.orderId, workspaceRole: timeline.workspaceRole, context });
+    return {
+      status: 'operational-persistence-dry-run-ready',
+      mode: 'dry-run-only',
+      writeEnabled: false,
+      orderId: timeline.orderId,
+      summary: { ledgers: 3, insertReady: 3, blocked: 0, caseEventCandidates: 1, notificationApprovalCandidates: 1, evidenceProvenanceCandidates: 1 },
+      ledgers: [
+        { table: 'nuxera_case_events', summary: { insertReady: 1, blocked: 0 } },
+        { table: 'nuxera_notification_approvals', summary: { insertReady: 1, blocked: 0 } },
+        { table: 'nuxera_evidence_links', summary: { insertReady: 1, blocked: 0 } }
+      ],
+      guardrails: ['Operational persistence plan is read-only.']
+    };
+  })
+}));vi.mock('../services/nuxeraDecisionEvidencePackageService.js', () => ({
   getGrantorDecisionEvidencePackage: vi.fn(async (input) => {
     serviceCalls.decisionPackage.push({ role: 'grantor', ...input });
     return { status: 'decision-package-ready-for-human-review', orderId: input.orderId, workspaceRole: 'grantor', summary: { findings: 1 }, coverage: [], guardrails: ['Decision package read-only.'] };
@@ -566,6 +584,7 @@ describe('nuxera routes', () => {
     serviceCalls.notificationRules = [];
     serviceCalls.notificationApprovalPlan = [];
     serviceCalls.notificationApprovalReadiness = [];
+    serviceCalls.operationalPersistencePlan = [];
     serviceCalls.notificationApprove = [];
     serviceCalls.notificationTemplates = [];
     serviceCalls.notificationQueue = [];
@@ -1539,7 +1558,22 @@ describe('nuxera routes', () => {
     expect(body.guardrails.join(' ')).toContain('dry-run only');
     expect(serviceCalls.caseEventsPlan).toEqual([{ orderId: 'order-1', workspaceRole: 'admin' }]);
   });
-  it('returns grantor decision package and admin evidence coverage without writes', async () => {
+  it('returns admin operational persistence plan as a three-ledger dry-run', async () => {
+    const denied = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/operational-persistence-plan`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'case:own:read' }
+    });
+    const response = await fetch(`${baseUrl}/api/nuxera/admin/orders/order-1/operational-persistence-plan?language=en`, {
+      headers: { 'x-test-user-id': 'admin-1', 'x-test-permissions': 'nuxera:admin:read' }
+    });
+    const body = await response.json();
+
+    expect(denied.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(body.operationalPersistencePlan).toMatchObject({ status: 'operational-persistence-dry-run-ready', mode: 'dry-run-only', writeEnabled: false });
+    expect(body.operationalPersistencePlan.ledgers.map((ledger) => ledger.table)).toEqual(['nuxera_case_events', 'nuxera_notification_approvals', 'nuxera_evidence_links']);
+    expect(body.guardrails.join(' ')).toContain('dry-run only');
+    expect(serviceCalls.operationalPersistencePlan[0]).toMatchObject({ orderId: 'order-1', workspaceRole: 'admin', context: { language: 'en' } });
+  });  it('returns grantor decision package and admin evidence coverage without writes', async () => {
     const grantor = await fetch(`${baseUrl}/api/nuxera/orders/order-1/grantor-decision-package`, {
       headers: { 'x-test-user-id': 'grantor-1', 'x-test-permissions': 'data_room:authorized:read', 'x-test-email': 'grantor@example.com' }
     });
