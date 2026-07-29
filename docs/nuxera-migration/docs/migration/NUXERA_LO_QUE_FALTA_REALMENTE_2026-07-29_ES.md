@@ -1,40 +1,79 @@
-# NUXERA - Lo que Falta Realmente para Operar en Produccion
+# NUXERA - Plan Extendido de Pendientes Reales, Produccion y Cutover
 
-Fecha: 2026-07-29
+Fecha/Date: 2026-07-29
 
-## Estado General
+## 1. Estado
 
-NUXERA ya esta suficientemente avanzada para demostracion, revision de socio e inversionistas, y para preparar el reemplazo de la experiencia Nexus. Lo que falta ya no es crear mas pantallas: falta cerrar ciclos reales de datos, autorizacion, correo, agentes y cutover.
+- 90-92% demo/investor-ready
+- 78-82% produccion real
+- Falta cerrar ciclos reales, no mas pantallas
 
-Avance estimado despues de esta jornada:
 
-- 90-92% para experiencia demostrable e investor-ready.
-- 78-82% para produccion operativa con datos reales y automatizaciones activas.
+## 2. Criticos
 
-## Pendientes Criticos antes de Sustituir Nexus por Completo
+- RLS fase 2
+- SQL persistence rehearsal
+- correo sandbox
+- agente con contexto autorizado
+- backend estable
+- fuentes privadas por convenio
+- cutover Nexus->NUXERA
+- rollback
 
-1. Cutover de identidad: retirar o redirigir cualquier entrada publica/operativa que aun lleve a Nexus y dejar NUXERA como experiencia principal.
-2. RLS fase 2: probar solicitante, otorgante y admin con datos reales o staging para demostrar aislamiento.
-3. SQL/persistencia: ejecutar rehearsal no productivo para eventos, aprobaciones de notificacion y procedencia documental.
-4. Backend remoto: resolver latencia/cold start de Render o calentar servicio antes de demos. En esta corrida Vercel respondio, Render no respondio dentro de 20 segundos.
-5. Notificaciones: ejecutar sandbox real con correo aprobado, plantillas firmadas y sin evidencia sensible adjunta.
-6. Agente/chat: conectar al backend con contexto autorizado, logs y limites de riesgo.
-7. Pais/ciudad/jurisdiccion: ampliar fuentes por region y mantener fecha/fuente/limitacion por cada conclusion.
-8. Medio Oriente: convertir fuentes UAE/ADGM/DIFC/VARA/CBUAE/FTA en conectores reales donde exista API o proceso autorizado.
-9. Manuales finales con imagenes: revisar y editar para estilo comercial/inversionistas.
-10. Demo script: preparar recorrido de 12-15 minutos con camino feliz y respaldo por capturas.
 
-## Pendientes Importantes pero no Bloqueantes para Demo
+## 3. Plan de cutover
 
-- NVIDIA API: se puede dejar como experimental.
-- Profundizar copy comercial de pagina publica.
-- Agregar mas casos demo por industria.
-- Preparar one-pager de inversion.
-- Preparar deck de pitch.
-- Preparar matriz de pricing y plan piloto.
+1. Inventario de URLs
+2. redirecciones
+3. freeze
+4. QA
+5. demo final
+6. backup rollback
+7. cambio principal
+8. monitoreo
+9. correcciones
+10. retiro remanentes
 
-## Recomendacion de Decision
 
-Para presentacion de inversionistas: avanzar.  
-Para sustitucion total de Nexus: hacerlo con cutover controlado y plan de rollback.  
-Para produccion con clientes reales: no activar escrituras sensibles, notificaciones live ni agentes con datos reales hasta cerrar RLS, SQL, correo y observabilidad.
+## 4. Riesgos
+
+- backend frio
+- prometer fuentes privadas
+- correo sin sandbox
+- agente sin RLS
+- score confundido con aprobacion
+- tabs duplicadas
+
+
+## 5. Recomendacion
+
+Avanzar para inversionistas con demo controlada; no activar clientes reales hasta cerrar RLS, SQL, correo, agente seguro y cutover.
+
+
+## 6. Roadmap operativo por semanas
+
+1. Semana 1: RLS staging y SQL rehearsal
+2. Semana 2: sandbox correo y agente con contexto
+3. Semana 3: fuentes jurisdiccionales y EAU priorizadas
+4. Semana 4: cutover controlado y monitoreo
+5. Semana 5: pilotos con datos limitados
+6. Semana 6: retroalimentacion, hardening y produccion limitada
+
+## 7. Checklist final de produccion
+
+- RLS verificado
+- SQL migrado y probado
+- correo sandbox aprobado
+- plantillas aprobadas
+- agente restringido por rol
+- backend estable
+- fuentes privadas marcadas correctamente
+- Nexus redirigido
+- rollback listo
+- manuales actualizados
+- demo script listo
+- monitoreo activo
+
+## 8. Decision ejecutiva
+
+La recomendacion es avanzar con presentacion a inversionistas, pero no vender como produccion plenamente automatizada hasta cerrar RLS, SQL, correo, agentes y backend estable. La narrativa correcta es: plataforma viva, producto demostrable, controles disenados y roadmap claro de produccion.

@@ -1,137 +1,214 @@
-# NUXERA - Detailed Technical Manual
+# NUXERA - Extended Technical Manual
 
-Date: 2026-07-29  
-Audience: technical team, fractional CTO, integrators, security, DevOps and technical due diligence.
+Fecha/Date: 2026-07-29
+Audiencia/Audience: equipo tecnico, CTO, integradores, DevOps, seguridad y due diligence tecnico.
 
-## 1. Overall Architecture
+## 1. Arquitectura
 
-NUXERA keeps the NSD repository while shifting the visible and operating experience to the NUXERA brand. The frontend uses React/Vite and exposes role-based workspaces. The Node/Express backend concentrates NUXERA routes, service contracts, persistence gates, notifications, agents and operational readiness.
+- React/Vite frontend
+- Node/Express backend
+- Supabase/SQL previsto
+- Vercel frontend
+- Render backend actual con latencia pendiente
+- Shell por roles
+- Servicios NUXERA protegidos
+- Automatizaciones por gates
 
-Main layers:
-
-- Frontend: public site, dashboard, applicant workspace, funding provider workspace and admin console.
-- Backend: protected routes, jurisdiction intelligence services, notification contracts, agent readiness and operational persistence.
-- Data: Supabase/SQL as the target for files, events, approvals, documents and traceability.
-- AI: OpenAI and Anthropic as primary providers; Kimi/DeepSeek as low-risk secondary providers; NVIDIA as experimental/non-critical.
-- Integrations: public sources, private APIs by agreement, transactional email and regulatory registers.
 
 ## 2. Frontend
 
-The frontend must preserve three role boundaries:
+- Separacion por rol
+- ES/EN
+- Sin identidad Nexus visible
+- Vistas demo no prueban auth real
+- Decision desk distinto de case management
+- Admin como control operativo
 
-- Applicant: prepares the file and sees own gaps.
-- Funding provider: reviews authorized files, committee material, jurisdiction and risk.
-- Admin: operates security, sources, gates, notifications, agents and readiness.
 
-Verified visual scenarios:
+## 3. Backend y servicios
 
-- Public home.
-- Applicant dashboard.
-- Funding provider workspace.
-- Admin operations.
+- nuxeraJurisdictionIntelligenceService
+- nuxeraOperationalPersistenceService
+- nuxeraConversationAgentReadinessService
+- rutas readiness/evidencia/persistencia/admin
+- fallo cerrado sin token/rol/autorizacion
 
-Screenshots are stored in `docs/nuxera-migration/docs/migration/assets/qa-2026-07-29/`.
 
-## 3. Backend and Contracts
+## 4. Modelo de datos
 
-Relevant modeled services:
+- usuarios
+- roles
+- files
+- empresas
+- personas relacionadas
+- proyectos
+- documents
+- requisitos
+- eventos
+- notificaciones
+- aprobaciones
+- fuentes regulatorias
+- agent_runs
+- jurisdiction_snapshots
 
-- `nuxeraJurisdictionIntelligenceService`: produces jurisdiction analysis, regulatory sources, scope, limitations and source acquisition planning.
-- `nuxeraOperationalPersistenceService`: defines operating events and gates before writing NUXERA state.
-- `nuxeraConversationAgentReadinessService`: defines context manifest, agent restrictions and provider policy by risk.
-- NUXERA routes: expose readiness, jurisdiction evidence and persistence plans behind authentication.
+Tablas sugeridas:
 
-Technical principle: every sensitive operation must fail closed without token, role and authorization. LocalStorage demos support visual QA only; they do not prove production authorization.
+- nuxera_case_events
+- nuxera_notification_approvals
+- nuxera_document_provenance
+- nuxera_regulatory_sources
+- nuxera_agent_runs
+- nuxera_jurisdiction_snapshots
 
-## 4. Agents and AI Providers
 
-Recommended provider policy:
+## 5. RLS y seguridad
 
-- OpenAI: reasoning, complex analysis, primary agents and higher-sensitivity compliance tasks.
-- Anthropic: document analysis, long explanations, second primary provider and serious fallback.
-- Kimi: low-cost provider for low-risk tasks, drafts, preliminary classification, non-binding summaries and internal support.
-- DeepSeek: keep behind primary providers and only use for low-risk work when cost/benefit supports it.
-- NVIDIA: experimental; presentation or cutover should not depend on it.
+1. Applicant A no ve B
+2. Funding Provider no autorizado no ve file
+3. Funding Provider solo ve data room permitido
+4. Admin requiere rol
+5. Service role solo flujos controlados
+6. Agente recibe contexto filtrado
+7. Correo no expone documents
 
-The agent should be grounded in:
 
-- File metadata.
-- Checklist and requirements.
-- Authorized documents.
-- Event history.
-- Notification state.
-- Regulatory sources.
-- Country/state/city context.
+## 6. Notificaciones
 
-Restrictions:
+Componentes: eventos, plantillas, outbox, proveedor, approvals, reintentos y logs. Fases: dry-run, sandbox, production limitada y production completa.
 
-- No financing approval.
-- No email sending without a gate.
-- No cross-user data exposure.
-- No invented evidence.
-- No treating conditional sources as verified live sources.
 
-## 5. Notifications
+## 7. Agentes
 
-Email delivery should move through phases:
+- Context Manifest obligatorio
+- OpenAI/Anthropic principales
+- Kimi bajo riesgo
+- DeepSeek bajo riesgo detras de principales
+- NVIDIA experimental
+- Prohibido aprobar o emitir decision vinculante
+- Prohibido inventar evidencia o filtrar datos
 
-1. Local dry-run: generate payloads and templates, no delivery.
-2. Sandbox: send only to approved recipients, no sensitive attachments.
-3. Limited production: low-sensitivity events with logs and retries.
-4. Full production: requires legal/privacy approval, signed-off templates and monitoring.
 
-Suggested events:
+## 8. Jurisdiccion
 
-- File created.
-- Missing document.
-- Evidence received.
-- Status changed.
-- Data room invitation.
-- SLA approaching breach.
-- Human review required.
-- Committee decision pending or recorded.
+Analiza economico, politico, social, regulatorio, territorial, reputacional, documental, financiero, operativo, jurisdiccional. Cada conclusion necesita fuente, fecha, alcance, limitacion, confianza y siguiente accion.
 
-## 6. Data, RLS and Persistence
 
-Before full production, validate:
+## 9. Medio Oriente
 
-- Case event tables.
-- Notification approval ledger/table.
-- Document provenance evidence.
-- RLS policies for applicant, funding provider and admin.
-- Real or staging-equivalent tokens.
-- Applicant cannot access another applicant's file.
-- Funding provider only sees authorized data rooms.
-- Admin requires privileged role.
+- UAE PASS
+- EOCN
+- SCA/CMA
+- CBUAE
+- DFSA
+- FSRA/ADGM
+- ADGM Registration Authority
+- VARA
+- FTA
+- National Economic Registry
+- DET/DED Dubai
+- ADDED Abu Dhabi
+- registros economicos locales
 
-## 7. Regulators and Country/City Intelligence
 
-For the Middle East, especially UAE, the platform should classify sources as:
+## 10. Deploy y cutover
 
-- Public downloadable or searchable.
-- Public without stable API.
-- Private by agreement.
-- Government approval required.
-- Unavailable for automation.
+1. Congelar cambios
+2. Ejecutar tests
+3. Validar Vercel
+4. Calentar backend
+5. Validar RLS
+6. Validar sandbox correo
+7. Revisar URLs Nexus
+8. Redirigir a NUXERA
+9. Mantener rollback
+10. Monitorear 24-48h
 
-Initial UAE sources: UAE PASS, EOCN, SCA/CMA, CBUAE, DFSA, FSRA/ADGM, ADGM Registration Authority, VARA, FTA, National Economic Registry and local economic departments.
 
-For country/state/city intelligence, the engine must separate economic, political, social, regulatory and territorial data, with query date, source and limitation.
+## 11. Pruebas recientes
 
-## 8. Tests Executed in this Session
+- Backend 86/86
+- Frontend 125/125
+- Build Vite passed
+- QA visual 4/4
+- Vercel HTTP 200
+- Render timeout 20s pendiente
 
-- Focused backend: 86/86 tests passed.
-- NUXERA frontend: 125/125 tests passed.
-- Vite build: passed.
-- Playwright screenshots: 4/4 scenarios passed.
-- Vercel smoke: passed for main home and production alias.
-- Render smoke: 20-second timeout in this run; availability/cold start should be checked before a live API demo.
 
-## 9. Real Technical Pending Work
+## 14. Contratos de servicio esperados
 
-1. Execute RLS phase 2 with real or staging tokens.
-2. Run non-production SQL persistence rehearsal.
-3. Test email sandbox with approved recipient.
-4. Verify Render or move backend to a more predictable runtime before API-dependent demos.
-5. Define final matrix for private sources and commercial agreements.
-6. Execute controlled cutover from Nexus to NUXERA.
+Cada servicio backend debe tener entrada, salida, errores controlados y logs. La salida debe ser JSON trazable y no debe depender de textos ambiguos.
+
+### Contrato jurisdiction-readiness
+
+Entrada: orderId, usuario, rol, idioma y contexto autorizado. Salida: status, evidence, limitations, nextActions y traceId. Errores: AUTH_MISSING, AUTH_FORBIDDEN, SOURCE_UNAVAILABLE, VALIDATION_FAILED. Pruebas: sin token debe fallar cerrado; con rol incorrecto debe negar; con contexto valido debe responder sin filtrar datos ajenos.
+
+### Contrato grantor-jurisdiction-evidence
+
+Entrada: orderId, usuario, rol, idioma y contexto autorizado. Salida: status, evidence, limitations, nextActions y traceId. Errores: AUTH_MISSING, AUTH_FORBIDDEN, SOURCE_UNAVAILABLE, VALIDATION_FAILED. Pruebas: sin token debe fallar cerrado; con rol incorrecto debe negar; con contexto valido debe responder sin filtrar datos ajenos.
+
+### Contrato operational-persistence-plan
+
+Entrada: orderId, usuario, rol, idioma y contexto autorizado. Salida: status, evidence, limitations, nextActions y traceId. Errores: AUTH_MISSING, AUTH_FORBIDDEN, SOURCE_UNAVAILABLE, VALIDATION_FAILED. Pruebas: sin token debe fallar cerrado; con rol incorrecto debe negar; con contexto valido debe responder sin filtrar datos ajenos.
+
+### Contrato conversation-agent-readiness
+
+Entrada: orderId, usuario, rol, idioma y contexto autorizado. Salida: status, evidence, limitations, nextActions y traceId. Errores: AUTH_MISSING, AUTH_FORBIDDEN, SOURCE_UNAVAILABLE, VALIDATION_FAILED. Pruebas: sin token debe fallar cerrado; con rol incorrecto debe negar; con contexto valido debe responder sin filtrar datos ajenos.
+
+### Contrato notification-approval-plan
+
+Entrada: orderId, usuario, rol, idioma y contexto autorizado. Salida: status, evidence, limitations, nextActions y traceId. Errores: AUTH_MISSING, AUTH_FORBIDDEN, SOURCE_UNAVAILABLE, VALIDATION_FAILED. Pruebas: sin token debe fallar cerrado; con rol incorrecto debe negar; con contexto valido debe responder sin filtrar datos ajenos.
+
+### Contrato document-provenance
+
+Entrada: orderId, usuario, rol, idioma y contexto autorizado. Salida: status, evidence, limitations, nextActions y traceId. Errores: AUTH_MISSING, AUTH_FORBIDDEN, SOURCE_UNAVAILABLE, VALIDATION_FAILED. Pruebas: sin token debe fallar cerrado; con rol incorrecto debe negar; con contexto valido debe responder sin filtrar datos ajenos.
+
+### Contrato case-events
+
+Entrada: orderId, usuario, rol, idioma y contexto autorizado. Salida: status, evidence, limitations, nextActions y traceId. Errores: AUTH_MISSING, AUTH_FORBIDDEN, SOURCE_UNAVAILABLE, VALIDATION_FAILED. Pruebas: sin token debe fallar cerrado; con rol incorrecto debe negar; con contexto valido debe responder sin filtrar datos ajenos.
+
+## 15. Matriz RLS tecnica
+
+RLS debe probarse por tabla y rol.
+
+- applicant can select own files only
+- applicant cannot select other applicant files
+- grantor can select authorized data rooms only
+- grantor cannot select unshared documents
+- admin can access operational panels only with privileged role
+- service role writes require explicit backend gate
+- agent context query must apply same filters as user role
+
+## 16. Variables y compuertas
+
+- NUXERA_WRITE_ENABLED controla escrituras reales
+- NOTIFICATION_DRY_RUN controla envio
+- AGENT_RUNTIME_ENABLED controla chat live
+- SOURCE_PRIVATE_CONNECTORS_ENABLED controla APIs privadas
+- RLS_PHASE2_VERIFIED documenta evidencia antes de cutover
+- BACKEND_HEALTH_REQUIRED bloquea demo API si Render no responde
+
+## 17. Observabilidad ampliada
+
+- traceId por request
+- userId y role en logs seguros
+- latencia por endpoint
+- errores por proveedor IA
+- eventos de notificacion
+- fallas de correo
+- fuentes consultadas
+- limitaciones devueltas
+- intentos de acceso denegado
+- metricas de cold start backend
+
+## 18. Plan de hardening
+
+1. agregar pruebas RLS con tokens staging
+2. ejecutar migraciones en entorno no productivo
+3. activar sandbox correo
+4. probar agente con contexto filtrado
+5. agregar health checks programados
+6. documentar rollback
+7. preparar seed de casos demo
+8. validar ausencia de Nexus en rutas principales
+9. bloquear rutas legacy o redirigirlas
+10. preparar checklist go/no-go

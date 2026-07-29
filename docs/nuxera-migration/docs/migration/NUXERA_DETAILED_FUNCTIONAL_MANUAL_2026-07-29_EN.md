@@ -1,140 +1,495 @@
-# NUXERA - Detailed Functional Manual
+# NUXERA - Extended Functional Manual
 
-Date: 2026-07-29  
-Audience: business specialists, compliance teams, originators, funding providers, commercial teams and investors.  
-Status: live NUXERA experience for demonstration, with sensitive operations protected by gates and final production evidence still pending.
+Fecha/Date: 2026-07-29
+Audiencia/Audience: negocio, cumplimiento, usuarios operativos, socios e inversionistas.
 
-## 1. What NUXERA Is
+Este documento reemplaza el manual corto previo. Su objetivo es explicar NUXERA como plataforma operativa, no como resumen ejecutivo: que hace cada area, como entrar, que datos se capturan, como se cargan documents, que revisa el funding provider, como actua administracion, que hacen agentes/notificaciones y que resultado produce cada ciclo.
 
-NUXERA is a financial intelligence and compliance platform for preparing, reviewing and monitoring financing files. Its core purpose is to transform scattered information about a company, project, beneficial owners, documents and jurisdictional context into a structured file that humans can review and defend.
+## 1. Concepto general
 
-NUXERA is not an automatic credit approval engine. It is a controlled operating layer that organizes evidence, exposes gaps, triggers reviews, prepares decision packets and records what is known, what is missing and what requires external validation.
+NUXERA organiza files de financiamiento con evidencia, cumplimiento, riesgo y revision humana. No aprueba credito automaticamente. La plataforma separa pagina publica, applicants, funding providers y administracion para evitar que captura, analisis y control se mezclen. El resultado esperado es un file defendible, trazable y listo para comite humano.
 
-The platform has four main surfaces: public site, applicant workspace, funding provider workspace and administration.
 
-![NUXERA public site](./assets/qa-2026-07-29/public-home-en.png)
+## 2. Principios de operacion
 
-## 2. Public Site
+- La decision final siempre corresponde a humanos autorizados
+- Todo dato importante debe tener fuente, documento, usuario, fecha o evento
+- Los roles se separan por permisos y RLS
+- Los documents sensibles no se adjuntan por correo por defecto
+- El agente solo usa contexto autorizado
+- Las fuentes externas muestran alcance y limitaciones
+- Demo e investor-ready no equivalen a production con datos reales
 
-The public site is the commercial and institutional entry point. It explains NUXERA as a global compliance and risk platform for evidence-based financial decisions.
 
-How to use it:
+## 3. Public site
 
-1. Open the public NUXERA URL.
-2. Review the value proposition, global coverage, industries, integrations and implementation model.
-3. Switch between Spanish and English for local or international presentations.
-4. Use Login or Sign Up to move from public information into the operational workspace.
+![Public site](./assets/qa-2026-07-29/public-home-en.png)
 
-What each area does:
+La pagina publica presenta NUXERA al mercado. No carga documents sensibles ni genera score; explica propuesta de valor, cobertura global, industrias, integraciones e implementacion.
 
-- Home: presents identity, product promise and summary capabilities.
-- Platform: explains the system as a file, intelligence and traceability workspace.
-- Global coverage: presents the jurisdictional and regulatory coverage logic.
-- Industries: shows sectors that can prepare funding files.
-- Integrations: communicates connection potential with APIs, public sources, AI providers, email and regulatory registers.
-- Implementation: frames onboarding and migration.
 
-Expected result: visitors understand NUXERA as a compliance and financial intelligence platform, not just a financing landing page.
+### Como operar esta vista
 
-## 3. Applicant Workspace
+1. Abrir URL publica
+2. Verificar marca NUXERA Financial Intelligence
+3. Cambiar idioma ES/EN si aplica
+4. Revisar Home, Platform, Global coverage, Industries, Integrations e Implementation
+5. Entrar a Login o Sign Up solo cuando el usuario pasara a workspace
 
-The applicant workspace is where a company, sponsor or project owner prepares the file before requesting capital.
 
-![Applicant workspace](./assets/qa-2026-07-29/applicant-dashboard-en.png)
 
-How to enter:
+## 4. Workspace de applicants
 
-1. Sign in as applicant.
-2. Open the dashboard.
-3. Confirm the shell reads NUXERA / Applicant.
-4. Review the overall readiness state.
+![Applicant](./assets/qa-2026-07-29/applicant-dashboard-en.png)
 
-Recommended workflow:
+El workspace de applicants prepara el file antes de compartirlo. Debe contestar que falta, que documents subir, que riesgos estan abiertos y que sigue.
 
-1. Complete company and responsible-party profile. Add legal entity details, corporate structure, representatives, beneficial owners and file owners.
-2. Prepare project information. Explain funding amount, use of funds, location, sector, impact, maturity and financial assumptions.
-3. Upload documents. Depending on the file type, documents may include corporate, tax, financial, identity, permits, contracts, collateral, technical and compliance evidence.
-4. Review gaps. NUXERA shows missing data or documents required for review.
-5. Resolve observations. When the funding provider or system marks a gap, the applicant uploads, corrects or explains the evidence.
-6. Track progress. The applicant follows status, next steps, open risks and pending requests.
 
-Document upload behavior:
+### Ingreso y primera lectura
 
-- Each document should be mapped to a category and requirement.
-- Metadata should include type, date, owner, version, linked requirement and review status.
-- Documents must not be emailed automatically or exposed to a funding provider without authorization rules.
-- In production, evidence must persist through secure storage, RLS and access logs.
+1. Iniciar sesion como applicant
+2. Abrir dashboard
+3. Confirmar NUXERA / Applicant o Applicant
+4. Revisar readiness
+5. Entrar a empresa, responsables, proyecto, documents y seguimiento
 
-Expected result: a structured funding file with visible gaps, categorized documents and clear conditions before funding-provider review.
 
-## 4. Funding Provider Workspace
 
-The funding provider workspace is for authorized reviewers: funds, banks, lenders, analysts, family offices and investment committees.
+### Empresa y responsables
 
-![Funding provider decision desk](./assets/qa-2026-07-29/grantor-workspace-en.png)
+Captura nombre legal, pais, registro, domicilio, sector, representante, beneficiarios finales y contactos. Documentos tipicos:
 
-How to enter:
+- Acta constitutiva o registro equivalente
+- Poderes y representante legal
+- Identificacion de responsables y beneficiarios finales
+- Comprobante fiscal o numero tributario
+- Registro mercantil o licencia comercial
+- Estructura accionaria
+- Estados financieros
 
-1. Sign in as funding provider.
-2. Use Decision desk for executive and committee review.
-3. Use Case management for operational follow-up, ownership and SLAs.
-4. Use Finance, Intelligence, Markets or Strategy according to the review need.
+NUXERA clasifica, marca faltantes, alimenta checklist y prepara senales para funding provider.
 
-Decision desk vs Case management:
 
-- Decision desk answers whether the file is ready for committee, what evidence supports the review, what questions remain and what human conditions are required.
-- Case management answers which cases are open, who owns them, what SLA applies, what evidence blocks progress and which follow-ups must be sent.
 
-Jurisdiction and country/state/city analysis:
+### Proyecto y uso de fondos
 
-Funding providers need to understand where the project will operate. NUXERA should surface economic, political, social, regulatory and territorial context at country, state/province and city level when reliable data exists.
+Captura ubicacion pais/estado/ciudad, sector, monto, moneda, uso de fondos, etapa, plazo, garantias, modelo, impacto y permisos. Documentos tipicos:
 
-The analysis should cover:
+- Modelo financiero
+- Presupuesto de inversion
+- Permisos y licencias
+- Contratos relevantes
+- Evidencia tecnica
+- Garantias
+- Informacion ESG o impacto
 
-- Economic conditions: growth, inflation, currency, FX exposure, relevant sectors, debt, foreign investment and macro stability.
-- Political conditions: institutional stability, elections, regulatory changes, sanctions, conflict, perceived corruption and governance.
-- Social and territorial conditions: security, local conflict, permits, community risk, infrastructure, employment, poverty or local pressure.
-- Regulatory conditions: public registers, licenses, restricted sectors, financial authorities, tax standing, beneficial owners and sanctions lists.
-- Local granularity: province/state/city indicators where public data or reliable APIs can support the conclusion.
 
-Middle East and UAE regulatory coverage:
 
-NUXERA models UAE PASS, EOCN, SCA/CMA, CBUAE, DFSA, FSRA/ADGM, ADGM Registration Authority, VARA, FTA, National Economic Registry and local economic departments as public, conditional or private sources. In the applicant workspace these sources should feed score, checklist and gaps quietly. In the funding provider workspace they should be explicit: source, scope, limitation, last review and next action.
+### Carga documental paso a paso
 
-Expected result: faster, better structured and more defensible committee review with traceable evidence and clear human conditions.
+1. Seleccionar requisito o categoria
+2. Subir archivo
+3. Asociar a requisito
+4. Confirmar version, fecha y responsable
+5. Esperar estado recibido/en revision/observado/passed
+6. Atender observacion o cargar nueva version
 
-## 5. Administration
+Categorias: identidad, corporativo, fiscal, financiero, legal, tecnico, proyecto, garantias, cumplimiento, regulatorio, impacto y evidencia complementaria.
 
-Administration controls operations, security, sources, agents, notifications, persistence and production readiness.
 
-![Admin operations](./assets/qa-2026-07-29/admin-operations-en.png)
 
-How to enter:
+### Score, seguimiento y agente
 
-1. Sign in as administrator.
-2. Open Operations for operating state.
-3. Open Security for RLS, protected routes and authorization evidence.
-4. Open AI & agents for agent policy.
-5. Open System for health, gates, sources and deployment posture.
+Readiness mide preparacion, no aprobacion. El agente puede explicar faltantes y requisitos, pero no promete condiciones, no aprueba financiamiento, no inventa datos y no muestra informacion de otros usuarios.
 
-What admin does:
 
-- Supervises users and permissions.
-- Reviews protected modules.
-- Manages regulatory source posture: live, public, private, agreement required or unavailable.
-- Controls automatic notifications and email sandbox.
-- Defines conversational agent limits.
-- Reviews operational persistence before enabling real writes.
-- Prepares cutover evidence from Nexus to NUXERA.
 
-Notifications:
+## 5. Workspace de funding providers
 
-The notification service should email applicants and funding providers about file creation, missing documents, evidence requests, status changes, data room invitations, SLA reminders, risk alerts and human decisions. It must start in sandbox/dry-run mode with approved templates and without sensitive attachments.
+![Funding provider](./assets/qa-2026-07-29/grantor-workspace-en.png)
 
-Agent/chat:
+El workspace de funding providers transforma files autorizados en analisis, comite y seguimiento. No debe duplicar la pantalla de applicant.
 
-The chat should explain requirements, summarize file state, identify risks, guide document upload and prepare committee questions. It should be grounded in authorized data: file metadata, checklist, permitted documents, timeline, regulatory sources and jurisdictional context. It must not invent evidence, approve transactions, send email without authorization or expose another user's data.
 
-## 6. Overall Result
+### Decision desk
 
-NUXERA is investor-ready as a demonstrable live product experience. Full production operation still requires controlled real-data testing, RLS phase 2 evidence, final SQL persistence, email sandbox/live provider approval, cutover decision and agreements/APIs for private regulatory sources.
+Prepara paquete de decision no vinculante: resumen, evidencia, riesgos, preguntas de comite, condiciones humanas, fuentes y limitaciones.
+
+
+
+### Case management
+
+Mueve el caso: responsable, SLA, faltantes, solicitudes, files detenidos e intervencion humana. Decision desk mira la decision; Case management mueve la operacion.
+
+
+
+### Finance e intelligence
+
+Finance revisa monto, moneda, uso de fondos, repago, garantias, modelo y sensibilidad. Intelligence revisa empresa, representantes, beneficiarios, sanciones, reputacion, fuentes abiertas y hallazgos trazados.
+
+
+
+### Pais, ciudad y contexto
+
+Debe analizar dimensiones economico, politico, social, regulatorio, territorial. El flujo es: ubicacion capturada por applicant, fuente publica/API, separacion de datos confirmados y pendientes, resumen para funding provider con fecha, fuente, alcance y limitacion.
+
+
+
+### Medio Oriente y EAU
+
+Fuentes consideradas:
+
+- UAE PASS
+- EOCN
+- SCA/CMA
+- CBUAE
+- DFSA
+- FSRA/ADGM
+- ADGM Registration Authority
+- VARA
+- FTA
+- National Economic Registry
+- DET/DED Dubai
+- ADDED Abu Dhabi
+- registros economicos locales
+
+En applicant alimentan checklist y score sin saturar. En funding provider se muestran explicitamente con alcance, estatus, tipo de acceso, limitacion y siguiente accion.
+
+
+
+### Agente para funding provider
+
+Puede resumir, preparar preguntas de comite, explicar faltantes, comparar evidencia, redactar solicitudes y memo no vinculante. No puede aprobar, emitir term sheet vinculante, ignorar faltantes, consultar sin permisos ni enviar correos sin gate.
+
+
+
+## 6. Administracion
+
+![Admin](./assets/qa-2026-07-29/admin-operations-en.png)
+
+Admin controla usuarios, permisos, fuentes, agentes, notificaciones, seguridad, RLS, persistencia y cutover.
+
+
+### Ingreso y modulos
+
+1. Iniciar sesion admin
+2. Revisar Operations
+3. Revisar Security/RLS
+4. Revisar AI & agents
+5. Revisar System/deploys/gates
+6. Revisar fuentes regulatorias
+
+
+
+### Usuarios y permisos
+
+- Alta/baja de usuarios
+- Roles applicant/funding provider/admin
+- Data rooms autorizados
+- Separacion demo vs production
+- Revision de accesos antes de compartir evidencia
+
+
+
+### Catalogo de fuentes
+
+- Nombre, pais, jurisdiccion y tipo de dato
+- Modo de acceso: publico, descarga, API, convenio o no disponible
+- Estatus live, condicional, privado, pendiente o bloqueado
+- Fecha de ultima revision y responsable
+- Limitaciones para no exagerar cobertura
+- Siguiente accion para integracion real
+
+
+
+### Notificaciones
+
+Eventos: bienvenida, file creado, documento faltante, documento recibido, observacion, aclaracion, estatus, nuevo file autorizado, evidencia nueva, SLA, revision humana, memo listo y riesgo critico. Fases: dry-run, sandbox, production limitada y production completa.
+
+
+
+### Agentes e IA
+
+OpenAI y Anthropic son principales; Kimi bajo costo/bajo riesgo; DeepSeek detras de principales y bajo riesgo; NVIDIA experimental. Admin ve proveedor, tareas permitidas, riesgo maximo, logs, runtime y fallas.
+
+
+
+### Persistencia y cutover
+
+Antes de production: eventos, aprobaciones, procedencia documental, RLS, tokens staging, logs y rollback. Cutover: inventario Nexus, QA, redireccion, monitoreo y plan de regreso.
+
+
+
+## 7. Ciclo completo
+
+1. Applicant crea file
+2. Carga datos y documents
+3. NUXERA calcula readiness
+4. Admin controla fuentes y gates
+5. Funding Provider accede si esta autorizado
+6. Funding Provider revisa evidencia y riesgos
+7. Agente apoya bajo limites
+8. Notificaciones mueven solicitudes
+9. Persistencia registra eventos
+10. Decision humana se documenta
+
+
+## 8. Matriz ampliada de documentos
+
+La operacion documental debe permitir que cada archivo tenga categoria, requisito asociado, version, fecha, responsable, estado y observacion. La plataforma debe evitar que un documento quede como archivo suelto sin relacion operativa.
+
+Categorias:
+
+- Identidad
+- Corporativo
+- Fiscal
+- Financiero
+- Legal
+- Tecnico
+- Proyecto
+- Garantias
+- Cumplimiento
+- Regulatorio
+- Impacto ESG
+- Evidencia complementaria
+
+Estados posibles:
+
+- borrador
+- recibido
+- en revision
+- observado
+- requiere aclaracion
+- aprobado por revision humana
+- bloqueado
+- reemplazado por nueva version
+
+### Documento - Identidad
+
+Funcion: acreditar informacion de tipo identidad. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Corporativo
+
+Funcion: acreditar informacion de tipo corporativo. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Fiscal
+
+Funcion: acreditar informacion de tipo fiscal. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Financiero
+
+Funcion: acreditar informacion de tipo financiero. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Legal
+
+Funcion: acreditar informacion de tipo legal. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Tecnico
+
+Funcion: acreditar informacion de tipo tecnico. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Proyecto
+
+Funcion: acreditar informacion de tipo proyecto. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Garantias
+
+Funcion: acreditar informacion de tipo garantias. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Cumplimiento
+
+Funcion: acreditar informacion de tipo cumplimiento. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Regulatorio
+
+Funcion: acreditar informacion de tipo regulatorio. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Impacto ESG
+
+Funcion: acreditar informacion de tipo impacto esg. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+### Documento - Evidencia complementaria
+
+Funcion: acreditar informacion de tipo evidencia complementaria. Paso a paso: 1. identificar requisito
+2. subir archivo
+3. asociar categoria
+4. validar metadata
+5. revisar completitud
+6. marcar resultado
+7. notificar faltante si aplica
+
+Resultado esperado: el expediente muestra si esta evidencia esta completa, observada o bloqueada.
+
+## 9. Flujos operativos por rol
+
+Cada rol opera una parte distinta del ciclo. El valor de NUXERA esta en que estos ciclos se conectan sin mezclar permisos.
+
+### Flujo de solicitante
+
+1. entra con rol correcto
+2. consulta solo informacion permitida
+3. ejecuta accion propia del rol
+4. genera evento trazable
+5. recibe o dispara notificacion si aplica
+6. deja evidencia para auditoria
+
+Riesgo a evitar: que solicitante opere fuera de su alcance o vea datos que no corresponden.
+
+### Flujo de otorgante
+
+1. entra con rol correcto
+2. consulta solo informacion permitida
+3. ejecuta accion propia del rol
+4. genera evento trazable
+5. recibe o dispara notificacion si aplica
+6. deja evidencia para auditoria
+
+Riesgo a evitar: que otorgante opere fuera de su alcance o vea datos que no corresponden.
+
+### Flujo de administrador
+
+1. entra con rol correcto
+2. consulta solo informacion permitida
+3. ejecuta accion propia del rol
+4. genera evento trazable
+5. recibe o dispara notificacion si aplica
+6. deja evidencia para auditoria
+
+Riesgo a evitar: que administrador opere fuera de su alcance o vea datos que no corresponden.
+
+### Flujo de agente
+
+1. entra con rol correcto
+2. consulta solo informacion permitida
+3. ejecuta accion propia del rol
+4. genera evento trazable
+5. recibe o dispara notificacion si aplica
+6. deja evidencia para auditoria
+
+Riesgo a evitar: que agente opere fuera de su alcance o vea datos que no corresponden.
+
+### Flujo de servicio de notificaciones
+
+1. entra con rol correcto
+2. consulta solo informacion permitida
+3. ejecuta accion propia del rol
+4. genera evento trazable
+5. recibe o dispara notificacion si aplica
+6. deja evidencia para auditoria
+
+Riesgo a evitar: que servicio de notificaciones opere fuera de su alcance o vea datos que no corresponden.
+
+## 10. Escenarios practicos de uso
+
+Escenario 1: solicitante incompleto. La plataforma debe mostrar brechas, documentos faltantes y acciones. Escenario 2: expediente listo con observaciones. Debe permitir revision humana. Escenario 3: otorgante detecta riesgo jurisdiccional. Debe pedir evidencia y preparar pregunta de comite. Escenario 4: admin detecta fuente condicional. Debe marcar limitacion y evitar presentarla como live. Escenario 5: agente no tiene contexto. Debe decir que no cuenta con evidencia suficiente.
+
+## 11. Errores frecuentes y manejo esperado
+
+- Documento subido en categoria incorrecta: marcar observacion y pedir reclasificacion
+- Modelo financiero desactualizado: pedir nueva version
+- Ubicacion incompleta: bloquear analisis jurisdiccional profundo
+- Beneficiario final no identificado: marcar riesgo critico
+- Fuente regulatoria privada sin convenio: mostrar pendiente, no live
+- Otorgante sin autorizacion: denegar acceso
+- Correo con evidencia sensible: bloquear envio por defecto
+
+## 12. Resultado por seccion
+
+- Pagina publica: entendimiento comercial
+- Solicitante: expediente preparado
+- Documentos: evidencia clasificada
+- Readiness: brechas visibles
+- Otorgante: paquete de decision no vinculante
+- Case management: seguimiento y SLA
+- Jurisdiccion: contexto pais/ciudad trazable
+- Admin: control operativo
+- Agente: asistencia limitada por contexto
+- Notificaciones: movimiento operativo sin exponer evidencia

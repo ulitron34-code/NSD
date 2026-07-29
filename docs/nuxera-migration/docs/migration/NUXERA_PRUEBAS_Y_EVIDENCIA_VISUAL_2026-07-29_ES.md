@@ -1,94 +1,311 @@
-# NUXERA - Pruebas, Evidencia Visual y Estado de Calidad
+# NUXERA - Manual Extendido de Pruebas y Evidencia
 
-Fecha: 2026-07-29  
-Base revisada: `https://nsd-pi.vercel.app`  
-Objetivo: dejar evidencia util para revision interna, socio, inversionistas y decision de sustitucion de Nexus por NUXERA.
+Fecha/Date: 2026-07-29
 
-## Resumen Ejecutivo
+## 1. Alcance
 
-La verificacion hecha en esta sesion confirma que la experiencia visible de NUXERA esta activa en Vercel, que las vistas principales en ingles cargan, que no aparece Nexus como marca visible en los escenarios automatizados y que las pruebas locales criticas pasan.
+- QA visual
+- Backend tests
+- Frontend tests
+- Build
+- Smoke Vercel/Render
+- Ausencia visible Nexus
 
-Resultados principales:
 
-- Capturas automatizadas en ingles: 4 escenarios ejecutados, 4 aprobados, 0 fallos, 0 referencias visibles a Nexus.
-- Backend enfocado: 4 archivos de prueba, 86 pruebas aprobadas.
-- Frontend NUXERA: 1 archivo de prueba, 125 pruebas aprobadas.
-- Build frontend de produccion: aprobado.
-- Smoke Vercel: pagina main y production responden HTTP 200, muestran NUXERA y no muestran Nexus visible.
-- Smoke Render/backend remoto: en esta corrida el backend agoto 20 segundos en health y rutas protegidas. Esto no invalida el frontend ni los tests locales, pero queda como pendiente operativo de disponibilidad/latencia antes de una presentacion critica.
+## 2. Pagina publica
 
-## Escenarios Visuales Ejecutados
+![Public site](./assets/qa-2026-07-29/public-home-en.png)
 
-### 1. Pagina Publica
+Validado: carga, NUXERA visible, sin Nexus, lectura en ingles.
 
-URL: `https://nsd-pi.vercel.app/`  
-Esperado: identidad NUXERA Financial Intelligence visible.  
-Resultado: aprobado.  
-Nexus visible: no.
 
-![Pagina publica](./assets/qa-2026-07-29/public-home-en.png)
+## 3. Solicitante
 
-### 2. Solicitante
+![Applicant](./assets/qa-2026-07-29/applicant-dashboard-en.png)
 
-URL: `https://nsd-pi.vercel.app/dashboard`  
-Sesion simulada: `applicant.qa@nuxera.local`  
-Esperado: shell NUXERA y rol Applicant.  
-Resultado: aprobado.  
-Nexus visible: no.
+Validado: dashboard applicant, readiness, preparacion, sin Nexus.
 
-![Solicitante](./assets/qa-2026-07-29/applicant-dashboard-en.png)
 
-### 3. Otorgante
+## 4. Otorgante
 
-URL: `https://nsd-pi.vercel.app/dashboard/nuxera/cases`  
-Sesion simulada: `grantor.qa@nuxera.local`  
-Esperado: shell NUXERA y rol Funding provider.  
-Resultado: aprobado.  
-Nexus visible: no.
+![Funding provider](./assets/qa-2026-07-29/grantor-workspace-en.png)
 
-![Otorgante](./assets/qa-2026-07-29/grantor-workspace-en.png)
+Validado: funding provider, decision desk, case management, sin Nexus.
 
-### 4. Administrador
 
-URL: `https://nsd-pi.vercel.app/dashboard/nuxera/operations`  
-Sesion simulada: `admin.qa@nuxera.local`  
-Esperado: shell NUXERA y rol Admin.  
-Resultado: aprobado.  
-Nexus visible: no.
+## 5. Admin
 
-![Administrador](./assets/qa-2026-07-29/admin-operations-en.png)
+![Admin](./assets/qa-2026-07-29/admin-operations-en.png)
 
-## Pruebas Tecnicas Ejecutadas
+Validado: operations, modulos protegidos, rol admin, sin Nexus.
 
-Backend enfocado:
 
-- Comando: Vitest sobre servicios y rutas NUXERA criticas.
-- Cobertura de esta corrida: inteligencia jurisdiccional, persistencia operativa, readiness de agente conversacional y rutas NUXERA.
-- Resultado: 4 archivos aprobados, 86 pruebas aprobadas.
+## 6. Resultados
 
-Frontend NUXERA:
+- Backend: 86/86
+- Frontend: 125/125
+- Build: aprobado
+- Visual: 4/4
+- Nexus visible: 0
 
-- Comando: Vitest sobre experiencia NUXERA.
-- Resultado: 1 archivo aprobado, 125 pruebas aprobadas.
 
-Build:
+## 7. Limitaciones
 
-- Comando: Vite production build.
-- Resultado: build aprobado en 4.58 segundos.
+- localStorage demo
+- sin RLS real
+- sin usuarios reales
+- sin upload productivo
+- sin correo live
+- sin agente con datos reales
+- sin APIs privadas
 
-Smoke remoto:
 
-- Vercel main: HTTP 200, NUXERA visible, Nexus no visible.
-- Vercel production/alias: HTTP 200, NUXERA visible, Nexus no visible.
-- Render health y rutas backend: timeout de 20 segundos en esta ejecucion.
+## 8. Pendientes de QA
 
-## Interpretacion
+1. RLS solicitante A/B
+2. otorgante autorizado/no autorizado
+3. admin con/sin rol
+4. upload/versionado
+5. sandbox correo
+6. agente por rol
+7. jurisdiccion pais-ciudad
+8. SQL rehearsal
+9. cutover rollback
 
-La plataforma esta en buen estado para demostracion visual y funcional controlada. La parte que necesita cuidado antes de una presentacion en vivo es el backend remoto en Render: si esta dormido, con cold start largo o con saturacion, puede fallar una demo que dependa de respuestas API en tiempo real.
 
-Recomendacion para presentacion:
+## 9. Matriz extendida de pruebas manuales
 
-1. Usar Vercel para mostrar la experiencia principal.
-2. Tener capturas listas como respaldo.
-3. Evitar depender de Anthropic/Render/NVIDIA en vivo salvo que se caliente el servicio antes.
-4. Presentar agentes, notificaciones y persistencia como arquitectura controlada con gates, no como automatizacion sin supervision.
+La siguiente matriz debe ejecutarse antes de produccion real.
+
+### Caso login solicitante
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso login otorgante
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso login admin
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso crear expediente
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso editar empresa
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso cargar documento
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso observar documento
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso reemplazar version
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso calcular readiness
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso compartir data room
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso denegar otorgante no autorizado
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso generar decision memo
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso analizar pais ciudad
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso consultar fuente EAU
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso enviar dry-run correo
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso enviar sandbox correo
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso preguntar agente solicitante
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso preguntar agente otorgante
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso probar fallback IA
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+### Caso validar rollback
+
+Pasos: 1. preparar usuario/contexto
+2. ejecutar accion
+3. registrar resultado visible
+4. validar permisos
+5. validar evento/log
+6. capturar evidencia
+
+Esperado: resultado correcto sin fuga de datos, sin Nexus visible y con limitaciones claras si aplica.
+
+## 10. Evidencia que debe guardarse
+
+- captura antes/despues
+- usuario/rol usado
+- URL
+- fecha/hora
+- resultado esperado
+- resultado obtenido
+- logs relevantes
+- id de expediente demo
+- limitaciones
+- decision go/no-go
