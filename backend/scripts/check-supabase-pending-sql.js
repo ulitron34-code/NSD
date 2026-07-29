@@ -1,31 +1,34 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const file = resolve(process.cwd(), 'supabase_pendiente_010626.sql');
-
-const required = [
-  'document_reviews',
-  'extracted_data',
-  'warnings',
-  'recipient_user_id',
-  'funder_contact_requests',
-  'information_requests',
-  'information_request_events',
-  'file_hash',
-  'notify pgrst'
-];
-
-if (!existsSync(file)) {
-  console.error(`ERROR - missing ${file}`);
+const directory = resolve(process.cwd(), 'sql_migrations_pendientes');
+if (!existsSync(directory)) {
+  console.error(`ERROR - missing ${directory}`);
   process.exit(1);
 }
 
-const content = readFileSync(file, 'utf8');
-const missing = required.filter((pattern) => !content.includes(pattern));
+const files = readdirSync(directory).filter((name) => name.endsWith('.sql')).sort();
+const requiredFiles = [
+  '2026-07-10_core_tables_rls.sql',
+  '2026-07-13_satellite_tables_rls.sql',
+  '2026-07-14_rag_vector_embeddings.sql',
+  '2026-07-16_nuxera_workspace_states.sql',
+  '2026-07-17_nuxera_evidence_links.sql',
+  '2026-07-17_nuxera_admin_controls.sql'
+];
+const missing = requiredFiles.filter((name) => !files.includes(name));
 
 if (missing.length) {
-  console.error(`ERROR - pending SQL missing: ${missing.join(', ')}`);
+  console.error(`ERROR - pending migration missing: ${missing.join(', ')}`);
   process.exit(1);
 }
 
-console.log('OK - supabase_pendiente_010626.sql covers current missing schema items.');
+for (const name of files) {
+  const content = readFileSync(resolve(directory, name), 'utf8').trim();
+  if (!content || !/\b(create|alter|drop|comment|grant|revoke|insert|update|delete|do)\b/i.test(content)) {
+    console.error(`ERROR - invalid or empty SQL migration: ${name}`);
+    process.exit(1);
+  }
+}
+
+console.log(`OK - ${files.length} pending Supabase migration files are present and non-empty.`);

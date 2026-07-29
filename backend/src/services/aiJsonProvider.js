@@ -5,7 +5,7 @@
 // DeepSeek ya estaban aprovisionados en Render (aiEngine.js los usa para el
 // checklist demo/localStorage) pero nunca se ofrecían como respaldo al
 // pipeline real por documento. Este módulo intenta, en orden: Anthropic ->
-// OpenAI (si está configurado) -> DeepSeek -> NVIDIA NIM. Solo si TODOS
+// OpenAI (si está configurado) -> Kimi/DeepSeek solo para bajo riesgo anonimizado -> NVIDIA NIM. Solo si TODOS
 // fallan o ninguno está configurado, el llamador debe caer a su propia
 // heurística -- este módulo nunca inventa una evaluación ni reintenta contra
 // el mismo proveedor que ya falló.
@@ -21,7 +21,7 @@
 // detectada, dando una falsa sensación de protección). Esto NO se resuelve
 // con código: es una decisión de producto/legal pendiente del dueño del
 // negocio -- verificar y documentar el acuerdo de tratamiento de datos
-// vigente con cada proveedor (Anthropic/OpenAI/DeepSeek/NVIDIA) antes de
+// vigente con cada proveedor (Anthropic/OpenAI/Kimi/DeepSeek/NVIDIA) antes de
 // procesar documentos reales de clientes en producción. Mientras esa
 // verificación no se haga, tratar cualquier documento de prueba como si
 // fuera a quedar expuesto al proveedor de IA correspondiente.
@@ -31,12 +31,14 @@ import OpenAI from 'openai';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY;
+const KIMI_KEY = process.env.KIMI_API_KEY;
 const NVIDIA_KEY = process.env.NVIDIA_API_KEY;
 
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
 const openai = OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY }) : null;
 // DeepSeek y NVIDIA NIM exponen API compatible con OpenAI.
 const deepseek = DEEPSEEK_KEY ? new OpenAI({ apiKey: DEEPSEEK_KEY, baseURL: 'https://api.deepseek.com/v1' }) : null;
+const kimi = KIMI_KEY ? new OpenAI({ apiKey: KIMI_KEY, baseURL: process.env.KIMI_BASE_URL || 'https://api.moonshot.ai/v1' }) : null;
 const nvidia = NVIDIA_KEY ? new OpenAI({ apiKey: NVIDIA_KEY, baseURL: 'https://integrate.api.nvidia.com/v1' }) : null;
 
 async function callAnthropic(systemPrompt, userContent, maxTokens) {
@@ -68,14 +70,66 @@ async function callOpenAiCompatible(client, model, systemPrompt, userContent) {
 }
 
 const PROVIDER_CHAIN = [
-  { name: 'anthropic', model: 'claude-sonnet-4-6', enabled: () => Boolean(anthropic), call: (s, u, t) => callAnthropic(s, u, t) },
-  { name: 'openai', model: 'gpt-4o-mini', enabled: () => Boolean(openai), call: (s, u) => callOpenAiCompatible(openai, 'gpt-4o-mini', s, u) },
-  { name: 'deepseek', model: 'deepseek-chat', enabled: () => Boolean(deepseek), call: (s, u) => callOpenAiCompatible(deepseek, 'deepseek-chat', s, u) },
-  { name: 'nvidia', model: 'meta/llama-3.1-8b-instruct', enabled: () => Boolean(nvidia), call: (s, u) => callOpenAiCompatible(nvidia, 'meta/llama-3.1-8b-instruct', s, u) }
+  { name: "anthropic", tier: "primary", riskProfile: "sensitive-approved", model: "claude-sonnet-4-6", enabled: () => Boolean(anthropic), call: (s, u, t) => callAnthropic(s, u, t) },
+  { name: "openai", tier: "primary", riskProfile: "sensitive-approved", model: process.env.OPENAI_JSON_MODEL || "gpt-4o-mini", enabled: () => Boolean(openai), call: (s, u) => callOpenAiCompatible(openai, process.env.OPENAI_JSON_MODEL || "gpt-4o-mini", s, u) },
+  { name: "kimi", tier: "restricted", riskProfile: "low-risk-anonymized-only", model: process.env.KIMI_JSON_MODEL || "kimi-k3", enabled: () => Boolean(kimi), call: (s, u) => callOpenAiCompatible(kimi, process.env.KIMI_JSON_MODEL || "kimi-k3", s, u) },
+  { name: "deepseek", tier: "restricted", riskProfile: "low-risk-anonymized-only", model: process.env.DEEPSEEK_JSON_MODEL || "deepseek-chat", enabled: () => Boolean(deepseek), call: (s, u) => callOpenAiCompatible(deepseek, process.env.DEEPSEEK_JSON_MODEL || "deepseek-chat", s, u) },
+  { name: "nvidia", tier: "restricted", riskProfile: "low-risk-anonymized-only", model: "meta/llama-3.1-8b-instruct", enabled: () => Boolean(nvidia), call: (s, u) => callOpenAiCompatible(nvidia, "meta/llama-3.1-8b-instruct", s, u) }
 ];
+
+const LOW_RISK_TASKS = new Set([
+  "classification",
+  "routing",
+  "schema-normalization",
+  "public-research-summary",
+  "template-drafting",
+  "synthetic-test",
+  "provider-benchmark"
+]);
+
+function isRestrictedProviderAllowed(options = {}) {
+  return options.dataRisk === "low"
+    && options.anonymized === true
+    && LOW_RISK_TASKS.has(options.taskType || "");
+}
+
+export function resolveJsonProviderPolicy(options = {}) {
+  const restrictedAllowed = isRestrictedProviderAllowed(options);
+  const providers = PROVIDER_CHAIN.map((provider) => {
+    const configured = provider.enabled();
+    const allowed = provider.tier === "primary" || restrictedAllowed;
+    return {
+      name: provider.name,
+      model: provider.model,
+      tier: provider.tier,
+      riskProfile: provider.riskProfile,
+      configured,
+      allowed,
+      blockedReason: allowed ? null : "restricted-provider-requires-low-risk-anonymized-task"
+    };
+  });
+
+  return {
+    restrictedAllowed,
+    requestedTaskType: options.taskType || null,
+    dataRisk: options.dataRisk || "sensitive",
+    anonymized: options.anonymized === true,
+    providers,
+    guardrails: [
+      "Anthropic/OpenAI are the primary providers for sensitive document review.",
+      "Kimi/DeepSeek/NVIDIA are restricted to low-risk anonymized tasks only.",
+      "Provider routing must remain configurable; no agent should hardcode a secondary provider for sensitive data."
+    ]
+  };
+}
 
 export function hasAnyJsonProvider() {
   return PROVIDER_CHAIN.some((p) => p.enabled());
+}
+
+export function hasAnyAllowedJsonProvider(options = {}) {
+  const policy = resolveJsonProviderPolicy(options);
+  return policy.providers.some((provider) => provider.configured && provider.allowed);
 }
 
 // Precio aproximado por 1M de tokens (entrada/salida), solo para estimar
@@ -84,7 +138,8 @@ export function hasAnyJsonProvider() {
 const PRICING_PER_MILLION_TOKENS = {
   anthropic: { input: 3, output: 15 },
   openai: { input: 0.15, output: 0.6 },
-  deepseek: { input: 0.27, output: 1.1 },
+  kimi: { input: 3, output: 15 },
+  deepseek: { input: 0.14, output: 0.28 },
   nvidia: { input: 0.2, output: 0.2 }
 };
 
@@ -101,10 +156,20 @@ export function estimateCostUsd(provider, usage) {
 // el texto crudo de la respuesta (se espera JSON) junto con qué proveedor lo
 // resolvió, para que el llamador guarde una bitácora honesta (sección 28) en
 // vez de asumir siempre "Anthropic".
-export async function generateJsonWithFallback(systemPrompt, userContent, { maxTokens = 1400 } = {}) {
+export async function generateJsonWithFallback(systemPrompt, userContent, options = {}) {
+  const { maxTokens = 1400 } = options;
+  const policy = resolveJsonProviderPolicy(options);
   const attempted = [];
+
   for (const provider of PROVIDER_CHAIN) {
+    const providerPolicy = policy.providers.find((item) => item.name === provider.name);
     if (!provider.enabled()) continue;
+
+    if (!providerPolicy?.allowed) {
+      attempted.push({ provider: provider.name, skipped: true, reason: providerPolicy?.blockedReason });
+      continue;
+    }
+
     try {
       const { text, usage } = await provider.call(systemPrompt, userContent, maxTokens);
       return {
@@ -113,7 +178,8 @@ export async function generateJsonWithFallback(systemPrompt, userContent, { maxT
         model: provider.model,
         usage,
         costUsd: estimateCostUsd(provider.name, usage),
-        attemptedBeforeSuccess: attempted
+        attemptedBeforeSuccess: attempted,
+        providerPolicy: { tier: provider.tier, riskProfile: provider.riskProfile }
       };
     } catch (err) {
       attempted.push({ provider: provider.name, error: err.message });
@@ -121,9 +187,11 @@ export async function generateJsonWithFallback(systemPrompt, userContent, { maxT
     }
   }
 
-  const error = new Error(attempted.length
-    ? `Todos los proveedores de IA configurados fallaron (${attempted.map((a) => a.provider).join(', ')}).`
-    : 'Ningún proveedor de IA está configurado (ANTHROPIC_API_KEY/OPENAI_API_KEY/DEEPSEEK_API_KEY/NVIDIA_API_KEY).');
+  const configured = policy.providers.filter((provider) => provider.configured);
+  const error = new Error(configured.length
+    ? `Todos los proveedores de IA configurados fallaron o fueron bloqueados por política (${attempted.map((a) => a.provider).join(", ")}).`
+    : "Ningún proveedor de IA está configurado (ANTHROPIC_API_KEY/OPENAI_API_KEY/KIMI_API_KEY/DEEPSEEK_API_KEY/NVIDIA_API_KEY).");
   error.attempted = attempted;
+  error.providerPolicy = policy;
   throw error;
 }

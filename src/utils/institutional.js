@@ -1,3 +1,5 @@
+import { BRAND } from "../config/brand";
+
 export const CASE_STAGES = {
   captura: "Captura",
   revision_documental: "Revision documental",
@@ -23,7 +25,7 @@ export const DOCUMENT_TYPES = {
   fiscal: "Informacion fiscal",
   garantias: "Garantias / colateral",
   proyecto: "Proyecto / narrativa ejecutiva",
-  reporte_nsd: "Reporte NEXUS",
+  reporte_nsd: `Reporte ${BRAND.name}`,
   observaciones: "Observaciones / subsanaciones",
   otro: "Otro documento",
 };

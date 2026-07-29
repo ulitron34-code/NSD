@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 export default function AboutSection() {
   const { t } = useTranslation();
@@ -16,7 +17,7 @@ export default function AboutSection() {
           borderLeft: `4px solid ${COLORS.gold}`,
           paddingLeft: "1rem",
         }}>
-          {t("about.title")}
+          {t("about.title", { legalName: BRAND.legalName })}
         </h2>
 
         {/* Responsive: collapses to 1 col on mobile via min() trick */}
@@ -42,10 +43,10 @@ export default function AboutSection() {
               {t("about.whoTitle")}
             </h3>
             <p style={{ color: COLORS.textMuted, lineHeight: "1.85", marginBottom: "1.5rem" }}>
-              {t("about.whoText1")}
+              {t("about.whoText1", { legalName: BRAND.legalName })}
             </p>
             <p style={{ color: COLORS.textMuted, lineHeight: "1.85" }}>
-              {t("about.whoText2")}
+              {t("about.whoText2", { brand: BRAND.name })}
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const pitchSteps = [
   {
@@ -35,10 +36,10 @@ const pitchSteps = [
   },
   {
     minute: "6:00 - 7:30",
-    title: "NEXUS Admin",
+    title: `${BRAND.name} Admin`,
     screen: "Vista inversion",
     proof: "La administracion ve pipeline, ingresos, score, conversion, trazabilidad y modulos premium.",
-    investorLine: "El modelo combina SaaS, fee por expediente, servicios NEXUS y modulos avanzados.",
+    investorLine: `El modelo combina SaaS, fee por expediente, servicios ${BRAND.name} y modulos avanzados.`,
   },
   {
     minute: "7:30 - 9:00",
@@ -51,13 +52,13 @@ const pitchSteps = [
     minute: "9:00 - 10:00",
     title: "Cierre",
     screen: "Vista inversion / Modelo de negocio",
-    proof: "Demo completa: solicitante, IA, otorgante, NEXUS Admin, monetizacion e internacional.",
+    proof: `Demo completa: solicitante, IA, otorgante, ${BRAND.name} Admin, monetizacion e internacional.`,
     investorLine: "La ronda financia producto, pilotos, integraciones y go-to-market con entidades financieras.",
   },
 ];
 
 const objectionCards = [
-  ["Esto no reemplaza al banco", "Correcto. NEXUS prepara evidencia, trazabilidad y comparabilidad; la decision sigue siendo del otorgante."],
+  ["Esto no reemplaza al banco", `Correcto. ${BRAND.name} prepara evidencia, trazabilidad y comparabilidad; la decision sigue siendo del otorgante.`],
   ["La IA puede equivocarse", "Por eso se presenta como revision asistida, explicable y auditable, no como aprobacion automatica."],
   ["Como monetiza", "SaaS B2B, fee por expediente, servicios profesionales y modulos premium de compliance."],
   ["Por que ahora", "Las entidades necesitan revisar mas casos con menos tiempo, mas regulacion y mayor presion antifraude."],
@@ -84,7 +85,7 @@ export default function PitchDemoModeTab() {
           {L("Modo demo 10 minutos", "10-Minute Demo Mode")}
         </p>
         <h1 style={{ color: COLORS.navy, fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 2.8rem)", lineHeight: 1.1, marginBottom: "0.75rem" }}>
-          {L("Guion ejecutivo para presentar NEXUS como startup.", "Executive script to present NEXUS as a startup.")}
+          {L(`Guion ejecutivo para presentar ${BRAND.name} como startup.`, `Executive script to present ${BRAND.name} as a startup.`)}
         </h1>
         <p style={{ color: COLORS.textMuted, maxWidth: "860px", lineHeight: 1.7 }}>
           {L("Esta vista ordena la demostracion para inversionistas: que pantalla abrir, que probar y que frase decir en cada bloque.", "This view organizes the investor demo: which screen to open, what to prove and what line to say in each block.")}
@@ -160,7 +161,7 @@ export default function PitchDemoModeTab() {
           <h2 style={{ color: COLORS.navy, fontSize: "1.15rem", marginBottom: "1rem" }}>{L("Checklist antes de presentar", "Pre-Presentation Checklist")}</h2>
           {[
             L("Entrar con usuario demo y selector de perfil visible.", "Enter with demo user and visible profile switcher."),
-            L("Mostrar Solicitante, Otorgante y NEXUS Admin en menos de 10 minutos.", "Show Applicant, Funder and NEXUS Admin in under 10 minutes."),
+            L(`Mostrar Solicitante, Otorgante y ${BRAND.name} Admin en menos de 10 minutos.`, `Show Applicant, Funder and ${BRAND.name} Admin in under 10 minutes.`),
             L("Evitar prometer aprobacion crediticia automatica.", "Avoid promising automatic credit approval."),
             L("Cerrar con modelo de negocio y uso de fondos de la ronda.", "Close with business model and use of funds for the round."),
           ].map((item) => (

@@ -1,0 +1,54 @@
+:root {
+  /* Background / Surface / Text / Muted / Border */
+  --nuxera-ink: #111827;
+  --nuxera-muted: #667085;
+  --nuxera-bg: #f6f7f9;
+  --nuxera-panel: #ffffff;
+  --nuxera-border: #d9dee7;
+
+  /* Gold / Graphite (brand) */
+  --nuxera-gold: #b7923a;
+  --nuxera-gold-soft: #f4ead0;
+  --nuxera-graphite: #1d232d;
+
+  /* Success / Warning / Danger / Info (semantic status) */
+  --nuxera-success: #1a7f4e;
+  --nuxera-success-soft: #e2f3ea;
+  --nuxera-warning: #b65f0f;
+  --nuxera-warning-soft: #faead3;
+  --nuxera-danger: #b3261e;
+  --nuxera-danger-soft: #fbe4e2;
+  --nuxera-info: #2563a8;
+  --nuxera-info-soft: #e1ecf7;
+
+  /* Radius */
+  --nuxera-radius-sm: 6px;
+  --nuxera-radius-md: 8px;
+  --nuxera-radius-lg: 14px;
+  --nuxera-radius-pill: 999px;
+
+  /* Shadow */
+  --nuxera-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --nuxera-shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --nuxera-shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.14);
+
+  /* Spacing */
+  --nuxera-space-xs: 4px;
+  --nuxera-space-sm: 8px;
+  --nuxera-space-md: 16px;
+  --nuxera-space-lg: 24px;
+  --nuxera-space-xl: 40px;
+
+  /* Typography */
+  --nuxera-font-family: Georgia, "Times New Roman", serif;
+  --nuxera-font-family-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --nuxera-font-size-xs: 0.75rem;
+  --nuxera-font-size-sm: 0.875rem;
+  --nuxera-font-size-base: 1rem;
+  --nuxera-font-size-lg: 1.25rem;
+  --nuxera-font-size-xl: 1.5rem;
+  --nuxera-font-size-2xl: 2rem;
+  --nuxera-font-weight-regular: 400;
+  --nuxera-font-weight-medium: 500;
+  --nuxera-font-weight-bold: 700;
+}

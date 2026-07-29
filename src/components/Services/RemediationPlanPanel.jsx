@@ -1,5 +1,6 @@
 import React from "react";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 function cleanText(value = "") {
   return String(value)
@@ -70,7 +71,7 @@ function buildMarkdown(actions, scoring, shareReadiness) {
   const score = shareReadiness?.finalScore || scoring?.finalScore || 0;
   const status = shareReadiness?.canPublish ? "Listo para presentacion" : "Pendiente de subsanacion";
   const lines = [
-    "# Plan de subsanacion NEXUS",
+    `# Plan de subsanacion ${BRAND.name}`,
     "",
     `- Estado: ${status}`,
     `- Grado: ${grade}`,
@@ -107,7 +108,7 @@ export default function RemediationPlanPanel({ scoring, shareReadiness }) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "plan-subsanacion-nsd.md";
+    anchor.download = "nuxera-remediation-plan.md";
     anchor.click();
     URL.revokeObjectURL(url);
   };

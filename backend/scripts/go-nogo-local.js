@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = process.cwd();
-const frontendRoot = 'E:\\CODEX\\ulitron34-code-nsd-https-github-com';
+const frontendRoot = resolve(root, '..');
 
 function run(name, command, args, cwd = root) {
   try {
@@ -53,18 +53,22 @@ const checks = [
   run('Solicitante local', 'npm.cmd', ['run', 'check:solicitante']),
   run('International local', 'npm.cmd', ['run', 'check:international']),
   run('Public pages local', 'npm.cmd', ['run', 'check:public-pages']),
+  run('NUXERA public identity', 'npm.cmd', ['run', 'check:nuxera-public-identity']),
   run('RBAC matrix', 'npm.cmd', ['run', 'check:rbac']),
+  run('NUXERA verification plan', 'npm.cmd', ['run', 'check:nuxera-verification-plan']),
+  run('NUXERA HTTP read-only plan', 'npm.cmd', ['run', 'verify:nuxera-http:plan']),
+  run('NUXERA SQL drafts', 'npm.cmd', ['run', 'check:nuxera-sql']),
   run('Backend syntax payments', process.execPath, ['--check', 'src/routes/payments.js']),
   run('Backend syntax scoring', process.execPath, ['--check', 'src/routes/scoring.js']),
   run('Frontend production build', 'npm.cmd', ['run', 'build'], frontendRoot),
-  fileContains('Document hash SQL', resolve(root, 'supabase_fase9_document_hash.sql'), ['file_hash', 'idx_documents_order_hash']),
+  run('Frontend Chromium E2E', 'npm.cmd', ['run', 'test:e2e:chromium'], frontendRoot),
   run('Supabase pending SQL package', 'npm.cmd', ['run', 'check:supabase-pending']),
-  fileContains('QA report exists', 'E:\\CODEX\\fase9_qa_local_310526.md', ['Go/No-Go', 'Riesgos abiertos'])
+  fileContains('Migration project state', resolve(frontendRoot, 'docs/nuxera-migration/docs/migration/PROJECT_STATE.md'), ['NUXERA', 'Controlled migration', 'Validation status'])
 ];
 
 const failed = checks.filter((check) => check.status !== 'GO');
 
-console.log('# NSD IF - Go/No-Go local');
+console.log('# NUXERA Financial Intelligence - Go/No-Go local');
 console.log(`Fecha: ${new Date().toISOString()}`);
 console.log('');
 console.log('| Check | Resultado | Detalle |');

@@ -1,0 +1,15 @@
+// 1. Add:
+import { ExperienceProvider } from "./experience/ExperienceContext";
+
+// 2. Wrap existing providers without changing AuthProvider:
+export default function App() {
+  return (
+    <AuthProvider>
+      <NotificationProvider>
+        <ExperienceProvider>
+          <AppContent />
+        </ExperienceProvider>
+      </NotificationProvider>
+    </AuthProvider>
+  );
+}

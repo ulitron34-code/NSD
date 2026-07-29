@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { ROLES, createDemoUsers } from "../services/authService";
 import { COLORS } from "../utils/constants";
+import { BRAND } from "../config/brand";
 
 export default function LoginPage({ onLoginSuccess }) {
   const { login, error, loading } = useAuth();
@@ -59,7 +60,7 @@ export default function LoginPage({ onLoginSuccess }) {
             margin: "0 0 0.5rem 0",
             fontWeight: 800
           }}>
-            NEXUS Platform
+            {BRAND.productName}
           </h1>
           <p style={{
             color: "rgba(255,255,255,0.6)",

@@ -3,6 +3,7 @@ import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const agentRows = [
   {
@@ -96,15 +97,15 @@ export default function AIAgentOpsTab() {
         boxShadow: COLORS.shadowMd,
       }}>
         <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.74rem", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-          {L("NEXUS Admin / orquestacion IA", "NEXUS Admin / AI orchestration")}
+          {L(`${BRAND.name} Admin / orquestacion IA`, `${BRAND.name} Admin / AI orchestration`)}
         </p>
         <h1 style={{ margin: "0.35rem 0", color: COLORS.white, fontSize: "1.7rem" }}>
           {L("Consola de agentes IA", "AI Agent Console")}
         </h1>
         <p style={{ margin: 0, maxWidth: "940px", color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>
           {L(
-            "Mapa ejecutivo para explicar como NEXUS conectara agentes especializados por API sin disparar costos antes de tiempo: primero evidencia local, despues OCR/hashing, luego KYB externo y biometricos por riesgo.",
-            "Executive map explaining how NEXUS will connect specialized agents through APIs without triggering costs too early: local evidence first, then OCR/hashing, then external KYB and risk-based biometrics."
+            `Mapa ejecutivo para explicar como ${BRAND.name} conectara agentes especializados por API sin disparar costos antes de tiempo: primero evidencia local, despues OCR/hashing, luego KYB externo y biometricos por riesgo.`,
+            `Executive map explaining how ${BRAND.name} will connect specialized agents through APIs without triggering costs too early: local evidence first, then OCR/hashing, then external KYB and risk-based biometrics.`
           )}
         </p>
       </section>

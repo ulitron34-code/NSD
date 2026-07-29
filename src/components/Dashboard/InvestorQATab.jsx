@@ -3,12 +3,13 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const qaGroups = [
   {
     title: "Mercado",
     items: [
-      ["Quien paga?", "Entidades que revisan expedientes, solicitantes que necesitan prepararse y NEXUS por servicios profesionales asociados."],
+      ["Quien paga?", `Entidades que revisan expedientes, solicitantes que necesitan prepararse y ${BRAND.name} por servicios profesionales asociados.`],
       ["Por que es grande?", "Cada solicitud de credito, inversion o fondeo requiere documentos, revision, requisitos, evidencia y seguimiento. Ese trabajo hoy es lento y poco comparable."],
       ["Por que empezar en Mexico?", "Hay SOFOMES, fintechs, bancos, fondos y PyMEs con friccion documental; ademas permite validar producto con costos controlados antes de expandir."],
     ],
@@ -16,8 +17,8 @@ const qaGroups = [
   {
     title: "Producto",
     items: [
-      ["Que hace distinto NEXUS?", "Une preparacion del solicitante, matriz documental, IA, data room, requerimientos, otorgantes y administracion en un flujo vertical."],
-      ["Esto ya funciona?", "La demo local ya muestra landing, solicitante, otorgante, NEXUS Admin, vista de inversion, demo guiado, ronda, traccion y moat."],
+      [`Que hace distinto ${BRAND.name}?`, "Une preparacion del solicitante, matriz documental, IA, data room, requerimientos, otorgantes y administracion en un flujo vertical."],
+      ["Esto ya funciona?", `La demo local ya muestra landing, solicitante, otorgante, ${BRAND.name} Admin, vista de inversion, demo guiado, ronda, traccion y moat.`],
       ["Que falta para producto comercial?", "Permisos robustos, pilotos reales, integraciones premium, optimizacion visual y endurecimiento de seguridad/operacion."],
     ],
   },
@@ -32,7 +33,7 @@ const qaGroups = [
   {
     title: "Negocio",
     items: [
-      ["Como monetiza?", "SaaS B2B, fee por expediente, servicios NEXUS y modulos premium como OCR, biometria, KYB, antifraude e integraciones."],
+      ["Como monetiza?", `SaaS B2B, fee por expediente, servicios ${BRAND.name} y modulos premium como OCR, biometria, KYB, antifraude e integraciones.`],
       ["Como se consigue traccion?", "Pilotos con SOFOMES, fintechs, fondos, despachos financieros y empresas solicitantes usando expedientes reales controlados."],
       ["Que financia la ronda?", "Producto, IA/integraciones, pilotos, go-to-market y base legal/operativa para lanzar con menor riesgo."],
     ],
@@ -40,7 +41,7 @@ const qaGroups = [
 ];
 
 const closingLines = [
-  "NEXUS no compite por aprobar creditos; compite por hacer que los expedientes lleguen mejor preparados.",
+  `${BRAND.name} no compite por aprobar creditos; compite por hacer que los expedientes lleguen mejor preparados.`,
   "La oportunidad esta en estandarizar un flujo que hoy vive entre correos, PDFs, hojas de calculo y revisiones manuales.",
   "El producto puede empezar con servicios profesionales y evolucionar hacia SaaS recurrente con datos operativos propios.",
 ];

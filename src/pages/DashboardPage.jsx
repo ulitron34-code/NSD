@@ -1,6 +1,8 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
+import { useExperience } from "../experience/ExperienceContext";
+import { EXPERIENCE_VALUES } from "../experience/experienceStorage";
 import { COLORS } from "../utils/constants";
 import NotificationCenter from "../components/NotificationCenter";
 import DashboardStats from "../components/Dashboard/DashboardStats";
@@ -16,8 +18,10 @@ import { demoServiceOrders } from "../data/demoServiceOrders";
 import { buildOtorganteAnalytics, buildOtorgantePipeline, buildOtorgantePipelineFromEntries } from "../data/otorgantePipeline";
 import { buildInternationalLaunchPlan } from "../utils/localization";
 import { uiText, translateCopy } from "../utils/runtimeCopy";
+import { BRAND } from "../config/brand";
 
 const MiPerfilTab = lazy(() => import("../components/Dashboard/Solicitante/MiPerfilTab"));
+const NuxeraWorkspaceRouter = lazy(() => import("../nuxera/NuxeraWorkspaceRouter"));
 const FundingReadinessTab = lazy(() => import("../components/Dashboard/Solicitante/FundingReadinessTab"));
 const MatchesTab = lazy(() => import("../components/Dashboard/Solicitante/MatchesTab"));
 const SubirProyectoTab = lazy(() => import("../components/Dashboard/Solicitante/SubirProyectoTab"));
@@ -77,12 +81,18 @@ function DashboardLoadingFallback() {
 }
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const { allowedExperiences, experience, setExperience } = useExperience();
+  const nuxeraEnabled = allowedExperiences.includes(EXPERIENCE_VALUES.NUXERA);
+  const nuxeraPathRequested = window.location.pathname.startsWith("/dashboard/nuxera");
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
   const copy = (value) => translateCopy(value, i18n.language);
   const [userMode, setUserMode] = useState(() => localStorage.getItem("nsd_demo_profile") || "solicitante");
   const [activeTab, setActiveTab] = useState("perfil");
-  const [uiView, setUiView] = useState(() => localStorage.getItem("nsd_ui_view") || "new");
+  const [uiView, setUiView] = useState(() => {
+    const stored = localStorage.getItem("nsd_ui_view");
+    return stored === EXPERIENCE_VALUES.CLASSIC ? EXPERIENCE_VALUES.CLASSIC : EXPERIENCE_VALUES.CURRENT;
+  });
   const [otorganteOpportunities, setOtorganteOpportunities] = useState([]);
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("nsd_sidebar_collapsed") === "1");
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -94,6 +104,20 @@ export default function DashboardPage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (!path.startsWith("/dashboard/nuxera")) return;
+
+    if (nuxeraEnabled && experience !== EXPERIENCE_VALUES.NUXERA) {
+      setExperience(EXPERIENCE_VALUES.NUXERA);
+      setUiView(EXPERIENCE_VALUES.NUXERA);
+    }
+
+    if (user?.demo && path.startsWith("/dashboard/nuxera/queue") && userMode !== "otorgante") {
+      localStorage.setItem("nsd_demo_profile", "otorgante");
+      setUserMode("otorgante");
+    }
+  }, [experience, nuxeraEnabled, setExperience, user?.demo, userMode]);
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
       const next = !prev;
@@ -226,9 +250,19 @@ export default function DashboardPage() {
   const tabs = getTabs();
 
   const toggleUiView = () => {
-    const next = uiView === "classic" ? "new" : "classic";
-    localStorage.setItem("nsd_ui_view", next);
+    const next = uiView === EXPERIENCE_VALUES.CLASSIC ? EXPERIENCE_VALUES.CURRENT : EXPERIENCE_VALUES.CLASSIC;
+    setExperience(next);
     setUiView(next);
+  };
+
+  const openNuxeraExperience = () => {
+    setExperience(EXPERIENCE_VALUES.NUXERA);
+    setUiView(EXPERIENCE_VALUES.NUXERA);
+  };
+
+  const exitNuxeraExperience = () => {
+    setExperience(EXPERIENCE_VALUES.CURRENT);
+    setUiView(EXPERIENCE_VALUES.CURRENT);
   };
 
   const handleModeSwitch = (mode) => {
@@ -492,6 +526,18 @@ export default function DashboardPage() {
     return <ServiceOrdersPage />;
   };
 
+  if (experience === EXPERIENCE_VALUES.NUXERA || (nuxeraEnabled && nuxeraPathRequested)) {
+    const path = window.location.pathname;
+    const directNuxeraDemoMode = import.meta.env.DEV && path.startsWith("/dashboard/nuxera")
+      ? path.startsWith("/dashboard/nuxera/queue")
+        ? "otorgante"
+        : ["/dashboard/nuxera/operations", "/dashboard/nuxera/security", "/dashboard/nuxera/ai", "/dashboard/nuxera/system"].some((adminPath) => path.startsWith(adminPath))
+          ? "nsd_admin"
+          : "solicitante"
+      : null;
+    return <NuxeraWorkspaceRouter demoMode={directNuxeraDemoMode || (user?.demo ? userMode : null)} onExit={exitNuxeraExperience} />;
+  }
+
   const railWidth = "76px";
   const fullWidth = "260px";
   const sidebarOpen = isMobile ? mobileNavOpen : true;
@@ -558,7 +604,7 @@ export default function DashboardPage() {
         }}>
           {!sidebarCollapsed && (
             <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.68rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              NEXUS
+              {BRAND.name}
             </span>
           )}
           <button
@@ -612,7 +658,7 @@ export default function DashboardPage() {
           {!sidebarCollapsed && (
             <>
               <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : "NEXUS Admin"}
+                {userMode === "solicitante" ? L("Empresa Solicitante", "Applicant Company") : userMode === "otorgante" ? L("Fondo / institucion", "Fund / Institution") : `${BRAND.name} Admin`}
               </p>
               <p style={{ color: "white", fontWeight: 600, fontSize: "0.82rem", wordBreak: "break-word" }}>{user?.email}</p>
             </>
@@ -642,6 +688,28 @@ export default function DashboardPage() {
               {uiView === "classic" ? L("Vista nueva", "New view") : L("Vista clasica", "Classic view")}
             </button>
           </div>
+        )}
+
+        {!sidebarCollapsed && nuxeraEnabled && (
+          <button
+            type="button"
+            onClick={openNuxeraExperience}
+            title={L("Abrir experiencia NUXERA", "Open NUXERA experience")}
+            style={{
+              width: "100%",
+              marginBottom: "0.75rem",
+              padding: "0.7rem 0.85rem",
+              fontSize: "0.8rem",
+              fontWeight: 900,
+              borderRadius: "8px",
+              background: "rgba(201,168,76,0.24)",
+              color: COLORS.goldLight,
+              border: "1px solid rgba(201,168,76,0.48)",
+              cursor: "pointer",
+            }}
+          >
+            NUXERA
+          </button>
         )}
 
         {uiView === "classic" ? (
@@ -676,7 +744,7 @@ export default function DashboardPage() {
             {[
               ["solicitante", L("Solicitante", "Applicant"), "S"],
               ["otorgante", L("Otorgante", "Funding Provider"), "O"],
-              ["nsd_admin", "NEXUS Admin", "N"],
+              ["nsd_admin", `${BRAND.name} Admin`, "N"],
             ].map(([mode, label, initial]) => (
               <button
                 key={mode}

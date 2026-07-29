@@ -3,27 +3,28 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const competitors = [
   ["Consultorias tradicionales", "Alto criterio humano", "Lentas, poco escalables y sin producto SaaS repetible."],
   ["Data rooms genericos", "Ordenan archivos", "No entienden requisitos, score, otorgantes ni subsanacion."],
   ["CRMs financieros", "Gestionan pipeline", "No preparan expediente ni validan evidencia documental."],
   ["Herramientas KYC/KYB", "Verifican identidad", "Cubren una pieza, no el flujo completo de financiamiento."],
-  ["NEXUS", "Expediente + IA + data room + otorgantes + servicios", "Plataforma vertical para preparar y revisar solicitudes financieras."],
+  [BRAND.name, "Expediente + IA + data room + otorgantes + servicios", "Plataforma vertical para preparar y revisar solicitudes financieras."],
 ];
 
 const moatLayers = [
   ["Workflow vertical", "El producto entiende solicitantes, otorgantes, expedientes, data room, requerimientos y comite."],
   ["Matriz documental", "Cada expediente se estructura por sector, monto, tipo de fondeo y requisitos exigibles."],
   ["Datos de interaccion", "Cada carga, faltante, requerimiento, score e interes institucional puede mejorar el sistema."],
-  ["Servicios NEXUS", "La capa profesional ayuda a iniciar ingresos antes de que el SaaS este completamente maduro."],
+  [`Servicios ${BRAND.name}`, "La capa profesional ayuda a iniciar ingresos antes de que el SaaS este completamente maduro."],
   ["Confianza y auditoria", "Trazabilidad, permisos, disclaimers y revision humana reducen riesgo reputacional."],
 ];
 
 const positioning = [
-  ["No somos solo consultoria", "La consultoria no escala; NEXUS convierte conocimiento en flujo repetible."],
+  ["No somos solo consultoria", `La consultoria no escala; ${BRAND.name} convierte conocimiento en flujo repetible.`],
   ["No somos solo data room", "El data room es consecuencia; el valor esta en preparar, validar y explicar el expediente."],
-  ["No somos aprobacion automatica", "La decision sigue en el otorgante; NEXUS acelera preparacion y revision."],
+  ["No somos aprobacion automatica", `La decision sigue en el otorgante; ${BRAND.name} acelera preparacion y revision.`],
   ["No somos KYC aislado", "KYC/KYB es un modulo dentro de un expediente financiero completo."],
 ];
 
@@ -42,7 +43,7 @@ export default function CompetitiveMoatTab() {
           {L("La defensa esta en el flujo vertical, no en una sola funcion.", "The moat is in the vertical workflow, not a single feature.")}
         </h1>
         <p style={{ color: COLORS.textMuted, maxWidth: "920px", lineHeight: 1.7 }}>
-          {L("NEXUS se posiciona entre consultoria financiera, compliance, data room, KYC/KYB e inteligencia documental. La oportunidad es unificar esas piezas en un flujo repetible para solicitantes y otorgantes.", "NEXUS sits between financial consulting, compliance, data rooms, KYC/KYB and document intelligence. The opportunity is to unify those pieces into a repeatable workflow for applicants and funders.")}
+          {L(`${BRAND.name} se posiciona entre consultoria financiera, compliance, data room, KYC/KYB e inteligencia documental. La oportunidad es unificar esas piezas en un flujo repetible para solicitantes y otorgantes.`, `${BRAND.name} sits between financial consulting, compliance, data rooms, KYC/KYB and document intelligence. The opportunity is to unify those pieces into a repeatable workflow for applicants and funders.`)}
         </p>
       </section>
 
@@ -59,7 +60,7 @@ export default function CompetitiveMoatTab() {
             </thead>
             <tbody>
               {competitors.map(([category, strength, gap]) => (
-                <tr key={category} style={{ background: category === "NEXUS" ? "rgba(201,168,76,0.12)" : "transparent" }}>
+                <tr key={category} style={{ background: category === BRAND.name ? "rgba(201,168,76,0.12)" : "transparent" }}>
                   <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.navy, fontWeight: 900 }}>{copy(category)}</td>
                   <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(strength)}</td>
                   <td style={{ padding: "0.85rem", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: "0.84rem" }}>{copy(gap)}</td>

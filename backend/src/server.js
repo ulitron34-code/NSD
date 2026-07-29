@@ -43,6 +43,7 @@ import referenceSourcesRoutes from './routes/referenceSources.js';
 import messagingRoutes from './routes/messaging.js';
 import activitySummaryRoutes from './routes/activitySummary.js';
 import adminRoutes from './routes/admin.js';
+import nuxeraRoutes from './routes/nuxera.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { primeRegulatoryLists } from './services/regulatoryGateway.js';
@@ -51,10 +52,14 @@ import { startComplianceCron } from './services/complianceAlertCron.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 const isDev = process.env.NODE_ENV !== 'production';
+const isPullRequestPreview = process.env.IS_PULL_REQUEST === 'true';
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://127.0.0.1:5173,http://localhost:5173,https://nsd-pi.vercel.app')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+const pullRequestPreviewOrigins = [
+  'https://nsd-git-nuxera-controlled-migration-ulitron34-codes-projects.vercel.app'
+];
 
 if (!isDev) {
   app.set('trust proxy', 1);
@@ -72,6 +77,9 @@ app.use(cors({
       return callback(null, true);
     }
     if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    if (isPullRequestPreview && pullRequestPreviewOrigins.includes(origin)) {
       return callback(null, true);
     }
     const error = new Error('Origen no permitido por CORS');
@@ -126,6 +134,7 @@ app.use('/api', referenceSourcesRoutes);
 app.use('/api', messagingRoutes);
 app.use('/api', activitySummaryRoutes);
 app.use('/api', adminRoutes);
+app.use('/api', nuxeraRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

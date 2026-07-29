@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../utils/constants";
 import { uiText } from "../../../utils/runtimeCopy";
+import { BRAND } from "../../../config/brand";
 import { useMyOrders } from "../../../hooks/useMyOrders";
 import { useReadinessChecklist } from "../../../hooks/useReadinessChecklist";
 import ReadinessTemplatesPanel from "./ReadinessTemplatesPanel";
@@ -129,7 +130,7 @@ export default function FundingReadinessTab() {
 
   const financingSteps = [
     ["1", L("Preparar expediente", "Prepare File"), L("Completar documentos base y datos del proyecto.", "Complete base documents and project details.")],
-    ["2", L("Revision IA / NEXUS", "AI / NEXUS Review"), L("Detectar faltantes, score, riesgos y memo ejecutivo.", "Detect gaps, score, risks and executive memo.")],
+    ["2", L(`Revision IA / ${BRAND.name}`, `AI / ${BRAND.name} Review`), L("Detectar faltantes, score, riesgos y memo ejecutivo.", "Detect gaps, score, risks and executive memo.")],
     ["3", L("Liberar data room", "Release Data Room"), L("Compartir expediente con otorgantes compatibles.", "Share file with compatible funding providers.")],
     ["4", L("Atender requerimientos", "Address Requests"), L("Responder solicitudes y sustituir documentos vencidos.", "Respond to requests and replace expired documents.")],
     ["5", L("Comite / term sheet", "Committee / Term Sheet"), L("Llegar con evidencia ordenada para decision del otorgante.", "Arrive with organized evidence for funding provider decision.")],
@@ -188,8 +189,8 @@ export default function FundingReadinessTab() {
         </h1>
         <p style={{ margin: 0, maxWidth: "820px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(
-            "NEXUS organiza documentos, revisa faltantes, prioriza riesgos y prepara una lectura institucional para que el solicitante llegue mejor armado a una entidad financiera.",
-            "NEXUS organizes documents, reviews gaps, prioritizes risks and prepares an institutional readout so the applicant reaches a financial institution better prepared."
+            `${BRAND.name} organiza documentos, revisa faltantes, prioriza riesgos y prepara una lectura institucional para que el solicitante llegue mejor armado a una entidad financiera.`,
+            `${BRAND.name} organizes documents, reviews gaps, prioritizes risks and prepares an institutional readout so the applicant reaches a financial institution better prepared.`
           )}
         </p>
       </section>
@@ -303,15 +304,15 @@ export default function FundingReadinessTab() {
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "0.9rem" }}>
           <div>
             <p style={{ margin: 0, color: COLORS.gold, fontSize: "0.72rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              {L("Requisitos minimos NEXUS", "NEXUS Minimum Requirements")}
+              {L(`Requisitos minimos ${BRAND.name}`, `${BRAND.name} Minimum Requirements`)}
             </p>
             <h2 style={{ color: COLORS.navy, fontSize: "1.08rem", margin: "0.35rem 0 0" }}>
               {L("Checklist de 13 requisitos minimos del proyecto", "Project's 13 minimum requirements checklist")}
             </h2>
             <p style={{ margin: "0.35rem 0 0", color: COLORS.textMuted, fontSize: "0.82rem", maxWidth: "620px", lineHeight: 1.5 }}>
               {L(
-                "Todo proyecto debe cubrir estos 12 puntos antes de poder enviarse a prevalidacion NEXUS. Los marcados como criticos bloquean el envio si quedan pendientes.",
-                "Every project must cover these 12 points before it can be sent to NEXUS pre-validation. Items marked critical block submission while pending."
+                `Todo proyecto debe cubrir estos 12 puntos antes de poder enviarse a prevalidacion ${BRAND.name}. Los marcados como criticos bloquean el envio si quedan pendientes.`,
+                `Every project must cover these 12 points before it can be sent to ${BRAND.name} pre-validation. Items marked critical block submission while pending.`
               )}
             </p>
             {!isDemo && ordersChecked && !orderId && (

@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const demoMetrics = [
   ["Expedientes demo", "128", "Pipeline simulado para bancos, SOFOMES, fintechs y fondos."],
@@ -14,15 +15,15 @@ const demoMetrics = [
 const storySteps = [
   ["1", "Solicitante", "Sube proyecto, monto, sector, uso de fondos y documentos base."],
   ["2", "AI Compliance Engine", "Detecta faltantes, vencimientos, inconsistencias, riesgos y requisitos exigibles."],
-  ["3", "Preparacion NEXUS", "Convierte el caso en expediente, data room, score, memo y plan de subsanacion."],
+  ["3", `Preparacion ${BRAND.name}`, "Convierte el caso en expediente, data room, score, memo y plan de subsanacion."],
   ["4", "Otorgante", "Filtra oportunidades, revisa data room, solicita informacion y registra interes."],
-  ["5", "NEXUS Admin", "Monitorea actividad, conversion, ingresos, auditoria y calidad operativa."],
+  ["5", `${BRAND.name} Admin`, "Monitorea actividad, conversion, ingresos, auditoria y calidad operativa."],
 ];
 
 const revenueStreams = [
   ["SaaS entidades", "Suscripcion mensual por usuarios, data room, roles, auditoria y pipeline."],
   ["Fee por expediente", "Cobro por evaluacion, checklist, scoring, data room y requerimientos."],
-  ["Servicios NEXUS", "Business plan, modelo financiero, pitch deck, memo y preparacion institucional."],
+  [`Servicios ${BRAND.name}`, "Business plan, modelo financiero, pitch deck, memo y preparacion institucional."],
   ["Premium", "Biometria, OCR, antifraude, KYB, integraciones y monitoreo avanzado."],
 ];
 
@@ -58,10 +59,10 @@ export default function InvestorPitchTab() {
           {L("Vista para ronda de inversion", "Investor Round View")}
         </p>
         <h1 style={{ fontFamily: "'Playfair Display', serif", color: "white", fontSize: "clamp(2rem, 4vw, 3rem)", lineHeight: 1.05, marginBottom: "0.8rem" }}>
-          {L("NEXUS convierte solicitudes financieras dispersas en expedientes institucionales revisables.", "NEXUS turns scattered financing requests into institution-ready review files.")}
+          {L(`${BRAND.name} convierte solicitudes financieras dispersas en expedientes institucionales revisables.`, `${BRAND.name} turns scattered financing requests into institution-ready review files.`)}
         </h1>
         <p style={{ maxWidth: "880px", color: "rgba(255,255,255,0.78)", fontSize: "1rem", lineHeight: 1.75 }}>
-          {L("La demo muestra el puente completo entre solicitantes, otorgantes y NEXUS: preparacion documental, IA, data room, score, requerimientos, trazabilidad y monetizacion.", "The demo shows the complete bridge between applicants, funders and NEXUS: document readiness, AI, data room, score, requests, traceability and monetization.")}
+          {L(`La demo muestra el puente completo entre solicitantes, otorgantes y ${BRAND.name}: preparacion documental, IA, data room, score, requerimientos, trazabilidad y monetizacion.`, `The demo shows the complete bridge between applicants, funders and ${BRAND.name}: document readiness, AI, data room, score, requests, traceability and monetization.`)}
         </p>
       </section>
 

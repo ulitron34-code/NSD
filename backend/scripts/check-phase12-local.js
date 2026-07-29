@@ -1,27 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const codexRoot = 'E:\\CODEX';
-const frontendRoot = 'E:\\CODEX\\ulitron34-code-nsd-https-github-com';
+const frontendRoot = resolve(process.cwd(), '..');
 
 const checks = [
-  {
-    name: 'Fase 12 security source exists',
-    file: resolve(codexRoot, 'REESTRUCTURACIONNSDIF\\FASE 12\\NSD_International_Finance_Fase_12_Manual_Tecnico_Seguridad_Continuidad.docx'),
-    patterns: []
-  },
-  {
-    name: 'Local phase 12 operating brief exists',
-    file: resolve(codexRoot, 'fase12_seguridad_continuidad_local_010626.md'),
-    patterns: [
-      'BCP',
-      'DRP',
-      'Respuesta a incidentes',
-      'Accesos criticos',
-      'Respaldos',
-      'Control de cambios'
-    ]
-  },
   {
     name: 'Backend production proxy is configured',
     file: resolve(process.cwd(), 'src/server.js'),
@@ -36,10 +18,10 @@ const checks = [
     name: 'Public security page exists',
     file: resolve(frontendRoot, 'src/pages/SecurityTraceabilityPage.jsx'),
     patterns: [
-      'Seguridad, privacidad y trazabilidad',
-      'Permisos por rol',
-      'Bitacora auditable',
-      'Continuidad operativa'
+      'securityPage.controls',
+      'securityPage.principles',
+      'securityPage.minimumTitle',
+      'securityPage.minimumText'
     ]
   },
   {

@@ -3,12 +3,13 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const checks = [
   ["Build local", "npm.cmd run build ejecuta sin errores", "Go"],
   ["Chunk dashboard", "Carga diferida activa; sin warning mayor a 500 kB", "Go"],
   ["Home", "Pagina principal carga en preview local y Vercel sirve assets correctamente", "Go"],
-  ["Dashboard", "Perfiles Solicitante, Otorgante y NEXUS Admin navegables", "Go"],
+  ["Dashboard", `Perfiles Solicitante, Otorgante y ${BRAND.name} Admin navegables`, "Go"],
   ["Textos", "Revisar acentos finales y posibles tramos en ingles", "Caution"],
   ["Legal", "Disclaimers visibles pero faltan terminos legales finales", "Caution"],
   ["Backend", "Render/Supabase deben estar vivos para login y datos reales", "Caution"],

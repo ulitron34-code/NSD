@@ -3,6 +3,7 @@ import { useNotification } from "../hooks/useNotification";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../utils/constants";
 import Footer from "../components/Landing/Footer";
+import { BRAND } from "../config/brand";
 
 const FORMSPREE_ENDPOINT = import.meta.env.VITE_FORMSPREE_URL || "";
 
@@ -42,7 +43,7 @@ export default function ContactPage() {
       } else {
         // Fallback: abre cliente de correo
         const body = encodeURIComponent(`Nombre: ${formData.name}\nEmail: ${formData.email}\nTeléfono: ${formData.phone}\nAsunto: ${formData.subject}\n\n${formData.message}`);
-        window.location.href = `mailto:contacto@nsd.mx?subject=${encodeURIComponent(formData.subject || "Contacto NEXUS")}&body=${body}`;
+        window.location.href = `mailto:contacto@nsd.mx?subject=${encodeURIComponent(formData.subject || `Contacto ${BRAND.name}`)}&body=${body}`;
       }
 
       addNotification(

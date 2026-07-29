@@ -1,18 +1,18 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const frontendRoot = 'E:\\CODEX\\ulitron34-code-nsd-https-github-com';
+const frontendRoot = resolve(process.cwd(), '..');
 
 const checks = [
   {
     name: 'For applicants page',
     file: resolve(frontendRoot, 'src/pages/ForApplicantsPage.jsx'),
-    patterns: ['useTranslation', 'forApplicants.eyebrow', 'forApplicants.steps', 'forApplicants.deliverables', 'forApplicants.services']
+    patterns: ['useTranslation', 'forApplicants.eyebrow', 'forApplicants.steps', 'forApplicants.deliverables', 'navigate("/services")']
   },
   {
     name: 'For funders page',
     file: resolve(frontendRoot, 'src/pages/ForFundersPage.jsx'),
-    patterns: ['useTranslation', 'forFunders.eyebrow', 'forFunders.controls', 'forFunders.operatingFlow', 'forFunders.openDashboard']
+    patterns: ['useTranslation', 'forFunders.eyebrow', 'forFunders.controls', 'forFunders.flow', 'navigate("/dashboard")']
   },
   {
     name: 'Routes wired',
@@ -27,7 +27,7 @@ const checks = [
   {
     name: 'Landing operating model',
     file: resolve(frontendRoot, 'src/components/Landing/OperatingModelSection.jsx'),
-    patterns: ['Modelo operativo NSD IF', 'De solicitud dispersa', 'Data room', 'No aprueba credito']
+    patterns: ['Modelo operativo ${BRAND.name}', 'De solicitud dispersa', 'Data room', 'No aprueba creditos']
   },
   {
     name: 'Landing operating model wired',
@@ -37,12 +37,12 @@ const checks = [
   {
     name: 'Landing final CTA paths',
     file: resolve(frontendRoot, 'src/components/Landing/CTASection.jsx'),
-    patterns: ['Solicitante', 'Otorgante', 'Servicios NSD', '/for-applicants', '/for-funders', '/services']
+    patterns: ['navigate("/signup")', 'navigate("/contact")', 'cta.cta1', 'cta.cta2']
   },
   {
     name: 'i18n public page resources',
     file: resolve(frontendRoot, 'src/utils/i18n.js'),
-    patterns: ['forApplicants', 'forFunders', 'languageChanged', 'document.documentElement.lang']
+    patterns: ['resources', 'initReactI18next', 'fallbackLng', 'localStorage.getItem("language")']
   },
   {
     name: 'i18n loaded at entrypoint',
@@ -52,12 +52,12 @@ const checks = [
   {
     name: 'Brand config exists',
     file: resolve(frontendRoot, 'src/config/brand.js'),
-    patterns: ['BRAND', 'productName', 'futureName', 'contactEmail']
+    patterns: ['BRAND', 'productName', 'contactEmail', 'logoAlt']
   },
   {
     name: 'Brand config wired',
     file: resolve(frontendRoot, 'src/components/Layout/Header.jsx'),
-    patterns: ['BRAND.productName', 'BRAND.tagline', 'BRAND.logoAlt']
+    patterns: ['BRAND', 'BRAND.logoAlt']
   }
 ];
 

@@ -1,5 +1,5 @@
 // ============================================
-// NEXUS PLATFORM - ERROR BOUNDARY COMPONENT
+// NUXERA PLATFORM - ERROR BOUNDARY COMPONENT
 // Catches React errors and displays fallback UI
 // ============================================
 

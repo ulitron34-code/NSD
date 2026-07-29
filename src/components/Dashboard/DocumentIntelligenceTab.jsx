@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { intelAPI, documentsAPI, ordersAPI } from "../../services/api";
+import { BRAND } from "../../config/brand";
 
 export default function DocumentIntelligenceTab() {
   const { t, i18n } = useTranslation();
@@ -337,13 +338,13 @@ export default function DocumentIntelligenceTab() {
     }
 
     reportMd += `\n=========================================\n`;
-    reportMd += `NEXUS Secure Due-Diligence Unit - Platform compliance Audit`;
+    reportMd += `${BRAND.legalName} - Platform Compliance Audit`;
 
     const blob = new Blob([reportMd], { type: "text/markdown;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `NSD-Reporte-Ejecutivo-${selectedExpedienteId.slice(0, 8)}.md`);
+    link.setAttribute("download", `NUXERA-Executive-Report-${selectedExpedienteId.slice(0, 8)}.md`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -491,7 +492,7 @@ export default function DocumentIntelligenceTab() {
               style={{ marginTop: "3px" }}
               required
             />
-            Acepto los términos de servicio de NEXUS Platform y las políticas de retención limitada de documentos.
+            {`Acepto los términos de servicio de ${BRAND.productName} y las políticas de retención limitada de documentos.`}
           </label>
 
           <label style={{ display: "flex", gap: "0.8rem", cursor: "pointer", fontSize: "0.88rem", color: COLORS.text }}>

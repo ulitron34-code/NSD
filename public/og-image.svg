@@ -35,20 +35,20 @@
   
   <!-- Company name -->
   <text x="240" y="140" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="#D4AF37">
-    NEXUS
+    NUXERA
   </text>
 
   <!-- Tagline -->
   <text x="240" y="180" font-family="Arial, sans-serif" font-size="18" fill="#94A3B8" letter-spacing="2">
-    SECURE DUE-DILIGENCE UNIT
+    FINANCIAL INTELLIGENCE
   </text>
   
   <!-- Main text -->
   <text x="80" y="320" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
-    Documentos Verificables.
+    Evidencia Trazable.
   </text>
   <text x="80" y="390" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
-    Fondos Confiables.
+    Decisiones Claras.
   </text>
   
   <!-- Accent line -->
@@ -56,7 +56,7 @@
   
   <!-- Description -->
   <text x="80" y="480" font-family="Arial, sans-serif" font-size="22" fill="#94A3B8">
-    Plataforma B2B de cumplimiento documental para financiamiento institucional
+    Inteligencia financiera para solicitantes, otorgantes y equipos de decision
   </text>
   
   <!-- Features -->
@@ -76,6 +76,6 @@
   
   <!-- URL -->
   <text x="1200" y="600" font-family="Arial, sans-serif" font-size="16" fill="#64748B" text-anchor="end">
-    nsd.com
+    NUXERA Financial Intelligence
   </text>
 </svg>

@@ -1,5 +1,6 @@
 import { error, debug, info, warn } from '../utils/logger';
 import { escapeHtml as esc } from '../utils/htmlEscape';
+import { BRAND } from '../config/brand';
 // ============================================
 // SERVICIO DE EXPORTACIÓN A PDF
 // Genera PDFs profesionales de expedientes
@@ -291,7 +292,7 @@ export async function generateExpedientePDF(expediente, requirements, documents,
           </div>
 
           <div class="footer">
-            <p>Documento generado automáticamente por NEXUS Compliance Platform</p>
+            <p>Documento generado automáticamente por ${BRAND.productName}</p>
             <p>${new Date().toLocaleString('es-MX')}</p>
           </div>
         </body>

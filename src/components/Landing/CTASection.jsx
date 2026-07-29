@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import Icon from "../common/icons";
 import SectionBackground from "../common/SectionBackground";
 import { overlays } from "../../utils/visualStyle";
+import { BRAND } from "../../config/brand";
 
 const TRUST_ICONS = ["shieldCheck", "bolt", "globe"];
 
@@ -48,7 +49,7 @@ export default function CTASection() {
           color: "rgba(255,255,255,0.7)", fontSize: "1.1rem",
           lineHeight: 1.7, maxWidth: "550px", margin: "0 auto 2.5rem",
         }}>
-          {t("cta.subtitle")}
+          {t("cta.subtitle", { brand: BRAND.name })}
         </p>
 
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>

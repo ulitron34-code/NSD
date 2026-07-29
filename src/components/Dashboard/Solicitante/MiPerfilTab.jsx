@@ -5,6 +5,7 @@ import { softCardStyle } from "../../../utils/visualStyle";
 import { useNotification } from "../../../hooks/useNotification";
 import { useTranslation } from "react-i18next";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
+import { BRAND } from "../../../config/brand";
 import { useRequisitosMinimos } from "../../../hooks/useRequisitosMinimos";
 import { DEMO_EXPEDIENTE_ID, pickLang } from "../../../data/requisitosMinimos";
 
@@ -41,7 +42,7 @@ export default function MiPerfilTab() {
   const readinessGrade = {
     grade: "B+",
     label: "Compartible con condiciones",
-    detail: "El expediente puede avanzar a prevalidacion NEXUS, pero conviene cerrar documentos bloqueantes antes de abrirlo a otorgantes."
+    detail: `El expediente puede avanzar a prevalidacion ${BRAND.name}, pero conviene cerrar documentos bloqueantes antes de abrirlo a otorgantes.`
   };
 
   const sharePackage = [
@@ -84,7 +85,7 @@ export default function MiPerfilTab() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
         <div style={{ ...softCardStyle, padding: "1.5rem" }}>
-          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>NEXUS Readiness Score</h2>
+          <h2 style={{ fontSize: "1.1rem", color: COLORS.navy, marginBottom: "1rem" }}>{BRAND.name} Readiness Score</h2>
           <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
             <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: COLORS.greenBg, color: COLORS.green, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700 }}>
               85
@@ -152,7 +153,7 @@ export default function MiPerfilTab() {
           </div>
           <button
             disabled={!requisitos.listoParaEnviar}
-            onClick={() => addNotification(L("Paquete enviado a prevalidación NEXUS", "Package sent to NEXUS pre-validation"), "success")}
+            onClick={() => addNotification(L(`Paquete enviado a prevalidación ${BRAND.name}`, `Package sent to ${BRAND.name} pre-validation`), "success")}
             style={{
               width: "100%", padding: "0.75rem", border: "none", borderRadius: "6px", fontWeight: 900,
               background: requisitos.listoParaEnviar ? COLORS.gold : "rgba(255,255,255,0.15)",
@@ -160,7 +161,7 @@ export default function MiPerfilTab() {
               cursor: requisitos.listoParaEnviar ? "pointer" : "not-allowed",
             }}
           >
-            {L("Enviar a prevalidación NEXUS", "Send to NEXUS Pre-Validation")}
+            {L(`Enviar a prevalidación ${BRAND.name}`, `Send to ${BRAND.name} Pre-Validation`)}
           </button>
           {!requisitos.listoParaEnviar && (
             <p style={{ color: "#F5B7B7", fontSize: "0.76rem", lineHeight: 1.45, marginTop: "0.6rem", marginBottom: 0 }}>

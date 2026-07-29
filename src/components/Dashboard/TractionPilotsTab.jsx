@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const tractionMetrics = [
   ["Pilotos objetivo", "8", "Entidades y aliados para validar flujo real."],
@@ -29,7 +30,7 @@ const evidenceSignals = [
 const nextExperiments = [
   ["Landing + demo", "Medir interes de entidades y solicitantes con CTA hacia demo guiada."],
   ["Piloto 30 dias", "Procesar 10 expedientes con un aliado y medir faltantes, tiempos y acciones."],
-  ["Pricing test", "Comparar fee por expediente vs. SaaS mensual + servicios NEXUS."],
+  ["Pricing test", `Comparar fee por expediente vs. SaaS mensual + servicios ${BRAND.name}.`],
   ["Otorgante workflow", "Validar si data room, memo y requerimientos reducen tiempo de primera revision."],
 ];
 

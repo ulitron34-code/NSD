@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 export default function FAQSection() {
   const [openFaq, setOpenFaq] = useState(null);
   const { t } = useTranslation();
-  const sections = t("faq.sections", { returnObjects: true });
+  const sections = t("faq.sections", { returnObjects: true, brand: BRAND.name, legalName: BRAND.legalName });
 
   return (
     <section style={{ padding: "5rem 2rem", background: COLORS.white, minHeight: "80vh" }}>

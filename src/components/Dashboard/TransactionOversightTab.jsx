@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -132,7 +133,7 @@ export default function TransactionOversightTab() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <p style={{ fontSize: "0.72rem", opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.3rem" }}>
-              {L("Modulo F4 — NEXUS Global Compliance", "Module F4 — NEXUS Global Compliance")}
+              {L(`Modulo F4 — ${BRAND.name} Global Compliance`, `Module F4 — ${BRAND.name} Global Compliance`)}
             </p>
             <h2 style={{ fontSize: "1.4rem", fontWeight: 800, margin: 0 }}>
               {L("Supervision de Transacciones", "Transaction Oversight")}

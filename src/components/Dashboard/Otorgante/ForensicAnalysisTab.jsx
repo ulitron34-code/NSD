@@ -11,6 +11,7 @@ import {
   buildOtorgantePipelineFromEntries,
 } from "../../../data/otorgantePipeline";
 import { translateCopy, uiText } from "../../../utils/runtimeCopy";
+import { BRAND } from "../../../config/brand";
 
 const severityColor = {
   Critico: "#C62828",
@@ -160,7 +161,7 @@ function buildForensicMemo(opportunity, findings, verdict, custodyEvents, L, cop
   if (!opportunity) return "";
 
   return [
-    `# ${L("Analisis forense preliminar NEXUS", "NEXUS Preliminary Forensic Analysis")}`,
+    `# ${L(`Analisis forense preliminar ${BRAND.name}`, `${BRAND.name} Preliminary Forensic Analysis`)}`,
     "",
     `- ${L("Expediente", "File")}: ${opportunity.id}`,
     `- ${L("Proyecto", "Project")}: ${copy(opportunity.name)}`,

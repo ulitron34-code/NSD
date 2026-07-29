@@ -7,6 +7,7 @@ import { validateEmail, validatePassword } from "../../utils/validators";
 import { COLORS } from "../../utils/constants";
 import { useTranslation } from "react-i18next";
 import { uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 export default function LoginComponent() {
   const navigate = useNavigate();
@@ -81,10 +82,20 @@ export default function LoginComponent() {
       const response = await authService.login(formData.email, formData.password);
 
       if (response.success) {
+        // response.data.user.role is Supabase's own auth role (always
+        // "authenticated"), not our app role. Fetch /auth/me for the
+        // backend-normalized role (profile_type from the users table),
+        // falling back to the old behavior for demo/offline sessions.
+        localStorage.setItem("auth_token", response.data.access_token);
+        const meResponse = await authService.validateToken();
+        const resolvedRole = meResponse.success
+          ? meResponse.data.role
+          : response.data.user?.role || response.data.role || "compliance_officer";
+
         const userData = {
           id: response.data.user_id,
           email: formData.email,
-          role: response.data.user?.role || response.data.role || "compliance_officer",
+          role: resolvedRole,
           demo: response.data.user?.demo,
         };
         login(userData, response.data.access_token);
@@ -124,7 +135,7 @@ export default function LoginComponent() {
           marginBottom: "0.5rem",
           textAlign: "center",
         }}>
-          {uiText(i18n, "Acceso a NEXUS Platform", "Access NEXUS Platform")}
+          {uiText(i18n, `Acceso a ${BRAND.productName}`, `Access ${BRAND.productName}`)}
         </h1>
         <p style={{
           color: COLORS.textMuted,

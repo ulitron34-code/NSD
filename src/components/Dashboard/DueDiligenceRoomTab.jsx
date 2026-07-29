@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText, translateCopy } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 const readinessBlocks = [
   {
@@ -11,7 +12,7 @@ const readinessBlocks = [
     score: "82%",
     points: [
       "Pagina publica SaaS con narrativa de cumplimiento, otorgantes, solicitantes e internacional.",
-      "Dashboard demo con tres perfiles: solicitante, otorgante y NEXUS Admin.",
+      `Dashboard demo con tres perfiles: solicitante, otorgante y ${BRAND.name} Admin.`,
       "Flujo de expediente, carga documental, data room y revision con IA simulado/operativo.",
     ],
   },
@@ -57,7 +58,7 @@ const evidenceItems = [
 ];
 
 const investorRisks = [
-  ["Regulatorio", "Aclarar que NEXUS no sustituye dictamen legal, regulatorio ni decision crediticia."],
+  ["Regulatorio", `Aclarar que ${BRAND.name} no sustituye dictamen legal, regulatorio ni decision crediticia.`],
   ["Datos sensibles", "Fortalecer consentimiento, auditoria, retencion documental y politicas de acceso."],
   ["Dependencia IA", "Mantener revision asistida y explicable; evitar decisiones automaticas opacas."],
   ["Adopcion otorgantes", "Validar con pilotos pequenos antes de escalar equipo comercial."],

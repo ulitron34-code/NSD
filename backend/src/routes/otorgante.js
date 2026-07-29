@@ -5,6 +5,118 @@ import { scoreExpedient } from '../services/scoringEngine.js';
 import { logAuditEvent } from '../utils/audit.js';
 
 const router = express.Router();
+const CASE_ASSIGNMENT_WRITE_ENABLED = String(process.env.NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED || 'false').toLowerCase() === 'true';
+const ALLOWED_ASSIGNMENT_ROLES = new Set(['analista', 'agente_interno', 'compliance_officer', 'administrador', 'grantor_analyst', 'grantor_senior', 'compliance_reviewer', 'risk_committee']);
+const ALLOWED_SLA_TIERS = new Set(['committee-ready-24h', 'needs-information-48h', 'watch-7d', 'needs-information-24h', 'decision-review-72h', 'risk-escalation-24h']);
+
+function normalizeCaseAssignmentIntent(input = {}) {
+  const orderId = String(input.orderId || input.order_id || '').trim();
+  const assignedReviewerId = input.assignedReviewerId || input.assigned_reviewer_id || null;
+  const assignedReviewerRole = String(input.assignedReviewerRole || input.assigned_reviewer_role || 'analista').trim();
+  const slaTier = String(input.slaTier || input.sla_tier || '').trim();
+  const reason = String(input.reason || '').trim().slice(0, 1000);
+  const slaDueAt = input.slaDueAt || input.sla_due_at || null;
+
+  if (!orderId) throw new Error('orderId es requerido para asignacion NUXERA');
+  if (!ALLOWED_ASSIGNMENT_ROLES.has(assignedReviewerRole)) throw new Error('Rol de revisor NUXERA invalido');
+  if (!ALLOWED_SLA_TIERS.has(slaTier)) throw new Error('SLA NUXERA invalido');
+
+  const dueDate = new Date(slaDueAt);
+  if (!slaDueAt || Number.isNaN(dueDate.getTime())) throw new Error('Fecha SLA NUXERA invalida');
+
+  return {
+    orderId,
+    assignedReviewerId: assignedReviewerId ? String(assignedReviewerId) : null,
+    assignedReviewerRole,
+    slaTier,
+    slaDueAt: dueDate.toISOString(),
+    reason,
+    metadata: input.metadata && typeof input.metadata === 'object' ? input.metadata : {}
+  };
+}
+
+function buildCaseAssignmentPreview(intent, actorUserId) {
+  return {
+    id: 'nuxera-case-assignment-preview',
+    status: 'case-assignment-preview',
+    persisted: false,
+    assignment: {
+      ...intent,
+      status: 'open',
+      createdBy: actorUserId || null,
+      source: 'preview-no-write'
+    },
+    guardrails: [
+      'Case assignment preview only; no Supabase row is inserted by default.',
+      'Persisting assignments requires NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED=true and nuxera:admin:update.',
+      'Reassignment must preserve prior rows for audit instead of deleting history.'
+    ]
+  };
+}
+
+async function queueNuxeraCaseAssignment({ input, actorUserId, req }) {
+  const intent = normalizeCaseAssignmentIntent(input);
+
+  if (!CASE_ASSIGNMENT_WRITE_ENABLED) {
+    return buildCaseAssignmentPreview(intent, actorUserId);
+  }
+
+  const existing = await getActiveCaseAssignmentForOrder(intent.orderId);
+
+  if (existing?.id) {
+    const { error: updateError } = await supabaseAdmin
+      .from('nuxera_case_assignments')
+      .update({ status: 'reassigned', updated_at: new Date().toISOString() })
+      .eq('id', existing.id);
+    if (updateError) throw updateError;
+  }
+
+  const row = {
+    order_id: intent.orderId,
+    assigned_reviewer_id: intent.assignedReviewerId,
+    assigned_reviewer_role: intent.assignedReviewerRole,
+    sla_tier: intent.slaTier,
+    sla_due_at: intent.slaDueAt,
+    status: 'open',
+    reason: intent.reason,
+    metadata: intent.metadata,
+    created_by: actorUserId || null
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from('nuxera_case_assignments')
+    .insert([row])
+    .select('id, order_id, assigned_reviewer_id, assigned_reviewer_role, sla_tier, sla_due_at, status, reason, created_at, updated_at')
+    .single();
+  if (error) throw error;
+
+  await logAuditEvent({
+    userId: actorUserId || null,
+    action: existing?.id ? 'nuxera_case_assignment_reassigned' : 'nuxera_case_assignment_created',
+    entityType: 'nuxera_case_assignments',
+    entityId: data.id,
+    orderId: intent.orderId,
+    req,
+    complianceRelevant: true,
+    metadata: {
+      assignedReviewerRole: intent.assignedReviewerRole,
+      slaTier: intent.slaTier,
+      priorAssignmentId: existing?.id || null
+    }
+  });
+
+  return {
+    id: data.id,
+    status: existing?.id ? 'case-assignment-reassigned' : 'case-assignment-created',
+    persisted: true,
+    assignment: mapCaseAssignmentRow(data),
+    guardrails: [
+      'Assignment persisted only because backend write flag is enabled.',
+      'Prior active assignment is marked reassigned before inserting the new open row.',
+      'Audit metadata is recorded without exposing sensitive document contents.'
+    ]
+  };
+}
 
 const ALLOWED_INTEREST_STATUSES = new Set([
   'interested',
@@ -133,8 +245,123 @@ async function getContactRequestForShare(share) {
   return data || null;
 }
 
+async function getInformationRequestsForOrder(orderId) {
+  const { data, error } = await supabaseAdmin
+    .from('information_requests')
+    .select('id, order_id, title, status, priority, due_date, document_type, created_at')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: false });
+
+  if (error?.message?.includes('information_requests')) {
+    return [];
+  }
+  if (error) throw error;
+
+  return data || [];
+}
+
+function mapCaseAssignmentRow(row) {
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    orderId: row.order_id,
+    assignedReviewerId: row.assigned_reviewer_id || null,
+    assignedReviewerRole: row.assigned_reviewer_role || null,
+    slaTier: row.sla_tier || null,
+    slaDueAt: row.sla_due_at || null,
+    status: row.status || null,
+    reason: row.reason || '',
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null,
+    source: 'nuxera_case_assignments'
+  };
+}
+
+async function getActiveCaseAssignmentForOrder(orderId) {
+  const { data, error } = await supabaseAdmin
+    .from('nuxera_case_assignments')
+    .select('id, order_id, assigned_reviewer_id, assigned_reviewer_role, sla_tier, sla_due_at, status, reason, created_at, updated_at')
+    .eq('order_id', orderId)
+    .eq('status', 'open')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error?.message?.includes('nuxera_case_assignments')) {
+    return null;
+  }
+  if (error) throw error;
+
+  return mapCaseAssignmentRow(data);
+}
+
+async function getAdminCaseAssignmentHistory({ limit = 50 } = {}) {
+  const { data, error } = await supabaseAdmin
+    .from('nuxera_case_assignments')
+    .select('id, order_id, assigned_reviewer_id, assigned_reviewer_role, sla_tier, sla_due_at, status, reason, created_at, updated_at')
+    .order('updated_at', { ascending: false })
+    .limit(limit);
+
+  if (error?.message?.includes('nuxera_case_assignments')) {
+    return {
+      source: 'table-unavailable',
+      assignments: [],
+      tableAvailable: false,
+      guardrails: ['nuxera_case_assignments is not available; no assignment history is shown.']
+    };
+  }
+  if (error) throw error;
+
+  return {
+    source: 'nuxera_case_assignments',
+    assignments: (data || []).map(mapCaseAssignmentRow).filter(Boolean),
+    tableAvailable: true,
+    guardrails: [
+      'Assignment history is read-only in this endpoint.',
+      'Rows are ordered by updated_at and do not expose document contents.'
+    ]
+  };
+}
+
+function resolveAssignmentSlaStatus(assignment, now = new Date()) {
+  if (!assignment?.slaDueAt) return 'sla-unset';
+  if (assignment.status && assignment.status !== 'open') return 'closed';
+
+  const dueAt = new Date(assignment.slaDueAt);
+  if (Number.isNaN(dueAt.getTime())) return 'sla-invalid';
+
+  const remainingMs = dueAt.getTime() - now.getTime();
+  if (remainingMs < 0) return 'overdue';
+  if (remainingMs <= 24 * 60 * 60 * 1000) return 'due-soon';
+  return 'on-track';
+}
+
+function summarizeCaseAssignments(assignments = []) {
+  const summary = {
+    total: assignments.length,
+    open: 0,
+    reassigned: 0,
+    overdue: 0,
+    dueSoon: 0,
+    onTrack: 0
+  };
+
+  assignments.forEach((assignment) => {
+    if (assignment.status === 'open') summary.open += 1;
+    if (assignment.status === 'reassigned') summary.reassigned += 1;
+
+    const slaStatus = resolveAssignmentSlaStatus(assignment);
+    if (slaStatus === 'overdue') summary.overdue += 1;
+    if (slaStatus === 'due-soon') summary.dueSoon += 1;
+    if (slaStatus === 'on-track') summary.onTrack += 1;
+  });
+
+  return summary;
+}
+
 async function buildPipelineItem(share) {
-  const [{ data: order, error: orderError }, { data: documents, error: documentsError }, { data: reviews, error: reviewsError }, interest, contactRequest] = await Promise.all([
+  const [{ data: order, error: orderError }, { data: documents, error: documentsError }, { data: reviews, error: reviewsError }, interest, contactRequest, informationRequests, assignment] = await Promise.all([
     supabaseAdmin
       .from('service_orders')
       .select('id, user_id, service_type, status, amount, created_at, completed_at, metadata, case_number, project_name, applicant_type, requested_amount, funding_purpose, stage, risk_level, readiness_grade, compliance_status')
@@ -151,7 +378,9 @@ async function buildPipelineItem(share) {
       .eq('order_id', share.order_id)
       .order('created_at', { ascending: false }),
     getInterestForShare(share),
-    getContactRequestForShare(share)
+    getContactRequestForShare(share),
+    getInformationRequestsForOrder(share.order_id),
+    getActiveCaseAssignmentForOrder(share.order_id)
   ]);
 
   if (orderError) throw orderError;
@@ -179,6 +408,14 @@ async function buildPipelineItem(share) {
     order,
     documentsCount: documents?.length || 0,
     latestReview: reviews?.[0] || null,
+    informationRequests: (informationRequests || []).map((request) => ({
+      id: request.id,
+      title: request.title,
+      status: request.status,
+      priority: request.priority,
+      dueDate: request.due_date || null,
+      documentType: request.document_type || null
+    })),
     scoring: {
       finalScore: scoring.finalScore,
       readinessGrade: scoring.readinessGrade,
@@ -187,7 +424,8 @@ async function buildPipelineItem(share) {
       regulatoryValidation: scoring.regulatoryValidation
     },
     interest,
-    contactRequest
+    contactRequest,
+    assignment
   };
 }
 
@@ -230,6 +468,83 @@ router.get('/otorgante/pipeline', authMiddleware, requirePermission('data_room:a
   }
 });
 
+// Admin-wide view across every accepted/shared data room, not just the requester's own
+// shares. Reuses buildPipelineItem so the shape matches /otorgante/pipeline exactly --
+// admin already has unrestricted read access to users/audit-logs/orders elsewhere in this
+// permission model (ROLE_PERMISSIONS.administrador = ['*']), so this does not introduce a
+// new visibility tier, only a real endpoint for a view operationsConsole.js previously had
+// to fake with local demo data.
+router.get('/nuxera/admin/grantor-cases', authMiddleware, requirePermission('nuxera:admin:read'), async (req, res) => {
+  try {
+    const { data: shares, error: sharesError } = await supabaseAdmin
+      .from('data_room_shares')
+      .select('id, order_id, recipient_user_id, recipient_name, recipient_email, status, created_at, accepted_at, expires_at, last_viewed_at')
+      .in('status', ['accepted', 'shared'])
+      .order('created_at', { ascending: false });
+
+    if (sharesError) throw sharesError;
+
+    const pipeline = await Promise.all((shares || []).map((share) => buildPipelineItem(share)));
+
+    res.json({
+      workspaceRole: 'admin',
+      pipeline,
+      guardrails: [
+        'Admin-wide pipeline view reuses the same real fields exposed to an authorized grantor; it does not add new columns or bypass data-room shares.',
+        'It does not approve financing, issue term sheets or change data-room permissions.'
+      ]
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.get('/nuxera/admin/case-assignments', authMiddleware, requirePermission('nuxera:admin:read'), async (req, res) => {
+  try {
+    const history = await getAdminCaseAssignmentHistory({ limit: Number(req.query?.limit || 50) });
+    const assignments = history.assignments.map((assignment) => ({
+      ...assignment,
+      slaStatus: resolveAssignmentSlaStatus(assignment)
+    }));
+
+    res.json({
+      workspaceRole: 'admin',
+      source: history.source,
+      tableAvailable: history.tableAvailable,
+      assignments,
+      summary: summarizeCaseAssignments(assignments),
+      guardrails: [
+        ...history.guardrails,
+        'Admin assignment history requires nuxera:admin:read and remains read-only.'
+      ]
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.post('/nuxera/admin/case-assignments', authMiddleware, requirePermission('nuxera:admin:update'), async (req, res) => {
+  try {
+    const assignment = await queueNuxeraCaseAssignment({
+      input: req.body?.assignment || req.body,
+      actorUserId: req.userId,
+      req
+    });
+
+    res.json({
+      workspaceRole: 'admin',
+      assignment,
+      writeEnabled: CASE_ASSIGNMENT_WRITE_ENABLED,
+      guardrails: [
+        'Admin case assignment endpoint requires nuxera:admin:update.',
+        'Default mode is preview/no-write until NUXERA_CASE_ASSIGNMENT_WRITE_ENABLED=true.',
+        'No credit decision, data-room permission change or notification send is performed.'
+      ]
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 router.post('/otorgante/interests', authMiddleware, requirePermission('funder:interest:create'), async (req, res) => {
   try {
     const { orderId, status = 'interested', notes = '' } = req.body || {};

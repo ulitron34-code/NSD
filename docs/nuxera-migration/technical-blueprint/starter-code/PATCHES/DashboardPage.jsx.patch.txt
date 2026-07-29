@@ -1,0 +1,24 @@
+// Add imports:
+import { useExperience } from "../experience/ExperienceContext";
+import { EXPERIENCE_VALUES } from "../experience/experienceStorage";
+import NUWorkspaceRouter from "../nu/NUWorkspaceRouter";
+
+// Inside DashboardPage:
+const { experience, setExperience } = useExperience();
+
+// IMPORTANT:
+// During the first migration commit, keep existing uiView state untouched.
+// Render N&U before the existing dashboard return:
+if (experience === EXPERIENCE_VALUES.NU) {
+  return (
+    <NUWorkspaceRouter
+      demoMode={userMode}
+      onExitNU={() => setExperience(EXPERIENCE_VALUES.CURRENT)}
+    />
+  );
+}
+
+// Add a controlled button in the existing view:
+// setExperience(EXPERIENCE_VALUES.NU)
+//
+// Do not remove toggleUiView(), classic or new.

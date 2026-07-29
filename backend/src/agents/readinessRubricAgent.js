@@ -15,7 +15,7 @@ import { searchLegalEntity } from '../services/gleifService.js';
 import { screenRfcAgainstSat69b } from '../services/satBlacklistScreening.js';
 import { findDatesInText } from './agentValidator.js';
 import { screenBeneficiaryOwners, normalizeBeneficiaryOwnerList } from '../services/beneficiaryOwners.js';
-import { generateJsonWithFallback, hasAnyJsonProvider } from '../services/aiJsonProvider.js';
+import { generateJsonWithFallback, hasAnyAllowedJsonProvider } from "../services/aiJsonProvider.js";
 import { searchReferenceSources } from '../services/ragService.js';
 
 // Bitacora auditable (seccion 28 del plan): version del prompt/rubrica usados
@@ -290,7 +290,7 @@ function heuristicFallback(rubric, extractedText) {
     score,
     summary: `Revisión heurística de "${rubric?.label || 'documento'}" — ningún proveedor de IA está configurado, no se evaluó contenido real.`,
     findings: hasText
-      ? ['Documento cargado; requiere revisión con IA real (falta ANTHROPIC_API_KEY/OPENAI_API_KEY/DEEPSEEK_API_KEY/NVIDIA_API_KEY) o revisión manual.']
+      ? ['Documento cargado; requiere revisión con IA real (falta proveedor primario permitido ANTHROPIC_API_KEY/OPENAI_API_KEY; KIMI/DEEPSEEK/NVIDIA solo se permiten con datos anonimizados de bajo riesgo) o revisión manual.']
       : ['No se pudo extraer texto del documento; requiere revisión manual.'],
     missing_items: [
       ...missingItems,
@@ -304,7 +304,7 @@ function heuristicFallback(rubric, extractedText) {
       { key: 'human_review_required', value: true },
       ...auditEntries({ agentName: 'readinessRubricAgent', modelName: 'heuristic-fallback' })
     ],
-    warnings: ['Advertencia: ningún proveedor de IA configurado (ANTHROPIC_API_KEY/OPENAI_API_KEY/DEEPSEEK_API_KEY/NVIDIA_API_KEY), usando revisión heurística por reglas.']
+    warnings: ['Advertencia: ningún proveedor primario de IA permitido configurado (ANTHROPIC_API_KEY/OPENAI_API_KEY); KIMI/DEEPSEEK/NVIDIA quedan restringidos a bajo riesgo anonimizado, usando revisión heurística por reglas.']
   };
 }
 
@@ -865,7 +865,7 @@ export async function evaluateReadinessDocument({ documentTypeCode, extractedTex
     return evaluateKyc(order);
   }
 
-  if (!hasAnyJsonProvider()) {
+  if (!hasAnyAllowedJsonProvider({ dataRisk: "sensitive", anonymized: false, taskType: "document-review" })) {
     const fallback = heuristicFallback(rubric, extractedText);
     return enrichResult(itemId, documentTypeCode, fallback, { extractedText, order });
   }

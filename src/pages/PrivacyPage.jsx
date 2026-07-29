@@ -21,7 +21,7 @@ const sections = [
   ]],
   ["4. Finalidades primarias", [
     "Crear y administrar cuentas, ordenes, pagos, expedientes y data rooms.",
-    "Prestar servicios profesionales NEXUS y preparar expedientes para credito, inversion, fondeo o revision por otorgantes.",
+    `Prestar servicios profesionales ${BRAND.name} y preparar expedientes para credito, inversion, fondeo o revision por otorgantes.`,
     "Validar identidad, documentos, cumplimiento, antifraude, KYC/KYB, beneficiario final y requisitos exigibles.",
     "Permitir que otorgantes autorizados revisen data rooms, documentos y revisiones IA preliminares.",
     "Generar bitacoras, auditoria, trazabilidad, evidencia operativa y controles de seguridad."
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
           Ultima actualizacion: 23 de mayo de 2026
         </p>
         <p style={{ color: COLORS.textMuted, lineHeight: 1.7, marginBottom: "2rem" }}>
-          Este aviso es una base operativa para NEXUS Platform y debe ser revisado por asesoria legal antes de su publicacion definitiva.
+          Este aviso es una base operativa para {BRAND.productName} y debe ser revisado por asesoria legal antes de su publicacion definitiva.
         </p>
 
         <div style={{ lineHeight: "1.8", color: COLORS.text }}>

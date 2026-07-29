@@ -1,0 +1,10 @@
+:root {
+  --nu-bg: #f4f1eb;
+  --nu-surface: #ffffff;
+  --nu-ink: #17191d;
+  --nu-muted: #6b6560;
+  --nu-gold: #b9903f;
+  --nu-border: rgba(23, 25, 29, 0.12);
+  --nu-radius: 16px;
+  --nu-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}

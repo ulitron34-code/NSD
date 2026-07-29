@@ -19,11 +19,11 @@ const resources = {
         industries: "Industrias",
         integrations: "Integraciones",
         modalities: "Modalidades",
-        knowNsd: "Conocer NEXUS",
+        knowNsd: "Conocer {{brand}}",
       },
 
       hero: {
-        badge: "NEXUS, Plataforma Global de Cumplimiento y Riesgo",
+        badge: "{{brand}}, Plataforma Global de Cumplimiento y Riesgo",
         title: "Cumplimiento global.",
         titleHighlight: "Decisiones con evidencia.",
         description:
@@ -51,7 +51,7 @@ const resources = {
       },
 
       differentiators: {
-        eyebrow: "POR QUÉ NEXUS",
+        eyebrow: "POR QUÉ {{brand}}",
         title: "Nuestros Diferenciadores",
         subtitle:
           "Combinamos tecnología de punta con experiencia humana para llevar tu proyecto al siguiente nivel.",
@@ -67,9 +67,9 @@ const resources = {
         title: "Tecnología, experiencia y gobierno",
         whoTitle: "¿Quiénes somos?",
         whoText1:
-          "NEXUS Secure Due-Diligence Unit es una firma tecnológica independiente que desarrolla soluciones de cumplimiento, riesgo y análisis inteligente de expedientes para organizaciones que operan en entornos regulados o toman decisiones financieras, corporativas y de inversión de alta relevancia.",
+          "{{legalName}} es una firma tecnológica independiente que desarrolla soluciones de cumplimiento, riesgo y análisis inteligente de expedientes para organizaciones que operan en entornos regulados o toman decisiones financieras, corporativas y de inversión de alta relevancia.",
         whoText2:
-          "A través de la plataforma NEXUS, integramos información fiscal, corporativa, legal, financiera y reputacional en un entorno seguro y trazable. La plataforma ayuda a identificar personas y empresas, comprender estructuras de propiedad y control, detectar inconsistencias, gestionar alertas y preparar expedientes sólidos.",
+          "A través de la plataforma {{brand}}, integramos información fiscal, corporativa, legal, financiera y reputacional en un entorno seguro y trazable. La plataforma ayuda a identificar personas y empresas, comprender estructuras de propiedad y control, detectar inconsistencias, gestionar alertas y preparar expedientes sólidos.",
         missionTitle: "Nuestra Misión",
         missionText:
           "Facilitar que organizaciones de cualquier tamaño integren procesos de conocimiento del cliente, validación empresarial, prevención de riesgos, revisión financiera y monitoreo mediante una tecnología flexible, explicable y adaptable a cada jurisdicción, sector y política interna.",
@@ -81,14 +81,14 @@ const resources = {
       },
 
       history: {
-        title: "Historia de NEXUS Secure Due-Diligence Unit",
+        title: "Historia de {{legalName}}",
         teamTitle: "Nuestro Equipo",
         timeline: [
-          { year: 2022, title: "Fundación",         desc: "NEXUS nace con la misión de preparar proyectos para inversionistas internacionales" },
+          { year: 2022, title: "Fundación",         desc: "{{brand}} nace con la misión de preparar proyectos para inversionistas internacionales" },
           { year: 2023, title: "Primer Millón",      desc: "Financiamos primer proyecto por $1M USD con family office europeo" },
           { year: 2024, title: "Expansión Regional", desc: "Extensión a Latinoamérica con oficinas en Colombia y Perú" },
           { year: 2025, title: "Plataforma Digital", desc: "Lanzamiento de plataforma SaaS para análisis automatizado" },
-          { year: 2026, title: "Hoy",                desc: "NEXUS acompaña +100 proyectos con acceso a capital privado global" },
+          { year: 2026, title: "Hoy",                desc: "{{brand}} acompaña +100 proyectos con acceso a capital privado global" },
         ],
         team: [
           { name: "Ulises Salgado", role: "Fundador & CEO",       bio: "15+ años en finanzas corporativas y SOFOM" },
@@ -148,10 +148,10 @@ const resources = {
           {
             category: "Plataforma",
             questions: [
-              { q: "¿Qué es la plataforma NEXUS?", a: "Una plataforma SaaS global de cumplimiento, riesgo y revisión inteligente de expedientes. Centraliza KYC, KYB, beneficiario final, validación fiscal, sanciones, riesgo y monitoreo en un expediente único, configurable por jurisdicción y sector." },
-              { q: "¿NEXUS es exclusiva para México?", a: "No. NEXUS opera con un núcleo tecnológico común y activa paquetes jurisdiccionales para México, Latinoamérica, Estados Unidos, Canadá, Emiratos Árabes Unidos y futuras jurisdicciones." },
+              { q: "¿Qué es la plataforma {{brand}}?", a: "Una plataforma SaaS global de cumplimiento, riesgo y revisión inteligente de expedientes. Centraliza KYC, KYB, beneficiario final, validación fiscal, sanciones, riesgo y monitoreo en un expediente único, configurable por jurisdicción y sector." },
+              { q: "¿{{brand}} es exclusiva para México?", a: "No. {{brand}} opera con un núcleo tecnológico común y activa paquetes jurisdiccionales para México, Latinoamérica, Estados Unidos, Canadá, Emiratos Árabes Unidos y futuras jurisdicciones." },
               { q: "¿Es segura mi información?", a: "Sí. La plataforma utiliza cifrado en tránsito y en reposo, autenticación multifactor, roles y segregación de funciones, bitácora de auditoría y políticas de privacidad desde el diseño." },
-              { q: "¿La plataforma garantiza el cumplimiento legal?", a: "No. NEXUS ayuda a configurar, ejecutar, documentar y monitorear procesos. La organización usuaria conserva la responsabilidad de determinar sus obligaciones con asesoría local." },
+              { q: "¿La plataforma garantiza el cumplimiento legal?", a: "No. {{brand}} ayuda a configurar, ejecutar, documentar y monitorear procesos. La organización usuaria conserva la responsabilidad de determinar sus obligaciones con asesoría local." },
             ],
           },
           {
@@ -165,7 +165,7 @@ const resources = {
           {
             category: "Decisiones e IA",
             questions: [
-              { q: "¿La inteligencia artificial toma decisiones?", a: "No. Los agentes de NEXUS apoyan la lectura, clasificación, comparación y síntesis de información. La aprobación, rechazo, escalamiento o excepción corresponde a las personas autorizadas por la organización." },
+              { q: "¿La inteligencia artificial toma decisiones?", a: "No. Los agentes de {{brand}} apoyan la lectura, clasificación, comparación y síntesis de información. La aprobación, rechazo, escalamiento o excepción corresponde a las personas autorizadas por la organización." },
               { q: "¿Puede usarse para inversiones y crédito?", a: "Sí. Los módulos de revisión financiera e investor due diligence organizan información, riesgos, garantías, contratos, beneficiarios y pendientes para que el cliente final tome la decisión." },
               { q: "¿Cómo se define la implementación?", a: "Mediante un diagnóstico de procesos, jurisdicciones, volumen, módulos, usuarios, integraciones, seguridad, soporte y gobierno. Cada organización recibe una configuración específica." },
             ],
@@ -173,7 +173,7 @@ const resources = {
           {
             category: "Seguridad y privacidad",
             questions: [
-              { q: "¿Quién puede ver mis datos?", a: "Solo el personal autorizado de su organización. NEXUS no comparte información sin consentimiento y aplica controles de acceso, segregación de funciones y bitácora de auditoría." },
+              { q: "¿Quién puede ver mis datos?", a: "Solo el personal autorizado de su organización. {{brand}} no comparte información sin consentimiento y aplica controles de acceso, segregación de funciones y bitácora de auditoría." },
               { q: "¿Cómo reclamo mis derechos ARCO?", a: "Contacta a privacidad@nsd.com para ejercer tus derechos de Acceso, Rectificación, Cancelación y Oposición." },
               { q: "¿Qué sucede si cambia una regulación?", a: "Los paquetes jurisdiccionales se mantienen versionados. Los cambios se analizan, configuran, prueban y documentan antes de su publicación en la plataforma." },
             ],
@@ -185,7 +185,7 @@ const resources = {
         eyebrow: "DISEÑA TU IMPLEMENTACIÓN",
         title: "Una plataforma global para decisiones\ninstitucionales mejor documentadas.",
         subtitle:
-          "Conozca cómo NEXUS puede adaptar expedientes, documentos, reglas, riesgos e integraciones a la estructura de su organización y a los países en los que opera.",
+          "Conozca cómo {{brand}} puede adaptar expedientes, documentos, reglas, riesgos e integraciones a la estructura de su organización y a los países en los que opera.",
         cta1: "Conocer la plataforma",
         cta2: "Solicitar diagnóstico institucional",
         trust1: "Cifrado y trazabilidad",
@@ -194,7 +194,7 @@ const resources = {
       },
 
       footer: {
-        companyName: "NEXUS Secure Due-Diligence Unit",
+        companyName: "{{legalName}}",
         companyDesc: "Preparamos empresas y proyectos para inversionistas globales.",
         navTitle: "Navegación",
         nav: {
@@ -294,6 +294,103 @@ const resources = {
         sandboxOption3: "Simular Descuadre Contable",
         sandboxReset: "Restaurar Original"
       },
+      forApplicants: {
+        eyebrow: "PARA SOLICITANTES",
+        title: "Prepara tu expediente antes de tocar la puerta de un otorgante.",
+        description: "{{brand}} organiza tu proyecto, documentos y cumplimiento en un expediente institucional, con IA que detecta faltantes antes de compartirlo con inversionistas o instituciones financieras.",
+        steps: [
+          ["1. Registro del proyecto", "Captura monto, uso de fondos, sector, etapa y datos base del proyecto o empresa."],
+          ["2. Checklist dinamico", "Se genera el listado de requisitos documentales y de cumplimiento segun tu sector y jurisdiccion."],
+          ["3. Revision con IA", "Los agentes validan vigencia, consistencia y autenticidad, y marcan lo que falta antes de compartir nada."],
+          ["4. Plan de subsanacion", "Recibes brechas priorizadas y pasos concretos para completar el expediente."],
+        ],
+        deliverablesTitle: "Que recibes al terminar",
+        deliverables: [
+          ["Expediente ordenado", "Documentos, evidencia y estatus organizados por carpeta, listos para compartir."],
+          ["Score de preparacion", "Una lectura objetiva de que tan listo esta tu expediente para revision institucional."],
+          ["Data room controlado", "Compartes solo lo que autorizas, con permisos y trazabilidad de cada acceso."],
+        ],
+        next: "SIGUIENTE PASO",
+        ctaTitle: "Empieza tu expediente hoy",
+        ctaText: "Sube tu proyecto y deja que {{brand}} te diga exactamente que falta antes de buscar financiamiento.",
+        ctaButton: "Ver servicios",
+      },
+      forFunders: {
+        eyebrow: "PARA OTORGANTES",
+        title: "Revisa oportunidades con expedientes ya ordenados, no carpetas sueltas.",
+        description: "{{brand}} entrega a instituciones financieras e inversionistas expedientes con score, riesgos, evidencia y data room controlado, para que el comite decida con informacion, no con promesas.",
+        controls: [
+          ["Score y semaforo", "Cada expediente llega con una lectura de riesgo y completitud generada por los agentes de IA."],
+          ["Evidencia trazable", "Cada documento y hallazgo tiene fuente, fecha y responsable de revision."],
+          ["Acceso controlado", "Tu institucion decide que ve, cuando y con que permisos, con bitacora de cada acceso."],
+        ],
+        flowTitle: "Como opera tu equipo dentro de {{brand}}",
+        flow: [
+          ["1. Pipeline", "Revisas oportunidades filtradas por apetito, sector, ticket y jurisdiccion."],
+          ["2. Data room", "Solicitas informacion adicional y sigues el estatus de cada requerimiento."],
+          ["3. Memo y comite", "Se prepara un memo ejecutivo con hallazgos, riesgos y pendientes para tu comite interno."],
+        ],
+        signalsTitle: "Senales de riesgo que {{brand}} destaca",
+        signalsText: "La plataforma no decide por tu institucion; organiza las senales para que tu equipo de riesgo y cumplimiento tome la decision final.",
+        signals: [
+          ["Documentacion vencida o inconsistente", "Se marca automaticamente antes de llegar a tu bandeja de revision."],
+          ["Beneficiario final incompleto", "Se identifica cuando falta informacion de estructura societaria o control."],
+          ["Coincidencias en listas de sanciones", "Se reportan con evidencia y fuente para revision humana obligatoria."],
+        ],
+        institutionalView: "VISTA INSTITUCIONAL",
+        ctaTitle: "Conecta tu equipo de riesgo a {{brand}}",
+        ctaText: "Revisa el pipeline de oportunidades y el data room controlado desde un solo lugar.",
+        ctaButton: "Entrar a la plataforma",
+      },
+      internationalPage: {
+        eyebrow: "COBERTURA INTERNACIONAL",
+        title: "Un nucleo tecnologico, paquetes regulatorios por mercado.",
+        description: "{{brand}} activa paquetes jurisdiccionales por pais: identificadores fiscales, listas de sanciones, formatos y requisitos documentales especificos, sin duplicar la plataforma por region.",
+        routeTitle: "Ruta de expansion",
+        launchPlan: [
+          { phase: "MVP internacional", markets: "Mexico + Estados Unidos", status: "Recomendado", scope: "Copy, formatos, data room, disclaimers y scoring explicable para pilotos controlados." },
+          { phase: "Expansion inicial", markets: "Canada + Reino Unido", status: "Despues del piloto", scope: "Ajustes regulatorios, privacidad, formatos legales y validaciones por mercado." },
+          { phase: "Escalamiento", markets: "Europa / MENA", status: "No inmediato", scope: "Requiere revision legal, traduccion profesional, proveedores y soporte multi-region." },
+        ],
+        marketsTitle: "Mercados soportados hoy",
+        crossTitle: "Controles de operacion transfronteriza",
+        crossText: "Cada mercado tiene un estatus explicito. {{brand}} no activa un pais sin fuente de validacion o cobertura regulatoria confirmada.",
+        crossBorder: [
+          ["Mexico", "Activo", "Nucleo de la plataforma: RFC, CURP, SAT, UIF y catalogo documental completo."],
+          ["Estados Unidos", "Activo", "EIN, SSN/ITIN, OFAC y FinCEN integrados para validacion y sanciones."],
+          ["Canada", "Piloto", "FINTRAC y Business Number en validacion; cobertura documental en expansion."],
+          ["Reino Unido", "Piloto", "Companies House y FCA en validacion; formatos legales en revision."],
+          ["Union Europea / MENA", "No disponible", "Requiere revision legal y proveedores locales antes de activarse."],
+        ],
+        checklistTitle: "Checklist antes de publicar un mercado nuevo",
+        checklistText: "Ningun mercado se activa en produccion sin pasar estos controles.",
+        checklist: [
+          ["Fuente oficial confirmada", "Identificadores fiscales y catalogos documentales validados contra fuente regulatoria."],
+          ["Listas de sanciones conectadas", "Proveedor o fuente publica de sanciones integrada y probada."],
+          ["Formato local y moneda", "Fechas, moneda y formato de documentos ajustados al mercado."],
+          ["Revision legal", "Disclaimers, terminos y tratamiento de datos revisados para la jurisdiccion."],
+        ],
+      },
+      securityPage: {
+        eyebrow: "SEGURIDAD Y TRAZABILIDAD",
+        title: "Controles de seguridad pensados para expedientes financieros.",
+        description: "{{brand}} trata cada expediente como informacion sensible: cifrado, control de acceso por rol y bitacora auditable en cada accion.",
+        controls: [
+          { title: "Cifrado en transito y en reposo", text: "Toda la informacion viaja y se almacena cifrada, incluyendo documentos y datos personales." },
+          { title: "Permisos por rol", text: "Solicitante, otorgante, analista y administrador ven solo lo que su rol autoriza." },
+          { title: "Bitacora auditable", text: "Cada carga, revision, acceso y cambio de permiso queda registrado con usuario y fecha." },
+          { title: "Continuidad operativa", text: "Respaldos, control de cambios y plan de respuesta a incidentes documentados." },
+        ],
+        minimumTitle: "El minimo que exigimos a nuestra propia plataforma",
+        minimumText: "Antes de conectar credenciales productivas, cada cambio pasa por pruebas automatizadas, revision de codigo y una migracion controlada de base de datos, sin excepciones.",
+        principlesTitle: "Principios de operacion",
+        principles: [
+          "Ningun dato sensible se comparte sin consentimiento explicito.",
+          "El backend nunca expone la llave de administrador al frontend.",
+          "Las reglas de acceso a nivel de base de datos reflejan las mismas reglas del backend.",
+          "Todo cambio de permisos o rol queda registrado y es reversible.",
+        ],
+      },
     },
   },
 
@@ -314,11 +411,11 @@ const resources = {
         industries: "Industries",
         integrations: "Integrations",
         modalities: "Implementation",
-        knowNsd: "Know NEXUS",
+        knowNsd: "Know {{brand}}",
       },
 
       hero: {
-        badge: "NEXUS, Global Compliance and Risk Platform",
+        badge: "{{brand}}, Global Compliance and Risk Platform",
         title: "Global compliance.",
         titleHighlight: "Decisions with evidence.",
         description:
@@ -346,7 +443,7 @@ const resources = {
       },
 
       differentiators: {
-        eyebrow: "WHY NEXUS",
+        eyebrow: "WHY {{brand}}",
         title: "Our Differentiators",
         subtitle:
           "We combine cutting-edge technology with human expertise to take your project to the next level.",
@@ -359,10 +456,10 @@ const resources = {
       },
 
       about: {
-        title: "About NEXUS Secure Due-Diligence Unit",
+        title: "About {{legalName}}",
         whoTitle: "Who We Are",
         whoText1:
-          "NEXUS Secure Due-Diligence Unit is an independent boutique firm that helps convert projects, companies, and investment opportunities into financially presentable, documented, and defensible dossiers for national and international capital sources.",
+          "{{legalName}} is an independent boutique firm that helps convert projects, companies, and investment opportunities into financially presentable, documented, and defensible dossiers for national and international capital sources.",
         whoText2:
           "Our team combines expertise in corporate finance, capital structuring, regulatory compliance, and international business.",
         missionTitle: "Our Mission",
@@ -376,14 +473,14 @@ const resources = {
       },
 
       history: {
-        title: "History of NEXUS Secure Due-Diligence Unit",
+        title: "History of {{legalName}}",
         teamTitle: "Our Team",
         timeline: [
-          { year: 2022, title: "Founded",            desc: "NEXUS is born with the mission of preparing projects for international investors" },
+          { year: 2022, title: "Founded",            desc: "{{brand}} is born with the mission of preparing projects for international investors" },
           { year: 2023, title: "First Million",      desc: "We financed the first project for $1M USD with a European family office" },
           { year: 2024, title: "Regional Expansion", desc: "Expansion to Latin America with offices in Colombia and Peru" },
           { year: 2025, title: "Digital Platform",   desc: "Launch of SaaS platform for automated analysis" },
-          { year: 2026, title: "Today",              desc: "NEXUS supports 100+ projects with access to global private capital" },
+          { year: 2026, title: "Today",              desc: "{{brand}} supports 100+ projects with access to global private capital" },
         ],
         team: [
           { name: "Ulises Salgado", role: "Founder & CEO",             bio: "15+ years in corporate finance and SOFOM" },
@@ -449,7 +546,7 @@ const resources = {
           {
             category: "Platform",
             questions: [
-              { q: "What is NEXUS Secure Due-Diligence Unit?", a: "A boutique platform that prepares projects for international investors" },
+              { q: "What is {{legalName}}?", a: "A boutique platform that prepares projects for international investors" },
               { q: "Is my information secure?",          a: "Yes, we use SSL/TLS encryption and comply with LGPD/GDPR" },
               { q: "How much does it cost?",             a: "Plans from $99 USD/month. Contact us for a custom quote" },
             ],
@@ -486,7 +583,7 @@ const resources = {
       },
 
       footer: {
-        companyName: "NEXUS Secure Due-Diligence Unit",
+        companyName: "{{legalName}}",
         companyDesc: "We prepare companies and projects for global investors.",
         navTitle: "Navigation",
         nav: {
@@ -585,6 +682,103 @@ const resources = {
         sandboxOption2: "Simulate Altered PDF",
         sandboxOption3: "Simulate Out-of-balance Financials",
         sandboxReset: "Restore Original"
+      },
+      forApplicants: {
+        eyebrow: "FOR APPLICANTS",
+        title: "Prepare your file before you knock on a funder's door.",
+        description: "{{brand}} organizes your project, documents and compliance into an institutional file, with AI that flags gaps before you share it with investors or financial institutions.",
+        steps: [
+          ["1. Project intake", "Capture amount, use of funds, sector, stage and base data for your project or company."],
+          ["2. Dynamic checklist", "The list of documentary and compliance requirements is generated for your sector and jurisdiction."],
+          ["3. AI review", "Agents validate expiration, consistency and authenticity, and flag what is missing before you share anything."],
+          ["4. Remediation plan", "You get prioritized gaps and concrete steps to complete the file."],
+        ],
+        deliverablesTitle: "What you get when you finish",
+        deliverables: [
+          ["Organized file", "Documents, evidence and status organized by folder, ready to share."],
+          ["Readiness score", "An objective read on how ready your file is for institutional review."],
+          ["Controlled data room", "You share only what you authorize, with permissions and traceability on every access."],
+        ],
+        next: "NEXT STEP",
+        ctaTitle: "Start your file today",
+        ctaText: "Upload your project and let {{brand}} tell you exactly what is missing before you seek financing.",
+        ctaButton: "View services",
+      },
+      forFunders: {
+        eyebrow: "FOR FUNDERS",
+        title: "Review opportunities with files that are already organized, not loose folders.",
+        description: "{{brand}} delivers financial institutions and investors files with score, risks, evidence and a controlled data room, so the committee decides with information, not promises.",
+        controls: [
+          ["Score and traffic light", "Every file arrives with a risk and completeness read generated by the AI agents."],
+          ["Traceable evidence", "Every document and finding has a source, date and reviewer of record."],
+          ["Controlled access", "Your institution decides what it sees, when, and with what permissions, with a log of every access."],
+        ],
+        flowTitle: "How your team operates inside {{brand}}",
+        flow: [
+          ["1. Pipeline", "Review opportunities filtered by appetite, sector, ticket size and jurisdiction."],
+          ["2. Data room", "Request additional information and track the status of every request."],
+          ["3. Memo and committee", "An executive memo is prepared with findings, risks and open items for your internal committee."],
+        ],
+        signalsTitle: "Risk signals {{brand}} surfaces",
+        signalsText: "The platform does not decide for your institution; it organizes the signals so your risk and compliance team makes the final call.",
+        signals: [
+          ["Expired or inconsistent documentation", "Flagged automatically before it reaches your review queue."],
+          ["Incomplete beneficial ownership", "Identified when corporate structure or control information is missing."],
+          ["Sanctions list matches", "Reported with evidence and source for mandatory human review."],
+        ],
+        institutionalView: "INSTITUTIONAL VIEW",
+        ctaTitle: "Connect your risk team to {{brand}}",
+        ctaText: "Review the opportunity pipeline and the controlled data room from one place.",
+        ctaButton: "Enter the platform",
+      },
+      internationalPage: {
+        eyebrow: "INTERNATIONAL COVERAGE",
+        title: "One technology core, regulatory packages per market.",
+        description: "{{brand}} activates jurisdictional packages by country: tax identifiers, sanctions lists, formats and specific documentary requirements, without duplicating the platform per region.",
+        routeTitle: "Expansion route",
+        launchPlan: [
+          { phase: "International MVP", markets: "Mexico + United States", status: "Recommended", scope: "Copy, formats, data room, disclaimers and explainable scoring for controlled pilots." },
+          { phase: "Initial expansion", markets: "Canada + United Kingdom", status: "After the pilot", scope: "Regulatory adjustments, privacy, legal formats and per-market validations." },
+          { phase: "Scale-up", markets: "Europe / MENA", status: "Not immediate", scope: "Requires legal review, professional translation, providers and multi-region support." },
+        ],
+        marketsTitle: "Markets supported today",
+        crossTitle: "Cross-border operating controls",
+        crossText: "Every market has an explicit status. {{brand}} does not activate a country without a confirmed validation source or regulatory coverage.",
+        crossBorder: [
+          ["Mexico", "Active", "Platform core: RFC, CURP, SAT, UIF and full document catalog."],
+          ["United States", "Active", "EIN, SSN/ITIN, OFAC and FinCEN integrated for validation and sanctions."],
+          ["Canada", "Pilot", "FINTRAC and Business Number in validation; document coverage expanding."],
+          ["United Kingdom", "Pilot", "Companies House and FCA in validation; legal formats under review."],
+          ["European Union / MENA", "Not available", "Requires legal review and local providers before activation."],
+        ],
+        checklistTitle: "Checklist before publishing a new market",
+        checklistText: "No market goes live in production without passing these controls.",
+        checklist: [
+          ["Official source confirmed", "Tax identifiers and document catalogs validated against a regulatory source."],
+          ["Sanctions lists connected", "A sanctions provider or public source integrated and tested."],
+          ["Local format and currency", "Dates, currency and document formats adjusted to the market."],
+          ["Legal review", "Disclaimers, terms and data handling reviewed for the jurisdiction."],
+        ],
+      },
+      securityPage: {
+        eyebrow: "SECURITY AND TRACEABILITY",
+        title: "Security controls built for financial files.",
+        description: "{{brand}} treats every file as sensitive information: encryption, role-based access control and an auditable log on every action.",
+        controls: [
+          { title: "Encryption in transit and at rest", text: "All information travels and is stored encrypted, including documents and personal data." },
+          { title: "Role-based permissions", text: "Applicant, funder, analyst and administrator each see only what their role authorizes." },
+          { title: "Auditable log", text: "Every upload, review, access and permission change is recorded with user and date." },
+          { title: "Operational continuity", text: "Backups, change control and an incident response plan, all documented." },
+        ],
+        minimumTitle: "The minimum we demand from our own platform",
+        minimumText: "Before connecting production credentials, every change goes through automated tests, code review and a controlled database migration, with no exceptions.",
+        principlesTitle: "Operating principles",
+        principles: [
+          "No sensitive data is shared without explicit consent.",
+          "The backend never exposes the admin key to the frontend.",
+          "Database-level access rules mirror the same rules enforced by the backend.",
+          "Every permission or role change is logged and reversible.",
+        ],
       },
     },
   },

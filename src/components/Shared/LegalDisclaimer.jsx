@@ -1,5 +1,6 @@
 import React from "react";
 import { COLORS } from "../../utils/constants";
+import { BRAND } from "../../config/brand";
 
 export default function LegalDisclaimer() {
   return (
@@ -23,7 +24,7 @@ export default function LegalDisclaimer() {
           marginBottom: "0.9rem",
         }}
       >
-        AVISO LEGAL — NEXUS SECURE DUE-DILIGENCE UNIT
+        AVISO LEGAL — {BRAND.legalName}
       </p>
       <p
         style={{
@@ -33,7 +34,7 @@ export default function LegalDisclaimer() {
           marginBottom: "0.75rem",
         }}
       >
-        La plataforma NEXUS es una solución tecnológica de apoyo para la gestión de información,
+        La plataforma {BRAND.name} es una solución tecnológica de apoyo para la gestión de información,
         debida diligencia, cumplimiento, riesgo y revisión de expedientes. La plataforma no sustituye el criterio
         profesional, las políticas internas, la asesoría legal local, las obligaciones regulatorias ni las decisiones
         de los órganos facultados de sus clientes.
@@ -46,7 +47,7 @@ export default function LegalDisclaimer() {
           marginBottom: "0.75rem",
         }}
       >
-        Los resultados, alertas, puntajes, resúmenes y recomendaciones generados por NEXUS no constituyen por sí mismos
+        Los resultados, alertas, puntajes, resúmenes y recomendaciones generados por {BRAND.name} no constituyen por sí mismos
         una certificación de cumplimiento, aprobación de cliente, dictamen legal, autorización regulatoria,
         recomendación de inversión ni decisión crediticia. Toda decisión debe ser revisada y autorizada por las personas
         responsables de la organización usuaria.
@@ -61,7 +62,7 @@ export default function LegalDisclaimer() {
       >
         La disponibilidad de verificaciones, registros, listas, noticias, biometría, identificadores fiscales y otras
         fuentes depende de la jurisdicción, cobertura, permisos, calidad de datos, proveedores y módulos contratados.
-        NEXUS identifica qué capacidades se encuentran disponibles, integradas, en prueba o sujetas a configuración.
+        {BRAND.name} identifica qué capacidades se encuentran disponibles, integradas, en prueba o sujetas a configuración.
       </p>
       <p
         style={{
@@ -70,7 +71,7 @@ export default function LegalDisclaimer() {
           lineHeight: 1.7,
         }}
       >
-        NEXUS no es una institución de crédito, no capta recursos del público, no opera como autoridad, no emite
+        {BRAND.name} no es una institución de crédito, no capta recursos del público, no opera como autoridad, no emite
         licencias y no garantiza financiamiento, inversión o aceptación regulatoria.
       </p>
     </section>

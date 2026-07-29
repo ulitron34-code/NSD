@@ -1,0 +1,7 @@
+// Replace:
+src="/logo-nexus.png"
+
+// With:
+src={BRAND.logoPath || "/logo-nexus.png"}
+
+// This preserves fallback until the new asset is committed.

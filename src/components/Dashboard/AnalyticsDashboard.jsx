@@ -1,5 +1,5 @@
 // ============================================
-// NEXUS PLATFORM - ANALYTICS DASHBOARD COMPONENT
+// NUXERA PLATFORM - ANALYTICS DASHBOARD COMPONENT
 // Enhanced metrics and KPIs for admin dashboard
 // ============================================
 

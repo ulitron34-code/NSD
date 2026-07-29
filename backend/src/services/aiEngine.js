@@ -5,43 +5,50 @@ import { AI_PROMPTS } from '../config/aiPrompts.js';
 // Configuración opcional por si las llaves aún no están en .env
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const DEEPSEEK_KEY  = process.env.DEEPSEEK_API_KEY;
+const KIMI_KEY      = process.env.KIMI_API_KEY;
 const NVIDIA_KEY    = process.env.NVIDIA_API_KEY; // temporal — pruebas NIM
 
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
-const deepseek  = DEEPSEEK_KEY  ? new OpenAI({ apiKey: DEEPSEEK_KEY,  baseURL: 'https://api.deepseek.com/v1' }) : null;
+const deepseek  = DEEPSEEK_KEY  ? new OpenAI({ apiKey: DEEPSEEK_KEY,  baseURL: "https://api.deepseek.com/v1" }) : null;
+const kimi      = KIMI_KEY      ? new OpenAI({ apiKey: KIMI_KEY,      baseURL: process.env.KIMI_BASE_URL || "https://api.moonshot.ai/v1" }) : null;
 // NVIDIA NIM expone API compatible con OpenAI en integrate.api.nvidia.com
 const nvidia    = NVIDIA_KEY    ? new OpenAI({ apiKey: NVIDIA_KEY,    baseURL: 'https://integrate.api.nvidia.com/v1' }) : null;
 
 /**
- * Fase 1: extracción de datos (NVIDIA NIM si está disponible, DeepSeek como fallback).
- * NVIDIA usa meta/llama-3.1-8b-instruct — rápido y económico para extracción estructurada.
- * Remover cliente nvidia y NVIDIA_KEY cuando termine el periodo de pruebas.
+ * Fase 1: extracción secundaria solo para datos anonimizados de bajo riesgo.
+ * Orden: Kimi -> DeepSeek -> NVIDIA NIM. Nunca procesa texto sensible completo.
  */
-async function extractDataWithDeepSeek(documentText) {
-  const client = nvidia || deepseek;
-  const model  = nvidia ? 'meta/llama-3.1-8b-instruct' : 'deepseek-chat';
-  const provider = nvidia ? 'NVIDIA NIM' : 'DeepSeek';
+async function extractDataWithDeepSeek(documentText, options = {}) {
+  const restrictedAllowed = options.dataRisk === "low" && options.anonymized === true;
+  const secondaryProviders = [
+    { name: "Kimi", client: kimi, model: process.env.KIMI_JSON_MODEL || "kimi-k3" },
+    { name: "DeepSeek", client: deepseek, model: process.env.DEEPSEEK_JSON_MODEL || "deepseek-chat" },
+    { name: "NVIDIA NIM", client: nvidia, model: "meta/llama-3.1-8b-instruct" }
+  ].filter((provider) => provider.client);
 
-  if (!client) {
-    console.warn("Sin proveedor de extracción configurado (NVIDIA_API_KEY / DEEPSEEK_API_KEY). Simulando.");
-    return { entidad: "Entidad simulada", fecha: new Date().toISOString().split('T')[0], esValido: true };
+  if (!restrictedAllowed || secondaryProviders.length === 0) {
+    console.warn("Sin proveedor de extracción permitido: KIMI/DEEPSEEK/NVIDIA solo se usan con datos anonimizados de bajo riesgo. Simulando.");
+    return { entidad: "Entidad simulada", fecha: new Date().toISOString().split("T")[0], esValido: true };
   }
 
-  try {
-    const completion = await client.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: AI_PROMPTS.DEEPSEEK_EXTRACTOR_SYSTEM },
-        { role: "user",   content: `Analiza este texto:\n\n${documentText}` }
-      ],
-      response_format: { type: "json_object" },
-    });
-    console.info(`[aiEngine] Extracción via ${provider} (${model})`);
-    return JSON.parse(completion.choices[0].message.content);
-  } catch (error) {
-    console.error(`Error en ${provider}:`, error);
-    return null;
+  for (const provider of secondaryProviders) {
+    try {
+      const completion = await provider.client.chat.completions.create({
+        model: provider.model,
+        messages: [
+          { role: "system", content: AI_PROMPTS.DEEPSEEK_EXTRACTOR_SYSTEM },
+          { role: "user", content: `Analiza este texto:\n\n${documentText}` }
+        ],
+        response_format: { type: "json_object" },
+      });
+      console.info(`[aiEngine] Extracción via ${provider.name} (${provider.model})`);
+      return JSON.parse(completion.choices[0].message.content);
+    } catch (error) {
+      console.error(`Error en ${provider.name}:`, error);
+    }
   }
+
+  return null;
 }
 
 /**
@@ -82,10 +89,13 @@ export async function runAIReviewCascaded(document, extractedText) {
   const textToAnalyze = extractedText || `Documento ${document.filename} subido el ${document.uploaded_at}. Texto de prueba legal para análisis preliminar.`;
 
   // 1. Extracción Pesada/Barata
-  let extracted = await extractDataWithDeepSeek(textToAnalyze);
+  let extracted = await extractDataWithDeepSeek(textToAnalyze, {
+    dataRisk: document?.metadata?.aiDataRisk,
+    anonymized: document?.metadata?.anonymizedForAI === true
+  });
   
   // Fallback simulado para metadatos si no hay DeepSeek configurado
-  if (!deepseek) {
+  if (!extracted || !(document?.metadata?.aiDataRisk === "low" && document?.metadata?.anonymizedForAI === true)) {
     const isFinancial = String(document.filename).toLowerCase().match(/(financier|flujo|balance|sat|dscr|cuenta)/);
     extracted = {
       entidad: "Comercializadora Industrial SA de CV",
@@ -143,7 +153,7 @@ export async function runAIReviewCascaded(document, extractedText) {
     findings: audit?.findings || ['Análisis completado con éxito parcial.'],
     missing_items: audit?.missing_items || ['Requiere firmas.'],
     extracted_data: extraList,
-    warnings: !anthropic || !deepseek ? ["Advertencia: Llaves IA no configuradas, usando fallback simulado."] : []
+    warnings: !anthropic || !(document?.metadata?.aiDataRisk === "low" && document?.metadata?.anonymizedForAI === true) ? ["Advertencia: proveedores secundarios restringidos; usando fallback simulado para extracción no anonimizada."] : []
   };
 }
 

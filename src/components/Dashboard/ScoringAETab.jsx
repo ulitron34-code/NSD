@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 export default function ScoringAETab() {
   const { i18n } = useTranslation();
@@ -49,8 +50,8 @@ export default function ScoringAETab() {
         </h1>
         <p style={{ margin: 0, maxWidth: "820px", color: "rgba(255,255,255,0.82)", lineHeight: 1.6 }}>
           {L(
-            "La escala A-E traduce revision documental, riesgo y completitud en una lectura simple para solicitantes, NEXUS y otorgantes. No sustituye aprobacion crediticia.",
-            "The A-E scale translates document review, risk and completeness into a simple readout for applicants, NEXUS and funders. It does not replace credit approval."
+            `La escala A-E traduce revision documental, riesgo y completitud en una lectura simple para solicitantes, ${BRAND.name} y otorgantes. No sustituye aprobacion crediticia.`,
+            `The A-E scale translates document review, risk and completeness into a simple readout for applicants, ${BRAND.name} and funders. It does not replace credit approval.`
           )}
         </p>
       </section>

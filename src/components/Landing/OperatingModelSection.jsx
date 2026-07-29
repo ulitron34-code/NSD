@@ -2,20 +2,21 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
 import { uiText } from "../../utils/runtimeCopy";
+import { BRAND } from "../../config/brand";
 
 export default function OperatingModelSection() {
   const { i18n } = useTranslation();
   const L = (es, en) => uiText(i18n, es, en);
   const flow = [
     [L("1. Recepcion", "1. Intake"), L("El solicitante registra proyecto, monto, uso de fondos, sector, etapa y datos base.", "Applicant registers project, amount, fund use, sector, stage and base data.")],
-    [L("2. Matriz", "2. Matrix"), L("NEXUS cruza el tipo de proyecto contra requisitos documentales y cumplimiento esperado.", "NEXUS crosses project type against documentary requirements and expected compliance.")],
+    [L("2. Matriz", "2. Matrix"), L(`${BRAND.name} cruza el tipo de proyecto contra requisitos documentales y cumplimiento esperado.`, `${BRAND.name} crosses project type against documentary requirements and expected compliance.`)],
     [L("3. Revision con IA", "3. AI Review"), L("Los agentes revisan faltantes, vencimientos, consistencia, riesgos y evidencia disponible.", "Agents review missing items, expirations, consistency, risks and available evidence.")],
     [L("4. Data room", "4. Data Room"), L("El expediente se organiza por carpetas, permisos, trazabilidad y autorizacion de acceso.", "File is organized by folders, permissions, traceability and access authorization.")],
     [L("5. Otorgantes", "5. Funders"), L("Las instituciones revisan oportunidades por apetito, score, riesgo, ticket y data room.", "Institutions review opportunities by appetite, score, risk, ticket and data room.")],
     [L("6. Decision", "6. Decision"), L("Genera memo, requerimientos, controles de contacto y soporte para comite interno.", "Generates memo, requirements, contact gates and support for internal committee.")],
   ];
   const safeguards = [
-    [L("No aprueba creditos", "Does not approve credit"), L("NEXUS organiza evidencia y reduce friccion; la decision final corresponde al otorgante.", "NEXUS organizes evidence and reduces friction; final decision is the funder's responsibility.")],
+    [L("No aprueba creditos", "Does not approve credit"), L(`${BRAND.name} organiza evidencia y reduce friccion; la decision final corresponde al otorgante.`, `${BRAND.name} organizes evidence and reduces friction; final decision is the funder's responsibility.`)],
     [L("Trazabilidad", "Traceability"), L("Cada carga, revision, requerimiento y acceso debe ser auditable.", "Every upload, review, requirement and access must be auditable.")],
     [L("Privacidad", "Privacy"), L("El contacto y acceso documental operan con consentimiento y permisos controlados.", "Contact and document access operate with consent and controlled permissions.")],
   ];
@@ -25,7 +26,7 @@ export default function OperatingModelSection() {
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         <div style={{ maxWidth: "840px", marginBottom: "2rem" }}>
           <p style={{ color: COLORS.gold, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 900, fontSize: "0.75rem", marginBottom: "0.65rem" }}>
-            {L("Modelo operativo NEXUS", "NEXUS Operating Model")}
+            {L(`Modelo operativo ${BRAND.name}`, `${BRAND.name} Operating Model`)}
           </p>
           <h2 style={{ color: COLORS.navy, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", lineHeight: 1.12, marginBottom: "0.85rem" }}>
             {L("De solicitud dispersa a expediente revisable institucionalmente.", "From scattered application to institutional reviewable file.")}
