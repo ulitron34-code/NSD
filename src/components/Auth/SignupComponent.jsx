@@ -82,7 +82,7 @@ export default function SignupComponent() {
           Crear cuenta
         </h1>
         <p style={{ color: COLORS.textMuted, textAlign: "center", marginBottom: "2rem", fontSize: "0.95rem" }}>
-          Unete a {BRAND.productName} y prueba los modulos de solicitante, otorgante o administracion.
+          Unete a {BRAND.productName} como solicitante u otorgante.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -90,11 +90,10 @@ export default function SignupComponent() {
             <label style={{ display: "block", color: COLORS.navy, fontWeight: 700, marginBottom: "0.5rem", fontSize: "0.9rem" }}>
               Perfil de usuario
             </label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}>
               {[
                 { value: "solicitante", label: "Solicitante" },
                 { value: "otorgante", label: "Otorgante" },
-                { value: "analista", label: BRAND.name },
               ].map((option) => (
                 <label key={option.value} style={{
                   display: "flex",
