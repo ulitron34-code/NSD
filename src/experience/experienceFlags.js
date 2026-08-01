@@ -43,6 +43,13 @@ export function isNuxeraStrategyEnabled() {
   return readNuxeraFlag("VITE_NUXERA_STRATEGY_ENABLED");
 }
 
+// Commercial model rollout flags (Fase 1+ del plan de planes/paquetes/UA).
+// New flags start fail-closed: only the literal "true" enables them, so an
+// absent variable never turns on unreleased commercial behavior.
+export function isCommercialCatalogEnabled() {
+  return import.meta.env.VITE_COMMERCIAL_CATALOG_ENABLED === "true";
+}
+
 const roleFlagCheckers = {
   applicant: isNuxeraApplicantEnabled,
   grantor: isNuxeraGrantorEnabled,

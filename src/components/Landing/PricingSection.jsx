@@ -1,11 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../utils/constants";
+import { isCommercialCatalogEnabled } from "../../experience/experienceFlags";
+import { useCommercialOffers } from "../../hooks/useCommercialOffers";
+import AudienceSelector from "../Pricing/AudienceSelector";
+import ApplicantPackageCard from "../Pricing/ApplicantPackageCard";
+import GrantorPlanCard from "../Pricing/GrantorPlanCard";
 
-export default function PricingSection() {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
+function CommercialCatalogPricing({ navigate }) {
+  const [audience, setAudience] = useState("applicant");
+  const { offers, loading } = useCommercialOffers(audience);
+  const CardComponent = audience === "grantor" ? GrantorPlanCard : ApplicantPackageCard;
+
+  return (
+    <section style={{ padding: "5rem 2rem", background: COLORS.bg, minHeight: "80vh" }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+        <h2 style={{ color: COLORS.navy, fontSize: "2.5rem", marginBottom: "1rem", borderLeft: `4px solid ${COLORS.gold}`, paddingLeft: "1rem" }}>
+          Planes y paquetes
+        </h2>
+        <p style={{ color: COLORS.textMuted, marginBottom: "0.5rem", fontSize: "1.1rem" }}>
+          {audience === "grantor"
+            ? "Suscripciones para otorgantes que patrocinan expedientes de sus solicitantes."
+            : "Paquetes por expediente para solicitantes independientes."}
+        </p>
+        <p style={{ color: COLORS.textMuted, marginBottom: "2rem", fontSize: "0.85rem" }}>* Precios en USD, antes de impuestos.</p>
+
+        <AudienceSelector audience={audience} onChange={setAudience} />
+
+        {loading && <p style={{ color: COLORS.textMuted }}>Cargando catálogo…</p>}
+
+        {!loading && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+            {offers.map((offer, i) => (
+              <CardComponent
+                key={offer.code}
+                offer={offer}
+                popular={i === 1}
+                onSelect={() => navigate("/signup")}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LegacyStaticPricing({ navigate, t }) {
   const plans = t("pricing.plans", { returnObjects: true });
 
   return (
@@ -112,4 +154,14 @@ export default function PricingSection() {
       </div>
     </section>
   );
+}
+
+export default function PricingSection() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  if (isCommercialCatalogEnabled()) {
+    return <CommercialCatalogPricing navigate={navigate} />;
+  }
+  return <LegacyStaticPricing navigate={navigate} t={t} />;
 }

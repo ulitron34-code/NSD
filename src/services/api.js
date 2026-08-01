@@ -209,6 +209,14 @@ export const adminAPI = {
     api.get('/admin/readiness-metrics')
 };
 
+// Catálogo comercial único (Fase 1 del plan de planes/paquetes/UA) — público,
+// sin sesión. El backend responde 404 mientras COMMERCIAL_CATALOG_ENABLED
+// esté apagado.
+export const commercialCatalogAPI = {
+  listOffers: (audience, currency = 'USD') =>
+    api.get('/commercial/offers', { params: { audience, currency } })
+};
+
 // Plantillas descargables (sección 31 del plan) — contenido genérico, no
 // atado a ningún expediente, solo requiere sesión iniciada.
 export const readinessTemplatesAPI = {
