@@ -83,16 +83,54 @@ async function resolveApplicantOfferForPurchase(offerCode, currency) {
   };
 }
 
+// Los códigos `addon_*` (sección 2.2 del plan: UA extra, extensión de 30
+// días) no son un grant independiente -- modifican una compra activa ya
+// existente (paso 6, Fase 4). Se distinguen por el prefijo del código,
+// mismo criterio que ya usan los seeds de Fase 1
+// (2026-07-31_nuxera_commercial_catalog.sql) para nombrarlos.
+function isAddonOfferCode(offerCode) {
+  return offerCode.startsWith('addon_');
+}
+
 // Sección 9.1/12 (Fase 4): crea la compra en `pending` con el precio ya
 // resuelto en servidor. El PaymentIntent se genera después (stripeBillingService)
 // y la activación real llega solo por webhook (sección 9.2) -- crear la fila
-// no otorga nada todavía.
-export async function createPendingPurchase({ applicantUserId, billingAccountId, offerCode, currency = 'USD' }) {
+// no otorga nada todavía. Para un adicional, `targetPurchaseId` identifica
+// la compra activa que va a extender -- se valida acá, antes de cobrar
+// nada, y viaja luego en la metadata del PaymentIntent para que la
+// activación sepa a qué compra aplicar el efecto.
+export async function createPendingPurchase({
+  applicantUserId,
+  billingAccountId,
+  offerCode,
+  currency = 'USD',
+  targetPurchaseId = null
+}) {
   if (!offerCode) throw new Error('offerCode es requerido');
 
   await assertBillingAccountMember(applicantUserId, billingAccountId);
 
   const resolved = await resolveApplicantOfferForPurchase(offerCode, currency);
+  const isAddon = isAddonOfferCode(offerCode);
+
+  if (isAddon) {
+    if (!targetPurchaseId) {
+      throw notFound('Este adicional requiere targetPurchaseId (la compra que extiende)', 'ADDON_TARGET_REQUIRED');
+    }
+
+    const { data: target, error: targetError } = await supabaseAdmin
+      .from('package_purchases')
+      .select('id, billing_account_id, status')
+      .eq('id', targetPurchaseId)
+      .maybeSingle();
+    if (targetError) throw targetError;
+    if (!target || target.billing_account_id !== billingAccountId) {
+      throw notFound('La compra a extender no existe o no pertenece a esta cuenta', 'ADDON_TARGET_NOT_FOUND');
+    }
+    if (target.status !== 'active') {
+      throw notFound('Solo se puede extender una compra activa', 'ADDON_TARGET_NOT_ACTIVE');
+    }
+  }
 
   const { data, error } = await supabaseAdmin
     .from('package_purchases')
@@ -112,7 +150,9 @@ export async function createPendingPurchase({ applicantUserId, billingAccountId,
     purchase: mapPurchase(data),
     amountCents: resolved.amountCents,
     currency: resolved.currency,
-    validityDays: resolved.validityDays
+    validityDays: resolved.validityDays,
+    isAddon,
+    targetPurchaseId: isAddon ? targetPurchaseId : null
   };
 }
 
@@ -125,6 +165,61 @@ export async function attachPaymentIntent(purchaseId, paymentIntentId) {
     .single();
   if (error) throw error;
   return mapPurchase(data);
+}
+
+// Un adicional no es un grant independiente: suma UA y/o extiende
+// expires_at de la compra destino, y la fila propia del adicional queda
+// como 'consumed' (no 'active') -- registra que se cobró y qué efecto tuvo,
+// pero no vence por sí sola ni se cuenta dos veces. Idempotente: si el
+// adicional ya está 'consumed', una segunda entrega del webhook no vuelve a
+// sumar UA ni a extender la vigencia de nuevo.
+async function activateAddonPurchase(addonPurchase, targetPurchaseId, paymentIntentId) {
+  if (addonPurchase.status === 'consumed') return mapPurchase(addonPurchase);
+
+  const { data: target, error: targetError } = await supabaseAdmin
+    .from('package_purchases')
+    .select('*')
+    .eq('id', targetPurchaseId)
+    .maybeSingle();
+  if (targetError) throw targetError;
+  if (!target) return mapPurchase(addonPurchase);
+
+  const { data: entitlementRows, error: entitlementsError } = await supabaseAdmin
+    .from('offer_entitlements')
+    .select('entitlement_key, limit_value')
+    .eq('offer_id', addonPurchase.offer_id)
+    .in('entitlement_key', ['analysis_units', 'package_validity_days']);
+  if (entitlementsError) throw entitlementsError;
+
+  const addonUa = (entitlementRows || []).find((row) => row.entitlement_key === 'analysis_units');
+  const addonValidity = (entitlementRows || []).find((row) => row.entitlement_key === 'package_validity_days');
+
+  const targetUpdate = {};
+  if (addonUa) {
+    targetUpdate.purchased_ua = Number(target.purchased_ua || 0) + Number(addonUa.limit_value);
+  }
+  if (addonValidity) {
+    const base = target.expires_at ? new Date(target.expires_at) : new Date();
+    targetUpdate.expires_at = new Date(base.getTime() + Number(addonValidity.limit_value) * 24 * 60 * 60 * 1000).toISOString();
+  }
+
+  if (Object.keys(targetUpdate).length > 0) {
+    const { error: updateTargetError } = await supabaseAdmin
+      .from('package_purchases')
+      .update(targetUpdate)
+      .eq('id', targetPurchaseId);
+    if (updateTargetError) throw updateTargetError;
+  }
+
+  const { data: updatedAddon, error: updateAddonError } = await supabaseAdmin
+    .from('package_purchases')
+    .update({ status: 'consumed', stripe_payment_intent_id: paymentIntentId })
+    .eq('id', addonPurchase.id)
+    .select()
+    .single();
+  if (updateAddonError) throw updateAddonError;
+
+  return mapPurchase(updatedAddon);
 }
 
 // Idempotente por diseño (sección 9.2: "rechazar eventos duplicados"): si la
@@ -142,6 +237,11 @@ export async function activatePackagePurchaseFromPaymentIntent(paymentIntent) {
     .maybeSingle();
   if (error) throw error;
   if (!purchase) return null;
+
+  const targetPurchaseId = paymentIntent?.metadata?.targetPurchaseId || null;
+  if (targetPurchaseId) {
+    return activateAddonPurchase(purchase, targetPurchaseId, paymentIntent.id);
+  }
 
   if (purchase.status === 'active') return mapPurchase(purchase);
 
@@ -172,4 +272,80 @@ export async function activatePackagePurchaseFromPaymentIntent(paymentIntent) {
   if (updateError) throw updateError;
 
   return mapPurchase(updated);
+}
+
+// Paso 5, Fase 4: "un paquete se vincula a un solo expediente" -- solo una
+// compra activa, sin vínculo previo, y el expediente debe pertenecer al
+// mismo usuario que compró el paquete.
+export async function linkPurchaseToOrder({ purchaseId, orderId, userId }) {
+  const { data: purchase, error } = await supabaseAdmin
+    .from('package_purchases')
+    .select('*')
+    .eq('id', purchaseId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!purchase) throw notFound('Compra no encontrada', 'PURCHASE_NOT_FOUND');
+  if (purchase.purchaser_user_id !== userId) {
+    throw notFound('Acceso denegado a esta compra', 'PURCHASE_ACCESS_DENIED');
+  }
+  if (purchase.status !== 'active') {
+    throw notFound('Solo una compra activa puede vincularse a un expediente', 'PURCHASE_NOT_ACTIVE');
+  }
+  if (purchase.order_id) {
+    throw notFound('Esta compra ya está vinculada a un expediente', 'PURCHASE_ALREADY_LINKED');
+  }
+
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from('service_orders')
+    .select('id, user_id')
+    .eq('id', orderId)
+    .maybeSingle();
+  if (orderError) throw orderError;
+  if (!order) throw notFound('Expediente no encontrado', 'ORDER_NOT_FOUND');
+  if (order.user_id !== userId) throw notFound('Acceso denegado a este expediente', 'ORDER_ACCESS_DENIED');
+
+  const { data: updated, error: updateError } = await supabaseAdmin
+    .from('package_purchases')
+    .update({ order_id: orderId })
+    .eq('id', purchaseId)
+    .select()
+    .single();
+  if (updateError) throw updateError;
+
+  return mapPurchase(updated);
+}
+
+// Paso 7, Fase 4: revierte los derechos de una compra pagada sin borrar el
+// historial (sección 5.5 del plan: "no borrar compras... ni movimientos
+// financieros") -- el estado pasa a 'refunded' y expires_at se corta a
+// ahora; la fila queda como evidencia de qué se compró y cuándo se revirtió.
+export async function loadRefundablePurchase(purchaseId) {
+  const { data: purchase, error } = await supabaseAdmin
+    .from('package_purchases')
+    .select('*')
+    .eq('id', purchaseId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!purchase) throw notFound('Compra no encontrada', 'PURCHASE_NOT_FOUND');
+  if (purchase.status !== 'active') {
+    throw notFound('Solo una compra activa puede reembolsarse', 'PURCHASE_NOT_REFUNDABLE');
+  }
+  if (!purchase.stripe_payment_intent_id) {
+    throw notFound('La compra no tiene un cobro de Stripe asociado', 'PURCHASE_NO_PAYMENT_INTENT');
+  }
+
+  return mapPurchase(purchase);
+}
+
+export async function markPurchaseRefunded(purchaseId) {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabaseAdmin
+    .from('package_purchases')
+    .update({ status: 'refunded', expires_at: nowIso })
+    .eq('id', purchaseId)
+    .select()
+    .single();
+  if (error) throw error;
+
+  return mapPurchase(data);
 }

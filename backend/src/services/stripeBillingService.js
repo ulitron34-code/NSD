@@ -25,8 +25,11 @@ function getStripeClient() {
 // mismo checkout para la misma compra pendiente no crea un segundo cargo --
 // Stripe devuelve el PaymentIntent original para la misma idempotencyKey.
 // metadata.type distingue este flujo del legacy de service_orders en
-// payments.js sin tocar su código.
-export async function createPackagePurchaseIntent({ purchaseId, amountCents, currency, userId, offerCode }) {
+// payments.js sin tocar su código. `targetPurchaseId` (paso 6) marca que
+// esta compra es un adicional -- packagePurchaseService lo usa en la
+// activación para sumar UA/vigencia a esa compra en vez de crear un grant
+// independiente.
+export async function createPackagePurchaseIntent({ purchaseId, amountCents, currency, userId, offerCode, targetPurchaseId = null }) {
   if (!purchaseId) throw new Error('purchaseId es requerido');
   if (!Number.isFinite(amountCents) || amountCents <= 0) {
     throw new Error('amountCents debe ser un monto positivo resuelto en servidor');
@@ -43,10 +46,21 @@ export async function createPackagePurchaseIntent({ purchaseId, amountCents, cur
         type: 'package_purchase',
         purchaseId,
         userId,
-        offerCode
+        offerCode,
+        ...(targetPurchaseId ? { targetPurchaseId } : {})
       },
       description: `NUXERA package purchase ${purchaseId}`
     },
     { idempotencyKey: `package_purchase_${purchaseId}` }
   );
+}
+
+// Paso 7, Fase 4: reembolso administrativo usando el PaymentIntent
+// persistido (sección 9.2 del plan: "implementar reembolso usando el
+// PaymentIntent persistido"), nunca un monto reingresado a mano.
+export async function refundPackagePurchase(paymentIntentId) {
+  if (!paymentIntentId) throw new Error('paymentIntentId es requerido');
+
+  const stripe = getStripeClient();
+  return stripe.refunds.create({ payment_intent: paymentIntentId });
 }

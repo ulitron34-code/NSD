@@ -6,7 +6,8 @@ const tables = {
   commercial_offers: [],
   commercial_prices: [],
   offer_entitlements: [],
-  package_purchases: []
+  package_purchases: [],
+  service_orders: []
 };
 
 // Ver el comentario en caseSponsorshipService.test.js: filtros perezosos que
@@ -72,8 +73,14 @@ vi.mock('../config/supabase.js', () => ({
   supabaseAdmin: { from: vi.fn((table) => makeBuilder(table)) }
 }));
 
-const { createPendingPurchase, attachPaymentIntent, activatePackagePurchaseFromPaymentIntent } =
-  await import('./packagePurchaseService.js');
+const {
+  createPendingPurchase,
+  attachPaymentIntent,
+  activatePackagePurchaseFromPaymentIntent,
+  linkPurchaseToOrder,
+  loadRefundablePurchase,
+  markPurchaseRefunded
+} = await import('./packagePurchaseService.js');
 
 function resetTables() {
   for (const key of Object.keys(tables)) tables[key] = [];
@@ -244,6 +251,199 @@ describe('packagePurchaseService', () => {
 
       expect(second.startsAt).toBe(first.startsAt);
       expect(second.expiresAt).toBe(first.expiresAt);
+    });
+  });
+
+  describe('add-ons extend an existing purchase instead of granting independently (paso 6)', () => {
+    it('rejects an addon offer without a targetPurchaseId', async () => {
+      givenApplicantOffer({ offerId: 'offer-addon', code: 'addon_ua_5', ua: 5, validityDays: null });
+
+      await expect(
+        createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'addon_ua_5' })
+      ).rejects.toThrow(/requiere targetPurchaseId/);
+    });
+
+    it('rejects an addon whose target purchase does not belong to the same billing account', async () => {
+      givenApplicantOffer({ offerId: 'offer-addon', code: 'addon_ua_5', ua: 5, validityDays: null });
+      tables.package_purchases.push({ id: 'other-purchase', billing_account_id: 'acct-2', status: 'active' });
+
+      await expect(
+        createPendingPurchase({
+          applicantUserId: 'user-1',
+          billingAccountId: 'acct-1',
+          offerCode: 'addon_ua_5',
+          targetPurchaseId: 'other-purchase'
+        })
+      ).rejects.toThrow(/no existe o no pertenece/);
+    });
+
+    it('rejects an addon targeting a purchase that is not active', async () => {
+      givenApplicantOffer({ offerId: 'offer-addon', code: 'addon_ua_5', ua: 5, validityDays: null });
+      tables.package_purchases.push({ id: 'target-1', billing_account_id: 'acct-1', status: 'pending' });
+
+      await expect(
+        createPendingPurchase({
+          applicantUserId: 'user-1',
+          billingAccountId: 'acct-1',
+          offerCode: 'addon_ua_5',
+          targetPurchaseId: 'target-1'
+        })
+      ).rejects.toThrow(/solo se puede extender/i);
+    });
+
+    it('adds UA to the target purchase and marks the addon as consumed, not independently active', async () => {
+      givenApplicantOffer();
+      const base = await createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'applicant_essential' });
+      const activeBase = await activatePackagePurchaseFromPaymentIntent({ id: 'pi_base', metadata: { purchaseId: base.purchase.id } });
+      expect(activeBase.purchasedUa).toBe(10);
+
+      givenApplicantOffer({ offerId: 'offer-addon-ua', code: 'addon_ua_5', ua: 5, validityDays: null });
+      const addon = await createPendingPurchase({
+        applicantUserId: 'user-1',
+        billingAccountId: 'acct-1',
+        offerCode: 'addon_ua_5',
+        targetPurchaseId: activeBase.id
+      });
+      expect(addon.isAddon).toBe(true);
+      expect(addon.targetPurchaseId).toBe(activeBase.id);
+
+      const activatedAddon = await activatePackagePurchaseFromPaymentIntent({
+        id: 'pi_addon',
+        metadata: { purchaseId: addon.purchase.id, targetPurchaseId: activeBase.id }
+      });
+
+      expect(activatedAddon.status).toBe('consumed');
+      const reloadedTarget = tables.package_purchases.find((row) => row.id === activeBase.id);
+      expect(Number(reloadedTarget.purchased_ua)).toBe(15);
+    });
+
+    it('extends expires_at on the target purchase for an extension addon', async () => {
+      givenApplicantOffer();
+      const base = await createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'applicant_essential' });
+      const activeBase = await activatePackagePurchaseFromPaymentIntent({ id: 'pi_base', metadata: { purchaseId: base.purchase.id } });
+      const originalExpiry = new Date(activeBase.expiresAt).getTime();
+
+      givenApplicantOffer({ offerId: 'offer-addon-ext', code: 'addon_extension_30_essential', ua: null, validityDays: 30 });
+      const addon = await createPendingPurchase({
+        applicantUserId: 'user-1',
+        billingAccountId: 'acct-1',
+        offerCode: 'addon_extension_30_essential',
+        targetPurchaseId: activeBase.id
+      });
+
+      await activatePackagePurchaseFromPaymentIntent({
+        id: 'pi_ext',
+        metadata: { purchaseId: addon.purchase.id, targetPurchaseId: activeBase.id }
+      });
+
+      const reloadedTarget = tables.package_purchases.find((row) => row.id === activeBase.id);
+      expect(new Date(reloadedTarget.expires_at).getTime() - originalExpiry).toBeCloseTo(30 * 24 * 60 * 60 * 1000, -3);
+    });
+
+    it('is idempotent: a second webhook delivery for a consumed addon does not double-credit the target', async () => {
+      givenApplicantOffer();
+      const base = await createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'applicant_essential' });
+      const activeBase = await activatePackagePurchaseFromPaymentIntent({ id: 'pi_base', metadata: { purchaseId: base.purchase.id } });
+
+      givenApplicantOffer({ offerId: 'offer-addon-ua2', code: 'addon_ua_5', ua: 5, validityDays: null });
+      const addon = await createPendingPurchase({
+        applicantUserId: 'user-1',
+        billingAccountId: 'acct-1',
+        offerCode: 'addon_ua_5',
+        targetPurchaseId: activeBase.id
+      });
+
+      const event = { id: 'pi_addon_dup', metadata: { purchaseId: addon.purchase.id, targetPurchaseId: activeBase.id } };
+      await activatePackagePurchaseFromPaymentIntent(event);
+      await activatePackagePurchaseFromPaymentIntent(event);
+
+      const reloadedTarget = tables.package_purchases.find((row) => row.id === activeBase.id);
+      expect(Number(reloadedTarget.purchased_ua)).toBe(15);
+    });
+  });
+
+  describe('linkPurchaseToOrder (paso 5)', () => {
+    async function givenActivePurchase() {
+      givenApplicantOffer();
+      const { purchase } = await createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'applicant_essential' });
+      return activatePackagePurchaseFromPaymentIntent({ id: 'pi_link', metadata: { purchaseId: purchase.id } });
+    }
+
+    it('links an active purchase to an expediente owned by the same user', async () => {
+      const active = await givenActivePurchase();
+      tables.service_orders = [{ id: 'order-1', user_id: 'user-1' }];
+
+      const linked = await linkPurchaseToOrder({ purchaseId: active.id, orderId: 'order-1', userId: 'user-1' });
+      expect(linked.orderId).toBe('order-1');
+    });
+
+    it('rejects linking a purchase that does not belong to the caller', async () => {
+      const active = await givenActivePurchase();
+      tables.service_orders = [{ id: 'order-1', user_id: 'user-1' }];
+
+      await expect(
+        linkPurchaseToOrder({ purchaseId: active.id, orderId: 'order-1', userId: 'stranger' })
+      ).rejects.toThrow(/Acceso denegado a esta compra/);
+    });
+
+    it('rejects linking a pending (not yet active) purchase', async () => {
+      givenApplicantOffer();
+      const { purchase } = await createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'applicant_essential' });
+      tables.service_orders = [{ id: 'order-1', user_id: 'user-1' }];
+
+      await expect(
+        linkPurchaseToOrder({ purchaseId: purchase.id, orderId: 'order-1', userId: 'user-1' })
+      ).rejects.toThrow(/Solo una compra activa/);
+    });
+
+    it('rejects linking to an expediente owned by a different user', async () => {
+      const active = await givenActivePurchase();
+      tables.service_orders = [{ id: 'order-1', user_id: 'someone-else' }];
+
+      await expect(
+        linkPurchaseToOrder({ purchaseId: active.id, orderId: 'order-1', userId: 'user-1' })
+      ).rejects.toThrow(/Acceso denegado a este expediente/);
+    });
+
+    it('rejects re-linking a purchase that is already linked -- one package, one expediente', async () => {
+      const active = await givenActivePurchase();
+      tables.service_orders = [
+        { id: 'order-1', user_id: 'user-1' },
+        { id: 'order-2', user_id: 'user-1' }
+      ];
+
+      await linkPurchaseToOrder({ purchaseId: active.id, orderId: 'order-1', userId: 'user-1' });
+
+      await expect(
+        linkPurchaseToOrder({ purchaseId: active.id, orderId: 'order-2', userId: 'user-1' })
+      ).rejects.toThrow(/ya está vinculada/);
+    });
+  });
+
+  describe('refund (paso 7)', () => {
+    it('loadRefundablePurchase rejects a purchase that is not active', async () => {
+      givenApplicantOffer();
+      const { purchase } = await createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'applicant_essential' });
+
+      await expect(loadRefundablePurchase(purchase.id)).rejects.toThrow(/Solo una compra activa puede reembolsarse/);
+    });
+
+    it('loadRefundablePurchase rejects an active purchase with no PaymentIntent on record', async () => {
+      tables.package_purchases.push({ id: 'no-pi', billing_account_id: 'acct-1', status: 'active', stripe_payment_intent_id: null });
+
+      await expect(loadRefundablePurchase('no-pi')).rejects.toThrow(/no tiene un cobro de Stripe/);
+    });
+
+    it('markPurchaseRefunded reverts status and cuts expires_at without deleting history', async () => {
+      givenApplicantOffer();
+      const { purchase } = await createPendingPurchase({ applicantUserId: 'user-1', billingAccountId: 'acct-1', offerCode: 'applicant_essential' });
+      const active = await activatePackagePurchaseFromPaymentIntent({ id: 'pi_refund', metadata: { purchaseId: purchase.id } });
+
+      const refunded = await markPurchaseRefunded(active.id);
+
+      expect(refunded.status).toBe('refunded');
+      expect(new Date(refunded.expiresAt).getTime()).toBeLessThanOrEqual(Date.now());
+      expect(tables.package_purchases.find((row) => row.id === active.id)).toBeTruthy();
     });
   });
 });

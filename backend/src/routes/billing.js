@@ -1,9 +1,15 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, requirePaymentAdmin } from '../middleware/auth.js';
 import { getOrCreateIndividualAccount } from '../services/billingAccountService.js';
 import { resolveEntitlements } from '../services/entitlementService.js';
-import { createPendingPurchase, attachPaymentIntent } from '../services/packagePurchaseService.js';
-import { createPackagePurchaseIntent } from '../services/stripeBillingService.js';
+import {
+  createPendingPurchase,
+  attachPaymentIntent,
+  linkPurchaseToOrder,
+  loadRefundablePurchase,
+  markPurchaseRefunded
+} from '../services/packagePurchaseService.js';
+import { createPackagePurchaseIntent, refundPackagePurchase } from '../services/stripeBillingService.js';
 import { logAuditEvent } from '../utils/audit.js';
 
 const router = express.Router();
@@ -31,8 +37,24 @@ const PURCHASE_ERROR_STATUS_BY_CODE = {
   PRICE_NOT_FOUND: 404,
   CUSTOM_PRICING_REQUIRES_SOW: 409,
   BILLING_ACCOUNT_NOT_FOUND: 404,
-  BILLING_ACCOUNT_ACCESS_DENIED: 403
+  BILLING_ACCOUNT_ACCESS_DENIED: 403,
+  ADDON_TARGET_REQUIRED: 400,
+  ADDON_TARGET_NOT_FOUND: 404,
+  ADDON_TARGET_NOT_ACTIVE: 409,
+  PURCHASE_NOT_FOUND: 404,
+  PURCHASE_ACCESS_DENIED: 403,
+  PURCHASE_NOT_ACTIVE: 409,
+  PURCHASE_ALREADY_LINKED: 409,
+  PURCHASE_NOT_REFUNDABLE: 409,
+  PURCHASE_NO_PAYMENT_INTENT: 409,
+  ORDER_NOT_FOUND: 404,
+  ORDER_ACCESS_DENIED: 403
 };
+
+function respondPurchaseError(res, error) {
+  const status = PURCHASE_ERROR_STATUS_BY_CODE[error.code] || 400;
+  res.status(status).json({ error: error.message, code: error.code });
+}
 
 // Fase 2 del plan comercial ("Cuentas y entitlements", modo lectura, sin
 // cobrar). Cada usuario autenticado tiene como máximo una cuenta individual,
@@ -65,19 +87,29 @@ router.get('/billing/entitlements', requireFlag, authMiddleware, async (req, res
 // resuelve contra el catálogo. El PaymentIntent se crea aquí, pero la
 // compra solo se activa (y acredita UA/vigencia) cuando llega el webhook de
 // Stripe (payments.js), nunca por esta respuesta.
+// `targetPurchaseId` (paso 6, Fase 4): presente solo para ofertas `addon_*`
+// -- packagePurchaseService valida que sea una compra activa de la misma
+// cuenta antes de cobrar nada, y su efecto (UA/vigencia) se aplica a esa
+// compra en la activación, no a un grant independiente.
 router.post('/billing/applicant/package-intent', requirePackagePaymentsFlag, authMiddleware, async (req, res) => {
   try {
-    const { offerCode, currency } = req.body || {};
+    const { offerCode, currency, targetPurchaseId } = req.body || {};
     if (!offerCode) {
       return res.status(400).json({ error: 'offerCode es requerido' });
     }
 
     const billingAccount = await getOrCreateIndividualAccount(req.userId);
-    const { purchase, amountCents, currency: resolvedCurrency } = await createPendingPurchase({
+    const {
+      purchase,
+      amountCents,
+      currency: resolvedCurrency,
+      targetPurchaseId: resolvedTargetPurchaseId
+    } = await createPendingPurchase({
       applicantUserId: req.userId,
       billingAccountId: billingAccount.id,
       offerCode,
-      currency: currency || 'USD'
+      currency: currency || 'USD',
+      targetPurchaseId: targetPurchaseId || null
     });
 
     const paymentIntent = await createPackagePurchaseIntent({
@@ -85,7 +117,8 @@ router.post('/billing/applicant/package-intent', requirePackagePaymentsFlag, aut
       amountCents,
       currency: resolvedCurrency,
       userId: req.userId,
-      offerCode
+      offerCode,
+      targetPurchaseId: resolvedTargetPurchaseId
     });
 
     const updatedPurchase = await attachPaymentIntent(purchase.id, paymentIntent.id);
@@ -96,7 +129,13 @@ router.post('/billing/applicant/package-intent', requirePackagePaymentsFlag, aut
       entityType: 'package_purchase',
       entityId: purchase.id,
       req,
-      metadata: { offerCode, amountCents, currency: resolvedCurrency, paymentIntentId: paymentIntent.id },
+      metadata: {
+        offerCode,
+        amountCents,
+        currency: resolvedCurrency,
+        paymentIntentId: paymentIntent.id,
+        targetPurchaseId: resolvedTargetPurchaseId
+      },
       complianceRelevant: false
     });
 
@@ -107,8 +146,67 @@ router.post('/billing/applicant/package-intent', requirePackagePaymentsFlag, aut
       currency: resolvedCurrency
     });
   } catch (error) {
-    const status = PURCHASE_ERROR_STATUS_BY_CODE[error.code] || 400;
-    res.status(status).json({ error: error.message, code: error.code });
+    respondPurchaseError(res, error);
+  }
+});
+
+// Paso 5, Fase 4: vincula una compra ya activa a un único expediente propio
+// del comprador. No crea el expediente -- ese flujo vive en orders.js
+// (fuera de alcance de esta fase); esta ruta solo conecta una compra
+// existente con un service_order existente.
+router.post('/billing/applicant/purchases/:purchaseId/link-order', requirePackagePaymentsFlag, authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.body || {};
+    if (!orderId) {
+      return res.status(400).json({ error: 'orderId es requerido' });
+    }
+
+    const purchase = await linkPurchaseToOrder({
+      purchaseId: req.params.purchaseId,
+      orderId,
+      userId: req.userId
+    });
+
+    await logAuditEvent({
+      userId: req.userId,
+      action: 'package_purchase_linked_to_order',
+      entityType: 'package_purchase',
+      entityId: purchase.id,
+      orderId: purchase.orderId,
+      req,
+      metadata: {},
+      complianceRelevant: false
+    });
+
+    res.json({ purchase });
+  } catch (error) {
+    respondPurchaseError(res, error);
+  }
+});
+
+// Paso 7, Fase 4: reembolso administrativo -- reversión usando el
+// PaymentIntent persistido, nunca un monto reingresado a mano (sección 9.2).
+// Solo administradores de pagos (mismo guard que backend/src/routes/payments.js).
+router.post('/billing/admin/purchases/:purchaseId/refund', requirePackagePaymentsFlag, authMiddleware, requirePaymentAdmin, async (req, res) => {
+  try {
+    const purchase = await loadRefundablePurchase(req.params.purchaseId);
+    const refund = await refundPackagePurchase(purchase.stripePaymentIntentId);
+    const updatedPurchase = await markPurchaseRefunded(purchase.id);
+
+    await logAuditEvent({
+      userId: req.userId,
+      action: 'package_purchase_refunded',
+      entityType: 'package_purchase',
+      entityId: purchase.id,
+      orderId: purchase.orderId,
+      req,
+      metadata: { refundId: refund.id, paymentIntentId: purchase.stripePaymentIntentId },
+      complianceRelevant: true
+    });
+
+    res.json({ purchase: updatedPurchase, refundId: refund.id });
+  } catch (error) {
+    respondPurchaseError(res, error);
   }
 });
 

@@ -9,9 +9,18 @@ const createPaymentIntentMock = vi.fn(async (params, options) => ({
   idempotencyKeyUsed: options?.idempotencyKey
 }));
 
+const createRefundMock = vi.fn(async (params) => ({
+  id: 're_test_123',
+  payment_intent: params.payment_intent,
+  status: 'succeeded'
+}));
+
 vi.mock('stripe', () => ({
   default: vi.fn(function StripeMock() {
-    return { paymentIntents: { create: createPaymentIntentMock } };
+    return {
+      paymentIntents: { create: createPaymentIntentMock },
+      refunds: { create: createRefundMock }
+    };
   })
 }));
 
@@ -21,6 +30,7 @@ describe('stripeBillingService', () => {
   afterEach(() => {
     process.env.STRIPE_SECRET_KEY = originalKey;
     createPaymentIntentMock.mockClear();
+    createRefundMock.mockClear();
   });
 
   it('throws without creating anything when purchaseId is missing', async () => {
@@ -78,5 +88,61 @@ describe('stripeBillingService', () => {
       offerCode: 'applicant_essential'
     });
     expect(options.idempotencyKey).toBe('package_purchase_purchase-1');
+  });
+
+  it('includes targetPurchaseId in metadata for an addon PaymentIntent', async () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
+    vi.resetModules();
+    const { createPackagePurchaseIntent } = await import('./stripeBillingService.js');
+
+    await createPackagePurchaseIntent({
+      purchaseId: 'addon-1',
+      amountCents: 27500,
+      currency: 'USD',
+      userId: 'user-1',
+      offerCode: 'addon_ua_5',
+      targetPurchaseId: 'base-purchase-1'
+    });
+
+    const [params] = createPaymentIntentMock.mock.calls[0];
+    expect(params.metadata.targetPurchaseId).toBe('base-purchase-1');
+  });
+
+  it('omits targetPurchaseId from metadata when not an addon', async () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
+    vi.resetModules();
+    const { createPackagePurchaseIntent } = await import('./stripeBillingService.js');
+
+    await createPackagePurchaseIntent({
+      purchaseId: 'purchase-1',
+      amountCents: 49500,
+      currency: 'USD',
+      userId: 'user-1',
+      offerCode: 'applicant_essential'
+    });
+
+    const [params] = createPaymentIntentMock.mock.calls[0];
+    expect(params.metadata).not.toHaveProperty('targetPurchaseId');
+  });
+
+  describe('refundPackagePurchase', () => {
+    it('throws when paymentIntentId is missing', async () => {
+      process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
+      vi.resetModules();
+      const { refundPackagePurchase } = await import('./stripeBillingService.js');
+
+      await expect(refundPackagePurchase()).rejects.toThrow(/paymentIntentId es requerido/);
+    });
+
+    it('creates a Stripe refund for the given PaymentIntent', async () => {
+      process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
+      vi.resetModules();
+      const { refundPackagePurchase } = await import('./stripeBillingService.js');
+
+      const refund = await refundPackagePurchase('pi_test_123');
+
+      expect(refund.id).toBe('re_test_123');
+      expect(createRefundMock).toHaveBeenCalledWith({ payment_intent: 'pi_test_123' });
+    });
   });
 });
