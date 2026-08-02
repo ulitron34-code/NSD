@@ -46,6 +46,7 @@ import adminRoutes from './routes/admin.js';
 import nuxeraRoutes from './routes/nuxera.js';
 import commercialCatalogRoutes from './routes/commercialCatalog.js';
 import billingRoutes from './routes/billing.js';
+import invitationsRoutes from './routes/invitations.js';
 import { getOfacListStatus } from './services/ofacScreening.js';
 import { getGatewayStatus, primeAllLists } from './services/sanctionsGateway.js';
 import { primeRegulatoryLists } from './services/regulatoryGateway.js';
@@ -139,6 +140,7 @@ app.use('/api', adminRoutes);
 app.use('/api', nuxeraRoutes);
 app.use('/api', commercialCatalogRoutes);
 app.use('/api', billingRoutes);
+app.use('/api', invitationsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
