@@ -221,7 +221,8 @@ jobs:
     name: Deploy Preview
     runs-on: ubuntu-latest
     needs: [build, test]
-    if: github.event_name == 'pull_request'
+    # Native Vercel Git integration already publishes the PR preview.
+    if: ${{ false }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -245,36 +246,6 @@ jobs:
               repo: context.repo.repo,
               body: `🚀 Preview deployment ready!\n\n**Preview URL:** ${{ steps.vercel.outputs.preview-url }}\n\n_Deployed from commit ${{ github.sha }}_`
             })
-
-  # ============================================
-  # DEPLOY TO PRODUCTION (Main Branch)
-  # ============================================
-  deploy-production:
-    name: Deploy Production
-    runs-on: ubuntu-latest
-    needs: [build, test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: https://nsd.com
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Vercel (Production)
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod=true'
-          working-directory: ./
-
-      - name: Notify deployment success
-        if: always()
-        run: |
-          echo "Deployment completed!"
-          echo "Production URL: https://nsd.com"
 
 # ============================================
 # DEPENDENCY REVIEW (GitHub-native security)
