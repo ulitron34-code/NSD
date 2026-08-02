@@ -21,7 +21,9 @@ function runCommand(name, command, args, cwd = process.cwd()) {
     const output = execFileSync(command, args, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
-      cwd
+      cwd,
+      maxBuffer: 10 * 1024 * 1024,
+      shell: process.platform === 'win32' && command === 'npm.cmd'
     });
 
     return { name, code: 0, output: output.trim() };
@@ -152,7 +154,7 @@ async function checkFrontendE2E() {
   const frontendRoot = new URL('../..', import.meta.url).pathname.replace(/^\/(?:([A-Za-z]:))/, '$1');
   const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const result = runCommand('Frontend Chromium E2E', command, ['run', 'test:e2e:chromium'], frontendRoot);
-  addCheck(result.name, result.code === 0 ? 'pass' : 'fail', result.code === 0 ? '34 browser journeys passed' : result.output.split('\n').slice(-8).join(' '));
+  addCheck(result.name, result.code === 0 ? 'pass' : 'fail', result.code === 0 ? '35 browser journeys passed' : result.output.split('\n').slice(-8).join(' '));
 }
 
 async function main() {

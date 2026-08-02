@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { getBillingAccountForUser } from './billingAccountService.js';
+import { getAnalysisUnitUsage } from './usageLedgerService.js';
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ['trialing', 'active', 'past_due'];
 
@@ -66,10 +67,12 @@ export async function resolveEntitlements(billingAccountId) {
     const isPastDue = subscription.status === 'past_due';
     const rows = (entitlementRows || []).filter((row) => row.offer_id === subscription.offer_id);
     for (const row of rows) {
+      const limit = row.limit_value === null ? null : Number(row.limit_value);
+      const used = row.entitlement_key === 'analysis_units' ? await getAnalysisUnitUsage(billingAccountId, { type: 'subscription', id: subscription.id }) : 0;
       entitlements.push(
         mapEntitlement(row, {
           allowed: !isPastDue,
-          remaining: isPastDue || row.limit_value === null ? null : Number(row.limit_value),
+          remaining: isPastDue || limit === null ? null : Math.max(0, limit - used),
           source: { type: 'subscription', id: subscription.id, offerId: subscription.offer_id },
           reasonCode: isPastDue ? 'subscription_past_due' : 'active_subscription'
         })
@@ -81,10 +84,12 @@ export async function resolveEntitlements(billingAccountId) {
     const expired = Boolean(purchase.expires_at) && new Date(purchase.expires_at).getTime() < nowMs;
     const rows = (entitlementRows || []).filter((row) => row.offer_id === purchase.offer_id);
     for (const row of rows) {
+      const limit = row.limit_value === null ? null : Number(row.limit_value);
+      const used = row.entitlement_key === 'analysis_units' ? await getAnalysisUnitUsage(billingAccountId, { type: 'package_purchase', id: purchase.id }) : 0;
       entitlements.push(
         mapEntitlement(row, {
           allowed: !expired,
-          remaining: expired || row.limit_value === null ? null : Number(row.limit_value),
+          remaining: expired || limit === null ? null : Math.max(0, limit - used),
           source: { type: 'package_purchase', id: purchase.id, offerId: purchase.offer_id },
           reasonCode: expired ? 'package_expired' : 'active_package'
         })

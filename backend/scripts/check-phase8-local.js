@@ -11,7 +11,7 @@ const checks = [
     patterns: [
       'async function upsertPublicUser(user, profileType = null)',
       "select('profile_type')",
-      "profileType || existing?.profile_type || user.user_metadata?.profile_type || 'solicitante'",
+      "profileType || existing?.profile_type || 'solicitante'",
       'await upsertPublicUser(data.user);'
     ]
   },
