@@ -5,6 +5,12 @@ import { logAuditEvent } from '../utils/audit.js';
 
 const router = express.Router();
 
+// Roles a public visitor may self-assign at signup. Internal/privileged
+// roles (analista, administrador, compliance_officer, auditor_interno,
+// inversionista) can only be granted by an administrator through an
+// authenticated admin route, never from this public endpoint.
+const PUBLIC_PROFILE_TYPES = new Set(['solicitante', 'otorgante']);
+
 async function upsertPublicUser(user, profileType = null) {
   if (!user?.id || !user?.email) return;
 
@@ -19,7 +25,7 @@ async function upsertPublicUser(user, profileType = null) {
     .upsert({
       id: user.id,
       email: user.email,
-      profile_type: profileType || existing?.profile_type || user.user_metadata?.profile_type || 'solicitante',
+      profile_type: profileType || existing?.profile_type || 'solicitante',
     }, { onConflict: 'id' });
 
   if (error) {
@@ -30,17 +36,32 @@ async function upsertPublicUser(user, profileType = null) {
 // REGISTER
 router.post('/register', async (req, res) => {
   const { email, password, profileType } = req.body;
-  
+
+  const requestedRole = String(profileType || '').trim().toLowerCase();
+  const isAllowedPublicRole = PUBLIC_PROFILE_TYPES.has(requestedRole);
+
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password
     });
-    
+
     if (error) throw error;
-    
-    await upsertPublicUser(data.user, profileType);
-    
+
+    if (profileType && !isAllowedPublicRole) {
+      await logAuditEvent({
+        userId: data.user?.id || null,
+        action: 'signup_privileged_role_rejected',
+        entityType: 'user',
+        entityId: data.user?.id || null,
+        req,
+        metadata: { requestedRole, email },
+        complianceRelevant: true
+      });
+    }
+
+    await upsertPublicUser(data.user, isAllowedPublicRole ? requestedRole : null);
+
     res.json({
       user: data.user,
       token: data.session?.access_token || null,
