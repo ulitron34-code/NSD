@@ -82,6 +82,29 @@ describe('entitlementService', () => {
       expect(entitlements).toEqual([]);
     });
 
+    it('marks a past_due subscription entitlement as not allowed, suspending new operations (Fase 5, paso 6)', async () => {
+      tables.billing_subscriptions = [
+        { id: 'sub-1', billing_account_id: 'acct-1', offer_id: 'offer-1', status: 'past_due' }
+      ];
+      tables.offer_entitlements = [
+        { offer_id: 'offer-1', entitlement_key: 'active_cases', limit_value: 20, unit: 'cases', reset_period: 'none' }
+      ];
+
+      const { entitlements } = await resolveEntitlements('acct-1');
+      expect(entitlements).toEqual([
+        {
+          key: 'active_cases',
+          limit: 20,
+          remaining: null,
+          unit: 'cases',
+          resetPeriod: 'none',
+          allowed: false,
+          source: { type: 'subscription', id: 'sub-1', offerId: 'offer-1' },
+          reasonCode: 'subscription_past_due'
+        }
+      ]);
+    });
+
     it('resolves entitlements from an active, unexpired package purchase', async () => {
       tables.package_purchases = [
         {

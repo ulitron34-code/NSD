@@ -7,6 +7,7 @@ function mapAccount(row) {
     accountType: row.account_type,
     organizationName: row.organization_name,
     ownerUserId: row.owner_user_id,
+    stripeCustomerId: row.stripe_customer_id || null,
     status: row.status,
     createdAt: row.created_at
   };
@@ -54,6 +55,22 @@ export async function getOrCreateIndividualAccount(userId) {
   const { data, error } = await supabaseAdmin
     .from('billing_accounts')
     .insert({ account_type: 'individual', owner_user_id: userId, status: 'active' })
+    .select('*')
+    .single();
+  if (error) throw error;
+
+  return mapAccount(data);
+}
+
+// Fase 5, paso 1: persiste el Stripe Customer creado para esta cuenta la
+// primera vez que se necesita (checkout de suscripción de otorgante). Se
+// llama una sola vez por cuenta -- las llamadas siguientes a checkout
+// reutilizan el customer ya guardado en vez de crear uno nuevo por Stripe.
+export async function attachStripeCustomer(billingAccountId, stripeCustomerId) {
+  const { data, error } = await supabaseAdmin
+    .from('billing_accounts')
+    .update({ stripe_customer_id: stripeCustomerId })
+    .eq('id', billingAccountId)
     .select('*')
     .single();
   if (error) throw error;

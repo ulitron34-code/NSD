@@ -64,3 +64,50 @@ export async function refundPackagePurchase(paymentIntentId) {
   const stripe = getStripeClient();
   return stripe.refunds.create({ payment_intent: paymentIntentId });
 }
+
+// Fase 5, paso 1: un Stripe Customer por cuenta de facturación, creado una
+// sola vez (billingAccountService.attachStripeCustomer persiste el id para
+// que las próximas suscripciones reutilicen el mismo customer).
+export async function createStripeCustomer({ email, billingAccountId }) {
+  if (!billingAccountId) throw new Error('billingAccountId es requerido');
+
+  const stripe = getStripeClient();
+  return stripe.customers.create({
+    email: email || undefined,
+    metadata: { billingAccountId }
+  });
+}
+
+// Fase 5, paso 2: Checkout Session en modo suscripción, con el Price ID
+// resuelto en servidor (grantorSubscriptionService.resolveGrantorOfferForCheckout)
+// -- nunca un precio que llegue del cliente. La metadata va tanto en la
+// Session como en subscription_data.metadata: Stripe no copia la metadata
+// de la Session al objeto Subscription automáticamente, y los webhooks de
+// ciclo (customer.subscription.*) necesitan encontrar billingAccountId/offerId
+// ahí para saber a qué cuenta acreditar.
+export async function createGrantorCheckoutSession({
+  customerId,
+  priceId,
+  billingAccountId,
+  offerId,
+  offerCode,
+  successUrl,
+  cancelUrl
+}) {
+  if (!customerId) throw new Error('customerId es requerido');
+  if (!priceId) throw new Error('priceId es requerido');
+  if (!successUrl || !cancelUrl) throw new Error('successUrl y cancelUrl son requeridos');
+
+  const stripe = getStripeClient();
+  const metadata = { type: 'grantor_subscription', billingAccountId, offerId, offerCode };
+
+  return stripe.checkout.sessions.create({
+    mode: 'subscription',
+    customer: customerId,
+    line_items: [{ price: priceId, quantity: 1 }],
+    metadata,
+    subscription_data: { metadata },
+    success_url: successUrl,
+    cancel_url: cancelUrl
+  });
+}

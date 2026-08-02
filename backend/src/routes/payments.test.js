@@ -64,6 +64,12 @@ vi.mock('../services/packagePurchaseService.js', () => ({
   activatePackagePurchaseFromPaymentIntent: vi.fn(async () => null)
 }));
 
+vi.mock('../services/grantorSubscriptionService.js', () => ({
+  upsertSubscriptionFromStripeEvent: vi.fn(async () => null),
+  markSubscriptionCanceled: vi.fn(async () => null),
+  syncSubscriptionPeriodFromInvoice: vi.fn(async () => null)
+}));
+
 const constructEventMock = vi.fn((body) => JSON.parse(body.toString()));
 
 vi.mock('stripe', () => ({
@@ -81,6 +87,8 @@ process.env.STRIPE_WEBHOOK_SECRET = 'whsec_dummy';
 const { default: router } = await import('./payments.js');
 const { logAuditEvent } = await import('../utils/audit.js');
 const { activatePackagePurchaseFromPaymentIntent } = await import('../services/packagePurchaseService.js');
+const { upsertSubscriptionFromStripeEvent, markSubscriptionCanceled, syncSubscriptionPeriodFromInvoice } =
+  await import('../services/grantorSubscriptionService.js');
 
 function createApp() {
   const app = express();
@@ -115,6 +123,12 @@ describe('POST /api/webhook', () => {
     logAuditEvent.mockClear();
     activatePackagePurchaseFromPaymentIntent.mockClear();
     activatePackagePurchaseFromPaymentIntent.mockResolvedValue(null);
+    upsertSubscriptionFromStripeEvent.mockClear();
+    upsertSubscriptionFromStripeEvent.mockResolvedValue(null);
+    markSubscriptionCanceled.mockClear();
+    markSubscriptionCanceled.mockResolvedValue(null);
+    syncSubscriptionPeriodFromInvoice.mockClear();
+    syncSubscriptionPeriodFromInvoice.mockResolvedValue(null);
     ({ server, baseUrl } = await listen(createApp()));
   });
 
@@ -184,5 +198,108 @@ describe('POST /api/webhook', () => {
     const auditActions = logAuditEvent.mock.calls.map(([call]) => call.action);
     expect(auditActions).not.toContain('package_purchase_activated');
 
+  });
+
+  it('logs checkout.session.completed only for a grantor_subscription session', async () => {
+    const response = await postWebhook(baseUrl, {
+      type: 'checkout.session.completed',
+      data: { object: { id: 'cs_1', metadata: { type: 'grantor_subscription', billingAccountId: 'acct-1', offerCode: 'grantor_professional' } } }
+    });
+
+    expect(response.status).toBe(200);
+    const auditActions = logAuditEvent.mock.calls.map(([call]) => call.action);
+    expect(auditActions).toContain('grantor_checkout_completed');
+  });
+
+  it('ignores checkout.session.completed for a non-subscription session', async () => {
+    const response = await postWebhook(baseUrl, {
+      type: 'checkout.session.completed',
+      data: { object: { id: 'cs_2', metadata: {} } }
+    });
+
+    expect(response.status).toBe(200);
+    const auditActions = logAuditEvent.mock.calls.map(([call]) => call.action);
+    expect(auditActions).not.toContain('grantor_checkout_completed');
+  });
+
+  it('upserts a grantor subscription on customer.subscription.created', async () => {
+    upsertSubscriptionFromStripeEvent.mockResolvedValueOnce({ id: 'sub-row-1', status: 'active' });
+
+    const response = await postWebhook(baseUrl, {
+      type: 'customer.subscription.created',
+      data: { object: { id: 'sub_1', status: 'active', metadata: { type: 'grantor_subscription', billingAccountId: 'acct-1', offerId: 'offer-1' } } }
+    });
+
+    expect(response.status).toBe(200);
+    expect(upsertSubscriptionFromStripeEvent).toHaveBeenCalledTimes(1);
+    const auditActions = logAuditEvent.mock.calls.map(([call]) => call.action);
+    expect(auditActions).toContain('grantor_subscription_upserted');
+  });
+
+  it('upserts a grantor subscription on customer.subscription.updated (e.g. transition to past_due)', async () => {
+    upsertSubscriptionFromStripeEvent.mockResolvedValueOnce({ id: 'sub-row-1', status: 'past_due' });
+
+    const response = await postWebhook(baseUrl, {
+      type: 'customer.subscription.updated',
+      data: { object: { id: 'sub_1', status: 'past_due', metadata: { type: 'grantor_subscription', billingAccountId: 'acct-1', offerId: 'offer-1' } } }
+    });
+
+    expect(response.status).toBe(200);
+    expect(upsertSubscriptionFromStripeEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores subscription events with no grantor_subscription metadata', async () => {
+    const response = await postWebhook(baseUrl, {
+      type: 'customer.subscription.updated',
+      data: { object: { id: 'sub_1', status: 'active', metadata: {} } }
+    });
+
+    expect(response.status).toBe(200);
+    expect(upsertSubscriptionFromStripeEvent).not.toHaveBeenCalled();
+  });
+
+  it('marks a grantor subscription canceled on customer.subscription.deleted', async () => {
+    markSubscriptionCanceled.mockResolvedValueOnce({ id: 'sub-row-1', status: 'canceled' });
+
+    const response = await postWebhook(baseUrl, {
+      type: 'customer.subscription.deleted',
+      data: { object: { id: 'sub_1', metadata: { type: 'grantor_subscription', billingAccountId: 'acct-1', offerId: 'offer-1' } } }
+    });
+
+    expect(response.status).toBe(200);
+    expect(markSubscriptionCanceled).toHaveBeenCalledTimes(1);
+    const auditActions = logAuditEvent.mock.calls.map(([call]) => call.action);
+    expect(auditActions).toContain('grantor_subscription_canceled');
+  });
+
+  it('syncs the subscription period on invoice.paid', async () => {
+    const response = await postWebhook(baseUrl, {
+      type: 'invoice.paid',
+      data: { object: { id: 'in_1', subscription: 'sub_1', lines: { data: [{ period: { start: 1, end: 2 } }] } } }
+    });
+
+    expect(response.status).toBe(200);
+    expect(syncSubscriptionPeriodFromInvoice).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not sync when invoice.paid has no subscription', async () => {
+    const response = await postWebhook(baseUrl, {
+      type: 'invoice.paid',
+      data: { object: { id: 'in_1', subscription: null } }
+    });
+
+    expect(response.status).toBe(200);
+    expect(syncSubscriptionPeriodFromInvoice).not.toHaveBeenCalled();
+  });
+
+  it('logs invoice.payment_failed for a subscription invoice', async () => {
+    const response = await postWebhook(baseUrl, {
+      type: 'invoice.payment_failed',
+      data: { object: { id: 'in_2', subscription: 'sub_1' } }
+    });
+
+    expect(response.status).toBe(200);
+    const auditActions = logAuditEvent.mock.calls.map(([call]) => call.action);
+    expect(auditActions).toContain('grantor_invoice_payment_failed');
   });
 });

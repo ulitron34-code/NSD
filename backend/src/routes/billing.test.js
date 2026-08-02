@@ -1,5 +1,5 @@
 import express from 'express';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../middleware/auth.js', () => ({
   authMiddleware: (req, res, next) => {
@@ -15,7 +15,27 @@ vi.mock('../services/billingAccountService.js', () => ({
     accountType: 'individual',
     organizationName: null,
     ownerUserId: userId,
+    stripeCustomerId: null,
     status: 'active'
+  })),
+  attachStripeCustomer: vi.fn(async (billingAccountId, stripeCustomerId) => ({
+    id: billingAccountId,
+    accountType: 'individual',
+    organizationName: null,
+    ownerUserId: 'user-1',
+    stripeCustomerId,
+    status: 'active'
+  }))
+}));
+
+vi.mock('../services/grantorSubscriptionService.js', () => ({
+  resolveGrantorOfferForCheckout: vi.fn(async (offerCode) => ({
+    offerId: 'offer-professional',
+    priceId: 'price-row-1',
+    stripePriceId: 'price_test_123',
+    amountCents: 49500,
+    currency: 'USD',
+    billingInterval: 'month'
   }))
 }));
 
@@ -66,6 +86,14 @@ vi.mock('../services/stripeBillingService.js', () => ({
     id: 're_test_123',
     payment_intent: paymentIntentId,
     status: 'succeeded'
+  })),
+  createStripeCustomer: vi.fn(async ({ billingAccountId }) => ({
+    id: 'cus_test_123',
+    metadata: { billingAccountId }
+  })),
+  createGrantorCheckoutSession: vi.fn(async () => ({
+    id: 'cs_test_123',
+    url: 'https://checkout.stripe.com/c/pay/cs_test_123'
   }))
 }));
 
@@ -94,11 +122,22 @@ describe('billing routes', () => {
   let baseUrl;
   const originalEnv = process.env.BILLING_ACCOUNTS_ENABLED;
   const originalPackageFlag = process.env.APPLICANT_PACKAGE_PAYMENTS_ENABLED;
+  const originalGrantorFlag = process.env.GRANTOR_SUBSCRIPTIONS_ENABLED;
+  const originalCorsOrigin = process.env.CORS_ORIGIN;
+
+  beforeEach(() => {
+    // Los mocks de vi.mock() persisten entre tests dentro del mismo archivo
+    // (vi.resetModules() no los reemplaza) -- sin esto, .mock.calls y los
+    // asserts de "no llamado"/"llamado N veces" se contaminan entre tests.
+    vi.clearAllMocks();
+  });
 
   afterEach(() => {
     server?.close();
     process.env.BILLING_ACCOUNTS_ENABLED = originalEnv;
     process.env.APPLICANT_PACKAGE_PAYMENTS_ENABLED = originalPackageFlag;
+    process.env.GRANTOR_SUBSCRIPTIONS_ENABLED = originalGrantorFlag;
+    process.env.CORS_ORIGIN = originalCorsOrigin;
   });
 
   it('is fail-closed: GET /billing/me returns 404 when the flag is unset', async () => {
@@ -135,6 +174,7 @@ describe('billing routes', () => {
       accountType: 'individual',
       organizationName: null,
       ownerUserId: 'user-1',
+      stripeCustomerId: null,
       status: 'active'
     });
   });
@@ -351,6 +391,124 @@ describe('billing routes', () => {
       ({ server, baseUrl } = await listen(createApp(router)));
 
       const response = await fetch(`${baseUrl}/api/billing/admin/purchases/purchase-1/refund`, { method: 'POST' });
+      expect(response.status).toBe(409);
+    });
+  });
+
+  describe('POST /billing/grantor/checkout-session', () => {
+    const validBody = {
+      offerCode: 'grantor_professional',
+      successUrl: 'https://nsd-pi.vercel.app/success',
+      cancelUrl: 'https://nsd-pi.vercel.app/cancel'
+    };
+
+    it('is fail-closed when the grantor subscriptions flag is unset', async () => {
+      delete process.env.GRANTOR_SUBSCRIPTIONS_ENABLED;
+      vi.resetModules();
+      const { default: router } = await import('./billing.js');
+      ({ server, baseUrl } = await listen(createApp(router)));
+
+      const response = await fetch(`${baseUrl}/api/billing/grantor/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validBody)
+      });
+      expect(response.status).toBe(404);
+    });
+
+    it('rejects without offerCode', async () => {
+      process.env.GRANTOR_SUBSCRIPTIONS_ENABLED = 'true';
+      vi.resetModules();
+      const { default: router } = await import('./billing.js');
+      ({ server, baseUrl } = await listen(createApp(router)));
+
+      const response = await fetch(`${baseUrl}/api/billing/grantor/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ successUrl: validBody.successUrl, cancelUrl: validBody.cancelUrl })
+      });
+      expect(response.status).toBe(400);
+    });
+
+    it('rejects a successUrl/cancelUrl pointing outside the allowed origins', async () => {
+      process.env.GRANTOR_SUBSCRIPTIONS_ENABLED = 'true';
+      process.env.CORS_ORIGIN = 'https://nsd-pi.vercel.app';
+      vi.resetModules();
+      const { default: router } = await import('./billing.js');
+      ({ server, baseUrl } = await listen(createApp(router)));
+
+      const response = await fetch(`${baseUrl}/api/billing/grantor/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...validBody, successUrl: 'https://evil.example.com/success' })
+      });
+      expect(response.status).toBe(400);
+    });
+
+    it('creates a Stripe customer and a checkout session when the account has none yet', async () => {
+      process.env.GRANTOR_SUBSCRIPTIONS_ENABLED = 'true';
+      process.env.CORS_ORIGIN = 'https://nsd-pi.vercel.app';
+      vi.resetModules();
+      const { default: router } = await import('./billing.js');
+      ({ server, baseUrl } = await listen(createApp(router)));
+
+      const response = await fetch(`${baseUrl}/api/billing/grantor/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validBody)
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(201);
+      expect(body.checkoutUrl).toBe('https://checkout.stripe.com/c/pay/cs_test_123');
+
+      const stripeBillingService = await import('../services/stripeBillingService.js');
+      expect(stripeBillingService.createStripeCustomer).toHaveBeenCalledTimes(1);
+    });
+
+    it('reuses an existing Stripe customer instead of creating a new one', async () => {
+      process.env.GRANTOR_SUBSCRIPTIONS_ENABLED = 'true';
+      process.env.CORS_ORIGIN = 'https://nsd-pi.vercel.app';
+      vi.resetModules();
+      const billingAccountService = await import('../services/billingAccountService.js');
+      billingAccountService.getOrCreateIndividualAccount.mockResolvedValueOnce({
+        id: 'acct-1',
+        accountType: 'individual',
+        organizationName: null,
+        ownerUserId: 'user-1',
+        stripeCustomerId: 'cus_existing_1',
+        status: 'active'
+      });
+      const { default: router } = await import('./billing.js');
+      ({ server, baseUrl } = await listen(createApp(router)));
+
+      const response = await fetch(`${baseUrl}/api/billing/grantor/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validBody)
+      });
+
+      expect(response.status).toBe(201);
+      const stripeBillingService = await import('../services/stripeBillingService.js');
+      expect(stripeBillingService.createStripeCustomer).not.toHaveBeenCalled();
+    });
+
+    it('maps a known checkout error code to its HTTP status', async () => {
+      process.env.GRANTOR_SUBSCRIPTIONS_ENABLED = 'true';
+      process.env.CORS_ORIGIN = 'https://nsd-pi.vercel.app';
+      vi.resetModules();
+      const grantorSubscriptionService = await import('../services/grantorSubscriptionService.js');
+      const err = new Error('El precio todavía no tiene un Stripe Price ID configurado');
+      err.code = 'STRIPE_PRICE_NOT_CONFIGURED';
+      grantorSubscriptionService.resolveGrantorOfferForCheckout.mockRejectedValueOnce(err);
+      const { default: router } = await import('./billing.js');
+      ({ server, baseUrl } = await listen(createApp(router)));
+
+      const response = await fetch(`${baseUrl}/api/billing/grantor/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validBody)
+      });
       expect(response.status).toBe(409);
     });
   });

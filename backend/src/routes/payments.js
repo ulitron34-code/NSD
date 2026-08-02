@@ -4,6 +4,11 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { logAuditEvent } from '../utils/audit.js';
 import { activatePackagePurchaseFromPaymentIntent } from '../services/packagePurchaseService.js';
+import {
+  upsertSubscriptionFromStripeEvent,
+  markSubscriptionCanceled,
+  syncSubscriptionPeriodFromInvoice
+} from '../services/grantorSubscriptionService.js';
 
 // Initialize Stripe with error handling for missing key
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -485,6 +490,105 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
               complianceRelevant: true
             });
           }
+        }
+        break;
+      }
+
+      // Suscripciones del otorgante (Fase 5 del plan comercial): eventos
+      // paralelos a los de arriba, distinguidos por metadata.type
+      // ('grantor_subscription' en la Session/Subscription) -- no tocan ni
+      // comparten estado con service_orders ni con package_purchases.
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+
+        if (session.metadata?.type === 'grantor_subscription') {
+          await logAuditEvent({
+            userId: null,
+            action: 'grantor_checkout_completed',
+            entityType: 'billing_account',
+            entityId: session.metadata?.billingAccountId || null,
+            req,
+            metadata: {
+              sessionId: session.id,
+              offerCode: session.metadata?.offerCode,
+              provider: 'stripe'
+            },
+            complianceRelevant: false
+          });
+        }
+        break;
+      }
+
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+
+        if (subscription.metadata?.type === 'grantor_subscription') {
+          const upserted = await upsertSubscriptionFromStripeEvent(subscription);
+          if (upserted) {
+            await logAuditEvent({
+              userId: null,
+              action: 'grantor_subscription_upserted',
+              entityType: 'billing_subscription',
+              entityId: upserted.id,
+              req,
+              metadata: {
+                stripeSubscriptionId: subscription.id,
+                status: upserted.status,
+                provider: 'stripe'
+              },
+              complianceRelevant: true
+            });
+          }
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object;
+
+        if (subscription.metadata?.type === 'grantor_subscription') {
+          const canceled = await markSubscriptionCanceled(subscription);
+          if (canceled) {
+            await logAuditEvent({
+              userId: null,
+              action: 'grantor_subscription_canceled',
+              entityType: 'billing_subscription',
+              entityId: canceled.id,
+              req,
+              metadata: { stripeSubscriptionId: subscription.id, provider: 'stripe' },
+              complianceRelevant: true
+            });
+          }
+        }
+        break;
+      }
+
+      case 'invoice.paid': {
+        const invoice = event.data.object;
+        if (invoice.subscription) {
+          await syncSubscriptionPeriodFromInvoice(invoice);
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+
+        if (invoice.subscription) {
+          await logAuditEvent({
+            userId: null,
+            action: 'grantor_invoice_payment_failed',
+            entityType: 'billing_subscription',
+            entityId: null,
+            req,
+            metadata: {
+              stripeSubscriptionId: invoice.subscription,
+              invoiceId: invoice.id,
+              provider: 'stripe'
+            },
+            complianceRelevant: true
+          });
         }
         break;
       }

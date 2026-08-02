@@ -58,14 +58,20 @@ export async function resolveEntitlements(billingAccountId) {
   const entitlements = [];
 
   for (const subscription of subscriptions || []) {
+    // Fase 5, paso 6: "suspender nuevas operaciones ante past_due". Se sigue
+    // leyendo la suscripción (no se oculta -- "no borrar datos"), pero sus
+    // entitlements quedan `allowed: false` mientras el pago no se resuelva.
+    // assertSponsorshipCapacity (Fase 3) ya filtra por `allowed`, así que
+    // esto basta para bloquear nuevas invitaciones sin tocar ese archivo.
+    const isPastDue = subscription.status === 'past_due';
     const rows = (entitlementRows || []).filter((row) => row.offer_id === subscription.offer_id);
     for (const row of rows) {
       entitlements.push(
         mapEntitlement(row, {
-          allowed: true,
-          remaining: row.limit_value === null ? null : Number(row.limit_value),
+          allowed: !isPastDue,
+          remaining: isPastDue || row.limit_value === null ? null : Number(row.limit_value),
           source: { type: 'subscription', id: subscription.id, offerId: subscription.offer_id },
-          reasonCode: 'active_subscription'
+          reasonCode: isPastDue ? 'subscription_past_due' : 'active_subscription'
         })
       );
     }

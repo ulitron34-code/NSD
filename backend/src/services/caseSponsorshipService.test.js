@@ -121,6 +121,13 @@ describe('caseSponsorshipService', () => {
 
       await expect(assertSponsorshipCapacity('acct-A')).rejects.toThrow(/límite de expedientes activos/);
     });
+
+    it('rejects sponsoring when the subscription is past_due (Fase 5, paso 6 -- suspende operaciones nuevas)', async () => {
+      tables.billing_subscriptions = [{ id: 'sub-1', billing_account_id: 'acct-A', offer_id: 'offer-1', status: 'past_due' }];
+      tables.offer_entitlements = [{ offer_id: 'offer-1', entitlement_key: 'active_cases', limit_value: 20, unit: 'cases', reset_period: 'none' }];
+
+      await expect(assertSponsorshipCapacity('acct-A')).rejects.toThrow(/no tiene un plan activo/);
+    });
   });
 
   describe('createSponsoredCase', () => {

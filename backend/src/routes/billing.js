@@ -1,6 +1,6 @@
 import express from 'express';
 import { authMiddleware, requirePaymentAdmin } from '../middleware/auth.js';
-import { getOrCreateIndividualAccount } from '../services/billingAccountService.js';
+import { getOrCreateIndividualAccount, attachStripeCustomer } from '../services/billingAccountService.js';
 import { resolveEntitlements } from '../services/entitlementService.js';
 import {
   createPendingPurchase,
@@ -9,13 +9,20 @@ import {
   loadRefundablePurchase,
   markPurchaseRefunded
 } from '../services/packagePurchaseService.js';
-import { createPackagePurchaseIntent, refundPackagePurchase } from '../services/stripeBillingService.js';
+import { resolveGrantorOfferForCheckout } from '../services/grantorSubscriptionService.js';
+import {
+  createPackagePurchaseIntent,
+  refundPackagePurchase,
+  createStripeCustomer,
+  createGrantorCheckoutSession
+} from '../services/stripeBillingService.js';
 import { logAuditEvent } from '../utils/audit.js';
 
 const router = express.Router();
 
 const BILLING_ACCOUNTS_ENABLED = String(process.env.BILLING_ACCOUNTS_ENABLED || 'false').toLowerCase() === 'true';
 const APPLICANT_PACKAGE_PAYMENTS_ENABLED = String(process.env.APPLICANT_PACKAGE_PAYMENTS_ENABLED || 'false').toLowerCase() === 'true';
+const GRANTOR_SUBSCRIPTIONS_ENABLED = String(process.env.GRANTOR_SUBSCRIPTIONS_ENABLED || 'false').toLowerCase() === 'true';
 
 function requireFlag(req, res, next) {
   if (!BILLING_ACCOUNTS_ENABLED) {
@@ -29,6 +36,29 @@ function requirePackagePaymentsFlag(req, res, next) {
     return res.status(404).json({ error: 'Not found' });
   }
   next();
+}
+
+function requireGrantorSubscriptionsFlag(req, res, next) {
+  if (!GRANTOR_SUBSCRIPTIONS_ENABLED) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  next();
+}
+
+// Mismo origen que ya usa CORS (server.js) -- reutilizado acá para no
+// permitir que success_url/cancel_url de Checkout apunten a un dominio
+// arbitrario que el cliente elija (Stripe redirige ahí después del pago).
+function isAllowedRedirectUrl(url) {
+  if (!url) return false;
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://127.0.0.1:5173,http://localhost:5173,https://nsd-pi.vercel.app')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  try {
+    return allowedOrigins.includes(new URL(url).origin);
+  } catch {
+    return false;
+  }
 }
 
 const PURCHASE_ERROR_STATUS_BY_CODE = {
@@ -48,7 +78,8 @@ const PURCHASE_ERROR_STATUS_BY_CODE = {
   PURCHASE_NOT_REFUNDABLE: 409,
   PURCHASE_NO_PAYMENT_INTENT: 409,
   ORDER_NOT_FOUND: 404,
-  ORDER_ACCESS_DENIED: 403
+  ORDER_ACCESS_DENIED: 403,
+  STRIPE_PRICE_NOT_CONFIGURED: 409
 };
 
 function respondPurchaseError(res, error) {
@@ -205,6 +236,60 @@ router.post('/billing/admin/purchases/:purchaseId/refund', requirePackagePayment
     });
 
     res.json({ purchase: updatedPurchase, refundId: refund.id });
+  } catch (error) {
+    respondPurchaseError(res, error);
+  }
+});
+
+// Fase 5 del plan comercial ("Suscripciones del otorgante"), pasos 1-2. El
+// Price ID se resuelve en servidor desde el catálogo -- nunca desde el
+// cliente. La suscripción real solo se crea/actualiza cuando llega el
+// webhook de Stripe (payments.js), nunca por esta respuesta: acá solo se
+// abre la Checkout Session.
+router.post('/billing/grantor/checkout-session', requireGrantorSubscriptionsFlag, authMiddleware, async (req, res) => {
+  try {
+    const { offerCode, currency, successUrl, cancelUrl } = req.body || {};
+    if (!offerCode) {
+      return res.status(400).json({ error: 'offerCode es requerido' });
+    }
+    if (!isAllowedRedirectUrl(successUrl) || !isAllowedRedirectUrl(cancelUrl)) {
+      return res.status(400).json({ error: 'successUrl y cancelUrl deben apuntar a un origen permitido' });
+    }
+
+    let billingAccount = await getOrCreateIndividualAccount(req.userId);
+    const resolved = await resolveGrantorOfferForCheckout(offerCode, currency || 'USD');
+
+    let stripeCustomerId = billingAccount.stripeCustomerId;
+    if (!stripeCustomerId) {
+      const customer = await createStripeCustomer({
+        email: req.userProfile?.email || req.user?.email,
+        billingAccountId: billingAccount.id
+      });
+      stripeCustomerId = customer.id;
+      billingAccount = await attachStripeCustomer(billingAccount.id, stripeCustomerId);
+    }
+
+    const session = await createGrantorCheckoutSession({
+      customerId: stripeCustomerId,
+      priceId: resolved.stripePriceId,
+      billingAccountId: billingAccount.id,
+      offerId: resolved.offerId,
+      offerCode,
+      successUrl,
+      cancelUrl
+    });
+
+    await logAuditEvent({
+      userId: req.userId,
+      action: 'grantor_checkout_session_created',
+      entityType: 'billing_account',
+      entityId: billingAccount.id,
+      req,
+      metadata: { offerCode, sessionId: session.id },
+      complianceRelevant: false
+    });
+
+    res.status(201).json({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
     respondPurchaseError(res, error);
   }
