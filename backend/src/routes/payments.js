@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware, requirePermission } from '../middleware/auth.js';
 import { logAuditEvent } from '../utils/audit.js';
+import { activatePackagePurchaseFromPaymentIntent } from '../services/packagePurchaseService.js';
 
 // Initialize Stripe with error handling for missing key
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -336,6 +337,30 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     switch (event.type) {
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object;
+
+        // Paquetes del solicitante (Fase 4 del plan comercial): flujo
+        // paralelo al de service_orders de abajo, distinguido por
+        // metadata.type -- no toca ni comparte estado con ese flujo legacy.
+        if (paymentIntent.metadata?.type === 'package_purchase') {
+          const purchase = await activatePackagePurchaseFromPaymentIntent(paymentIntent);
+          if (purchase) {
+            await logAuditEvent({
+              userId: purchase.purchaserUserId,
+              action: 'package_purchase_activated',
+              entityType: 'package_purchase',
+              entityId: purchase.id,
+              req,
+              metadata: {
+                paymentIntentId: paymentIntent.id,
+                offerId: purchase.offerId,
+                status: purchase.status
+              },
+              complianceRelevant: true
+            });
+          }
+          break;
+        }
+
         const orderId = paymentIntent.metadata?.orderId;
 
         if (orderId) {
