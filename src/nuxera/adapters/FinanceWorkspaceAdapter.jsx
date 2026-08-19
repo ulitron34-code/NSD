@@ -1,13 +1,15 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../finance/financeJourney";
 import { pickLang } from "../../data/requisitosMinimos";
 import ProjectBuilderAssistant from "./ProjectBuilderAssistant";
+import { COLORS } from "../../utils/constants";
 
 const FundingReadinessTab = lazy(() => import("../../components/Dashboard/Solicitante/FundingReadinessTab"));
 const PipelineTab = lazy(() => import("../../components/Dashboard/Otorgante/PipelineTab"));
+const VerifyIdentityTab = lazy(() => import("../../components/Services/VerifyIdentityTab"));
 const ServiceOrdersPage = lazy(() => import("../../pages/ServiceOrdersPage"));
 
 const roleContentSource = {
@@ -105,6 +107,7 @@ export default function FinanceWorkspaceAdapter({ role }) {
   const { L, language } = useNuxeraLanguage();
   const config = getFinanceAdapterConfig(role, language);
   const FinanceComponent = config.component;
+  const [activeTab, setActiveTab] = useState("finance");
 
   return (
     <section className="nuxera-adapter" aria-labelledby="nuxera-finance-title">
@@ -121,15 +124,69 @@ export default function FinanceWorkspaceAdapter({ role }) {
         </div>
       </header>
 
-      <RoleFinanceJourney role={role} L={L} language={language} />
+      {/* Tab Navigation - Solo para Grantor (Otorgante) */}
+      {role === "grantor" && (
+        <div style={{
+          background: "white",
+          borderBottom: `2px solid ${COLORS.border}`,
+          display: "flex",
+          gap: "0rem",
+          padding: "0 1.5rem"
+        }}>
+          <button
+            onClick={() => setActiveTab("finance")}
+            style={{
+              padding: "1.25rem 1rem",
+              background: "transparent",
+              border: "none",
+              borderBottom: activeTab === "finance" ? `3px solid ${COLORS.navy}` : "none",
+              color: activeTab === "finance" ? COLORS.navy : COLORS.textMuted,
+              fontWeight: activeTab === "finance" ? 700 : 500,
+              fontSize: "0.95rem",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            📊 {L("Pipeline Financiero", "Financial Pipeline")}
+          </button>
 
-      {role === "applicant" && <ProjectBuilderAssistant />}
+          <button
+            onClick={() => setActiveTab("verify")}
+            style={{
+              padding: "1.25rem 1rem",
+              background: "transparent",
+              border: "none",
+              borderBottom: activeTab === "verify" ? `3px solid ${COLORS.navy}` : "none",
+              color: activeTab === "verify" ? COLORS.navy : COLORS.textMuted,
+              fontWeight: activeTab === "verify" ? 700 : 500,
+              fontSize: "0.95rem",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            🔍 {L("Verificar Identidad", "Verify Identity")}
+          </button>
+        </div>
+      )}
 
-      <div className="nuxera-adapter-body">
-        <Suspense fallback={<AdapterLoading L={L} />}>
-          <FinanceComponent />
-        </Suspense>
-      </div>
+      {/* Content */}
+      {activeTab === "finance" ? (
+        <>
+          <RoleFinanceJourney role={role} L={L} language={language} />
+          {role === "applicant" && <ProjectBuilderAssistant />}
+          <div className="nuxera-adapter-body">
+            <Suspense fallback={<AdapterLoading L={L} />}>
+              <FinanceComponent />
+            </Suspense>
+          </div>
+        </>
+      ) : (
+        <div className="nuxera-adapter-body">
+          <Suspense fallback={<AdapterLoading L={L} />}>
+            <VerifyIdentityTab />
+          </Suspense>
+        </div>
+      )}
     </section>
   );
 }
