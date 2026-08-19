@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -9,6 +9,7 @@ import AdminWorkspaceAdapter from "./adapters/AdminWorkspaceAdapter";
 import FinanceWorkspaceAdapter from "./adapters/FinanceWorkspaceAdapter";
 import MarketsWorkspace from "./adapters/MarketsWorkspace";
 import StrategyWorkspace from "./adapters/StrategyWorkspace";
+import VerifyIdentityTab from "../components/Services/VerifyIdentityTab";
 import { NuxeraExpedientProvider } from "./context/NuxeraExpedientContext";
 import { resolveNuxeraRole } from "./navigation/roleResolver";
 import NuxeraHome from "./pages/NuxeraHome";
@@ -37,6 +38,15 @@ function RoleWorkspace({ role }) {
 
   if (role === "applicant" && ["markets", "strategy"].includes(section)) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Corpus / Verification for grantor
+  if (section === "corpus") {
+    return (
+      <div style={{ padding: "2rem", background: "var(--nuxera-bg)", minHeight: "100vh" }}>
+        <VerifyIdentityTab />
+      </div>
+    );
   }
 
   if (resolvedSection?.adapter === "finance-workspace") {
