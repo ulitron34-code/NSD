@@ -57,6 +57,7 @@ export default function OtorganteDashboard() {
         gap: "0rem"
       }}>
         <button
+          type="button"
           onClick={() => {
             setActiveTab("pipeline");
             setSelectedOrder(null);
@@ -87,6 +88,7 @@ export default function OtorganteDashboard() {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("verify-identity")}
           style={{
             padding: "1.25rem 1.5rem",
