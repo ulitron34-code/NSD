@@ -30,9 +30,26 @@ export default function NuxeraShell({ workspaceRole, onExit }) {
   return (
     <div className="nuxera-shell">
       <aside id="nuxera-mobile-navigation" className={`nuxera-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label={isEnglish ? "NUXERA navigation" : "Navegación NUXERA"}>
-        <div className="nuxera-brand">
-          <strong>NUXERA</strong>
-          <span>Financial Intelligence</span>
+        <div className="nuxera-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className="logo-mark" aria-hidden="true" style={{
+            width: '38px',
+            height: '38px',
+            border: '1px solid rgba(198, 166, 106, 0.45)',
+            borderRadius: '11px',
+            display: 'grid',
+            placeItems: 'center',
+            background: 'linear-gradient(145deg, rgba(198, 166, 106, 0.14), rgba(67, 184, 196, 0.04))',
+            flexShrink: 0
+          }}>
+            <svg viewBox="0 0 40 40" fill="none" width="24" height="24">
+              <path d="M8 31V9l24 22V9" stroke="#C6A66A" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8 9l24 22" stroke="#43B8C4" strokeWidth="1" opacity=".7"/>
+            </svg>
+          </span>
+          <div>
+            <strong style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.25rem', letterSpacing: '2px', color: '#fff' }}>NUXERA</strong>
+            <span style={{ display: 'block', fontSize: '0.66rem', letterSpacing: '0.18em', color: 'var(--nuxera-gold)', textTransform: 'uppercase', fontWeight: 700 }}>Financial Intelligence</span>
+          </div>
         </div>
 
         <nav className="nuxera-nav">
@@ -74,9 +91,10 @@ export default function NuxeraShell({ workspaceRole, onExit }) {
             <span className="nuxera-profile" title={user?.email || roleLabel}>{user?.email || roleLabel}</span>
           </div>
         </header>
-        <Outlet />
+        <section key={location.pathname} className="nuxera-route-transition" aria-live="polite">
+          <Outlet />
+        </section>
       </main>
-      {mobileOpen && <button type="button" className="nuxera-mobile-backdrop" aria-label={isEnglish ? "Close menu" : "Cerrar menú"} onClick={closeMobile} />}
     </div>
   );
 }

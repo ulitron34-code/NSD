@@ -1,36 +1,46 @@
 :root {
-  /* Background / Surface / Text / Muted / Border */
-  --nuxera-ink: #111827;
-  --nuxera-muted: #667085;
-  --nuxera-bg: #f6f7f9;
-  --nuxera-panel: #ffffff;
-  --nuxera-border: #d9dee7;
+  /* Nashadi Capital Master Tokens */
+  --obsidian: #080d11;
+  --petrol: #0c3438;
+  --petrol-2: #11525a;
+  --aqua: #43b8c4;
+  --champagne: #c6a66a;
+  --ivory: #f4f1ea;
+  --paper: #fbfaf6;
+  --platinum: #a8b3b9;
 
-  /* Gold / Graphite (brand) */
-  --nuxera-gold: #b7923a;
-  --nuxera-gold-soft: #f4ead0;
-  --nuxera-graphite: #1d232d;
+  /* NUXERA Brand Mapping onto Nashadi Design System */
+  --nuxera-ink: #f4f1ea;
+  --nuxera-muted: #a8b3b9;
+  --nuxera-bg: #080d11;
+  --nuxera-panel: linear-gradient(150deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+  --nuxera-border: rgba(255, 255, 255, 0.11);
 
-  /* Success / Warning / Danger / Info (semantic status) */
-  --nuxera-success: #1a7f4e;
-  --nuxera-success-soft: #e2f3ea;
-  --nuxera-warning: #b65f0f;
-  --nuxera-warning-soft: #faead3;
-  --nuxera-danger: #b3261e;
-  --nuxera-danger-soft: #fbe4e2;
-  --nuxera-info: #2563a8;
-  --nuxera-info-soft: #e1ecf7;
+  /* Gold / Petrol / Aqua (brand) */
+  --nuxera-gold: #c6a66a;
+  --nuxera-gold-soft: rgba(198, 166, 106, 0.15);
+  --nuxera-graphite: #0c3438;
+
+  /* Status Tokens */
+  --nuxera-success: #10b981;
+  --nuxera-success-soft: rgba(16, 185, 129, 0.15);
+  --nuxera-warning: #f59e0b;
+  --nuxera-warning-soft: rgba(245, 158, 11, 0.15);
+  --nuxera-danger: #ef4444;
+  --nuxera-danger-soft: rgba(239, 68, 68, 0.15);
+  --nuxera-info: #43b8c4;
+  --nuxera-info-soft: rgba(67, 184, 196, 0.15);
 
   /* Radius */
   --nuxera-radius-sm: 6px;
-  --nuxera-radius-md: 8px;
-  --nuxera-radius-lg: 14px;
+  --nuxera-radius-md: 12px;
+  --nuxera-radius-lg: 22px;
   --nuxera-radius-pill: 999px;
 
   /* Shadow */
-  --nuxera-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
-  --nuxera-shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
-  --nuxera-shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.14);
+  --nuxera-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --nuxera-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --nuxera-shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.5);
 
   /* Spacing */
   --nuxera-space-xs: 4px;
@@ -40,8 +50,8 @@
   --nuxera-space-xl: 40px;
 
   /* Typography */
-  --nuxera-font-family: Georgia, "Times New Roman", serif;
-  --nuxera-font-family-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --nuxera-font-family: 'Playfair Display', Georgia, serif;
+  --nuxera-font-family-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --nuxera-font-size-xs: 0.75rem;
   --nuxera-font-size-sm: 0.875rem;
   --nuxera-font-size-base: 1rem;
