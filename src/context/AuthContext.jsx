@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Force rebuild 2026-08-19 16:50
 
   // Verificar si hay usuario guardado en localStorage
   useEffect(() => {
