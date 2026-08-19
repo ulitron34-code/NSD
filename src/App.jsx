@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { ExperienceProvider } from "./experience/ExperienceContext";
@@ -52,6 +52,11 @@ const Loader = () => (
   </div>
 );
 
+function NuxeraRouteWrapper() {
+  const navigate = useNavigate();
+  return <NuxeraWorkspaceRouter demoMode="otorgante" onExit={() => navigate("/")} />;
+}
+
 function AppContent() {
   useEffect(() => {
     document.title = `${BRAND.legalName} — Plataforma Global de Cumplimiento y Riesgo`;
@@ -100,7 +105,7 @@ function AppContent() {
             path="/dashboard/*"
             element={
               <ProtectedRoute>
-                <><Header /><NuxeraWorkspaceRouter demoMode={null} onExit={null} /></>
+                <><Header /><NuxeraRouteWrapper /></>
               </ProtectedRoute>
             }
           />
