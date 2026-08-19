@@ -9,8 +9,8 @@ export default function ProtectedRoute({ children }) {
   const { t } = useTranslation();
   const isDashboard = window.location.pathname.startsWith("/dashboard");
   const isDev = import.meta.env.DEV;
-  // Allow unrestricted access during testing phase
-  const demoMode = isDev || import.meta.env.VITE_DEMO_MODE === "true" || true;
+  // TESTING PHASE: Allow unrestricted access without login
+  const demoMode = true;
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
