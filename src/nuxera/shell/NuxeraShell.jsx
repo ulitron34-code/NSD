@@ -50,8 +50,8 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
           ))}
         </nav>
 
-        {/* Vista Selector - Solo en DEV para Testing */}
-        {isDev && demoMode && onDemoModeChange && (
+        {/* Vista Selector - Para Testing */}
+        {demoMode && onDemoModeChange && (
           <div style={{ padding: "1rem", borderTop: "1px solid #e0e0e0" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.5rem", color: "#666" }}>
               {isEnglish ? "Testing View" : "Vista Testing"}
