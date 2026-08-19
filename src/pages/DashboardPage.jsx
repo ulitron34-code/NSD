@@ -720,6 +720,7 @@ export default function DashboardPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
                 title={sidebarCollapsed ? tab.label : undefined}
                 className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}

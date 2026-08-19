@@ -76,8 +76,9 @@ export default function Header({ isLanding = false }) {
         transition: "all 0.3s",
       }}>
         {/* Logo */}
-        <div
-          style={{ display: "flex", alignItems: "center", gap: "0.7rem", cursor: "pointer" }}
+        <button
+          type="button"
+          style={{ display: "flex", alignItems: "center", gap: "0.7rem", cursor: "pointer", border: "none", background: "transparent", padding: 0 }}
           onClick={() => { navigate("/"); setShowMobileNav(false); }}
         >
           {BRAND.logoMarkSrc ? (
@@ -115,7 +116,7 @@ export default function Header({ isLanding = false }) {
               style={{ height: "68px", width: "auto", display: "block" }}
             />
           )}
-        </div>
+        </button>
 
         {/* Nav links — desktop only */}
         {isLanding && !isMobile && (

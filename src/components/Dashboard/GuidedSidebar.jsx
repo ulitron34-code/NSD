@@ -123,6 +123,7 @@ export default function GuidedSidebar({ tabs, activeTab, onSelect, userMode, L, 
                 {groupTabs.map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => onSelect(tab.id)}
                     title={collapsed ? tab.label : undefined}
                     className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}
