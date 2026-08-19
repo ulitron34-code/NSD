@@ -63,9 +63,12 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
                 width: "100%",
                 padding: "0.5rem",
                 borderRadius: "4px",
-                border: "1px solid #ccc",
+                border: "2px solid #D4AF37",
+                backgroundColor: "#FFFACD",
+                color: "#333",
                 fontSize: "0.9rem",
-                cursor: "pointer"
+                cursor: "pointer",
+                fontWeight: 600
               }}
             >
               <option value="solicitante">{isEnglish ? "Applicant" : "Solicitante"}</option>
@@ -93,7 +96,7 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
               {isEnglish ? "ES" : "EN"}
             </button>
             <a href="/contact" className="nuxera-help">{isEnglish ? "Help" : "Ayuda"}</a>
-            <span className="nuxera-profile" title={user?.email || roleLabel}>{user?.email || roleLabel}</span>
+            <span className="nuxera-profile" title={roleLabel}>Demo</span>
           </div>
         </header>
         <section key={location.pathname} className="nuxera-route-transition" aria-live="polite">
