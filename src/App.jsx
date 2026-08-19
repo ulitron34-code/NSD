@@ -59,7 +59,8 @@ function NuxeraRouteWrapper() {
 
 function AppContent() {
   useEffect(() => {
-    document.title = `${BRAND.legalName} — Plataforma Global de Cumplimiento y Riesgo`;
+    // Invalidate cache
+    document.title = `${BRAND.legalName} — Plataforma Global de Cumplimiento y Riesgo (v20260819-1650)`;
   }, []);
 
   return (
