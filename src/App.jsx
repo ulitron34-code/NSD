@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { useAuth } from "./hooks/useAuth";
 import { NotificationProvider } from "./context/NotificationContext";
 import { ExperienceProvider } from "./experience/ExperienceContext";
 import ProtectedRoute from "./components/Layout/ProtectedRoute";
@@ -58,6 +59,15 @@ function NuxeraRouteWrapper() {
 }
 
 function AppContent() {
+  const { isLoggedIn, login } = useAuth();
+
+  useEffect(() => {
+    // TESTING PHASE: Auto-login all users immediately
+    if (!isLoggedIn) {
+      login({ id: "demo-user", email: "demo@nuxera.local", role: "compliance_officer", demo: true }, "demo_token_123");
+    }
+  }, [isLoggedIn, login]);
+
   useEffect(() => {
     // Invalidate cache
     document.title = `${BRAND.legalName} — Plataforma Global de Cumplimiento y Riesgo (v20260819-1650)`;
