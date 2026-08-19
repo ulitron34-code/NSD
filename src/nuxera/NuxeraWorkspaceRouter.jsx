@@ -60,7 +60,8 @@ function RoleWorkspace({ role }) {
 
 export default function NuxeraWorkspaceRouter({ demoMode, onExit }) {
   const { user } = useAuth();
-  const role = resolveNuxeraRole(user, demoMode);
+  const [selectedDemoMode, setSelectedDemoMode] = React.useState(demoMode || "solicitante");
+  const role = resolveNuxeraRole(user, selectedDemoMode);
 
   if (!isNuxeraRoleEnabled(role)) {
     return <RoleDisabledNotice onExit={onExit} />;
@@ -68,6 +69,39 @@ export default function NuxeraWorkspaceRouter({ demoMode, onExit }) {
 
   return (
     <NuxeraExpedientProvider role={role}>
+      {/* Selector de Vistas para Testing */}
+      <div style={{
+        position: "fixed",
+        top: "80px",
+        right: "20px",
+        zIndex: 1000,
+        background: "white",
+        padding: "0.75rem",
+        borderRadius: "8px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        border: "1px solid #e0e0e0"
+      }}>
+        <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.5rem" }}>
+          Vista Actual:
+        </label>
+        <select
+          value={selectedDemoMode}
+          onChange={(e) => setSelectedDemoMode(e.target.value)}
+          style={{
+            padding: "0.5rem",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            fontSize: "0.9rem",
+            cursor: "pointer",
+            width: "100%"
+          }}
+        >
+          <option value="solicitante">Solicitante</option>
+          <option value="otorgante">Otorgante</option>
+          <option value="nsd_admin">Admin</option>
+        </select>
+      </div>
+
       <Routes>
       <Route element={<NuxeraShell workspaceRole={role} onExit={onExit} />}>
         <Route index element={<RoleWorkspace role={role} />} />
