@@ -7,7 +7,8 @@ export default function ProtectedRoute({ children }) {
   const { isLoggedIn, isLoading, login } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const demoMode = import.meta.env.VITE_DEMO_MODE === "true";
+  const isDev = import.meta.env.DEV;
+  const demoMode = isDev || import.meta.env.VITE_DEMO_MODE === "true";
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
