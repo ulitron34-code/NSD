@@ -63,6 +63,7 @@ const CommissionsPage = lazy(() => import("../pages/CommissionsPage"));
 const DocumentIntelligenceTab = lazy(() => import("../components/Dashboard/DocumentIntelligenceTab"));
 const TransactionOversightTab = lazy(() => import("../components/Dashboard/TransactionOversightTab"));
 const NagmarCaseManagerTab = lazy(() => import("../components/Dashboard/NagmarCaseManagerTab"));
+const VerifyIdentityTab = lazy(() => import("../components/Services/VerifyIdentityTab"));
 
 function DashboardLoadingFallback() {
   return (
@@ -202,6 +203,7 @@ export default function DashboardPage() {
         { id: "expedientes", label: L("Mis Expedientes", "My Files"), icon: "EXP" },
         { id: "command", label: L("Centro de comando", "Command Center"), icon: "CC" },
         { id: "pipeline", label: L("Oportunidades / Data room", "Opportunities / Data Room"), icon: "DR" },
+        { id: "corpus", label: L("Corpus / Verificación", "Corpus / Verification"), icon: "CRP" },
         { id: "decision_room", label: L("Sala de decision 360", "360 Decision Room"), icon: "360" },
         { id: "forensic_analysis", label: L("Analisis forense", "Forensic Analysis"), icon: "FOR" },
         { id: "data_room_index", label: L("Indice Data Room", "Data Room Index"), icon: "IDX" },
@@ -492,6 +494,7 @@ export default function DashboardPage() {
 
     if (userMode === "otorgante") {
       if (activeTab === "pipeline") return <PipelineTab />;
+      if (activeTab === "corpus") return <VerifyIdentityTab />;
       if (activeTab === "decision_room") return <DecisionRoomTab />;
       if (activeTab === "forensic_analysis") return <ForensicAnalysisTab />;
       if (activeTab === "requirements") return <RequirementsTab />;
@@ -824,7 +827,9 @@ export default function DashboardPage() {
         <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 3 }}>
           {uiView === "new" && <SectionGuide {...(getGuideFor(activeTab, userMode, L) || {})} />}
           <Suspense fallback={<DashboardLoadingFallback />}>
-            {renderContent()}
+            <div key={`${userMode}-${activeTab}`} className="dashboard-tab-transition">
+              {renderContent()}
+            </div>
           </Suspense>
         </div>
       </main>

@@ -12,7 +12,7 @@ const GROUPS_BY_ROLE = {
   ],
   otorgante: [
     { id: "resumen", title: (L) => L("Resumen", "Overview"), tabIds: ["command", "expedientes"] },
-    { id: "intake", title: (L) => L("Revision de Oportunidad", "Deal Review"), tabIds: ["pipeline", "data_room_index", "document_intel"] },
+    { id: "intake", title: (L) => L("Revision de Oportunidad", "Deal Review"), tabIds: ["pipeline", "corpus", "data_room_index", "document_intel"] },
     { id: "validacion", title: (L) => L("Validacion", "Validation"), tabIds: ["forensic_analysis", "scoring_ae", "analytics"] },
     { id: "decision", title: (L) => L("Decision", "Decision"), tabIds: ["decision_room", "requirements", "committee_memo"] },
     { id: "operacion", title: (L) => L("Operacion", "Operations"), tabIds: ["biometricos", "transaction_oversight", "nagmar_cases"] },
