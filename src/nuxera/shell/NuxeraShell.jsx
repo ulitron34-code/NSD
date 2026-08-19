@@ -6,12 +6,13 @@ import { getNavigationByRole } from "../navigation/navigationByRole";
 import "../styles/tokens.css";
 import "../styles/shell.css";
 
-export default function NuxeraShell({ workspaceRole, onExit }) {
+export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoModeChange }) {
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isEnglish = i18n.language?.startsWith("en");
+  const isDev = import.meta.env.DEV;
   const items = getNavigationByRole(workspaceRole, isEnglish);
   const current = items.find((item) => item.path === location.pathname) || items[0];
   const toggleLanguage = () => {
@@ -66,9 +67,33 @@ export default function NuxeraShell({ workspaceRole, onExit }) {
           ))}
         </nav>
 
-        <button type="button" className="nuxera-exit" onClick={onExit}>
-          {isEnglish ? "Return to current view" : "Volver a vista actual"}
-        </button>
+        {/* Vista Selector - Para Testing */}
+        {demoMode && onDemoModeChange && (
+          <div style={{ padding: "1rem", borderTop: "1px solid #e0e0e0" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.5rem", color: "#666" }}>
+              {isEnglish ? "Testing View" : "Vista Testing"}
+            </label>
+            <select
+              value={demoMode}
+              onChange={(e) => onDemoModeChange(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                borderRadius: "4px",
+                border: "2px solid #D4AF37",
+                backgroundColor: "#FFFACD",
+                color: "#333",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                fontWeight: 600
+              }}
+            >
+              <option value="solicitante">{isEnglish ? "Applicant" : "Solicitante"}</option>
+              <option value="otorgante">{isEnglish ? "Funding Provider" : "Otorgante"}</option>
+              <option value="nsd_admin">{isEnglish ? "Administrator" : "Admin"}</option>
+            </select>
+          </div>
+        )}
       </aside>
 
       <main className="nuxera-main">
@@ -88,7 +113,7 @@ export default function NuxeraShell({ workspaceRole, onExit }) {
               {isEnglish ? "ES" : "EN"}
             </button>
             <a href="/contact" className="nuxera-help">{isEnglish ? "Help" : "Ayuda"}</a>
-            <span className="nuxera-profile" title={user?.email || roleLabel}>{user?.email || roleLabel}</span>
+            <span className="nuxera-profile" title={roleLabel}>Demo</span>
           </div>
         </header>
         <section key={location.pathname} className="nuxera-route-transition" aria-live="polite">

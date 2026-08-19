@@ -60,7 +60,8 @@ function RoleWorkspace({ role }) {
 
 export default function NuxeraWorkspaceRouter({ demoMode, onExit }) {
   const { user } = useAuth();
-  const role = resolveNuxeraRole(user, demoMode);
+  const [selectedDemoMode, setSelectedDemoMode] = React.useState(demoMode || "solicitante");
+  const role = resolveNuxeraRole(user, selectedDemoMode);
 
   if (!isNuxeraRoleEnabled(role)) {
     return <RoleDisabledNotice onExit={onExit} />;
@@ -69,7 +70,7 @@ export default function NuxeraWorkspaceRouter({ demoMode, onExit }) {
   return (
     <NuxeraExpedientProvider role={role}>
       <Routes>
-      <Route element={<NuxeraShell workspaceRole={role} onExit={onExit} />}>
+      <Route element={<NuxeraShell workspaceRole={role} onExit={onExit} demoMode={selectedDemoMode} onDemoModeChange={setSelectedDemoMode} />}>
         <Route index element={<RoleWorkspace role={role} />} />
         <Route path="nuxera/:section" element={<RoleWorkspace role={role} />} />
         <Route path="nuxera" element={<Navigate to="/dashboard" replace />} />

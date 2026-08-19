@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { ExperienceProvider } from "./experience/ExperienceContext";
@@ -17,6 +17,7 @@ import SignupComponent from "./components/Auth/SignupComponent";
 
 // Rutas secundarias — lazy load
 const DashboardPage     = lazy(() => import("./pages/DashboardPage"));
+const NuxeraWorkspaceRouter = lazy(() => import("./nuxera/NuxeraWorkspaceRouter"));
 const ProfilePage       = lazy(() => import("./pages/ProfilePage"));
 const PrivacyPage       = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage         = lazy(() => import("./pages/TermsPage"));
@@ -50,6 +51,11 @@ const Loader = () => (
     Cargando...
   </div>
 );
+
+function NuxeraRouteWrapper() {
+  const navigate = useNavigate();
+  return <NuxeraWorkspaceRouter demoMode="otorgante" onExit={() => navigate("/")} />;
+}
 
 function AppContent() {
   useEffect(() => {
@@ -94,9 +100,19 @@ function AppContent() {
           {/* Redirects de URLs anteriores */}
           <Route path="/pricing" element={<Navigate to="/modalidades" replace />} />
 
-          {/* Dashboard protegido */}
+          {/* Dashboard protegido — DEFAULT A NUXERA */}
           <Route
             path="/dashboard/*"
+            element={
+              <ProtectedRoute>
+                <><Header /><NuxeraRouteWrapper /></>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dashboard Legacy — URL secreta para fallback */}
+          <Route
+            path="/dashboard-legacy/*"
             element={
               <ProtectedRoute>
                 <><Header /><DashboardPage /></>
