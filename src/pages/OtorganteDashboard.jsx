@@ -89,6 +89,34 @@ export default function OtorganteDashboard() {
 
         <button
           type="button"
+          onClick={() => setActiveTab("corpus")}
+          style={{
+            padding: "1.25rem 1.5rem",
+            background: activeTab === "corpus" ? "white" : "transparent",
+            border: "none",
+            borderBottom: activeTab === "corpus" ? `3px solid ${COLORS.navy}` : "none",
+            color: activeTab === "corpus" ? COLORS.navy : COLORS.textMuted,
+            fontWeight: activeTab === "corpus" ? 700 : 500,
+            fontSize: "1rem",
+            cursor: "pointer",
+            transition: "all 0.2s"
+          }}
+          onMouseEnter={(e) => {
+            if (activeTab !== "corpus") {
+              e.target.style.color = COLORS.navy;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (activeTab !== "corpus") {
+              e.target.style.color = COLORS.textMuted;
+            }
+          }}
+        >
+          📚 Corpus / Verificación
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab("verify-identity")}
           style={{
             padding: "1.25rem 1.5rem",
@@ -223,8 +251,11 @@ export default function OtorganteDashboard() {
             </div>
           )}
         </div>
+      ) : activeTab === "corpus" ? (
+        /* Tab: Corpus / Verification */
+        <VerifyIdentityTab />
       ) : (
-        /* Tab: Verify Identity */
+        /* Tab: Verify Identity (legacy) */
         <VerifyIdentityTab />
       )}
     </div>
