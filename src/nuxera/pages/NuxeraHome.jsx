@@ -663,10 +663,16 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
   const { L, language } = useNuxeraLanguage();
   const [inboxFilter, setInboxFilter] = useState("all");
   const { pipeline, authorizedOrder, orderId, selectOrder, isDemo, loading } = useMyGrantorPipeline();
-  const queue = isDemo ? getGrantorCaseQueue(language) : buildGrantorCaseQueueFromPipeline(pipeline, language);
+  // Keep the queue identity stable. The jurisdiction adapter uses its
+  // fallback as an effect dependency; rebuilding the queue on every render
+  // otherwise creates a new fallback object and can trigger an update loop.
+  const queue = useMemo(
+    () => (isDemo ? getGrantorCaseQueue(language) : buildGrantorCaseQueueFromPipeline(pipeline, language)),
+    [isDemo, language, pipeline],
+  );
   const summary = getGrantorQueueSummary(queue);
   const isInboxView = variant === "inbox";
-  const selectedCase = resolveSelectedGrantorCase(queue, orderId);
+  const selectedCase = useMemo(() => resolveSelectedGrantorCase(queue, orderId), [queue, orderId]);
   const workbench = selectedCase ? getGrantorCaseWorkbench(selectedCase.id, queue, language) : null;
   const memo = selectedCase ? getGrantorDecisionMemo(selectedCase.id, queue, language) : null;
   const grantorDocumentSummary = selectedCase ? getGrantorDocumentSummary(selectedCase.id, queue, language) : null;

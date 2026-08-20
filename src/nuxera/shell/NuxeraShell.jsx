@@ -31,7 +31,13 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
   return (
     <div className="nuxera-shell">
       <aside id="nuxera-mobile-navigation" className={`nuxera-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label={isEnglish ? "NUXERA navigation" : "Navegación NUXERA"}>
-        <div className="nuxera-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button
+          type="button"
+          className="nuxera-brand"
+          aria-label={isEnglish ? "Return to NUXERA home" : "Volver al inicio de NUXERA"}
+          onClick={onExit}
+          style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+        >
           <span className="logo-mark" aria-hidden="true" style={{
             width: '38px',
             height: '38px',
@@ -51,7 +57,7 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
             <strong style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.25rem', letterSpacing: '2px', color: '#fff' }}>NUXERA</strong>
             <span style={{ display: 'block', fontSize: '0.66rem', letterSpacing: '0.18em', color: 'var(--nuxera-gold)', textTransform: 'uppercase', fontWeight: 700 }}>Financial Intelligence</span>
           </div>
-        </div>
+        </button>
 
         <nav className="nuxera-nav">
           {items.map((item) => (

@@ -10,6 +10,9 @@
   position: sticky;
   top: 72px;
   height: calc(100vh - 72px);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px 18px;
   background: var(--nuxera-graphite);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -70,7 +73,17 @@
 
 .nuxera-main {
   min-width: 0;
+  min-height: calc(100vh - 72px);
   padding: 28px;
+}
+
+.nuxera-brand {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
 }
 
 .nuxera-workspace-header { max-width: 1180px; margin: 0 auto 22px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--nuxera-panel); border: 1px solid var(--nuxera-border); border-radius: 8px; }
