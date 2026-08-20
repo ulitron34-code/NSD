@@ -15,6 +15,17 @@ export default function Header({ isLanding = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const goTo = (path) => {
+    navigate(path);
+    setShowMenu(false);
+    setShowMobileNav(false);
+    window.setTimeout(() => {
+      if (window.location.pathname !== path) {
+        window.location.assign(path);
+      }
+    }, 80);
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -28,7 +39,7 @@ export default function Header({ isLanding = false }) {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    goTo("/");
     setShowMenu(false);
     setShowMobileNav(false);
   };
@@ -79,7 +90,7 @@ export default function Header({ isLanding = false }) {
         <button
           type="button"
           style={{ display: "flex", alignItems: "center", gap: "0.7rem", cursor: "pointer", border: "none", background: "transparent", padding: 0 }}
-          onClick={() => { navigate("/"); setShowMobileNav(false); }}
+          onClick={() => goTo("/")}
         >
           {BRAND.logoMarkSrc ? (
             <>
@@ -124,7 +135,11 @@ export default function Header({ isLanding = false }) {
             {navLinks.map((link) => (
               <a
                 key={link.label}
-                onClick={() => navigate(link.anchor)}
+                href={link.anchor}
+                onClick={(event) => {
+                  event.preventDefault();
+                  goTo(link.anchor);
+                }}
                 style={linkStyle}
                 onMouseEnter={e => { e.target.style.color = "#E4C878"; e.target.style.borderBottomColor = "#C9A84C"; }}
                 onMouseLeave={e => { e.target.style.color = "rgba(255,255,255,0.85)"; e.target.style.borderBottomColor = "transparent"; }}
@@ -202,8 +217,8 @@ export default function Header({ isLanding = false }) {
                     <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1B3A5C", wordBreak: "break-all" }}>{user.email}</p>
                   </div>
                   {[
-                    { icon: "home", label: t("dashboard.title"), action: () => { navigate("/dashboard"); setShowMenu(false); } },
-                    { icon: "user", label: t("dashboard.miPerfil"),  action: () => { navigate("/profile");   setShowMenu(false); } },
+                    { icon: "home", label: t("dashboard.title"), action: () => goTo("/dashboard") },
+                    { icon: "user", label: t("dashboard.miPerfil"),  action: () => goTo("/profile") },
                   ].map((item, i) => (
                     <button key={i} onClick={item.action} style={{
                       width: "100%", padding: "0.75rem 1rem", border: "none",
@@ -237,7 +252,7 @@ export default function Header({ isLanding = false }) {
           ) : !isMobile && (
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => goTo("/login")}
                 style={{
                   padding: "0.5rem 1.1rem", fontWeight: 500, fontSize: "0.88rem",
                   background: "transparent", color: "rgba(255,255,255,0.85)",
@@ -250,7 +265,7 @@ export default function Header({ isLanding = false }) {
                 {t("navbar.login")}
               </button>
               <button
-                onClick={() => navigate("/signup")}
+                onClick={() => goTo("/signup")}
                 style={{
                   padding: "0.5rem 1.25rem", fontWeight: 700, fontSize: "0.88rem",
                   background: "linear-gradient(135deg, #C9A84C, #E4C878)",
@@ -327,7 +342,11 @@ export default function Header({ isLanding = false }) {
           {isLanding && navLinks.map((link) => (
             <a
               key={link.label}
-              onClick={() => { navigate(link.anchor); setShowMobileNav(false); }}
+              href={link.anchor}
+              onClick={(event) => {
+                event.preventDefault();
+                goTo(link.anchor);
+              }}
               style={{
                 display: "block",
                 padding: "0.9rem 1.5rem",
@@ -349,7 +368,7 @@ export default function Header({ isLanding = false }) {
           {/* Auth buttons */}
           {isLoggedIn && user ? (
             <>
-              <button onClick={() => { navigate("/dashboard"); setShowMobileNav(false); }}
+              <button onClick={() => goTo("/dashboard")}
                 style={{ width: "100%", padding: "0.9rem 1.5rem", background: "transparent", border: "none", color: "rgba(255,255,255,0.85)", cursor: "pointer", textAlign: "left", fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.6rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                 <Icon name="home" size={17} color="rgba(255,255,255,0.85)" />
                 {t("dashboard.title")}
@@ -362,11 +381,11 @@ export default function Header({ isLanding = false }) {
             </>
           ) : (
             <div style={{ padding: "1rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <button onClick={() => { navigate("/login"); setShowMobileNav(false); }}
+              <button onClick={() => goTo("/login")}
                 style={{ padding: "0.75rem", fontWeight: 600, background: "transparent", color: "white", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "8px", cursor: "pointer", fontSize: "0.95rem" }}>
                 {t("navbar.login")}
               </button>
-              <button onClick={() => { navigate("/signup"); setShowMobileNav(false); }}
+              <button onClick={() => goTo("/signup")}
                 style={{ padding: "0.75rem", fontWeight: 700, background: "linear-gradient(135deg, #C9A84C, #E4C878)", color: "#1B3A5C", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.95rem" }}>
                 {t("navbar.signup")}
               </button>
