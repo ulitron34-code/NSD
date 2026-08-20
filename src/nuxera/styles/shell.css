@@ -1977,7 +1977,7 @@
 
   .nuxera-sidebar {
     position: fixed;
-    z-index: 40;
+    z-index: 420;
     top: 0;
     bottom: 0;
     left: 0;
@@ -1987,10 +1987,13 @@
     overflow-y: auto;
     transform: translateX(-105%);
     transition: transform 180ms ease;
+    pointer-events: none;
+    box-shadow: 18px 0 38px rgba(0, 0, 0, 0.28);
   }
 
   .nuxera-sidebar.is-open {
     transform: translateX(0);
+    pointer-events: auto;
   }
 
   .nuxera-main {
@@ -2003,7 +2006,7 @@
 
   .nuxera-mobile-backdrop {
     position: fixed;
-    z-index: 30;
+    z-index: 410;
     inset: 0;
     display: block;
     border: 0;

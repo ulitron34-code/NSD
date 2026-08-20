@@ -52,6 +52,14 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
 
   return (
     <div className="nuxera-shell" data-nuxera-build="grantor-navigation-rebuild-20260820">
+      {mobileOpen && (
+        <button
+          type="button"
+          className="nuxera-mobile-backdrop"
+          aria-label={isEnglish ? "Close navigation" : "Cerrar navegacion"}
+          onClick={closeMobile}
+        />
+      )}
       <aside id="nuxera-mobile-navigation" className={`nuxera-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label={isEnglish ? "NUXERA navigation" : "Navegación NUXERA"}>
         <button type="button" className="nuxera-brand" onClick={exitToHome} aria-label={isEnglish ? "Return to main page" : "Volver a la pagina principal"} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span className="logo-mark" aria-hidden="true" style={{
@@ -82,11 +90,7 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
               to={item.path}
               end={item.path === "/dashboard"}
               className={({ isActive }) => isActive ? "nuxera-nav-link is-active" : "nuxera-nav-link"}
-              onClick={(event) => {
-                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-                event.preventDefault();
-                goTo(item.path);
-              }}
+              onClick={closeMobile}
             >
               {item.label}
             </NavLink>
