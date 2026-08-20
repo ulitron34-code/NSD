@@ -16,6 +16,11 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
   const isDev = import.meta.env.DEV;
   const items = getNavigationByRole(workspaceRole, isEnglish);
   const current = items.find((item) => item.path === location.pathname) || items[0];
+
+  React.useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   const toggleLanguage = () => {
     const nextLanguage = isEnglish ? "es" : "en";
     i18n.changeLanguage(nextLanguage);
