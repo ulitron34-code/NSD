@@ -50,7 +50,7 @@ function RoleWorkspace({ role }) {
     }
 
     if (["identity", "verify-identity"].includes(section)) {
-      return <FinanceWorkspaceAdapter role={role} initialTab="verify" />;
+      return <Navigate to="/dashboard/nuxera/corpus" replace />;
     }
   }
 

@@ -1,15 +1,13 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { Suspense, lazy } from "react";
 import { NavLink } from "react-router-dom";
 import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../finance/financeJourney";
 import { pickLang } from "../../data/requisitosMinimos";
 import ProjectBuilderAssistant from "./ProjectBuilderAssistant";
-import { COLORS } from "../../utils/constants";
 
 const FundingReadinessTab = lazy(() => import("../../components/Dashboard/Solicitante/FundingReadinessTab"));
 const PipelineTab = lazy(() => import("../../components/Dashboard/Otorgante/PipelineTab"));
-const VerifyIdentityTab = lazy(() => import("../../components/Services/VerifyIdentityTab"));
 const ServiceOrdersPage = lazy(() => import("../../pages/ServiceOrdersPage"));
 
 const roleContentSource = {
@@ -103,22 +101,35 @@ function RoleFinanceJourney({ role, L, language }) {
   );
 }
 
-export default function FinanceWorkspaceAdapter({ role, initialTab = "finance" }) {
+function GrantorIdentitySummary({ L }) {
+  return (
+    <section className="nuxera-operational-block" aria-label={L("Resumen de identidad", "Identity summary")}>
+      <header>
+        <div>
+          <span>{L("Identidad y sanciones", "Identity and sanctions")}</span>
+          <h2>{L("Verificacion centralizada en Corpus", "Verification centralized in Corpus")}</h2>
+          <p>
+            {L(
+              "Finance solo muestra el estado financiero. La busqueda de RFC, sanciones y corpus vive en Corpus / Verificacion para evitar duplicidad.",
+              "Finance only shows financial state. RFC, sanctions and corpus screening live in Corpus / Verification to avoid duplication."
+            )}
+          </p>
+        </div>
+        <strong>{L("Unico modulo", "Single module")}</strong>
+      </header>
+      <footer>
+        <a className="nuxera-operational-link" href="/dashboard/nuxera/corpus">
+          {L("Abrir Corpus / Verificacion", "Open Corpus / Verification")}
+        </a>
+      </footer>
+    </section>
+  );
+}
+
+export default function FinanceWorkspaceAdapter({ role }) {
   const { L, language } = useNuxeraLanguage();
   const config = getFinanceAdapterConfig(role, language);
   const FinanceComponent = config.component;
-  const [activeTab, setActiveTab] = useState(initialTab);
-
-  useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
-
-  const selectGrantorTab = (tab) => {
-    setActiveTab(tab);
-    if (role !== "grantor") return;
-    const path = tab === "verify" ? "/dashboard/nuxera/identity" : "/dashboard/nuxera/finance";
-    window.location.assign(path);
-  };
 
   return (
     <section className="nuxera-adapter" aria-labelledby="nuxera-finance-title">
@@ -135,73 +146,14 @@ export default function FinanceWorkspaceAdapter({ role, initialTab = "finance" }
         </div>
       </header>
 
-      {/* Tab Navigation - Solo para Grantor (Otorgante) */}
-      {role === "grantor" && (
-        <div style={{
-          background: "white",
-          borderBottom: `2px solid ${COLORS.border}`,
-          display: "flex",
-          gap: "0rem",
-          padding: "0 1.5rem"
-        }}>
-          <button
-            type="button"
-            onClick={() => selectGrantorTab("finance")}
-            aria-pressed={activeTab === "finance"}
-            style={{
-              padding: "1.25rem 1rem",
-              background: "transparent",
-              border: "none",
-              borderBottom: activeTab === "finance" ? `3px solid ${COLORS.navy}` : "none",
-              color: activeTab === "finance" ? COLORS.navy : COLORS.textMuted,
-              fontWeight: activeTab === "finance" ? 700 : 500,
-              fontSize: "0.95rem",
-              cursor: "pointer",
-              transition: "all 0.2s"
-            }}
-          >
-            📊 {L("Pipeline Financiero", "Financial Pipeline")}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => selectGrantorTab("verify")}
-            aria-pressed={activeTab === "verify"}
-            style={{
-              padding: "1.25rem 1rem",
-              background: "transparent",
-              border: "none",
-              borderBottom: activeTab === "verify" ? `3px solid ${COLORS.navy}` : "none",
-              color: activeTab === "verify" ? COLORS.navy : COLORS.textMuted,
-              fontWeight: activeTab === "verify" ? 700 : 500,
-              fontSize: "0.95rem",
-              cursor: "pointer",
-              transition: "all 0.2s"
-            }}
-          >
-            🔍 {L("Verificar Identidad", "Verify Identity")}
-          </button>
-        </div>
-      )}
-
-      {/* Content */}
-      {activeTab === "finance" ? (
-        <>
-          <RoleFinanceJourney role={role} L={L} language={language} />
-          {role === "applicant" && <ProjectBuilderAssistant />}
-          <div className="nuxera-adapter-body">
-            <Suspense fallback={<AdapterLoading L={L} />}>
-              <FinanceComponent />
-            </Suspense>
-          </div>
-        </>
-      ) : (
-        <div className="nuxera-adapter-body">
-          <Suspense fallback={<AdapterLoading L={L} />}>
-            <VerifyIdentityTab />
-          </Suspense>
-        </div>
-      )}
+      <RoleFinanceJourney role={role} L={L} language={language} />
+      {role === "grantor" && <GrantorIdentitySummary L={L} />}
+      {role === "applicant" && <ProjectBuilderAssistant />}
+      <div className="nuxera-adapter-body">
+        <Suspense fallback={<AdapterLoading L={L} />}>
+          <FinanceComponent />
+        </Suspense>
+      </div>
     </section>
   );
 }
