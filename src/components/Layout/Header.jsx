@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BRAND } from "../../config/brand";
 import { COLORS } from "../../utils/constants";
@@ -8,7 +7,6 @@ import Icon from "../common/icons";
 
 export default function Header({ isLanding = false }) {
   const { user, logout, isLoggedIn } = useAuth();
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -16,14 +14,9 @@ export default function Header({ isLanding = false }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const goTo = (path) => {
-    navigate(path);
     setShowMenu(false);
     setShowMobileNav(false);
-    window.setTimeout(() => {
-      if (window.location.pathname !== path) {
-        window.location.assign(path);
-      }
-    }, 80);
+    window.location.assign(path);
   };
 
   useEffect(() => {

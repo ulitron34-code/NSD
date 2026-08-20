@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../finance/financeJourney";
@@ -75,7 +75,7 @@ function FinanceJourneyPanel({ journey, options = [], selectedId, onSelect, L, l
       <div className="nuxera-finance-evidence">
         <h2>{L("Evidencia conectada", "Connected evidence")}</h2>
         {evidenceLinks.map((link) => (
-          <NavLink key={link.id} to={link.path}>
+          <NavLink reloadDocument key={link.id} to={link.path}>
             <strong>{link.label}</strong>
             <span>{link.detail}</span>
           </NavLink>
@@ -105,7 +105,6 @@ function RoleFinanceJourney({ role, L, language }) {
 
 export default function FinanceWorkspaceAdapter({ role, initialTab = "finance" }) {
   const { L, language } = useNuxeraLanguage();
-  const navigate = useNavigate();
   const config = getFinanceAdapterConfig(role, language);
   const FinanceComponent = config.component;
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -118,12 +117,7 @@ export default function FinanceWorkspaceAdapter({ role, initialTab = "finance" }
     setActiveTab(tab);
     if (role !== "grantor") return;
     const path = tab === "verify" ? "/dashboard/nuxera/identity" : "/dashboard/nuxera/finance";
-    navigate(path);
-    window.setTimeout(() => {
-      if (window.location.pathname !== path) {
-        window.location.assign(path);
-      }
-    }, 80);
+    window.location.assign(path);
   };
 
   return (

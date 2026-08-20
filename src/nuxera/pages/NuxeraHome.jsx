@@ -499,7 +499,7 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
                   <strong>{stage.label}</strong>
                   <p>{stage.objective}</p>
                   <small>{stage.readyEvidence}/{stage.evidence.length} {L("evidencias listas; siguiente", "evidence ready; next")}: {stage.nextEvidence}</small>
-                  <NavLink to={stage.sectionPath}>{stage.owner}</NavLink>
+                  <NavLink reloadDocument to={stage.sectionPath}>{stage.owner}</NavLink>
                 </article>
               ))}
             </div>
@@ -512,7 +512,7 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
                 <strong>{step.label}</strong>
                 <p>{step.prompt}</p>
                 <small>{step.owner}</small>
-                <NavLink to={step.evidencePath}>{step.engine}</NavLink>
+                <NavLink reloadDocument to={step.evidencePath}>{step.engine}</NavLink>
               </article>
             ))}
           </div>
@@ -539,7 +539,7 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
                   <strong>{section.label}</strong>
                   <p>{section.readyEvidence}/{section.evidence.length} {L("evidencias listas; siguiente", "evidence ready; next")}: {section.nextEvidence}</p>
                   <small>{section.owner}</small>
-                  <NavLink to={section.path}>{L("Abrir modulo", "Open module")}</NavLink>
+                  <NavLink reloadDocument to={section.path}>{L("Abrir modulo", "Open module")}</NavLink>
                 </article>
               ))}
             </div>
@@ -566,7 +566,7 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
                   <strong>{folder.label}</strong>
                   <p>{folder.summary.ready}/{folder.summary.total} {L("listos", "ready")}; {folder.summary.missing + folder.summary.needsAttention} {L("pendientes", "pending")}</p>
                   <small>{folder.scope}</small>
-                  <NavLink to={folder.path}>{L("Abrir contexto", "Open context")}</NavLink>
+                  <NavLink reloadDocument to={folder.path}>{L("Abrir contexto", "Open context")}</NavLink>
                 </article>
               ))}
             </div>
@@ -625,7 +625,7 @@ function ApplicantMissionHome({ sectionLabel, variant = "home" }) {
           <section>
             <h2>{L("Evidencia conectada", "Connected evidence")}</h2>
             {mission.evidenceLinks.map((link) => (
-              <NavLink className="nuxera-evidence-link" key={link.id} to={link.path}>
+              <NavLink reloadDocument className="nuxera-evidence-link" key={link.id} to={link.path}>
                 <span>{link.engine}</span>
                 <strong>{link.label}</strong>
                 <p>{link.signal}</p>
@@ -786,7 +786,7 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
               </div>
               <footer>
                 <p>{deskHandoff.nextAction}</p>
-                <NavLink to={deskHandoff.handoffPackage.decisionDeskPath}>{deskHandoff.blockers.length > 0 ? L("Preparar Mesa", "Prepare Desk") : L("Enviar a Mesa", "Send to Desk")}</NavLink>
+                <NavLink reloadDocument to={deskHandoff.handoffPackage.decisionDeskPath}>{deskHandoff.blockers.length > 0 ? L("Preparar Mesa", "Prepare Desk") : L("Enviar a Mesa", "Send to Desk")}</NavLink>
               </footer>
             </section>
           )}
@@ -812,9 +812,9 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
                 <p>{managementByCaseId.get(item.id)?.nextOperationalAction || item.nextAction}</p>
                 <footer>
                   {!isDemo && <button type="button" onClick={() => selectOrder(item.id)} aria-pressed={item.id === selectedCase?.id}>{item.id === selectedCase?.id ? L("Seleccionado", "Selected") : L("Priorizar gestion", "Prioritize management")}</button>}
-                  <NavLink to="/dashboard">{L("Enviar a Mesa", "Send to Desk")}</NavLink>
+                  <NavLink reloadDocument to="/dashboard">{L("Enviar a Mesa", "Send to Desk")}</NavLink>
                   {item.evidenceLinks.slice(0, 2).map((link) => (
-                    <NavLink key={link.engine} to={link.path}>{link.engine}</NavLink>
+                    <NavLink reloadDocument key={link.engine} to={link.path}>{link.engine}</NavLink>
                   ))}
                 </footer>
               </article>
@@ -829,7 +829,7 @@ function GrantorQueueHome({ sectionLabel, variant = "decision" }) {
                 <span>{selectedCase ? selectedCase.priority : L("Sin expediente", "No file")}</span>
                 <h2>{selectedCase ? selectedCase.name : L("Selecciona un expediente desde Gestion", "Select a file from Management")}</h2>
               </div>
-              <NavLink to="/dashboard/nuxera/queue">{L("Cambiar expediente", "Change file")}</NavLink>
+              <NavLink reloadDocument to="/dashboard/nuxera/queue">{L("Cambiar expediente", "Change file")}</NavLink>
             </header>
             {selectedCase && <div className="nuxera-decision-focus-grid">
               <article><span>{L("Solicitante", "Applicant")}</span><strong>{selectedCase.applicant}</strong></article>
