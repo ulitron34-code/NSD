@@ -8,6 +8,24 @@ const VerifyIdentityTab = () => {
   const [error, setError] = useState("");
   const [stats, setStats] = useState(null);
 
+  const buildLocalVerificationResult = (rawQuery, reason = "backend-unavailable") => {
+    const normalizedQuery = rawQuery.trim();
+    return {
+      query: normalizedQuery,
+      hasMatches: false,
+      matchCount: 0,
+      riskLevel: "low",
+      matches: [],
+      timestamp: new Date().toISOString(),
+      localFallback: true,
+      fallbackReason: reason,
+      sources: {
+        internal: 0,
+        opensanctions: 0
+      }
+    };
+  };
+
   // Cargar estadísticas del corpus al montar
   React.useEffect(() => {
     fetchCorpusStats();
@@ -63,6 +81,11 @@ const VerifyIdentityTab = () => {
       });
 
       if (!response.ok) {
+        if ([404, 405, 501, 502, 503, 504].includes(response.status)) {
+          setResult(buildLocalVerificationResult(query, `HTTP ${response.status}`));
+          return;
+        }
+
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
@@ -74,7 +97,7 @@ const VerifyIdentityTab = () => {
         setError(data.error || "Error en la verificación");
       }
     } catch (err) {
-      setError(`Error: ${err.message}`);
+      setResult(buildLocalVerificationResult(query, err.message));
       console.error("Verification error:", err);
     } finally {
       setLoading(false);
@@ -244,7 +267,7 @@ const VerifyIdentityTab = () => {
                   fontSize: "1rem",
                   color: stats.ready ? "#059669" : "#dc2626"
                 }}>
-                  {stats.ready ? "✅ Listo" : stats.unavailable ? "⚠️ Backend no disponible" : "⏳ Inicializando"}
+                  {stats.ready ? "✅ Listo" : stats.unavailable ? "⚠️ Modo demo local" : "⏳ Inicializando"}
                 </p>
               </div>
             </div>
@@ -266,6 +289,20 @@ const VerifyIdentityTab = () => {
             padding: "1.5rem",
             marginBottom: "1.5rem"
           }}>
+            {result.localFallback && (
+              <div style={{
+                background: "#fffbeb",
+                color: "#92400e",
+                border: "1px solid #fcd34d",
+                borderRadius: "8px",
+                padding: "0.75rem 1rem",
+                marginBottom: "1rem",
+                fontSize: "0.9rem",
+                fontWeight: 600
+              }}>
+                Modo local de demostracion: el backend de verificacion no esta conectado en este despliegue. Resultado preliminar no vinculante, sin consulta remota a listas oficiales.
+              </div>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div>
                 <h2 style={{
