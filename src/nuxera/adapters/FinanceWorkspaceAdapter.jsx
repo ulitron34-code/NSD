@@ -117,7 +117,13 @@ export default function FinanceWorkspaceAdapter({ role, initialTab = "finance" }
   const selectGrantorTab = (tab) => {
     setActiveTab(tab);
     if (role !== "grantor") return;
-    navigate(tab === "verify" ? "/dashboard/nuxera/identity" : "/dashboard/nuxera/finance");
+    const path = tab === "verify" ? "/dashboard/nuxera/identity" : "/dashboard/nuxera/finance";
+    navigate(path);
+    window.setTimeout(() => {
+      if (window.location.pathname !== path) {
+        window.location.assign(path);
+      }
+    }, 80);
   };
 
   return (

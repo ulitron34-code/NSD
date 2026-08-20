@@ -28,13 +28,26 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
     admin: isEnglish ? "Administrator" : "Administrador",
   }[workspaceRole];
   const closeMobile = () => setMobileOpen(false);
-  const exitToHome = () => {
+  const goTo = (path) => {
     closeMobile();
+    navigate(path);
+    window.setTimeout(() => {
+      if (window.location.pathname !== path) {
+        window.location.assign(path);
+      }
+    }, 80);
+  };
+  const exitToHome = () => {
     if (onExit) {
       onExit();
+      window.setTimeout(() => {
+        if (window.location.pathname !== "/") {
+          window.location.assign("/");
+        }
+      }, 80);
       return;
     }
-    navigate("/");
+    goTo("/");
   };
 
   return (
@@ -69,7 +82,11 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
               to={item.path}
               end={item.path === "/dashboard"}
               className={({ isActive }) => isActive ? "nuxera-nav-link is-active" : "nuxera-nav-link"}
-              onClick={closeMobile}
+              onClick={(event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+                event.preventDefault();
+                goTo(item.path);
+              }}
             >
               {item.label}
             </NavLink>
