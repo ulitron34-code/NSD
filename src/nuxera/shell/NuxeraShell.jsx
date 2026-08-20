@@ -38,7 +38,7 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
   };
 
   return (
-    <div className="nuxera-shell">
+    <div className="nuxera-shell" data-nuxera-build="grantor-navigation-rebuild-20260820">
       <aside id="nuxera-mobile-navigation" className={`nuxera-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label={isEnglish ? "NUXERA navigation" : "Navegación NUXERA"}>
         <button type="button" className="nuxera-brand" onClick={exitToHome} aria-label={isEnglish ? "Return to main page" : "Volver a la pagina principal"} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span className="logo-mark" aria-hidden="true" style={{
