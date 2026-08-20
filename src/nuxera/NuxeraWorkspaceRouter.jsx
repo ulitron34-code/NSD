@@ -32,6 +32,28 @@ function RoleWorkspace({ role }) {
   const { section = "home" } = useParams();
   const resolvedSection = resolveNuxeraSection(section);
 
+  if (role === "grantor") {
+    if (section === "finance") {
+      return <FinanceWorkspaceAdapter role={role} />;
+    }
+
+    if (section === "intelligence") {
+      return <DocumentIntelligenceAdapter role={role} />;
+    }
+
+    if (section === "markets") {
+      return <MarketsWorkspace role={role} />;
+    }
+
+    if (section === "strategy") {
+      return <StrategyWorkspace role={role} />;
+    }
+
+    if (["identity", "verify-identity"].includes(section)) {
+      return <FinanceWorkspaceAdapter role={role} initialTab="verify" />;
+    }
+  }
+
   if (role === "admin" && ["operations", "security", "ai", "system"].includes(section)) {
     return <AdminWorkspaceAdapter section={section} />;
   }
@@ -51,10 +73,6 @@ function RoleWorkspace({ role }) {
 
   if (resolvedSection?.adapter === "finance-workspace") {
     return <FinanceWorkspaceAdapter role={role} />;
-  }
-
-  if (role === "grantor" && ["identity", "verify-identity"].includes(section)) {
-    return <FinanceWorkspaceAdapter role={role} initialTab="verify" />;
   }
 
   if (resolvedSection?.adapter === "markets-workspace") {
