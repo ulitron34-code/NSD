@@ -17,6 +17,7 @@ const navigationByRoleSource = {
     { id: "home", label: { es: "Mesa de decision", en: "Decision desk" }, path: "/dashboard" },
     { id: "queue", label: { es: "Gestion de expedientes", en: "Case management" }, path: "/dashboard/nuxera/queue" },
     { id: "corpus", label: { es: "Corpus / Verificacion", en: "Corpus / Verification" }, path: "/dashboard/nuxera/corpus" },
+    { id: "identity", label: { es: "Identidad", en: "Identity" }, path: "/dashboard/nuxera/identity" },
     ...sharedEngines,
   ],
   admin: [

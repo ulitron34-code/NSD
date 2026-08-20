@@ -16,12 +16,25 @@ const VerifyIdentityTab = () => {
   const fetchCorpusStats = async () => {
     try {
       const response = await fetch("/api/identity/readiness");
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.success) {
         setStats(data);
+        return;
       }
+
+      throw new Error(data.error || "Respuesta no valida del backend");
     } catch (err) {
-      console.warn("No se pudieron cargar estadísticas del corpus");
+      console.warn("No se pudieron cargar estadísticas del corpus", err);
+      setStats({
+        corpusDocuments: 0,
+        corpusChunks: 0,
+        ready: false,
+        unavailable: true
+      });
     }
   };
 
@@ -231,7 +244,7 @@ const VerifyIdentityTab = () => {
                   fontSize: "1rem",
                   color: stats.ready ? "#059669" : "#dc2626"
                 }}>
-                  {stats.ready ? "✅ Listo" : "⏳ Inicializando"}
+                  {stats.ready ? "✅ Listo" : stats.unavailable ? "⚠️ Backend no disponible" : "⏳ Inicializando"}
                 </p>
               </div>
             </div>

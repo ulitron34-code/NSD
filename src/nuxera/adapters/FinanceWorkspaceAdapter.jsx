@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useState } from "react";
-import { NavLink } from "react-router-dom";
+import React, { Suspense, lazy, useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useNuxeraExpedient } from "../context/NuxeraExpedientContext";
 import { useNuxeraLanguage } from "../hooks/useNuxeraLanguage";
 import { buildFinanceJourneyFromExpedient, getFinanceJourney, getFinanceJourneyEvidenceLinks } from "../finance/financeJourney";
@@ -103,11 +103,22 @@ function RoleFinanceJourney({ role, L, language }) {
   );
 }
 
-export default function FinanceWorkspaceAdapter({ role }) {
+export default function FinanceWorkspaceAdapter({ role, initialTab = "finance" }) {
   const { L, language } = useNuxeraLanguage();
+  const navigate = useNavigate();
   const config = getFinanceAdapterConfig(role, language);
   const FinanceComponent = config.component;
-  const [activeTab, setActiveTab] = useState("finance");
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  const selectGrantorTab = (tab) => {
+    setActiveTab(tab);
+    if (role !== "grantor") return;
+    navigate(tab === "verify" ? "/dashboard/nuxera/identity" : "/dashboard/nuxera/finance");
+  };
 
   return (
     <section className="nuxera-adapter" aria-labelledby="nuxera-finance-title">
@@ -134,7 +145,9 @@ export default function FinanceWorkspaceAdapter({ role }) {
           padding: "0 1.5rem"
         }}>
           <button
-            onClick={() => setActiveTab("finance")}
+            type="button"
+            onClick={() => selectGrantorTab("finance")}
+            aria-pressed={activeTab === "finance"}
             style={{
               padding: "1.25rem 1rem",
               background: "transparent",
@@ -151,7 +164,9 @@ export default function FinanceWorkspaceAdapter({ role }) {
           </button>
 
           <button
-            onClick={() => setActiveTab("verify")}
+            type="button"
+            onClick={() => selectGrantorTab("verify")}
+            aria-pressed={activeTab === "verify"}
             style={{
               padding: "1.25rem 1rem",
               background: "transparent",

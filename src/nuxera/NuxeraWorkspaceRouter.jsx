@@ -53,6 +53,10 @@ function RoleWorkspace({ role }) {
     return <FinanceWorkspaceAdapter role={role} />;
   }
 
+  if (role === "grantor" && ["identity", "verify-identity"].includes(section)) {
+    return <FinanceWorkspaceAdapter role={role} initialTab="verify" />;
+  }
+
   if (resolvedSection?.adapter === "markets-workspace") {
     return <MarketsWorkspace role={role} />;
   }

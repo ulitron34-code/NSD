@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getNavigationByRole } from "../navigation/navigationByRole";
 import "../styles/tokens.css";
@@ -10,6 +10,7 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isEnglish = i18n.language?.startsWith("en");
   const isDev = import.meta.env.DEV;
@@ -27,11 +28,19 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
     admin: isEnglish ? "Administrator" : "Administrador",
   }[workspaceRole];
   const closeMobile = () => setMobileOpen(false);
+  const exitToHome = () => {
+    closeMobile();
+    if (onExit) {
+      onExit();
+      return;
+    }
+    navigate("/");
+  };
 
   return (
     <div className="nuxera-shell">
       <aside id="nuxera-mobile-navigation" className={`nuxera-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label={isEnglish ? "NUXERA navigation" : "Navegación NUXERA"}>
-        <div className="nuxera-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button type="button" className="nuxera-brand" onClick={exitToHome} aria-label={isEnglish ? "Return to main page" : "Volver a la pagina principal"} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span className="logo-mark" aria-hidden="true" style={{
             width: '38px',
             height: '38px',
@@ -51,7 +60,7 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
             <strong style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.25rem', letterSpacing: '2px', color: '#fff' }}>NUXERA</strong>
             <span style={{ display: 'block', fontSize: '0.66rem', letterSpacing: '0.18em', color: 'var(--nuxera-gold)', textTransform: 'uppercase', fontWeight: 700 }}>Financial Intelligence</span>
           </div>
-        </div>
+        </button>
 
         <nav className="nuxera-nav">
           {items.map((item) => (
@@ -69,7 +78,7 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
 
         {/* Vista Selector - Para Testing */}
         {demoMode && onDemoModeChange && (
-          <div style={{ padding: "1rem", borderTop: "1px solid #e0e0e0" }}>
+          <div className="nuxera-demo-switcher" style={{ padding: "1rem", borderTop: "1px solid #e0e0e0" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.5rem", color: "#666" }}>
               {isEnglish ? "Testing View" : "Vista Testing"}
             </label>
@@ -94,6 +103,9 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
             </select>
           </div>
         )}
+        <button type="button" className="nuxera-exit" onClick={exitToHome}>
+          {isEnglish ? "Main page" : "Pagina principal"}
+        </button>
       </aside>
 
       <main className="nuxera-main">
@@ -109,6 +121,9 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
           </div>
           <div className="nuxera-header-actions">
             <span className="nuxera-agent-status"><i aria-hidden="true" />{isEnglish ? "Agents guarded" : "Agentes protegidos"}</span>
+            <button type="button" onClick={exitToHome}>
+              {isEnglish ? "Main page" : "Pagina principal"}
+            </button>
             <button type="button" onClick={toggleLanguage} aria-label={isEnglish ? "Cambiar idioma a español" : "Switch language to English"}>
               {isEnglish ? "ES" : "EN"}
             </button>

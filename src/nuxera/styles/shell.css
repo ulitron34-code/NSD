@@ -10,18 +10,28 @@
   position: sticky;
   top: 72px;
   height: calc(100vh - 72px);
+  max-height: calc(100vh - 72px);
   padding: 24px 18px;
   background: var(--nuxera-graphite);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   gap: 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .nuxera-brand {
+  border: 0;
+  padding: 0;
+  background: transparent;
   display: grid;
   gap: 4px;
   color: #fff;
+  text-align: left;
+  cursor: pointer;
+  flex: 0 0 auto;
 }
 
 .nuxera-brand strong {
@@ -37,7 +47,11 @@
 
 .nuxera-nav {
   display: grid;
+  align-content: start;
   gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .nuxera-nav-link {
@@ -48,12 +62,17 @@
   text-decoration: none;
   font-weight: 750;
   font-size: 0.9rem;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .nuxera-nav-link:hover,
 .nuxera-nav-link.is-active {
   background: rgba(183, 146, 58, 0.18);
   color: #fff;
+}
+
+.nuxera-nav-link:hover {
+  transform: translateX(2px);
 }
 
 .nuxera-exit {
@@ -66,11 +85,62 @@
   padding: 10px 12px;
   font-weight: 800;
   cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.nuxera-demo-switcher {
+  flex: 0 0 auto;
 }
 
 .nuxera-main {
   min-width: 0;
   padding: 28px;
+}
+
+.nuxera-route-transition {
+  animation: nuxera-route-fade 240ms ease both;
+}
+
+.nuxera-card,
+.nuxera-status-panel,
+.nuxera-mission-step,
+.nuxera-workbench-grid article,
+.nuxera-grantor-queue article,
+.nuxera-admin-summary article {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.nuxera-card:hover,
+.nuxera-mission-step:hover,
+.nuxera-workbench-grid article:hover,
+.nuxera-grantor-queue article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.08);
+}
+
+@keyframes nuxera-route-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nuxera-route-transition,
+  .nuxera-nav-link,
+  .nuxera-card,
+  .nuxera-status-panel,
+  .nuxera-mission-step,
+  .nuxera-workbench-grid article,
+  .nuxera-grantor-queue article,
+  .nuxera-admin-summary article {
+    animation: none;
+    transition: none;
+  }
 }
 
 .nuxera-workspace-header { max-width: 1180px; margin: 0 auto 22px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--nuxera-panel); border: 1px solid var(--nuxera-border); border-radius: 8px; }
@@ -1913,6 +1983,8 @@
     left: 0;
     width: min(82vw, 300px);
     height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
     transform: translateX(-105%);
     transition: transform 180ms ease;
   }
