@@ -135,7 +135,7 @@ export default function StrategyWorkspace({ role }) {
         <section>
           <h2>{L("Evidencia conectada", "Connected evidence")}</h2>
           {workspace.evidenceLinks.map((link) => (
-            <NavLink className="nuxera-evidence-link" key={link.id} to={link.path}>
+            <NavLink reloadDocument className="nuxera-evidence-link" key={link.id} to={link.path}>
               <span>{link.engine}</span>
               <strong>{link.label}</strong>
               <p>{link.signal}</p>

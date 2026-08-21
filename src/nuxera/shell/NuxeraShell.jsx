@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { Outlet, useLocation } from "react-router-dom";
 import { getNavigationByRole } from "../navigation/navigationByRole";
 import "../styles/tokens.css";
 import "../styles/shell.css";
 
-export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoModeChange }) {
-  const { user } = useAuth();
+export default function NuxeraShell({ workspaceRole, demoMode, onDemoModeChange }) {
   const { i18n } = useTranslation();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isEnglish = i18n.language?.startsWith("en");
-  const isDev = import.meta.env.DEV;
   const items = getNavigationByRole(workspaceRole, isEnglish);
   const current = items.find((item) => item.path === location.pathname) || items[0];
+
+  React.useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   const toggleLanguage = () => {
     const nextLanguage = isEnglish ? "es" : "en";
     i18n.changeLanguage(nextLanguage);
@@ -27,17 +29,30 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
     admin: isEnglish ? "Administrator" : "Administrador",
   }[workspaceRole];
   const closeMobile = () => setMobileOpen(false);
+  const goTo = (path) => {
+    closeMobile();
+    window.location.assign(path);
+  };
+  const exitToHome = () => {
+    goTo("/");
+  };
+
+  const isActivePath = (path) => (
+    path === "/dashboard" ? location.pathname === "/dashboard" : location.pathname === path
+  );
 
   return (
-    <div className="nuxera-shell">
-      <aside id="nuxera-mobile-navigation" className={`nuxera-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label={isEnglish ? "NUXERA navigation" : "Navegación NUXERA"}>
+    <div className="nuxera-shell" data-nuxera-build="grantor-navigation-rebuild-20260820">
+      {mobileOpen && (
         <button
           type="button"
-          className="nuxera-brand"
-          aria-label={isEnglish ? "Return to NUXERA home" : "Volver al inicio de NUXERA"}
-          onClick={onExit}
-          style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
-        >
+          className="nuxera-mobile-backdrop"
+          aria-label={isEnglish ? "Close navigation" : "Cerrar navegacion"}
+          onClick={closeMobile}
+        />
+      )}
+      <aside id="nuxera-mobile-navigation" className={`nuxera-sidebar ${mobileOpen ? "is-open" : ""}`} aria-label={isEnglish ? "NUXERA navigation" : "Navegación NUXERA"}>
+        <a href="/" className="nuxera-brand" aria-label={isEnglish ? "Return to main page" : "Volver a la pagina principal"} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span className="logo-mark" aria-hidden="true" style={{
             width: '38px',
             height: '38px',
@@ -57,25 +72,25 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
             <strong style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.25rem', letterSpacing: '2px', color: '#fff' }}>NUXERA</strong>
             <span style={{ display: 'block', fontSize: '0.66rem', letterSpacing: '0.18em', color: 'var(--nuxera-gold)', textTransform: 'uppercase', fontWeight: 700 }}>Financial Intelligence</span>
           </div>
-        </button>
+        </a>
 
         <nav className="nuxera-nav">
           {items.map((item) => (
-            <NavLink
+            <a
               key={item.id}
-              to={item.path}
-              end={item.path === "/dashboard"}
-              className={({ isActive }) => isActive ? "nuxera-nav-link is-active" : "nuxera-nav-link"}
+              href={item.path}
+              aria-current={isActivePath(item.path) ? "page" : undefined}
+              className={isActivePath(item.path) ? "nuxera-nav-link is-active" : "nuxera-nav-link"}
               onClick={closeMobile}
             >
               {item.label}
-            </NavLink>
+            </a>
           ))}
         </nav>
 
         {/* Vista Selector - Para Testing */}
         {demoMode && onDemoModeChange && (
-          <div style={{ padding: "1rem", borderTop: "1px solid #e0e0e0" }}>
+          <div className="nuxera-demo-switcher" style={{ padding: "1rem", borderTop: "1px solid #e0e0e0" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.5rem", color: "#666" }}>
               {isEnglish ? "Testing View" : "Vista Testing"}
             </label>
@@ -100,6 +115,9 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
             </select>
           </div>
         )}
+        <a href="/" className="nuxera-exit">
+          {isEnglish ? "Main page" : "Pagina principal"}
+        </a>
       </aside>
 
       <main className="nuxera-main">
@@ -115,6 +133,9 @@ export default function NuxeraShell({ workspaceRole, onExit, demoMode, onDemoMod
           </div>
           <div className="nuxera-header-actions">
             <span className="nuxera-agent-status"><i aria-hidden="true" />{isEnglish ? "Agents guarded" : "Agentes protegidos"}</span>
+            <button type="button" onClick={exitToHome}>
+              {isEnglish ? "Main page" : "Pagina principal"}
+            </button>
             <button type="button" onClick={toggleLanguage} aria-label={isEnglish ? "Cambiar idioma a español" : "Switch language to English"}>
               {isEnglish ? "ES" : "EN"}
             </button>
